@@ -160,12 +160,6 @@
           "expect": "\"status\": \"passed\""
         }
       ],
-      "required_paths": [
-        {
-          "path": "/srv/homelab/data/bitwarden",
-          "type": "directory"
-        }
-      ],
       "service_health_checks": {
         "bitwarden": [
           {
@@ -191,10 +185,9 @@
     "guest_memory_mib": 2048,
     "timezone": "Australia/Brisbane",
     "bitwarden": {
-      "schema": "homelab-bitwarden-migration-v1",
+      "schema": "homelab-bitwarden-runtime-v1",
       "bind_address": "${addresses.bitwarden_backend}",
-      "source_image_id": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-      "source_database_server": "mariadb.db_bitwarden",
+      "image_id": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
       "database_server": "${addresses.mariadb_backend}",
       "database_provider": "mysql",
       "database_name": "bitwarden_vault",

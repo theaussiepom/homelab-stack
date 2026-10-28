@@ -204,12 +204,6 @@
         "gateway": "${gateways.frontend}",
         "mac": "${mac.ingress.2}"
       },
-      "required_paths": [
-        {
-          "path": "/srv/homelab/data/traefik",
-          "type": "directory"
-        }
-      ],
       "service_health_checks": {
         "traefik": [
           {

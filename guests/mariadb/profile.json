@@ -171,7 +171,6 @@
       ],
       "vmid": 206,
       "exclusive_writer_confirmed": false,
-      "required_paths": [],
       "service_health_checks": {
         "mariadb": [
           {

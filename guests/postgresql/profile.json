@@ -194,7 +194,6 @@
       ],
       "vmid": 208,
       "exclusive_writer_confirmed": false,
-      "required_paths": [],
       "service_health_checks": {
         "postgresql": [
           {

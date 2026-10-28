@@ -323,29 +323,7 @@
           "login": "oidc"
         }
       ],
-      "mqtt_hostname": "broker.mqtt",
-      "required_paths": [
-        {
-          "path": "/srv/homelab/data/homeassistant/config",
-          "type": "directory"
-        },
-        {
-          "path": "/srv/homelab/data/mqtt/config",
-          "type": "directory"
-        },
-        {
-          "path": "/srv/homelab/data/node-red/data",
-          "type": "directory"
-        },
-        {
-          "path": "/srv/homelab/data/node-red/runtime-settings.js",
-          "type": "file"
-        },
-        {
-          "path": "/srv/homelab/data/node-red/healthcheck.js",
-          "type": "file"
-        }
-      ]
+      "mqtt_hostname": "broker.mqtt"
     }
   },
   "files": {},

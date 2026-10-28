@@ -168,7 +168,6 @@
       ],
       "vmid": 204,
       "exclusive_writer_confirmed": false,
-      "required_paths": [],
       "service_health_checks": {
         "influxdb": [
           {

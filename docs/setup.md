@@ -36,7 +36,7 @@ The image entries retain the source selection. A null tag means no tag was recor
 the digest remains authoritative. HA/Node-RED custom image entries are placeholders
 until the private site supplies the original local image IDs and verified archives.
 Bitwarden retains its existing operator-selected latest policy and separately checks
-the observed source image ID. Do not change image policy as part of stack adoption.
+the observed image ID. Do not change image policy as part of stack adoption.
 
 Local commits use the same staged security guard and SSH signing policy as the
 framework. Configure `.githooks` as `core.hooksPath`, supply gitleaks 8.30.1 through

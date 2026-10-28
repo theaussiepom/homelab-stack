@@ -93,16 +93,6 @@
       "address": "${addresses.dns}",
       "mac": "${mac.dns.0}",
       "stack_config": "${inputs}/stack.json",
-      "required_paths": [
-        {
-          "path": "/srv/homelab/data/pihole",
-          "type": "directory"
-        },
-        {
-          "path": "/srv/homelab/data/unbound/unbound.conf",
-          "type": "file"
-        }
-      ],
       "service_health_checks": {
         "unbound": [
           {

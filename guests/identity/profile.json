@@ -159,12 +159,6 @@
       ],
       "stack_config": "${inputs}/stack.json",
       "vmid": 211,
-      "required_paths": [
-        {
-          "path": "/srv/homelab/data/authentik",
-          "type": "directory"
-        }
-      ],
       "service_health_checks": {
         "authentik": [
           {

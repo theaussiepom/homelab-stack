@@ -96,28 +96,16 @@
       ],
       "stack_config": "${inputs}/stack.json",
       "pegaprox": {
-        "key_source": "/var/lib/homelab-inputs/pegaprox/db-key",
-        "admin_username": "admin"
+        "key_source": "/var/lib/homelab-inputs/pegaprox/db-key"
       },
       "health_checks": [
         {
           "name": "PegaProx health and closed initial setup",
           "argv": [
             "python3",
-            "/opt/homelab-app/pegaprox-setup.py",
-            "verify"
+            "/opt/homelab-app/pegaprox-health.py"
           ],
           "expect": "PegaProx verification passed"
-        }
-      ],
-      "required_paths": [
-        {
-          "path": "/srv/homelab/data/pegaprox/config",
-          "type": "directory"
-        },
-        {
-          "path": "/srv/homelab/data/pegaprox/logs",
-          "type": "directory"
         }
       ],
       "service_health_checks": {
@@ -126,8 +114,7 @@
             "name": "PegaProx health and closed initial setup",
             "argv": [
               "python3",
-              "/opt/homelab-app/pegaprox-setup.py",
-              "verify"
+              "/opt/homelab-app/pegaprox-health.py"
             ],
             "expect": "PegaProx verification passed"
           }

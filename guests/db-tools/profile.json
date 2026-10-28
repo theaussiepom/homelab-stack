@@ -196,12 +196,6 @@
       ],
       "stack_config": "${inputs}/stack.json",
       "vmid": 202,
-      "required_paths": [
-        {
-          "path": "/srv/homelab/data/pgadmin",
-          "type": "directory"
-        }
-      ],
       "service_health_checks": {
         "pgadmin": [
           {
