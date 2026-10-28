@@ -1,0 +1,39 @@
+name: Stack source checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  source:
+    name: Source contracts
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Read framework selection
+        id: framework
+        run: |
+          python3 - <<'PYCODE' >> "$GITHUB_OUTPUT"
+          import pathlib,re
+          text=pathlib.Path('.github/workflows/phase.yml').read_text()
+          pins=re.findall(r'^\s*uses: ([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/\.github/workflows/guest-phase\.yml@([0-9a-f]{40})\s*$',text,re.M)
+          if len(pins)!=1:raise SystemExit('Use one immutable source selection')
+          print('repository='+pins[0][0]);print('revision='+pins[0][1])
+          PYCODE
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: ${{ steps.framework.outputs.repository }}
+          ref: ${{ steps.framework.outputs.revision }}
+          path: framework-source
+          persist-credentials: false
+      - name: Install source test requirements
+        run: python3 -m pip install -r framework-source/requirements.lock.txt
+      - name: Test all profiles and dependencies
+        env:
+          HOMELAB_FRAMEWORK: framework-source
+        run: |
+          python3 framework-source/blueprints/compile.py --stack . --site site.example.json --check
+          python3 -m unittest discover -s tests

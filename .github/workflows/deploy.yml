@@ -1,0 +1,115 @@
+name: HomeLab stack
+on:
+  workflow_call:
+    inputs:
+      enabled:
+        type: string
+        required: true
+      runner_labels:
+        type: string
+        required: true
+      environment_name:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  dns:
+    name: DNS
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(fromJSON(inputs.enabled), 'dns')
+    uses: ./.github/workflows/guest-dns.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets: inherit
+  ingress:
+    name: Traefik
+    needs: [dns]
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(fromJSON(inputs.enabled), 'ingress')
+    uses: ./.github/workflows/guest-ingress.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets: inherit
+  postgresql:
+    name: PostgreSQL
+    needs: [dns]
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(fromJSON(inputs.enabled), 'postgresql')
+    uses: ./.github/workflows/guest-postgresql.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets: inherit
+  mariadb:
+    name: MariaDB
+    needs: [dns]
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(fromJSON(inputs.enabled), 'mariadb')
+    uses: ./.github/workflows/guest-mariadb.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets: inherit
+  influxdb:
+    name: InfluxDB
+    needs: [dns]
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(fromJSON(inputs.enabled), 'influxdb')
+    uses: ./.github/workflows/guest-influxdb.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets: inherit
+  identity:
+    name: Authentik
+    needs: [postgresql, ingress]
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(fromJSON(inputs.enabled), 'identity')
+    uses: ./.github/workflows/guest-identity.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets: inherit
+  db-tools:
+    name: pgAdmin
+    needs: [postgresql, ingress, identity]
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(fromJSON(inputs.enabled), 'db-tools')
+    uses: ./.github/workflows/guest-db-tools.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets: inherit
+  automation:
+    name: Automation
+    needs: [ingress, identity, mariadb, influxdb]
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(fromJSON(inputs.enabled), 'automation')
+    uses: ./.github/workflows/guest-automation.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets: inherit
+  bitwarden:
+    name: Bitwarden
+    needs: [ingress, mariadb]
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(fromJSON(inputs.enabled), 'bitwarden')
+    uses: ./.github/workflows/guest-bitwarden.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets: inherit
+  pegaprox:
+    name: PegaProx
+    needs: [dns]
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(fromJSON(inputs.enabled), 'pegaprox')
+    uses: ./.github/workflows/guest-pegaprox.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets: inherit

@@ -1,0 +1,196 @@
+{
+  "schema": "homelab-stack-v1",
+  "values": {
+    "networks.policy_15": "198.18.15.0",
+    "networks.management": "198.18.25.0",
+    "gateways.management": "198.18.25.1",
+    "addresses.pve": "198.18.25.10",
+    "addresses.runner": "198.18.25.11",
+    "addresses.identity_management": "198.18.25.20",
+    "addresses.automation_management": "198.18.25.21",
+    "addresses.postgresql_management": "198.18.25.23",
+    "addresses.mariadb_management": "198.18.25.24",
+    "addresses.influxdb_management": "198.18.25.26",
+    "addresses.pgadmin_management": "198.18.25.32",
+    "addresses.ingress_management": "198.18.25.33",
+    "addresses.pegaprox_management": "198.18.25.34",
+    "addresses.bitwarden_management": "198.18.25.35",
+    "networks.http_backend": "198.18.30.0",
+    "addresses.identity_backend": "198.18.30.20",
+    "addresses.automation_backend": "198.18.30.21",
+    "addresses.pgadmin_backend": "198.18.30.32",
+    "addresses.ingress_backend": "198.18.30.33",
+    "addresses.bitwarden_backend": "198.18.30.35",
+    "addresses.identity_postgresql": "198.18.31.20",
+    "addresses.postgresql_backend": "198.18.31.23",
+    "addresses.pgadmin_postgresql": "198.18.31.32",
+    "addresses.automation_mariadb": "198.18.32.21",
+    "addresses.mariadb_backend": "198.18.32.24",
+    "addresses.bitwarden_mariadb": "198.18.32.35",
+    "addresses.automation_influxdb": "198.18.33.21",
+    "addresses.influxdb_backend": "198.18.33.26",
+    "addresses.ingress_influxdb": "198.18.33.33",
+    "networks.frontend": "198.18.40.0",
+    "gateways.frontend": "198.18.40.1",
+    "addresses.dns": "198.18.40.2",
+    "addresses.automation_frontend": "198.18.40.21",
+    "addresses.ingress_frontend": "198.18.40.33",
+    "networks.policy_50": "198.18.50.0",
+    "networks.home": "198.19.100.0",
+    "addresses.automation_home": "198.19.100.242",
+    "addresses.fallback_dns": "198.19.100.4",
+    "networks.iot": "198.19.107.0",
+    "domains.bitwarden": "service-1.example.invalid",
+    "domains.node_red_primary": "service-2.example.invalid",
+    "domains.pgadmin": "service-3.example.invalid",
+    "domains.node_red_alias": "service-4.example.invalid",
+    "domains.homeassistant": "service-5.example.invalid",
+    "domains.identity": "service-6.example.invalid",
+    "domains.primary": "service-7.example.invalid",
+    "domains.secondary": "service-9.example.invalid",
+    "mac.postgresql.0": "02:00:00:00:00:01",
+    "mac.postgresql.1": "02:00:00:01:00:01",
+    "mac.mariadb.0": "02:00:01:00:00:01",
+    "mac.mariadb.1": "02:00:01:01:00:01",
+    "mac.influxdb.0": "02:00:02:00:00:01",
+    "mac.influxdb.1": "02:00:02:01:00:01",
+    "mac.identity.0": "02:00:03:00:00:01",
+    "mac.identity.1": "02:00:03:01:00:01",
+    "mac.identity.2": "02:00:03:02:00:01",
+    "mac.db-tools.0": "02:00:04:00:00:01",
+    "mac.db-tools.1": "02:00:04:01:00:01",
+    "mac.db-tools.2": "02:00:04:02:00:01",
+    "mac.ingress.0": "02:00:05:00:00:01",
+    "mac.ingress.1": "02:00:05:01:00:01",
+    "mac.ingress.2": "02:00:05:02:00:01",
+    "mac.automation.0": "02:00:06:00:00:01",
+    "mac.automation.1": "02:00:06:01:00:01",
+    "mac.automation.2": "02:00:06:02:00:01",
+    "mac.automation.3": "02:00:06:03:00:01",
+    "mac.bitwarden.0": "02:00:07:00:00:01",
+    "mac.bitwarden.1": "02:00:07:01:00:01",
+    "mac.pegaprox.0": "02:00:08:00:00:01",
+    "mac.dns.0": "02:00:09:00:00:01",
+    "mac.automation.4": "02:00:06:04:00:01",
+    "mac.automation.5": "02:00:06:05:00:01",
+    "mac.bitwarden.2": "02:00:07:02:00:01",
+    "contact.acme_email": "operator@example.invalid",
+    "identity.discovery_token": "root@pam!example-discovery",
+    "identity.pgadmin_client": "example-pgadmin-client"
+  },
+  "guests": {
+    "dns": {
+      "depends_on": [],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared",
+        "dns-state-adopted-separately"
+      ]
+    },
+    "ingress": {
+      "depends_on": [
+        "dns"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared"
+      ]
+    },
+    "postgresql": {
+      "depends_on": [
+        "dns"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared"
+      ]
+    },
+    "mariadb": {
+      "depends_on": [
+        "dns"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared"
+      ]
+    },
+    "influxdb": {
+      "depends_on": [
+        "dns"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared"
+      ]
+    },
+    "identity": {
+      "depends_on": [
+        "postgresql",
+        "ingress"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared"
+      ]
+    },
+    "db-tools": {
+      "depends_on": [
+        "postgresql",
+        "ingress",
+        "identity"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared"
+      ]
+    },
+    "automation": {
+      "depends_on": [
+        "ingress",
+        "identity",
+        "mariadb",
+        "influxdb"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared",
+        "old-writers-retired",
+        "retained-custom-images",
+        "ha-config-converted-separately",
+        "node-red-login-prepared"
+      ]
+    },
+    "bitwarden": {
+      "depends_on": [
+        "ingress",
+        "mariadb"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared",
+        "old-writers-retired"
+      ]
+    },
+    "pegaprox": {
+      "depends_on": [
+        "dns"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared",
+        "initial-account-prepared",
+        "database-key-retained"
+      ]
+    }
+  }
+}

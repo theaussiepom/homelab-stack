@@ -1,0 +1,31 @@
+name: Guest phase
+on:
+  workflow_call:
+    inputs:
+      enabled:
+        type: string
+        required: true
+      runner_labels:
+        type: string
+        required: true
+      environment_name:
+        type: string
+        required: true
+      guest:
+        type: string
+        required: true
+      phase:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  run:
+    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@79652a3a62b4a35adccc73508828be7a366b4b57
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: ${{ inputs.guest }}
+      phase: ${{ inputs.phase }}
+    secrets: inherit

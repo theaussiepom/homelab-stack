@@ -1,0 +1,48 @@
+name: InfluxDB
+on:
+  workflow_call:
+    inputs:
+      enabled:
+        type: string
+        required: true
+      runner_labels:
+        type: string
+        required: true
+      environment_name:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  infrastructure:
+    name: Infrastructure
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: influxdb
+      phase: infrastructure
+    secrets: inherit
+  preparation:
+    name: Preparation
+    needs: infrastructure
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: influxdb
+      phase: preparation
+    secrets: inherit
+  influxdb:
+    name: InfluxDB
+    needs: preparation
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: influxdb
+      phase: influxdb
+    secrets: inherit

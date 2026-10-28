@@ -1,0 +1,59 @@
+name: DNS
+on:
+  workflow_call:
+    inputs:
+      enabled:
+        type: string
+        required: true
+      runner_labels:
+        type: string
+        required: true
+      environment_name:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  infrastructure:
+    name: Infrastructure
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: dns
+      phase: infrastructure
+    secrets: inherit
+  preparation:
+    name: Preparation
+    needs: infrastructure
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: dns
+      phase: preparation
+    secrets: inherit
+  unbound:
+    name: Unbound
+    needs: preparation
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: dns
+      phase: unbound
+    secrets: inherit
+  pihole:
+    name: Pi-hole
+    needs: unbound
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: dns
+      phase: pihole
+    secrets: inherit

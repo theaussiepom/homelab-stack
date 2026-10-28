@@ -1,0 +1,70 @@
+name: Automation
+on:
+  workflow_call:
+    inputs:
+      enabled:
+        type: string
+        required: true
+      runner_labels:
+        type: string
+        required: true
+      environment_name:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  infrastructure:
+    name: Infrastructure
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: automation
+      phase: infrastructure
+    secrets: inherit
+  preparation:
+    name: Preparation
+    needs: infrastructure
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: automation
+      phase: preparation
+    secrets: inherit
+  mqtt:
+    name: MQTT
+    needs: preparation
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: automation
+      phase: mqtt
+    secrets: inherit
+  homeassistant:
+    name: Home Assistant
+    needs: mqtt
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: automation
+      phase: homeassistant
+    secrets: inherit
+  node_red:
+    name: Node-RED
+    needs: homeassistant
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: automation
+      phase: node_red
+    secrets: inherit

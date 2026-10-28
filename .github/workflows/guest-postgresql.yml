@@ -1,0 +1,48 @@
+name: PostgreSQL
+on:
+  workflow_call:
+    inputs:
+      enabled:
+        type: string
+        required: true
+      runner_labels:
+        type: string
+        required: true
+      environment_name:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  infrastructure:
+    name: Infrastructure
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: postgresql
+      phase: infrastructure
+    secrets: inherit
+  preparation:
+    name: Preparation
+    needs: infrastructure
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: postgresql
+      phase: preparation
+    secrets: inherit
+  postgresql:
+    name: PostgreSQL
+    needs: preparation
+    uses: ./.github/workflows/phase.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+      guest: postgresql
+      phase: postgresql
+    secrets: inherit

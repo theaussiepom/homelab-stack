@@ -1,0 +1,217 @@
+{
+  "config": {
+    "guest": {
+      "boot_order": 20,
+      "cpu": 1,
+      "dns_servers": [
+        "${addresses.dns}",
+        "${addresses.fallback_dns}"
+      ],
+      "hostname": "mariadb",
+      "interfaces": [
+        {
+          "bridge": "vmbr0",
+          "gateway": "${gateways.management}",
+          "ipv4": "${addresses.mariadb_management}/24",
+          "ipv6": "manual",
+          "mac": "${mac.mariadb.0}",
+          "vlan": 25
+        },
+        {
+          "bridge": "vmbr32",
+          "ipv4": "${addresses.mariadb_backend}/24",
+          "ipv6": "manual",
+          "mac": "${mac.mariadb.1}",
+          "vlan": null
+        }
+      ],
+      "keyctl": false,
+      "memory_mib": 1024,
+      "nesting": true,
+      "root_gib": 4,
+      "rules": [
+        {
+          "comment": "Deployment runner SSH only",
+          "direction": "in",
+          "port": "22",
+          "proto": "tcp",
+          "source": "${addresses.runner}/32"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "udp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "udp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Signed package downloads",
+          "destination": "0.0.0.0/0",
+          "direction": "out",
+          "port": "80,443",
+          "proto": "tcp"
+        },
+        {
+          "comment": "mariadb approved client automation",
+          "destination": "${addresses.mariadb_backend}/32",
+          "direction": "in",
+          "port": "3306",
+          "proto": "tcp",
+          "source": "${addresses.automation_mariadb}/32"
+        },
+        {
+          "comment": "mariadb approved client bitwarden",
+          "destination": "${addresses.mariadb_backend}/32",
+          "direction": "in",
+          "port": "3306",
+          "proto": "tcp",
+          "source": "${addresses.bitwarden_mariadb}/32"
+        }
+      ],
+      "start_on_boot": true,
+      "started": true,
+      "storage_id": "local-zfs",
+      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "vmid": 206,
+      "volumes": {
+        "database": {
+          "path": "/var/lib/mysql",
+          "size_gib": 16
+        }
+      }
+    },
+    "app": {
+      "address": "${addresses.mariadb_management}",
+      "database": {
+        "account_mode": "package",
+        "config_files": [
+          {
+            "destination": "/etc/mysql/mariadb.conf.d/99-homelab.cnf",
+            "source": "${inputs}/homelab.cnf"
+          }
+        ],
+        "group": "mysql",
+        "home": "/var/lib/mysql",
+        "user": "mysql",
+        "version_command": [
+          "mariadb",
+          "--version"
+        ],
+        "version_pattern": "12.3.3"
+      },
+      "health_checks": [
+        {
+          "argv": [
+            "python3",
+            "-c",
+            "import subprocess; assert subprocess.check_output(['systemctl','is-enabled','mariadb'],text=True).strip()=='enabled'; subprocess.run(['systemctl','is-active','--quiet','mariadb'],check=True); print('SERVICE_OK')"
+          ],
+          "expect": "SERVICE_OK",
+          "name": "Service is enabled and active"
+        },
+        {
+          "argv": [
+            "mariadb",
+            "--protocol=socket",
+            "--user=root",
+            "--batch",
+            "--skip-column-names",
+            "-e",
+            "SELECT VERSION();"
+          ],
+          "expect": "12.3.3",
+          "name": "Local root socket query"
+        },
+        {
+          "argv": [
+            "python3",
+            "-c",
+            "import socket; s=socket.create_connection(('${addresses.mariadb_backend}',3306),timeout=5); s.close(); print('BACKEND_OK')"
+          ],
+          "expect": "BACKEND_OK",
+          "name": "Backend TCP listener"
+        }
+      ],
+      "hostname": "mariadb",
+      "kind": "mariadb",
+      "mac": "${mac.mariadb.0}",
+      "memory_mib": 1024,
+      "packages": [
+        "mariadb-server=1:12.3.3+maria~deb13",
+        "mariadb-client=1:12.3.3+maria~deb13"
+      ],
+      "repositories": [
+        {
+          "key_path": "${inputs}/vendor.asc",
+          "key_sha256": "00adb387f4c12e8982cfc28165d225695621494354cd58108c6845063bfb74b5",
+          "name": "mariadb",
+          "source": "Types: deb\nURIs: https://dlm.mariadb.com/repo/mariadb-server/12.3.3/repo/debian\nSuites: trixie\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/mariadb.asc\n"
+        }
+      ],
+      "vmid": 206,
+      "exclusive_writer_confirmed": false,
+      "required_paths": [],
+      "service_health_checks": {
+        "mariadb": [
+          {
+            "argv": [
+              "python3",
+              "-c",
+              "import subprocess; assert subprocess.check_output(['systemctl','is-enabled','mariadb'],text=True).strip()=='enabled'; subprocess.run(['systemctl','is-active','--quiet','mariadb'],check=True); print('SERVICE_OK')"
+            ],
+            "expect": "SERVICE_OK",
+            "name": "Service is enabled and active"
+          },
+          {
+            "argv": [
+              "mariadb",
+              "--protocol=socket",
+              "--user=root",
+              "--batch",
+              "--skip-column-names",
+              "-e",
+              "SELECT VERSION();"
+            ],
+            "expect": "12.3.3",
+            "name": "Local root socket query"
+          },
+          {
+            "argv": [
+              "python3",
+              "-c",
+              "import socket; s=socket.create_connection(('${addresses.mariadb_backend}',3306),timeout=5); s.close(); print('BACKEND_OK')"
+            ],
+            "expect": "BACKEND_OK",
+            "name": "Backend TCP listener"
+          }
+        ]
+      }
+    }
+  },
+  "files": {
+    "vendor.asc": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\n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\n=mCOI\n-----END PGP PUBLIC KEY BLOCK-----\n",
+    "homelab.cnf": "[mysqld]\nbind-address = ${addresses.mariadb_backend}\nskip-name-resolve\nmax_connections = 100\ninnodb_buffer_pool_size = 256M\n"
+  },
+  "stack": null
+}

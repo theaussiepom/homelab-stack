@@ -1,0 +1,272 @@
+{
+  "config": {
+    "guest": {
+      "vmid": 212,
+      "hostname": "traefik",
+      "cpu": 1,
+      "memory_mib": 768,
+      "root_gib": 4,
+      "storage_id": "local-zfs",
+      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "started": true,
+      "start_on_boot": true,
+      "boot_order": 30,
+      "nesting": true,
+      "keyctl": false,
+      "dns_servers": [
+        "${addresses.dns}",
+        "${addresses.fallback_dns}"
+      ],
+      "interfaces": [
+        {
+          "bridge": "vmbr0",
+          "vlan": 25,
+          "mac": "${mac.ingress.0}",
+          "ipv4": "${addresses.ingress_management}/24",
+          "ipv6": "manual",
+          "gateway": "${gateways.management}"
+        },
+        {
+          "bridge": "vmbr30",
+          "vlan": null,
+          "mac": "${mac.ingress.1}",
+          "ipv4": "${addresses.ingress_backend}/24",
+          "ipv6": "manual"
+        },
+        {
+          "bridge": "vmbr1",
+          "vlan": 40,
+          "mac": "${mac.ingress.2}",
+          "ipv4": "${addresses.ingress_frontend}/24",
+          "ipv6": "manual"
+        }
+      ],
+      "volumes": {
+        "data": {
+          "path": "/srv/homelab",
+          "size_gib": 2
+        }
+      },
+      "rules": [
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "22",
+          "comment": "Deployment runner SSH only",
+          "source": "${addresses.runner}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "80,443",
+          "comment": "Signed packages, pinned images, provider and HTTPS",
+          "destination": "0.0.0.0/0"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "80,443",
+          "comment": "Selected internal HTTPS clients",
+          "source": "${networks.home}/24",
+          "destination": "${addresses.ingress_frontend}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "80,443",
+          "comment": "Selected internal HTTPS clients",
+          "source": "${networks.policy_15}/24",
+          "destination": "${addresses.ingress_frontend}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "80,443",
+          "comment": "Selected internal HTTPS clients",
+          "source": "${networks.management}/24",
+          "destination": "${addresses.ingress_frontend}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "80,443",
+          "comment": "Selected internal HTTPS clients",
+          "source": "${networks.http_backend}/24",
+          "destination": "${addresses.ingress_frontend}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "80,443",
+          "comment": "Selected internal HTTPS clients",
+          "source": "${networks.frontend}/24",
+          "destination": "${addresses.ingress_frontend}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "80,443",
+          "comment": "Selected internal HTTPS clients",
+          "source": "${networks.policy_50}/24",
+          "destination": "${addresses.ingress_frontend}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "8006",
+          "comment": "Pinned Proxmox discovery API only",
+          "destination": "${addresses.pve}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "9000",
+          "comment": "Selected discovered backend",
+          "destination": "${addresses.identity_backend}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "80",
+          "comment": "Selected discovered backend",
+          "destination": "${addresses.pgadmin_backend}/32"
+        }
+      ]
+    },
+    "app": {
+      "kind": "ingress",
+      "vmid": 212,
+      "hostname": "traefik",
+      "memory_mib": 768,
+      "address": "${addresses.ingress_management}",
+      "mac": "${mac.ingress.0}",
+      "packages": [
+        "docker.io=26.1.5+dfsg1-9+deb13u1",
+        "docker-cli=26.1.5+dfsg1-9+deb13u1",
+        "docker-compose=2.26.1-4",
+        "curl=8.14.1-2+deb13u7",
+        "iproute2=6.15.0-1"
+      ],
+      "stack_config": "${inputs}/stack.json",
+      "exclusive_writer_confirmed": false,
+      "health_checks": [
+        {
+          "name": "Proxy health endpoint",
+          "argv": [
+            "curl",
+            "--retry",
+            "30",
+            "--retry-delay",
+            "2",
+            "--retry-all-errors",
+            "--retry-max-time",
+            "180",
+            "--fail",
+            "--silent",
+            "--show-error",
+            "--max-time",
+            "10",
+            "http://127.0.0.1:8082/ping"
+          ],
+          "expect": "OK"
+        }
+      ],
+      "frontend_routing": {
+        "address": "${addresses.ingress_frontend}/24",
+        "gateway": "${gateways.frontend}",
+        "mac": "${mac.ingress.2}"
+      },
+      "required_paths": [
+        {
+          "path": "/srv/homelab/data/traefik",
+          "type": "directory"
+        }
+      ],
+      "service_health_checks": {
+        "traefik": [
+          {
+            "name": "Proxy health endpoint",
+            "argv": [
+              "curl",
+              "--retry",
+              "30",
+              "--retry-delay",
+              "2",
+              "--retry-all-errors",
+              "--retry-max-time",
+              "180",
+              "--fail",
+              "--silent",
+              "--show-error",
+              "--max-time",
+              "10",
+              "http://127.0.0.1:8082/ping"
+            ],
+            "expect": "OK"
+          }
+        ]
+      }
+    }
+  },
+  "files": {},
+  "stack": {
+    "kind": "ingress",
+    "data_root": "/srv/homelab/data",
+    "guest_memory_mib": 768,
+    "timezone": "Australia/Brisbane",
+    "services": {
+      "traefik": {
+        "memory_mib": 512,
+        "cpus": 1,
+        "pids_limit": 256,
+        "restart": "unless-stopped",
+        "environment": {},
+        "extra_mounts": [],
+        "image_ref": "traefik"
+      }
+    },
+    "foundation": {
+      "version": 1,
+      "bind_address": "${addresses.ingress_frontend}",
+      "proxmox_url": "https://${addresses.pve}:8006",
+      "proxmox_token_id": "${identity.discovery_token}",
+      "acme_email": "${contact.acme_email}",
+      "pve_ca_file": "/usr/local/share/ca-certificates/homelab-pve.crt",
+      "secret_files": {
+        "proxmox_token": "${inputs}/proxmox-token",
+        "cloudflare_dns_token": "${inputs}/cloudflare-dns-token"
+      },
+      "acme_dns_resolvers": [
+        "${addresses.dns}:53"
+      ]
+    }
+  }
+}

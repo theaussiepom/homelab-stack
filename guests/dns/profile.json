@@ -1,0 +1,201 @@
+{
+  "config": {
+    "guest": {
+      "vmid": 6101,
+      "hostname": "dns",
+      "cpu": 2,
+      "memory_mib": 4096,
+      "root_gib": 8,
+      "storage_id": "local-zfs",
+      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "started": true,
+      "start_on_boot": true,
+      "boot_order": 10,
+      "nesting": true,
+      "keyctl": false,
+      "dns_servers": [
+        "${addresses.dns}",
+        "${addresses.fallback_dns}"
+      ],
+      "interfaces": [
+        {
+          "bridge": "vmbr1",
+          "vlan": 40,
+          "mac": "${mac.dns.0}",
+          "ipv4": "${addresses.dns}/24",
+          "gateway": "${gateways.frontend}",
+          "ipv6": "manual"
+        }
+      ],
+      "volumes": {
+        "data": {
+          "path": "/srv/homelab",
+          "size_gib": 16
+        }
+      },
+      "rules": [
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "22",
+          "source": "${addresses.runner}/32",
+          "comment": "Deployment SSH"
+        },
+        {
+          "direction": "in",
+          "proto": "udp",
+          "port": "53",
+          "source": "${networks.home}/24",
+          "comment": "Selected DNS clients"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "53",
+          "source": "${networks.home}/24",
+          "comment": "Selected DNS clients"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "80,443",
+          "destination": "0.0.0.0/0",
+          "comment": "Package and image downloads"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "destination": "0.0.0.0/0",
+          "comment": "Recursive DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "destination": "0.0.0.0/0",
+          "comment": "Recursive DNS"
+        }
+      ]
+    },
+    "app": {
+      "packages": [
+        "docker.io=26.1.5+dfsg1-9+deb13u1",
+        "docker-cli=26.1.5+dfsg1-9+deb13u1",
+        "docker-compose=2.26.1-4",
+        "curl=8.14.1-2+deb13u7"
+      ],
+      "exclusive_writer_confirmed": false,
+      "kind": "dns",
+      "vmid": 6101,
+      "hostname": "dns",
+      "memory_mib": 4096,
+      "address": "${addresses.dns}",
+      "mac": "${mac.dns.0}",
+      "stack_config": "${inputs}/stack.json",
+      "required_paths": [
+        {
+          "path": "/srv/homelab/data/pihole",
+          "type": "directory"
+        },
+        {
+          "path": "/srv/homelab/data/unbound/unbound.conf",
+          "type": "file"
+        }
+      ],
+      "service_health_checks": {
+        "unbound": [
+          {
+            "name": "unbound ready",
+            "argv": [
+              "docker",
+              "compose",
+              "-f",
+              "/opt/homelab-app/compose.yml",
+              "exec",
+              "-T",
+              "unbound",
+              "unbound-checkconf",
+              "/opt/unbound/etc/unbound/unbound.conf"
+            ],
+            "expect": ""
+          }
+        ],
+        "pihole": [
+          {
+            "name": "pihole ready",
+            "argv": [
+              "docker",
+              "compose",
+              "-f",
+              "/opt/homelab-app/compose.yml",
+              "exec",
+              "-T",
+              "pihole",
+              "pihole",
+              "status"
+            ],
+            "expect": ""
+          }
+        ]
+      },
+      "health_checks": [
+        {
+          "name": "unbound ready",
+          "argv": [
+            "docker",
+            "compose",
+            "-f",
+            "/opt/homelab-app/compose.yml",
+            "exec",
+            "-T",
+            "unbound",
+            "unbound-checkconf",
+            "/opt/unbound/etc/unbound/unbound.conf"
+          ],
+          "expect": ""
+        },
+        {
+          "name": "pihole ready",
+          "argv": [
+            "docker",
+            "compose",
+            "-f",
+            "/opt/homelab-app/compose.yml",
+            "exec",
+            "-T",
+            "pihole",
+            "pihole",
+            "status"
+          ],
+          "expect": ""
+        }
+      ]
+    }
+  },
+  "files": {},
+  "stack": {
+    "kind": "dns",
+    "data_root": "/srv/homelab/data",
+    "guest_memory_mib": 4096,
+    "timezone": "Etc/UTC",
+    "services": {
+      "pihole": {
+        "memory_mib": 256,
+        "cpus": 1,
+        "pids_limit": 128,
+        "environment": {},
+        "extra_mounts": [],
+        "image_ref": "pihole"
+      },
+      "unbound": {
+        "memory_mib": 256,
+        "cpus": 1,
+        "pids_limit": 128,
+        "environment": {},
+        "extra_mounts": [],
+        "image_ref": "unbound"
+      }
+    }
+  }
+}

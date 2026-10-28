@@ -1,0 +1,444 @@
+{
+  "config": {
+    "guest": {
+      "vmid": 200,
+      "hostname": "automation",
+      "cpu": 4,
+      "memory_mib": 4096,
+      "root_gib": 16,
+      "storage_id": "local-zfs",
+      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "started": true,
+      "start_on_boot": true,
+      "boot_order": 60,
+      "nesting": true,
+      "keyctl": false,
+      "dns_servers": [
+        "${addresses.dns}",
+        "${addresses.fallback_dns}"
+      ],
+      "interfaces": [
+        {
+          "bridge": "vmbr0",
+          "vlan": 25,
+          "mac": "${mac.automation.0}",
+          "ipv4": "${addresses.automation_management}/24",
+          "ipv6": "manual",
+          "gateway": "${gateways.management}"
+        },
+        {
+          "bridge": "vmbr30",
+          "vlan": null,
+          "mac": "${mac.automation.1}",
+          "ipv4": "${addresses.automation_backend}/24",
+          "ipv6": "manual"
+        },
+        {
+          "bridge": "vmbr1",
+          "vlan": 40,
+          "mac": "${mac.automation.2}",
+          "ipv4": "${addresses.automation_frontend}/24",
+          "ipv6": "manual"
+        },
+        {
+          "bridge": "vmbr1",
+          "vlan": 100,
+          "mac": "${mac.automation.3}",
+          "ipv4": "${addresses.automation_home}/24",
+          "ipv6": "manual"
+        },
+        {
+          "bridge": "vmbr32",
+          "vlan": null,
+          "mac": "${mac.automation.4}",
+          "ipv4": "${addresses.automation_mariadb}/24",
+          "ipv6": "manual"
+        },
+        {
+          "bridge": "vmbr33",
+          "vlan": null,
+          "mac": "${mac.automation.5}",
+          "ipv4": "${addresses.automation_influxdb}/24",
+          "ipv6": "manual"
+        }
+      ],
+      "volumes": {
+        "data": {
+          "path": "/srv/homelab",
+          "size_gib": 16
+        }
+      },
+      "rules": [
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "22",
+          "source": "${addresses.runner}/32",
+          "comment": "Deployment runner SSH only"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "destination": "${addresses.dns}/32",
+          "comment": "Selected internal DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "destination": "${addresses.dns}/32",
+          "comment": "Selected internal DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "destination": "${addresses.fallback_dns}/32",
+          "comment": "Selected internal DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "destination": "${addresses.fallback_dns}/32",
+          "comment": "Selected internal DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "80,443",
+          "destination": "0.0.0.0/0",
+          "comment": "Signed packages, original images and existing HTTPS integrations"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "8123,1880",
+          "source": "${addresses.ingress_backend}/32",
+          "comment": "Traefik HA and native OIDC Node-RED only",
+          "destination": "${addresses.automation_backend}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "1883,8000",
+          "source": "${networks.home}/24",
+          "comment": "Existing authenticated MQTT clients",
+          "destination": "${addresses.automation_frontend}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": null,
+          "destination": "${networks.home}/24",
+          "comment": "Existing Home and IoT device integrations"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": null,
+          "destination": "${networks.home}/24",
+          "comment": "Existing Home and IoT device integrations"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "1883,8000",
+          "source": "${networks.iot}/24",
+          "comment": "Existing authenticated MQTT clients",
+          "destination": "${addresses.automation_frontend}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": null,
+          "destination": "${networks.iot}/24",
+          "comment": "Existing Home and IoT device integrations"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": null,
+          "destination": "${networks.iot}/24",
+          "comment": "Existing Home and IoT device integrations"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "8123,21060:21070",
+          "source": "${networks.home}/24",
+          "comment": "HA own login and existing eleven HomeKit bridges",
+          "destination": "${addresses.automation_home}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "udp",
+          "port": "5353",
+          "source": "${networks.home}/24",
+          "comment": "Existing Home multicast discovery",
+          "destination": "224.0.0.251/32"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "5353",
+          "destination": "224.0.0.251/32",
+          "comment": "Home multicast discovery"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "1883",
+          "destination": "${addresses.automation_frontend}/32",
+          "comment": "This guest retained MQTT endpoint"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "443",
+          "destination": "${addresses.ingress_frontend}/32",
+          "comment": "Native OIDC and existing internal HTTPS"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "3306",
+          "source": "${addresses.automation_mariadb}/32",
+          "destination": "${addresses.mariadb_backend}/32",
+          "comment": "mariadb approved client automation"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "8086",
+          "source": "${addresses.automation_influxdb}/32",
+          "destination": "${addresses.influxdb_backend}/32",
+          "comment": "influxdb approved client automation"
+        }
+      ]
+    },
+    "app": {
+      "kind": "automation",
+      "vmid": 200,
+      "hostname": "automation",
+      "memory_mib": 4096,
+      "address": "${addresses.automation_management}",
+      "mac": "${mac.automation.0}",
+      "packages": [
+        "docker.io=26.1.5+dfsg1-9+deb13u1",
+        "docker-cli=26.1.5+dfsg1-9+deb13u1",
+        "docker-compose=2.26.1-4",
+        "curl=8.14.1-2+deb13u7"
+      ],
+      "stack_config": "${inputs}/stack.json",
+      "exclusive_writer_confirmed": false,
+      "health_checks": [
+        {
+          "name": "MQTT credentials accepted and anonymous refused",
+          "argv": [
+            "python3",
+            "/opt/homelab-app/automation-health.py",
+            "mqtt"
+          ],
+          "expect": "\"read_only_probe\": \"passed\""
+        },
+        {
+          "name": "HA web responds and unauthenticated API refused",
+          "argv": [
+            "python3",
+            "/opt/homelab-app/automation-health.py",
+            "homeassistant"
+          ],
+          "expect": "\"read_only_probe\": \"passed\""
+        },
+        {
+          "name": "Node-RED native login ready and unauthenticated flows refused",
+          "argv": [
+            "python3",
+            "/opt/homelab-app/automation-health.py",
+            "node_red"
+          ],
+          "expect": "\"read_only_probe\": \"passed\""
+        }
+      ],
+      "service_health_checks": {
+        "mqtt": [
+          {
+            "name": "MQTT credentials accepted and anonymous refused",
+            "argv": [
+              "python3",
+              "/opt/homelab-app/automation-health.py",
+              "mqtt"
+            ],
+            "expect": "\"read_only_probe\": \"passed\""
+          }
+        ],
+        "homeassistant": [
+          {
+            "name": "HA web responds and unauthenticated API refused",
+            "argv": [
+              "python3",
+              "/opt/homelab-app/automation-health.py",
+              "homeassistant"
+            ],
+            "expect": "\"read_only_probe\": \"passed\""
+          }
+        ],
+        "node_red": [
+          {
+            "name": "Node-RED native login ready and unauthenticated flows refused",
+            "argv": [
+              "python3",
+              "/opt/homelab-app/automation-health.py",
+              "node_red"
+            ],
+            "expect": "\"read_only_probe\": \"passed\""
+          }
+        ]
+      },
+      "node_red_authentication": "authentik-oidc",
+      "frontend_routing": {
+        "address": "${addresses.automation_frontend}/24",
+        "gateway": "${gateways.frontend}",
+        "mac": "${mac.automation.2}"
+      },
+      "discovery_routes": [
+        {
+          "name": "homeassistant",
+          "host": "hass.${domains.secondary}",
+          "aliases": [
+            "${domains.homeassistant}"
+          ],
+          "url": "http://${addresses.automation_backend}:8123",
+          "login": "own"
+        },
+        {
+          "name": "node-red",
+          "host": "${domains.node_red_alias}",
+          "aliases": [
+            "${domains.node_red_primary}"
+          ],
+          "url": "http://${addresses.automation_backend}:1880",
+          "login": "oidc"
+        }
+      ],
+      "mqtt_hostname": "broker.mqtt",
+      "required_paths": [
+        {
+          "path": "/srv/homelab/data/homeassistant/config",
+          "type": "directory"
+        },
+        {
+          "path": "/srv/homelab/data/mqtt/config",
+          "type": "directory"
+        },
+        {
+          "path": "/srv/homelab/data/node-red/data",
+          "type": "directory"
+        },
+        {
+          "path": "/srv/homelab/data/node-red/runtime-settings.js",
+          "type": "file"
+        },
+        {
+          "path": "/srv/homelab/data/node-red/healthcheck.js",
+          "type": "file"
+        }
+      ]
+    }
+  },
+  "files": {},
+  "stack": {
+    "kind": "automation",
+    "data_root": "/srv/homelab/data",
+    "guest_memory_mib": 4096,
+    "timezone": "Australia/Brisbane",
+    "node_red_oidc": {
+      "identity_url": "https://${domains.identity}",
+      "node_red_url": "https://${domains.node_red_alias}",
+      "client_id": "XkR2mzGf4L75NzmDpxOvPd6ggdmFc5rkdl3J44ak",
+      "provider_slug": "nodered"
+    },
+    "services": {
+      "homeassistant": {
+        "memory_mib": 2048,
+        "cpus": 2,
+        "pids_limit": 512,
+        "restart": "unless-stopped",
+        "environment": {
+          "HOMELAB_HA_IPV4": "${addresses.automation_home}"
+        },
+        "entrypoint": [
+          "/bin/sh",
+          "-c",
+          "/startup/mdns-route.sh && exec /init"
+        ],
+        "command": null,
+        "extra_hosts": {
+          "mariadb.db_hass": "${addresses.mariadb_backend}"
+        },
+        "cap_add": [
+          "NET_ADMIN"
+        ],
+        "extra_mounts": [
+          {
+            "source": "/srv/homelab/data/ha-startup",
+            "target": "/startup",
+            "read_only": true
+          },
+          {
+            "source": "/srv/homelab/data/homeassistant/media",
+            "target": "/media",
+            "read_only": false
+          },
+          {
+            "source": "/srv/homelab/data/homeassistant/config/www/community",
+            "target": "/hacsfiles",
+            "read_only": false
+          }
+        ],
+        "image_ref": "homeassistant"
+      },
+      "node_red": {
+        "memory_mib": 1024,
+        "cpus": 1,
+        "pids_limit": 256,
+        "restart": "unless-stopped",
+        "environment": {
+          "FLOWS": "/config/flows.json"
+        },
+        "entrypoint": [
+          "./entrypoint.sh"
+        ],
+        "command": [
+          "--settings",
+          "/runtime-settings.js"
+        ],
+        "user": "node-red",
+        "extra_mounts": [
+          {
+            "source": "/srv/homelab/data/node-red/runtime-settings.js",
+            "target": "/runtime-settings.js",
+            "read_only": true
+          },
+          {
+            "source": "/srv/homelab/data/node-red/healthcheck.js",
+            "target": "/healthcheck.js",
+            "read_only": true
+          }
+        ],
+        "image_ref": "node_red"
+      },
+      "mqtt": {
+        "memory_mib": 256,
+        "cpus": 1,
+        "pids_limit": 128,
+        "restart": "unless-stopped",
+        "environment": {},
+        "extra_mounts": [],
+        "image_ref": "mqtt"
+      }
+    }
+  }
+}
