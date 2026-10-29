@@ -77,10 +77,11 @@ For report-only Python coverage of the stack suite against its selected framewor
 python3 ../homelab/tools/measure_coverage.py --suite stack --stack . --output .work/stack-coverage
 ```
 
-Use a fresh output directory. The report measures the blueprint/application Python
-code reached by these tests and retains unexecuted files in those components. CI
-publishes the summary and JSON/XML/HTML artifacts without a coverage threshold.
-The framework README documents a combined run across all four suites.
+Use a fresh output directory and provide the pinned scanner through `GITLEAKS_BIN`.
+The report includes this repository's source guards and the selected framework's
+blueprint/application code, retaining unexecuted production files. CI publishes the
+summary and JSON/XML/HTML artifacts without a coverage threshold. The framework
+README documents `--all` for every Python component across all three repositories.
 
 Docker guest profiles inherit `restart: always` from the framework container policy.
 Keep `restart` omitted to use that convention; the current stack has no overrides.
