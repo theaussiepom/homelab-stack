@@ -7,8 +7,7 @@ settings and deployment controls.
 
 The source is executable: profiles compile to the framework's guarded ordinary
 packet; reusable workflows run infrastructure, preparation, and the real app jobs.
-The addresses and MACs here are sanitized examples. Nothing here has been deployed
-or published by this redesign.
+The addresses and MACs here are sanitized examples. This repository publishes source only; the redesign has not been deployed.
 
 ```mermaid
 flowchart TD

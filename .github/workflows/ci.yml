@@ -9,11 +9,15 @@ jobs:
   source:
     name: Source contracts
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
           persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
       - name: Read framework selection
         id: framework
         run: |
@@ -50,14 +54,41 @@ jobs:
           name: coverage-stack
           path: ${{ runner.temp }}/stack-coverage
           retention-days: 14
-      - name: Check source safety and changed history
-        env:
-          BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+      - name: Check source safety and full history
         run: |
           python3 - <<'PYCODE'
           import json,os,pathlib,sys
           sys.path.insert(0,'framework-source/.github/scripts')
           from source_safety import run
           scanner=pathlib.Path(os.environ['RUNNER_TEMP'])/'homelab-source-tools/gitleaks'
-          print(json.dumps(run(pathlib.Path('.'),'HEAD',os.environ['BASE_REVISION'],scanner)))
+          print(json.dumps(run(pathlib.Path('.'),'HEAD','',scanner)))
           PYCODE
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: never
+  analyze:
+    name: CodeQL (python)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee
+        with:
+          languages: python
+          build-mode: none
+          queries: security-extended
+      - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee
+        with:
+          category: /language:python

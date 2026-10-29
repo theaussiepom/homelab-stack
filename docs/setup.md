@@ -83,8 +83,8 @@ python3 ../homelab/tools/measure_coverage.py --suite stack --stack . --output .w
 
 Use a fresh output directory and provide the pinned scanner through `GITLEAKS_BIN`.
 The report includes this repository's source guards and the selected framework's
-blueprint/application code, retaining unexecuted production files. CI publishes the
-summary and JSON/XML/HTML artifacts without a coverage threshold. The framework
+blueprint/application code, retaining unexecuted production files. CI enforces 100% line and branch coverage per production file and publishes the
+summary and JSON/XML/HTML artifacts. The framework
 README documents `--all` for every Python component across all three repositories.
 
 Docker guest profiles inherit `restart: always` from the framework container policy.
