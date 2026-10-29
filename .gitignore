@@ -18,3 +18,5 @@ __pycache__/
 secrets.*
 !docs/secrets.md
 /site.json
+.coverage
+.coverage.*

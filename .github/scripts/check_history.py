@@ -13,6 +13,8 @@ BATCH_SECONDS = 180
 
 def scan(root, safety, scanner):
     head = safety.resolve(root, "HEAD")
+    if safety.git(root, "rev-parse", "--is-shallow-repository").decode().strip() != "false":
+        raise ValueError("Fetch complete history before scanning a shallow repository")
     revisions = safety.git(root, "rev-list", "--reverse", head).decode().splitlines()
     trees = {}
     for offset in range(0, len(revisions), BATCH_COMMITS):

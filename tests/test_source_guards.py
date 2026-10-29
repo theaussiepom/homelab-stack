@@ -68,7 +68,7 @@ class PublicPolicyTests(unittest.TestCase):
 
     def test_private_file_ignore_rules_preserve_example_exceptions(self):
         private = [".env", ".env.local", ".env.production", "site.json", "archive.p12",
-                   "certificate.pfx", "runtime.db", "state.sqlite3"]
+                   "certificate.pfx", "runtime.db", "state.sqlite3", ".coverage", ".coverage.fixture"]
         examples = [".env.example", ".env.sample", ".env.template", "site.example.json"]
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

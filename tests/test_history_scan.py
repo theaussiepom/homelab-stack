@@ -101,7 +101,7 @@ class FullHistoryTests(unittest.TestCase):
     def test_time_limit_and_guard_failures_stop_before_reporting_success(self):
         selected = SimpleNamespace(
             resolve=Mock(return_value="head"),
-            git=Mock(side_effect=[b"head\n", b"tree\n"]),
+            git=Mock(side_effect=[b"false\n", b"head\n", b"tree\n"]),
             check_identity=Mock(), scan_tree=Mock(),
         )
         with patch.object(history.time, "monotonic", side_effect=[0, 181]):
@@ -110,10 +110,26 @@ class FullHistoryTests(unittest.TestCase):
         selected.check_identity.assert_not_called()
         selected.scan_tree.assert_not_called()
         for failing_stage in ("check_identity", "scan_tree"):
-            selected.git = Mock(side_effect=[b"head\n", b"tree\n"])
+            selected.git = Mock(side_effect=[b"false\n", b"head\n", b"tree\n"])
             selected.check_identity = Mock()
             selected.scan_tree = Mock()
             getattr(selected, failing_stage).side_effect = RuntimeError("fixture guard refusal")
             with self.subTest(stage=failing_stage):
                 with self.assertRaisesRegex(RuntimeError, "guard refusal"):
                     history.scan(self.repo, selected, Path("unused-fixture-scanner"))
+
+    def test_cli_refuses_an_actual_shallow_clone_before_any_success_report(self):
+        with tempfile.TemporaryDirectory() as directory:
+            clone = Path(directory) / "shallow"
+            subprocess.run(
+                ["git", "clone", "-q", "--depth=1", self.repo.as_uri(), str(clone)],
+                check=True, capture_output=True,
+            )
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), "--root", str(clone),
+                 "--framework", str(FRAMEWORK), "--scanner", "unused-fixture-scanner"],
+                capture_output=True, text=True, timeout=15,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Fetch complete history", result.stderr)
+        self.assertNotIn('"status": "passed"', result.stdout)
