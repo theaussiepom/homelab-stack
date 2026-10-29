@@ -42,7 +42,7 @@ VM application support has not been qualified.
 | [common.json](common.json) | Shared runner paths and PVE connection shape |
 | [images.json](images.json) | Image selection authority |
 | [guests](guests) | Executable profiles and public vendor keys/config templates |
-| [deploy workflow](.github/workflows/deploy.yml) | Permanent guest groups and real dependency edges |
+| [deploy workflow](.github/workflows/deploy.yml) | Generated guest groups and real dependency edges |
 | [phase workflow](.github/workflows/phase.yml) | The single framework revision selection |
 | [site.example.json](site.example.json) | Empty private overlay shape |
 
@@ -54,5 +54,20 @@ enables no guests. This keeps unready workloads visibly present and disabled.
 
 The composition covers the ten prepared guests. Zigbee2MQTT's separate owner work,
 other fleet applications, optional image updates and recovery projects are outside
-this redesign. Existing reusable Zabbix Agent tasks remain in the framework; this
-stack does not invent missing per-guest machine IDs or PSK selections to enable them.
+this redesign. Monitoring source components remain in the framework; this stack
+does not deploy an additional monitoring guest.
+
+Guest definitions combine a framework blueprint with a profile under `guests/`,
+the dependency entry in `stack.json` and private-site overrides. For example,
+[MariaDB's profile](guests/mariadb/profile.json) selects VMID 206, one CPU,
+1024 MiB RAM, a 4 GiB root disk and 16 GiB at `/var/lib/mysql`. Its blueprint
+selects Linux preparation and the MariaDB application phase; the stack makes it
+depend on DNS. The profile also supplies pinned packages, repository/configuration
+files, interfaces, firewall rules and health checks. Actual addresses and keys
+are supplied by the private site. No Actions jobs are written inside a profile.
+
+The selected framework's `blueprints/workflows.py` generates `deploy.yml` and all
+`guest-*.yml` workflows from the catalogue and stack dependencies. Edit those
+declarative inputs and regenerate; the checked-in generated files are not edited
+by hand. CI rejects stale generated files. The literal framework selection in
+`phase.yml`, source CI and private-site enablement remain explicit controls.

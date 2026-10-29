@@ -32,6 +32,8 @@ jobs:
           persist-credentials: false
       - name: Install source test requirements
         run: python3 -m pip install -r framework-source/requirements.lock.txt
+      - name: Check generated workflow synchronization
+        run: python3 framework-source/blueprints/workflows.py --stack . --check
       - name: Test all profiles and dependencies
         env:
           HOMELAB_FRAMEWORK: framework-source

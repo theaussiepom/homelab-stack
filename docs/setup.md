@@ -21,9 +21,24 @@ mount. Do not run the phase runner on your laptop to test source changes.
 python3 -m venv .venv
 . .venv/bin/activate
 python3 -m pip install -r ../homelab/requirements.lock.txt
+python3 ../homelab/blueprints/workflows.py --stack . --check
 python3 ../homelab/blueprints/compile.py --stack . --site site.example.json --check
 HOMELAB_FRAMEWORK=../homelab python3 -m unittest discover -s tests
 ```
+
+When changing blueprint phases/display names or `stack.json` dependencies,
+regenerate the checked-in workflow graph before reviewing the source diff:
+
+```sh
+python3 ../homelab/blueprints/workflows.py --stack .
+python3 ../homelab/blueprints/workflows.py --stack . --check
+```
+
+This manages only `deploy.yml` and the permanent `guest-*.yml` files. `phase.yml`
+keeps the single deliberate framework pin, and `ci.yml` keeps source validation.
+The private site's enabled list and adopted stack pin remain explicit. There are
+no compatibility formats or transition flags. Obsolete managed paths must be
+removed explicitly; the generator never silently deletes another workflow.
 
 For an inspectable non-secret preview, add `--guest dns --output /tmp/dns-preview.json`
 instead of `--check`. Preview packets are disabled unless explicitly selected.
