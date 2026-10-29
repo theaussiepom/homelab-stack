@@ -2,9 +2,10 @@ name: Guest phase
 on:
   workflow_call:
     inputs:
-      enabled:
+      disabled:
         type: string
-        required: true
+        required: false
+        default: '[]'
       runner_labels:
         type: string
         required: true
@@ -21,9 +22,9 @@ permissions:
   contents: read
 jobs:
   run:
-    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@257359167ae67288d0c9805d7c15da8778d98c03
+    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@5416418646ec48cd9c7b58159cc9518c1cc1aa94
     with:
-      enabled: ${{ inputs.enabled }}
+      disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
       guest: ${{ inputs.guest }}

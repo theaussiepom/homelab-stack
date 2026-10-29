@@ -36,7 +36,7 @@ python3 ../homelab/blueprints/workflows.py --stack . --check
 
 This manages only `deploy.yml` and the permanent `guest-*.yml` files. `phase.yml`
 keeps the single deliberate framework pin, and `ci.yml` keeps source validation.
-The private site's enabled list and adopted stack pin remain explicit. There are
+The private site's optional disabled list and adopted stack pin remain explicit. There are
 no compatibility formats or transition flags. Obsolete managed paths must be
 removed explicitly; the generator never silently deletes another workflow.
 
@@ -53,7 +53,11 @@ foundation runtime files recreate their application bundle; an unchanged copy
 does not force recreation.
 
 For an inspectable non-secret preview, add `--guest dns --output /tmp/dns-preview.json`
-instead of `--check`. Preview packets are disabled unless explicitly selected.
+instead of `--check`. All guest packets participate by default; compilation itself
+never deploys them. `--disabled '["zigbee2mqtt"]'` explicitly excludes that leaf
+guest. The optional workflow input `disabled` uses the same JSON list and defaults
+to `[]`. Dependencies of active guests cannot be disabled. Unknown names,
+duplicates and the removed `--enabled` option are rejected.
 `--admit` additionally requires selected guest dependency closure, prerequisite
 acceptance, real keys, writer fencing and removal of image/runtime placeholders.
 Only the private workflow uses that admission path. Compiling a preview does not

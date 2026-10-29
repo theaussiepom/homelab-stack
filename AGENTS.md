@@ -8,4 +8,5 @@ Keep actual credentials outside Git. Preserve all state, identity, locks, holds
 and failed evidence. No automatic retries, state adoption, replacement or rollback.
 Public source changes validate only. Native deployment requires deliberate private
 site adoption and a reviewed main merge through the existing global queue.
-Unready guests remain disabled. Debian LXC is the implemented platform.
+All declared guests participate by default; only an explicit disabled list excludes
+guests. Missing prerequisites fail validation. Debian LXC is the implemented platform.

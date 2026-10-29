@@ -33,8 +33,8 @@ class StackTests(unittest.TestCase):
     def setUp(self):
         self.overlay = c.read(ROOT / "site.example.json")
 
-    def guest(self, name, enabled, **options):
-        return c.compile_stack(ROOT, self.overlay, enabled, **options)[name]
+    def guest(self, name, disabled=None, **options):
+        return c.compile_stack(ROOT, self.overlay, disabled, **options)[name]
 
     def test_all_docker_guests_inherit_always_restart(self):
         guests = set()
@@ -67,7 +67,7 @@ class StackTests(unittest.TestCase):
             a = self.guest(name, [])
             self.assertEqual(a, self.guest(name, []))
             cfg = json.loads(a["files"]["site.json"])
-            self.assertFalse(a["enabled"])
+            self.assertTrue(a["enabled"])
             self.assertNotIn("capture", cfg["app"])
             self.assertNotIn("ha_http", cfg["app"])
             self.assertEqual(
@@ -100,27 +100,28 @@ class StackTests(unittest.TestCase):
                     self.assertEqual(guest["jobs"][p]["needs"], phases[n - 1])
         c.workflow_selection(ROOT / ".github/workflows/phase.yml", "guest-phase.yml")
 
-    def test_missing_prerequisites_disabled_selection_and_placeholder_images_cannot_admit(
+    def test_admission_still_requires_reviewed_private_inputs_and_active_guests(
         self,
     ):
         for name in c.CATALOGUE:
             with self.assertRaises(ValueError):
                 self.guest(name, [], admit=True)
         manifest = c.manifest(ROOT)
-        enabled = list(c.CATALOGUE)
+        with self.assertRaisesRegex(ValueError, "disabled"):
+            self.guest("dns", list(c.CATALOGUE), admit=True)
         self.overlay["accepted"] = {
             name: row["prerequisites"] for name, row in manifest["guests"].items()
         }
         for name in ["automation", "bitwarden", "dns"]:
             with self.assertRaises(ValueError):
-                self.guest(name, enabled, admit=True)
+                self.guest(name, [], admit=True)
 
     def test_private_central_override_and_independent_guest_selection(self):
         self.overlay["values"]["addresses.pve"] = "192.0.2.10"
         with self.assertRaisesRegex(ValueError, "private HTTP"):
-            self.guest("postgresql", ["dns", "postgresql"])
+            self.guest("postgresql")
         self.overlay["values"]["addresses.pve"] = "198.18.25.99"
-        a = self.guest("postgresql", ["dns", "postgresql"])
+        a = self.guest("postgresql")
         cfg = json.loads(a["files"]["site.json"])
         self.assertEqual(cfg["site"]["api_endpoint"], "https://198.18.25.99:8006/")
         self.assertTrue(a["enabled"])

@@ -86,7 +86,7 @@ class CompositionIdentityTests(unittest.TestCase):
                 "config": {"guest": {"vmid": 880}, "app": {"vmid": 880}}
             }
         with self.assertRaisesRegex(ValueError, "identity"):
-            c.compile_stack(ROOT, overlay, ["dns", "postgresql", "mariadb"], admit=True)
+            c.compile_stack(ROOT, overlay, admit=True)
 
 
 @unittest.skipUnless(ANSIBLE, "Runtime contract fixtures require local Ansible")

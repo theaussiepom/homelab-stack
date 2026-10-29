@@ -23,7 +23,8 @@ the existing global deployment concurrency group and does not cancel running wor
 
 Update the private site's sole literal stack workflow SHA through a reviewed change.
 Accept exact prerequisites only after separate data/configuration preparation and
-writer fencing. Enable dependency-closed guest selections deliberately. A failed
+writer fencing. All declared guests participate by default. An optional `disabled`
+list can exclude named guests while preserving dependencies of active consumers. A failed
 or interrupted run preserves its hold and evidence and requires exact continuation
 review; rerunning jobs is not a recovery procedure. No automatic rollback exists.
 

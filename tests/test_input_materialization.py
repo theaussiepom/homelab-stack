@@ -31,7 +31,7 @@ class InputMaterializationTests(unittest.TestCase):
                 packet = compiler.compile_stack(
                     stack, compiler.read(stack / "site.example.json"), []
                 )[kind]
-                packet["enabled"] = True
+                self.assertTrue(packet["enabled"])
                 cfg = json.loads(packet["files"]["site.json"])
                 value = json.loads(packet["files"]["stack.json"])
                 destination = root / "inputs" / kind / packet["identity"]
@@ -80,7 +80,7 @@ class InputMaterializationTests(unittest.TestCase):
             packet = compiler.compile_stack(
                 stack, compiler.read(stack / "site.example.json"), []
             )["automation"]
-            packet["enabled"] = True
+            self.assertTrue(packet["enabled"])
             cfg = json.loads(packet["files"]["site.json"])
             value = json.loads(packet["files"]["stack.json"])
             cfg["app"]["exclusive_writer_confirmed"] = True

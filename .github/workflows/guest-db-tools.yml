@@ -3,9 +3,10 @@ name: pgAdmin
 'on':
   workflow_call:
     inputs:
-      enabled:
+      disabled:
         type: string
-        required: true
+        required: false
+        default: '[]'
       runner_labels:
         type: string
         required: true
@@ -19,7 +20,7 @@ jobs:
     name: Infrastructure
     uses: ./.github/workflows/phase.yml
     with:
-      enabled: ${{ inputs.enabled }}
+      disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
       guest: db-tools
@@ -30,7 +31,7 @@ jobs:
     needs: infrastructure
     uses: ./.github/workflows/phase.yml
     with:
-      enabled: ${{ inputs.enabled }}
+      disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
       guest: db-tools
@@ -41,7 +42,7 @@ jobs:
     needs: preparation
     uses: ./.github/workflows/phase.yml
     with:
-      enabled: ${{ inputs.enabled }}
+      disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
       guest: db-tools

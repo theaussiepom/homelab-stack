@@ -13,6 +13,23 @@ FRAMEWORK = Path(os.environ.get("HOMELAB_FRAMEWORK", ROOT.parent / "homelab")).r
 
 
 class CompilerCLITests(unittest.TestCase):
+    def test_default_and_empty_disable_nothing_while_named_guests_are_excluded(self):
+        for arguments, guest, expected in (
+            ([], "dns", True),
+            (["--disabled", ""], "dns", True),
+            (["--disabled", "[]"], "dns", True),
+            (["--disabled", '["zigbee2mqtt"]'], "zigbee2mqtt", False),
+        ):
+            with self.subTest(
+                arguments=arguments
+            ), tempfile.TemporaryDirectory() as tmp:
+                output = Path(tmp) / "packet.json"
+                result = self.command(
+                    "--guest", guest, "--output", str(output), *arguments
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIs(json.loads(output.read_text())["enabled"], expected)
+
     def command(self, *args):
         return subprocess.run(
             [
@@ -35,7 +52,7 @@ class CompilerCLITests(unittest.TestCase):
             result = self.command("--guest", "dns", "--output", str(output))
             self.assertEqual(result.returncode, 0, result.stderr)
             packet = json.loads(output.read_text())
-            self.assertFalse(packet["enabled"])
+            self.assertTrue(packet["enabled"])
             before = output.read_bytes()
             self.assertNotEqual(
                 self.command("--guest", "dns", "--output", str(output)).returncode, 0
@@ -50,10 +67,13 @@ class CompilerCLITests(unittest.TestCase):
                     "--output",
                     str(Path(tmp) / "other"),
                     "--admit",
-                    "--enabled",
+                    "--disabled",
                     '["dns"]',
                 ],
             ):
                 result = self.command(*args)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertFalse((Path(tmp) / "other").exists())
+        result = self.command("--check", "--enabled", "[]")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unrecognized arguments", result.stderr)

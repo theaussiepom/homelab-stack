@@ -75,12 +75,14 @@ only Pi-hole when the actual records change.
 Follow [setup and local tests](docs/setup.md), [secrets and prerequisites](docs/secrets.md),
 [public-source policy](docs/public-boundary.md) and [adoption](docs/adoption.md).
 Public pushes and pull requests run source CI only. Deployment is called from the
-private site after deliberate pin adoption and reviewed merge. The example site
-enables no guests. This keeps unready workloads visibly present and disabled.
+private site after deliberate pin adoption and reviewed merge. Every declared
+guest participates by default. The optional `disabled` input defaults to `[]`;
+only named exclusions are skipped. Invalid prerequisites fail validation instead
+of silently disabling a guest. The public example is an offline input fixture.
 
-The composition covers the ten prepared guests. Zigbee2MQTT's separate owner work,
-other fleet applications, optional image updates and recovery projects are outside
-this redesign. Monitoring source components remain in the framework; this stack
+The composition covers eleven prepared guests, including Zigbee2MQTT. Other fleet
+applications, optional image updates and recovery projects are outside this redesign.
+Monitoring source components remain in the framework; this stack
 does not deploy an additional monitoring guest.
 
 Guest definitions combine a framework blueprint with a profile under `guests/`,
@@ -96,7 +98,7 @@ The selected framework's `blueprints/workflows.py` generates `deploy.yml` and al
 `guest-*.yml` workflows from the catalogue and stack dependencies. Edit those
 declarative inputs and regenerate; the checked-in generated files are not edited
 by hand. CI rejects stale generated files. The literal framework selection in
-`phase.yml`, source CI and private-site enablement remain explicit controls.
+`phase.yml`, source CI and private-site exclusions remain explicit controls.
 
 HTTP applications expose named endpoints, while the separate `routes` map owns
 hostnames and optional middleware references. Managed routes compile to Proxmox
