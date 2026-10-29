@@ -58,3 +58,50 @@ class GeneratedWorkflowTests(unittest.TestCase):
             self.assertEqual(generate(root, check=True).returncode, 0)
             self.assertEqual((workflows / "phase.yml").read_bytes(), phase)
             self.assertEqual((workflows / "ci.yml").read_bytes(), ci)
+
+    def test_actual_selection_preflight_validates_before_any_guest_can_be_skipped(self):
+        import json
+        import yaml
+
+        deploy = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
+        selection = deploy["jobs"]["selection"]
+        self.assertIn("private == true", selection["if"])
+        self.assertEqual(selection["runs-on"], "ubuntu-24.04")
+        self.assertNotIn("secrets", selection)
+        step = selection["steps"][0]
+        dependencies = json.loads(step["env"]["DEPENDENCIES"])
+        declared = json.loads((ROOT / "stack.json").read_text())["guests"]
+        self.assertEqual(
+            dependencies, {name: row["depends_on"] for name, row in declared.items()}
+        )
+        for name, row in declared.items():
+            self.assertEqual(
+                deploy["jobs"][name]["needs"], ["selection", *row["depends_on"]]
+            )
+        for disabled, accepted in [
+            ("", True),
+            ("[]", True),
+            ('["zigbee2mqtt"]', True),
+            (json.dumps(list(declared)), True),
+            ('["dns"]', False),
+            ('["identity"]', False),
+            ('["not-a-guest"]', False),
+            ('["zigbee2mqtt", "zigbee2mqtt"]', False),
+            ('[1]', False),
+            ('{}', False),
+            ('null', False),
+            ('invalid-json', False),
+        ]:
+            with self.subTest(disabled=disabled):
+                result = subprocess.run(
+                    ["sh", "-eu", "-c", step["run"]],
+                    env=dict(
+                        os.environ,
+                        DISABLED=disabled,
+                        DEPENDENCIES=step["env"]["DEPENDENCIES"],
+                    ),
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
+                self.assertEqual(result.returncode == 0, accepted, result.stderr)

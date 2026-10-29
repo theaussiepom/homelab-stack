@@ -16,8 +16,21 @@ name: HomeLab stack
 permissions:
   contents: read
 jobs:
+  selection:
+    name: Validate guest selection
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+    - name: Reject invalid exclusions before the guest graph
+      env:
+        DISABLED: ${{ inputs.disabled }}
+        DEPENDENCIES: '{"dns": [], "ingress": ["dns"], "postgresql": ["dns"], "mariadb": ["dns"], "influxdb": ["dns"], "identity": ["postgresql", "ingress"], "db-tools": ["postgresql", "ingress", "identity"], "automation": ["ingress", "identity", "mariadb", "influxdb"], "bitwarden": ["ingress", "mariadb"], "pegaprox": ["dns"], "zigbee2mqtt": ["automation"]}'
+      run: "python3 - <<'PYCODE'\nimport json, os\nspec = json.loads(os.environ['DEPENDENCIES'])\ndisabled = json.loads(os.environ['DISABLED'] or '[]')\nif not (isinstance(disabled, list) and all(isinstance(name, str) for name in disabled)\n        and len(set(disabled)) == len(disabled) and set(disabled) <= set(spec)):\n    raise SystemExit('Disable only unique known guest names')\nactive = set(spec) - set(disabled)\nif any(not set(spec[name]) <= active for name in active):\n    raise SystemExit('Cannot disable a prerequisite while its consumers remain active')\nPYCODE\n"
   dns:
     name: DNS
+    needs:
+    - selection
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'dns')
     uses: ./.github/workflows/guest-dns.yml
     with:
@@ -28,6 +41,7 @@ jobs:
   ingress:
     name: Traefik
     needs:
+    - selection
     - dns
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'ingress')
     uses: ./.github/workflows/guest-ingress.yml
@@ -39,6 +53,7 @@ jobs:
   postgresql:
     name: PostgreSQL
     needs:
+    - selection
     - dns
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'postgresql')
     uses: ./.github/workflows/guest-postgresql.yml
@@ -50,6 +65,7 @@ jobs:
   mariadb:
     name: MariaDB
     needs:
+    - selection
     - dns
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'mariadb')
     uses: ./.github/workflows/guest-mariadb.yml
@@ -61,6 +77,7 @@ jobs:
   influxdb:
     name: InfluxDB
     needs:
+    - selection
     - dns
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'influxdb')
     uses: ./.github/workflows/guest-influxdb.yml
@@ -72,6 +89,7 @@ jobs:
   identity:
     name: Authentik
     needs:
+    - selection
     - postgresql
     - ingress
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'identity')
@@ -84,6 +102,7 @@ jobs:
   db-tools:
     name: pgAdmin
     needs:
+    - selection
     - postgresql
     - ingress
     - identity
@@ -97,6 +116,7 @@ jobs:
   automation:
     name: Automation
     needs:
+    - selection
     - ingress
     - identity
     - mariadb
@@ -111,6 +131,7 @@ jobs:
   bitwarden:
     name: Bitwarden
     needs:
+    - selection
     - ingress
     - mariadb
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'bitwarden')
@@ -123,6 +144,7 @@ jobs:
   pegaprox:
     name: PegaProx
     needs:
+    - selection
     - dns
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'pegaprox')
     uses: ./.github/workflows/guest-pegaprox.yml
@@ -134,6 +156,7 @@ jobs:
   zigbee2mqtt:
     name: Zigbee2MQTT
     needs:
+    - selection
     - automation
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'zigbee2mqtt')
     uses: ./.github/workflows/guest-zigbee2mqtt.yml

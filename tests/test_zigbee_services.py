@@ -56,7 +56,8 @@ class ZigbeeServiceTests(unittest.TestCase):
         )
         graph = workflows.models(ROOT)
         self.assertEqual(
-            graph["deploy.yml"]["jobs"]["zigbee2mqtt"]["needs"], ["automation"]
+            graph["deploy.yml"]["jobs"]["zigbee2mqtt"]["needs"],
+            ["selection", "automation"],
         )
         self.assertEqual(
             list(graph["guest-zigbee2mqtt.yml"]["jobs"]),

@@ -81,11 +81,11 @@ class StackTests(unittest.TestCase):
     def test_actual_workflows_match_blueprint_phases_and_dependency_edges(self):
         manifest = c.manifest(ROOT)
         deploy = workflow(ROOT / ".github/workflows/deploy.yml")
-        self.assertEqual(set(deploy["jobs"]), set(manifest["guests"]))
+        self.assertEqual(set(deploy["jobs"]), {"selection", *manifest["guests"]})
         for name, row in manifest["guests"].items():
             job = deploy["jobs"][name]
             needs = job.get("needs", [])
-            self.assertEqual(set(needs), set(row["depends_on"]))
+            self.assertEqual(needs, ["selection", *row["depends_on"]])
             self.assertIn("private == true", job["if"])
             guest = workflow(ROOT / ".github/workflows" / ("guest-" + name + ".yml"))
             phases = [
