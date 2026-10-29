@@ -46,6 +46,12 @@ changes, update the corresponding narrow allowances together. External client
 policies stay explicit. Passing compilation does not prove router reachability,
 NAT behavior or enforcement on the target host.
 
+Guests on the same declared node, bridge and VLAN need distinct IPv4 and MAC
+identities. Credential binding also verifies that the retained private SSH key
+matches an approved guest public key before infrastructure can run. Changes to
+foundation runtime files recreate their application bundle; an unchanged copy
+does not force recreation.
+
 For an inspectable non-secret preview, add `--guest dns --output /tmp/dns-preview.json`
 instead of `--check`. Preview packets are disabled unless explicitly selected.
 `--admit` additionally requires selected guest dependency closure, prerequisite

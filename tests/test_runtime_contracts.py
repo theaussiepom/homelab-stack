@@ -91,6 +91,67 @@ class CompositionIdentityTests(unittest.TestCase):
 
 @unittest.skipUnless(ANSIBLE, "Runtime contract fixtures require local Ansible")
 class RuntimeContractTests(unittest.TestCase):
+    def test_changed_runtime_files_recreate_the_application_with_current_bind_mounts(
+        self,
+    ):
+        tasks = yaml.safe_load((TASKS / "compose.yml").read_text())
+        source = next(t for t in tasks if t["name"] == "Start exactly this guest stack")
+        install = next(
+            t
+            for t in tasks
+            if t["name"]
+            == "Install only the selected service-readable foundation files"
+        )
+        for kind in ("identity", "ingress", "db-tools"):
+            for changed in (True, False):
+                with (
+                    self.subTest(guest=kind, runtime_changed=changed),
+                    tempfile.TemporaryDirectory() as directory,
+                ):
+                    root = Path(directory)
+                    (root / "rendered").mkdir()
+                    (root / "runtime").mkdir()
+                    (root / "rendered/config").write_text("current")
+                    prior = root / "runtime/config"
+                    prior.write_text("before" if changed else "current")
+                    prior.chmod(0o600)
+                    copy_task = copy.deepcopy(install)
+                    copy_task["ansible.builtin.copy"]["dest"] = str(
+                        root / "runtime/{{ item.path }}"
+                    )
+                    task = {
+                        "ansible.builtin.debug": {
+                            "msg": source["ansible.builtin.command"]["argv"]
+                        }
+                    }
+                    result = self.run_tasks(
+                        root,
+                        {
+                            "app": {
+                                "kind": kind,
+                                "start_services": True,
+                                "render_dir": str(root / "rendered"),
+                            },
+                            "stack": {"foundation": {}},
+                            "foundation_runtime_files": [
+                                {
+                                    "path": "config",
+                                    "uid": os.getuid(),
+                                    "gid": os.getgid(),
+                                    "mode": "0600",
+                                }
+                            ],
+                        },
+                        [copy_task, task],
+                    )
+                    self.assertEqual(
+                        result.returncode, 0, result.stdout + result.stderr
+                    )
+                    self.assertEqual(
+                        "--force-recreate" in result.stdout, changed, result.stdout
+                    )
+                    self.assertEqual(prior.read_text(), "current")
+
     def run_tasks(self, root, variables, tasks):
         play = root / "local-contract.json"
         play.write_text(

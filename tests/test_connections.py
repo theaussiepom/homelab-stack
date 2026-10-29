@@ -17,6 +17,22 @@ spec.loader.exec_module(c)
 
 
 class ConnectionTests(unittest.TestCase):
+    def test_shared_link_address_and_mac_collisions_refuse_before_admission(self):
+        values = c.manifest(ROOT)["values"]
+        for collision in ("address", "mac"):
+            overlay = c.read(ROOT / "site.example.json")
+            if collision == "address":
+                overlay["values"]["addresses.mariadb_management"] = values[
+                    "addresses.postgresql_management"
+                ]
+            else:
+                overlay["values"]["mac.mariadb.0"] = values["mac.postgresql.0"]
+            with (
+                self.subTest(collision=collision),
+                self.assertRaisesRegex(ValueError, "network identity"),
+            ):
+                self.configurations(overlay)
+
     def configurations(self, overlay=None):
         packets = c.compile_stack(
             ROOT, overlay or c.read(ROOT / "site.example.json"), []
