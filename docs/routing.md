@@ -66,6 +66,17 @@ reviewed before accepting `external-tls-trust-reviewed`; a downloaded certificat
 alone is not independent trust. Never place private keys or passwords in routes,
 Notes, middleware definitions or Git.
 
+PegaProx serves HTTPS on port 5000. Its managed endpoint uses that protocol, and
+the route selects the central `pegaprox` transport. The transport verifies
+`prox.${domains.secondary}` using the public trust bundle at
+`/usr/local/share/ca-certificates/homelab-pegaprox.crt` on the controller. Ingress
+stages this as `route-pegaprox.pem`, mounts it read-only, and references it from
+`pegaprox@file` in the guest's Notes. Include this backend in the existing
+state-and-trust review: independently verify the certificate/issuer and matching
+DNS SAN before adoption. A default self-signed certificate without a matching
+SAN needs separate certificate preparation; ordinary CD does not issue or replace
+the application's retained certificate. Missing trust input prevents staging.
+
 Compilation rejects global hostname/alias collisions, unknown endpoints or policy
 references, public or foreign-interface backends, conflicting DNS records and
 missing firewall permissions. It creates local Pi-hole records for all route names

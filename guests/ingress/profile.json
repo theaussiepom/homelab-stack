@@ -377,6 +377,10 @@
         "proxmox": {
           "ca_file": "/usr/local/share/ca-certificates/homelab-pve.crt"
         },
+        "pegaprox": {
+          "server_name": "prox.${domains.secondary}",
+          "ca_file": "/usr/local/share/ca-certificates/homelab-pegaprox.crt"
+        },
         "udm": {
           "server_name": "${domains.udm_backend}",
           "ca_file": "/usr/local/share/ca-certificates/homelab-udm.crt"

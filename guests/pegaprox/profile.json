@@ -130,7 +130,7 @@
       },
       "endpoints": {
         "pegaprox": {
-          "web": "http://${addresses.pegaprox_management}:5000"
+          "web": "https://${addresses.pegaprox_management}:5000"
         }
       }
     }

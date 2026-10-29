@@ -273,7 +273,8 @@
       "host": "prox.${domains.secondary}",
       "target": {
         "endpoint": "pegaprox.pegaprox.web"
-      }
+      },
+      "transport": "pegaprox"
     },
     "zigbee1": {
       "host": "zigbee1.${domains.primary}",
