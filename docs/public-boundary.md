@@ -1,7 +1,6 @@
 # Public source policy
 
-This repository is intended for public use but has not been published. It contains
-an executable, sanitized version of Ben's selected guest composition. Public
+This public repository contains an executable, sanitized version of Ben's selected guest composition. Public
 source uses benchmark networks (198.18.0.0/15), example.invalid names, synthetic
 MACs and a placeholder SSH public key. Central values describe topology once.
 These example identities are not approved deployment identities.
