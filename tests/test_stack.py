@@ -32,6 +32,31 @@ class StackTests(unittest.TestCase):
     def guest(self, name, enabled, **options):
         return c.compile_stack(ROOT, self.overlay, enabled, **options)[name]
 
+    def test_all_docker_guests_inherit_always_restart(self):
+        guests = set()
+        for name, packet in c.compile_stack(ROOT, self.overlay, []).items():
+            if "stack.json" not in packet["files"]:
+                continue
+            guests.add(name)
+            stack = json.loads(packet["files"]["stack.json"])
+            for service, cfg in render.compose(stack)["services"].items():
+                with self.subTest(guest=name, service=service):
+                    self.assertEqual(cfg["restart"], "always")
+                    if "services" in stack:
+                        self.assertNotIn("restart", stack["services"][service])
+        self.assertEqual(
+            guests,
+            {
+                "automation",
+                "dns",
+                "identity",
+                "ingress",
+                "db-tools",
+                "bitwarden",
+                "pegaprox",
+            },
+        )
+
     def test_all_guest_packets_compile_deterministically_without_restore(self):
         for name in c.CATALOGUE:
             a = self.guest(name, [])

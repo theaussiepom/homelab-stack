@@ -81,3 +81,7 @@ Use a fresh output directory. The report measures the blueprint/application Pyth
 code reached by these tests and retains unexecuted files in those components. CI
 publishes the summary and JSON/XML/HTML artifacts without a coverage threshold.
 The framework README documents a combined run across all four suites.
+
+Docker guest profiles inherit `restart: always` from the framework container policy.
+Keep `restart` omitted to use that convention; the current stack has no overrides.
+Native database guests use systemd rather than Docker.

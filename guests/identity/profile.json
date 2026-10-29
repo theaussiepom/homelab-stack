@@ -215,7 +215,6 @@
         "extra_mounts": [],
         "memory_mib": 128,
         "pids_limit": 256,
-        "restart": "unless-stopped",
         "image_ref": "redis"
       },
       "server": {
@@ -231,7 +230,6 @@
         "extra_mounts": [],
         "memory_mib": 768,
         "pids_limit": 256,
-        "restart": "unless-stopped",
         "user": "1000",
         "image_ref": "authentik"
       },
@@ -248,7 +246,6 @@
         "extra_mounts": [],
         "memory_mib": 768,
         "pids_limit": 256,
-        "restart": "unless-stopped",
         "user": "1000",
         "image_ref": "authentik"
       }

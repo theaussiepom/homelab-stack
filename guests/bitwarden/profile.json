@@ -199,7 +199,6 @@
         "memory_mib": 1536,
         "cpus": 1,
         "pids_limit": 256,
-        "restart": "no",
         "environment": {},
         "image_ref": "bitwarden"
       }

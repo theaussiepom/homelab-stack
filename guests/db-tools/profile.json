@@ -290,7 +290,6 @@
         "extra_mounts": [],
         "memory_mib": 512,
         "pids_limit": 256,
-        "restart": "unless-stopped",
         "user": "5050",
         "image_ref": "pgadmin"
       }
