@@ -342,7 +342,7 @@
     "node_red_oidc": {
       "identity_url": "https://${domains.identity}",
       "node_red_url": "https://${domains.node_red_alias}",
-      "client_id": "XkR2mzGf4L75NzmDpxOvPd6ggdmFc5rkdl3J44ak",
+      "client_id": "${identity.node_red_client}",
       "provider_slug": "nodered"
     },
     "services": {

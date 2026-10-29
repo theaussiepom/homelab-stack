@@ -77,7 +77,7 @@
           "port": "5000",
           "source": "${networks.home}/24",
           "destination": "${addresses.pegaprox_management}/32",
-          "comment": "Ben approved VLAN100 for initial native login; VLAN10 later"
+          "comment": "Direct client access to PegaProx"
         },
         {
           "direction": "in",

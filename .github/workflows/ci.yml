@@ -55,14 +55,7 @@ jobs:
           path: ${{ runner.temp }}/stack-coverage
           retention-days: 14
       - name: Check source safety and full history
-        run: |
-          python3 - <<'PYCODE'
-          import json,os,pathlib,sys
-          sys.path.insert(0,'framework-source/.github/scripts')
-          from source_safety import run
-          scanner=pathlib.Path(os.environ['RUNNER_TEMP'])/'homelab-source-tools/gitleaks'
-          print(json.dumps(run(pathlib.Path('.'),'HEAD','',scanner)))
-          PYCODE
+        run: python3 .github/scripts/check_history.py --framework framework-source --scanner "$RUNNER_TEMP/homelab-source-tools/gitleaks"
   dependency-review:
     name: Dependency review
     runs-on: ubuntu-24.04

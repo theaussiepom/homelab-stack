@@ -9,6 +9,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 FRAMEWORK = Path(os.environ.get("HOMELAB_FRAMEWORK", ROOT.parent / "homelab"))
 sys.path.insert(0, str(FRAMEWORK / "blueprints"))
+sys.path.insert(0, str(FRAMEWORK / "proxmox/applications"))
 import compile as compiler
 import workflows
 import render

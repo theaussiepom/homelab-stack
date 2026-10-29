@@ -10,7 +10,10 @@ selected framework/stack on the admitted runner. Test graph display, nested
 workflow access and secret inheritance there; local YAML checks cannot prove them.
 
 Before private adoption, compare the finished live desired state with these profiles.
-Carry current actual settings privately; do not revive old shared PostgreSQL
+Carry current actual settings privately, including the existing Node-RED OIDC
+client ID in `values["identity.node_red_client"]` (or its explicit stack override).
+The public default is a synthetic fixture, not a replacement provider identity.
+Do not revive old shared PostgreSQL
 backend assignments. Compare VMIDs, NIC MACs, addresses, disks, storage/template
 identities, UID/GID/modes, CA/SSH trust, backend state and all holds. DNS needs an
 explicit existing-state adoption because its complete commissioned infrastructure

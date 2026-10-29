@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import sys
 import tomllib
 import unittest
@@ -198,12 +199,30 @@ class StackTests(unittest.TestCase):
                 self.guest("automation", [])
 
     def test_public_tree_contains_no_actual_networks_or_private_assets(self):
-        for path in ROOT.rglob("*"):
-            if not path.is_file() or ".git" in path.parts:
-                continue
-            if path.suffix in [".json", ".yml"]:
+        # Inspect this repository's files, including untracked edits, without
+        # descending into the framework checkout that hosted CI places under this checkout.
+        names = subprocess.check_output(
+            ["git", "-C", str(ROOT), "ls-files", "--cached", "--others",
+             "--exclude-standard", "-z"], text=True,
+        ).split("\0")
+        for name in set(names) - {""}:
+            path = ROOT / name
+            if path.is_file() and path.suffix in {".json", ".yml", ".yaml", ".md", ".py", ".sh", ""}:
                 self.assertIsNone(
-                    re.search(r"\b(?:10\.77|192\.168)\.\d+\.\d+", path.read_text()),
-                    str(path),
+                    re.search(
+                        r"\b(?:10\.\d{1,3}|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}\b",
+                        path.read_text(),
+                    ), str(path),
                 )
         self.assertFalse(list(ROOT.rglob("*.tar")))
+
+    def test_node_red_oidc_identity_is_a_private_central_value(self):
+        self.overlay["values"]["identity.node_red_client"] = "selected-client-fixture"
+        packet = self.guest("automation", [])
+        stack = json.loads(packet["files"]["stack.json"])
+        self.assertEqual(stack["node_red_oidc"]["client_id"], "selected-client-fixture")
+        default = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])
+        self.assertEqual(
+            json.loads(default["automation"]["files"]["stack.json"])["node_red_oidc"]["client_id"],
+            "example-node-red-client",
+        )

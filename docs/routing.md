@@ -86,9 +86,13 @@ and real client resolution remain separate rollout checks.
 
 Ingress egress and managed app ingress rules remain explicit. External host
 firewalls are outside this stack's ownership. InfluxDB's isolated bridge therefore
-has an explicit ingress NIC; cross-bridge reachability is not assumed. Management
-UI routes currently select `management-clients`, limited to the declared policy15
-and management25 networks. Review that policy with the private site before rollout.
+has an explicit ingress NIC; cross-bridge reachability is not assumed. The `host`,
+`nas` and `proxmox` routes select `management-clients`, limited to policy15 and
+management25. The `pegaprox` route selects only `security-headers`; ingress also
+admits `http_backend`, `frontend` and `policy_50` clients, which can reach PegaProx
+through that route. PegaProx separately permits direct access from `home`. Any
+private-site restriction must be explicit, and an operator must review allowlist
+changes before rollout.
 
 This is stack schema `homelab-stack-v2` and site schema `homelab-site-v3`. Old
 per-app discovery routes and the application-specific browser-route contract are
