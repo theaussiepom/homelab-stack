@@ -5,6 +5,13 @@ execution additionally needs the already admitted Linux runner with OpenTofu,
 Ansible, trusted PVE CA, SSH known-hosts, shared persistent state and NAS recovery
 mount. Do not run the phase runner on your laptop to test source changes.
 
+DNS guest 6101 keeps DHCP allocation: `ipv4` is `dhcp`, `gateway` is null, and
+`ipv4_endpoint` records the independently qualified assigned address and prefix.
+The public `${addresses.dns}/24` endpoint is a synthetic fixture. The private site
+must supply its qualified endpoint; this metadata does not request a static lease
+or change DHCP. It keeps SSH, backend bindings and identity checks concrete.
+Static NICs keep their existing `ipv4` CIDR without `ipv4_endpoint`.
+
 1. Clone the stack and selected framework into sibling folders. Read the one
    framework SHA from `.github/workflows/phase.yml`, then check out that SHA in
    `../homelab`. A fork can change the workflow owner and revision deliberately.

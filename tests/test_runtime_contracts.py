@@ -182,7 +182,7 @@ class RuntimeContractTests(unittest.TestCase):
     def packet(self, name):
         return c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])[name]
 
-    def phase_variables(self, root, name, phase):
+    def phase_variables(self, root, name, phase, *, dhcp_endpoint=None):
         packet = self.packet(name)
         cfg = json.loads(packet["files"]["site.json"])
         runtime = json.loads(packet["files"]["stack.json"])
@@ -194,16 +194,46 @@ class RuntimeContractTests(unittest.TestCase):
         def execution(command, environment, log):
             private_io.write_new(log, b"fixture : ok=1 changed=0\n")
 
+        def pve_read(selected, path):
+            self.assertIs(selected, cfg)
+            prefix = f"/nodes/{cfg['site']['node']}/lxc/{cfg['guest']['vmid']}"
+            if path == prefix + "/config":
+                observed = {"hostname": cfg["guest"]["hostname"], "protection": 1, "unprivileged": 1}
+                for index, nic in enumerate(cfg["guest"]["interfaces"]):
+                    fields = f"name=eth{index},bridge={nic['bridge']},hwaddr={nic['mac']},ip={nic['ipv4']}"
+                    if nic["vlan"] is not None:
+                        fields += f",tag={nic['vlan']}"
+                    observed[f"net{index}"] = fields
+                return observed
+            self.assertEqual(path, prefix + "/interfaces")
+            return [
+                {"hwaddr": nic["mac"], "inet": (
+                    dhcp_endpoint or nic["ipv4_endpoint"]
+                    if nic["ipv4"] == "dhcp" else nic["ipv4"]
+                )}
+                for nic in cfg["guest"]["interfaces"]
+            ]
+
         with (
             patch.object(deployment_inputs, "binding", return_value={"reviewed": True}),
             patch.object(ansible_guest.proxmox_guest, "guest_trust"),
+            patch.object(ansible_guest.proxmox_guest, "api_get", side_effect=pve_read) as provider_read,
             patch.object(ansible_guest, "quiet", side_effect=execution),
         ):
             ansible_guest.run_phase(
                 cfg, root / "site.json", root, operation, {"reviewed": True}, phase
             )
+        self.assertEqual(provider_read.call_count, 2 if name == "dns" else 0)
         variables = json.loads((operation / phase / "variables.json").read_text())
         return dict(variables, stack=runtime)
+
+    def test_changed_dhcp_prefix_refuses_before_the_shared_runtime_task(self):
+        """The compiled DNS guest exercises real admission against synthetic PVE reads."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaisesRegex(ValueError, "endpoint differs"):
+                self.phase_variables(root, "dns", "unbound", dhcp_endpoint="198.18.40.2/25")
+            self.assertEqual(list((root / "attempt").iterdir()), [])
 
     def test_compiled_runtime_shapes_reach_the_shared_image_task(self):
         source = next(

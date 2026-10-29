@@ -22,8 +22,9 @@
           "bridge": "vmbr1",
           "vlan": 40,
           "mac": "${mac.dns.0}",
-          "ipv4": "${addresses.dns}/24",
-          "gateway": "${gateways.frontend}",
+          "ipv4": "dhcp",
+          "ipv4_endpoint": "${addresses.dns}/24",
+          "gateway": null,
           "ipv6": "manual"
         }
       ],
