@@ -39,7 +39,14 @@ jobs:
           HOMELAB_FRAMEWORK: framework-source
         run: |
           python3 framework-source/blueprints/compile.py --stack . --site site.example.json --check
-          python3 -m unittest discover -s tests
+          python3 framework-source/tools/measure_coverage.py --suite stack --stack . --output "$RUNNER_TEMP/stack-coverage"
+      - name: Save stack coverage reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: coverage-stack
+          path: ${{ runner.temp }}/stack-coverage
+          retention-days: 14
       - name: Install the integrity-pinned source scanner
         run: python3 framework-source/.github/scripts/install_gitleaks.py "$RUNNER_TEMP/homelab-source-tools"
       - name: Check source safety and changed history

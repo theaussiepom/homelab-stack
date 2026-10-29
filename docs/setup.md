@@ -70,3 +70,14 @@ framework. Configure `.githooks` as `core.hooksPath`, supply gitleaks 8.30.1 thr
 `hooks.gitleaksPath` or `GITLEAKS_BIN`, and use your existing signing identity.
 The exact reviewed vendor-key fingerprints in `.githooks/reviewed-findings.json`
 are public signing-key hashes, not secret exceptions. No scanner bypass is needed.
+
+For report-only Python coverage of the stack suite against its selected framework:
+
+```sh
+python3 ../homelab/tools/measure_coverage.py --suite stack --stack . --output .work/stack-coverage
+```
+
+Use a fresh output directory. The report measures the blueprint/application Python
+code reached by these tests and retains unexecuted files in those components. CI
+publishes the summary and JSON/XML/HTML artifacts without a coverage threshold.
+The framework README documents a combined run across all four suites.
