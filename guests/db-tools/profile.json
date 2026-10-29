@@ -272,7 +272,6 @@
       "oauth_client_id": "${identity.pgadmin_client}",
       "oauth_name": "authentik",
       "provider_slug": "pgadmin4",
-      "public_url": "https://${domains.pgadmin}",
       "secret_files": {
         "oauth_client_secret": "${inputs}/oauth-client-secret"
       },
