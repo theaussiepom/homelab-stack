@@ -35,14 +35,25 @@ class ZigbeeServiceTests(unittest.TestCase):
             & cfg["app"].keys()
         )
         document = render.compose(self.stack(packet))["services"]["zigbee2mqtt"]
+        device = cfg["guest"]["serial_device"]["path"]
         self.assertEqual(document["restart"], "always")
         self.assertEqual(
             document["devices"],
-            [cfg["guest"]["serial_device"]["path"] + ":/dev/ttyACM0:rw"],
+            [f"{device}:{device}:rw"],
         )
         self.assertEqual(document["ports"], ["198.18.30.22:8099:8099/tcp"])
         self.assertNotIn("privileged", document)
         self.assertFalse(document["volumes"][0]["bind"]["create_host_path"])
+        self.assertEqual(
+            document["volumes"][1],
+            {
+                "type": "bind",
+                "source": device,
+                "target": "/dev/ttyACM0",
+                "read_only": False,
+                "bind": {"create_host_path": False},
+            },
+        )
         graph = workflows.models(ROOT)
         self.assertEqual(
             graph["deploy.yml"]["jobs"]["zigbee2mqtt"]["needs"], ["automation"]
