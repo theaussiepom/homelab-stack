@@ -108,6 +108,14 @@
           "source": "${addresses.ingress_backend}/32",
           "comment": "Existing ingress backend",
           "destination": "${addresses.zigbee_backend}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "8099",
+          "source": "${addresses.ingress_backend}/32",
+          "destination": "${addresses.zigbee_backend}/32",
+          "comment": "Declared HTTP route backend"
         }
       ],
       "serial_device": {
@@ -163,6 +171,11 @@
             "expect": "\"healthy\": true"
           }
         ]
+      },
+      "endpoints": {
+        "zigbee2mqtt": {
+          "web": "http://${addresses.zigbee_backend}:8099"
+        }
       }
     },
     "paths": {

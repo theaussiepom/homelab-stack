@@ -117,13 +117,6 @@
     },
     "app": {
       "address": "${addresses.identity_management}",
-      "discovery_routes": [
-        {
-          "host": "${domains.identity}",
-          "name": "authentik",
-          "url": "http://${addresses.identity_backend}:9000"
-        }
-      ],
       "exclusive_writer_confirmed": false,
       "health_checks": [
         {
@@ -182,6 +175,11 @@
             "name": "Authentik application ready on its backend"
           }
         ]
+      },
+      "endpoints": {
+        "authentik": {
+          "web": "http://${addresses.identity_backend}:9000"
+        }
       }
     }
   },

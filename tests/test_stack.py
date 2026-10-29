@@ -113,9 +113,12 @@ class StackTests(unittest.TestCase):
 
     def test_private_central_override_and_independent_guest_selection(self):
         self.overlay["values"]["addresses.pve"] = "192.0.2.10"
+        with self.assertRaisesRegex(ValueError, "private HTTP"):
+            self.guest("postgresql", ["dns", "postgresql"])
+        self.overlay["values"]["addresses.pve"] = "198.18.25.99"
         a = self.guest("postgresql", ["dns", "postgresql"])
         cfg = json.loads(a["files"]["site.json"])
-        self.assertEqual(cfg["site"]["api_endpoint"], "https://192.0.2.10:8006/")
+        self.assertEqual(cfg["site"]["api_endpoint"], "https://198.18.25.99:8006/")
         self.assertTrue(a["enabled"])
         with self.assertRaises(ValueError):
             self.guest("automation", ["automation"])

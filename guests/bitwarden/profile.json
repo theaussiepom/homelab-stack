@@ -138,13 +138,6 @@
         "environment_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
         "runtime_env_file": "/var/lib/homelab-inputs/bitwarden/runtime.json"
       },
-      "discovery_routes": [
-        {
-          "name": "bitwarden",
-          "host": "${domains.bitwarden}",
-          "url": "http://${addresses.bitwarden_backend}:8080"
-        }
-      ],
       "health_checks": [
         {
           "name": "Bitwarden alive/config/identity",
@@ -176,6 +169,11 @@
             "expect": "\"status\": \"passed\""
           }
         ]
+      },
+      "endpoints": {
+        "bitwarden": {
+          "web": "http://${addresses.bitwarden_backend}:8080"
+        }
       }
     }
   },

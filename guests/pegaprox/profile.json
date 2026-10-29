@@ -78,6 +78,14 @@
           "source": "${networks.home}/24",
           "destination": "${addresses.pegaprox_management}/32",
           "comment": "Ben approved VLAN100 for initial native login; VLAN10 later"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "5000",
+          "source": "${addresses.ingress_management}/32",
+          "destination": "${addresses.pegaprox_management}/32",
+          "comment": "Declared HTTP route backend"
         }
       ]
     },
@@ -119,6 +127,11 @@
             "expect": "PegaProx verification passed"
           }
         ]
+      },
+      "endpoints": {
+        "pegaprox": {
+          "web": "http://${addresses.pegaprox_management}:5000"
+        }
       }
     }
   },

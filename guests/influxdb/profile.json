@@ -198,6 +198,11 @@
             "name": "Backend TCP listener"
           }
         ]
+      },
+      "endpoints": {
+        "influxdb": {
+          "web": "http://${addresses.influxdb_backend}:8086"
+        }
       }
     }
   },

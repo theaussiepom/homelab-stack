@@ -1,5 +1,5 @@
 {
-  "schema": "homelab-stack-v1",
+  "schema": "homelab-stack-v2",
   "values": {
     "networks.policy_15": "198.18.15.0",
     "networks.management": "198.18.25.0",
@@ -81,7 +81,15 @@
     "addresses.zigbee_backend": "198.18.30.22",
     "mac.zigbee.0": "02:00:0a:00:00:01",
     "mac.zigbee.1": "02:00:0a:01:00:01",
-    "devices.zigbee_coordinator": "/dev/serial/by-id/usb-example-coordinator"
+    "devices.zigbee_coordinator": "/dev/serial/by-id/usb-example-coordinator",
+    "addresses.udm": "198.19.100.1",
+    "addresses.nas": "198.18.25.2",
+    "addresses.pironman_apps": "198.18.40.4",
+    "addresses.zigbeepi_apps": "198.18.40.6",
+    "addresses.pironman_matter": "198.18.50.4",
+    "domains.udm_backend": "udm.example.invalid",
+    "domains.nas_backend": "nas.example.invalid",
+    "mac.ingress.3": "02:00:05:03:00:01"
   },
   "guests": {
     "dns": {
@@ -100,7 +108,9 @@
       "prerequisites": [
         "state-and-trust-reviewed",
         "data-prepared",
-        "configuration-prepared"
+        "configuration-prepared",
+        "external-http-backends-prepared",
+        "external-tls-trust-reviewed"
       ]
     },
     "postgresql": {
@@ -207,6 +217,128 @@
         "configuration-prepared",
         "old-writers-retired",
         "restricted-host-device-capability-registered"
+      ]
+    }
+  },
+  "routes": {
+    "homeassistant": {
+      "host": "hass.${domains.secondary}",
+      "aliases": [
+        "${domains.homeassistant}"
+      ],
+      "target": {
+        "endpoint": "automation.homeassistant.web"
+      }
+    },
+    "node-red": {
+      "host": "${domains.node_red_alias}",
+      "aliases": [
+        "${domains.node_red_primary}"
+      ],
+      "target": {
+        "endpoint": "automation.node_red.web"
+      }
+    },
+    "bitwarden": {
+      "host": "${domains.bitwarden}",
+      "target": {
+        "endpoint": "bitwarden.bitwarden.web"
+      }
+    },
+    "pgadmin": {
+      "host": "${domains.pgadmin}",
+      "target": {
+        "endpoint": "db-tools.pgadmin.web"
+      }
+    },
+    "pihole1": {
+      "host": "pihole1.${domains.primary}",
+      "target": {
+        "endpoint": "dns.pihole.web"
+      }
+    },
+    "authentik": {
+      "host": "${domains.identity}",
+      "target": {
+        "endpoint": "identity.authentik.web"
+      }
+    },
+    "influxdb": {
+      "host": "influx.${domains.secondary}",
+      "target": {
+        "endpoint": "influxdb.influxdb.web"
+      }
+    },
+    "pegaprox": {
+      "host": "prox.${domains.secondary}",
+      "target": {
+        "endpoint": "pegaprox.pegaprox.web"
+      }
+    },
+    "zigbee1": {
+      "host": "zigbee1.${domains.primary}",
+      "target": {
+        "endpoint": "zigbee2mqtt.zigbee2mqtt.web"
+      }
+    },
+    "host": {
+      "host": "host.${domains.secondary}",
+      "target": {
+        "url": "https://${addresses.udm}:443"
+      },
+      "transport": "udm",
+      "middlewares": [
+        "security-headers",
+        "management-clients"
+      ]
+    },
+    "nas": {
+      "host": "nas.${domains.secondary}",
+      "target": {
+        "url": "https://${addresses.nas}:31764"
+      },
+      "transport": "nas",
+      "middlewares": [
+        "security-headers",
+        "management-clients"
+      ],
+      "aliases": [
+        "nas.${domains.primary}"
+      ]
+    },
+    "pihole2": {
+      "host": "pihole2.${domains.primary}",
+      "target": {
+        "url": "http://${addresses.pironman_apps}:80"
+      }
+    },
+    "zigbee2": {
+      "host": "zigbee2.${domains.primary}",
+      "target": {
+        "url": "http://${addresses.zigbeepi_apps}:8099"
+      }
+    },
+    "thread": {
+      "host": "thread.${domains.primary}",
+      "target": {
+        "url": "http://${addresses.pironman_matter}:8080"
+      }
+    },
+    "matter": {
+      "host": "matter.${domains.primary}",
+      "target": {
+        "url": "http://${addresses.pironman_matter}:5580"
+      }
+    },
+    "proxmox": {
+      "host": "proxmox.${domains.secondary}",
+      "target": {
+        "url": "https://${addresses.pve}:8006"
+      },
+      "transport": "proxmox",
+      "middlewares": [
+        "security-headers",
+        "management-clients"
       ]
     }
   }

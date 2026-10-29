@@ -97,3 +97,9 @@ The selected framework's `blueprints/workflows.py` generates `deploy.yml` and al
 declarative inputs and regenerate; the checked-in generated files are not edited
 by hand. CI rejects stale generated files. The literal framework selection in
 `phase.yml`, source CI and private-site enablement remain explicit controls.
+
+HTTP applications expose named endpoints, while the separate `routes` map owns
+hostnames and optional middleware references. Managed routes compile to Proxmox
+Notes; external NAS/host/Pi routes compile to the Traefik file provider. DNS records
+point their hostnames to ingress. Read [the routing contract](docs/routing.md) for
+examples, TLS trust, middleware definitions and explicit firewall requirements.

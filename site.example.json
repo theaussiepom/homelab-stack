@@ -1,8 +1,9 @@
 {
-  "schema": "homelab-site-v2",
+  "schema": "homelab-site-v3",
   "values": {},
   "common": {},
   "guests": {},
   "images": {},
-  "accepted": {}
+  "accepted": {},
+  "routes": {}
 }

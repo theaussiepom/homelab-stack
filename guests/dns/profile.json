@@ -107,6 +107,14 @@
           "source": "${networks.frontend}/24",
           "destination": "${addresses.dns}/32",
           "comment": "Selected stack DNS clients"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "80",
+          "source": "${addresses.ingress_frontend}/32",
+          "destination": "${addresses.dns}/32",
+          "comment": "Declared HTTP route backend"
         }
       ]
     },
@@ -192,7 +200,12 @@
           ],
           "expect": ""
         }
-      ]
+      ],
+      "endpoints": {
+        "pihole": {
+          "web": "http://${addresses.dns}:80"
+        }
+      }
     }
   },
   "files": {},

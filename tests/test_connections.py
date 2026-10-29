@@ -52,7 +52,7 @@ class ConnectionTests(unittest.TestCase):
         ):
             route = next(
                 route
-                for route in cfg[name]["app"]["discovery_routes"]
+                for route in cfg[name]["routes"].values()
                 if route["url"].endswith(":" + str(port))
             )
             destination = route["url"].removeprefix("http://").split(":")[0] + "/32"
@@ -132,12 +132,16 @@ class ConnectionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "udp/53"):
             self.configurations(overlay)
         overlay = c.read(ROOT / "site.example.json")
-        routes = c.read(ROOT / "guests/automation/profile.json")["config"]["app"][
-            "discovery_routes"
-        ]
-        routes[0]["url"] = routes[0]["url"].replace(":8123", ":8124")
         overlay["guests"]["automation"] = {
-            "config": {"app": {"discovery_routes": routes}}
+            "config": {
+                "app": {
+                    "endpoints": {
+                        "homeassistant": {
+                            "web": "http://${addresses.automation_backend}:8124"
+                        }
+                    }
+                }
+            }
         }
         with self.assertRaisesRegex(ValueError, "tcp/8124"):
             self.configurations(overlay)
@@ -147,7 +151,7 @@ class ConnectionTests(unittest.TestCase):
         overlay["values"]["addresses.bitwarden_backend"] = "198.18.30.39"
         cfg = self.configurations(overlay)
         self.assertEqual(
-            cfg["bitwarden"]["app"]["discovery_routes"][0]["url"],
+            cfg["bitwarden"]["routes"]["bitwarden"]["url"],
             "http://198.18.30.39:8080",
         )
 

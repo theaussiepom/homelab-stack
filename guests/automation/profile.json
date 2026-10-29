@@ -311,26 +311,6 @@
         "gateway": "${gateways.frontend}",
         "mac": "${mac.automation.2}"
       },
-      "discovery_routes": [
-        {
-          "name": "homeassistant",
-          "host": "hass.${domains.secondary}",
-          "aliases": [
-            "${domains.homeassistant}"
-          ],
-          "url": "http://${addresses.automation_backend}:8123",
-          "login": "own"
-        },
-        {
-          "name": "node-red",
-          "host": "${domains.node_red_alias}",
-          "aliases": [
-            "${domains.node_red_primary}"
-          ],
-          "url": "http://${addresses.automation_backend}:1880",
-          "login": "oidc"
-        }
-      ],
       "published_services": {
         "mqtt": {
           "hostname": "broker.mqtt",
@@ -341,6 +321,14 @@
           "dns_address": "frontend",
           "protocol": "tcp",
           "port": 1883
+        }
+      },
+      "endpoints": {
+        "homeassistant": {
+          "web": "http://${addresses.automation_backend}:8123"
+        },
+        "node_red": {
+          "web": "http://${addresses.automation_backend}:1880"
         }
       }
     }

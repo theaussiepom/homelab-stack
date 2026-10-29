@@ -110,13 +110,6 @@
     },
     "app": {
       "address": "${addresses.pgadmin_management}",
-      "discovery_routes": [
-        {
-          "host": "${domains.pgadmin}",
-          "name": "pgadmin",
-          "url": "http://${addresses.pgadmin_backend}:80"
-        }
-      ],
       "exclusive_writer_confirmed": false,
       "health_checks": [
         {
@@ -263,6 +256,11 @@
             "name": "Verified HTTPS pgAdmin route"
           }
         ]
+      },
+      "endpoints": {
+        "pgadmin": {
+          "web": "http://${addresses.pgadmin_backend}:80"
+        }
       }
     }
   },

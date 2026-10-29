@@ -80,12 +80,44 @@ class ZigbeeServiceTests(unittest.TestCase):
         }
         packets = self.packets(overlay)
         dns = self.stack(packets["dns"])
-        self.assertEqual(dns["dns_records"], {"bus.example.invalid": "198.18.40.121"})
+        expected = {
+            "bus.example.invalid": "198.18.40.121",
+            **{
+                host: "198.18.40.33"
+                for host in (
+                    "hass.service-9.example.invalid",
+                    "host.service-9.example.invalid",
+                    "influx.service-9.example.invalid",
+                    "matter.service-7.example.invalid",
+                    "nas.service-7.example.invalid",
+                    "nas.service-9.example.invalid",
+                    "pihole1.service-7.example.invalid",
+                    "pihole2.service-7.example.invalid",
+                    "prox.service-9.example.invalid",
+                    "proxmox.service-9.example.invalid",
+                    "service-1.example.invalid",
+                    "service-2.example.invalid",
+                    "service-3.example.invalid",
+                    "service-4.example.invalid",
+                    "service-5.example.invalid",
+                    "service-6.example.invalid",
+                    "thread.service-7.example.invalid",
+                    "zigbee1.service-7.example.invalid",
+                    "zigbee2.service-7.example.invalid",
+                )
+            },
+        }
+        self.assertEqual(dns["dns_records"], expected)
         checks = json.loads(packets["dns"]["files"]["site.json"])["app"][
             "service_health_checks"
         ]["pihole"]
         self.assertEqual(
-            checks[-1]["argv"][-2:], ["bus.example.invalid", "198.18.40.121"]
+            next(
+                check
+                for check in checks
+                if check["name"] == "DNS service record bus.example.invalid"
+            )["argv"][-2:],
+            ["bus.example.invalid", "198.18.40.121"],
         )
         radio = self.stack(packets["zigbee2mqtt"])
         self.assertEqual(
