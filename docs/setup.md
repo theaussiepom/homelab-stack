@@ -40,6 +40,12 @@ The private site's enabled list and adopted stack pin remain explicit. There are
 no compatibility formats or transition flags. Obsolete managed paths must be
 removed explicitly; the generator never silently deletes another workflow.
 
+Compilation also checks both guest firewalls for each published service route and
+internal DNS connection. If an endpoint, NIC, DNS selection or firewall override
+changes, update the corresponding narrow allowances together. External client
+policies stay explicit. Passing compilation does not prove router reachability,
+NAT behavior or enforcement on the target host.
+
 For an inspectable non-secret preview, add `--guest dns --output /tmp/dns-preview.json`
 instead of `--check`. Preview packets are disabled unless explicitly selected.
 `--admit` additionally requires selected guest dependency closure, prerequisite

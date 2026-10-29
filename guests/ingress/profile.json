@@ -158,6 +158,20 @@
           "port": "80",
           "comment": "Selected discovered backend",
           "destination": "${addresses.pgadmin_backend}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "8123,1880",
+          "comment": "Selected discovered backend",
+          "destination": "${addresses.automation_backend}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "8080",
+          "comment": "Selected discovered backend",
+          "destination": "${addresses.bitwarden_backend}/32"
         }
       ]
     },

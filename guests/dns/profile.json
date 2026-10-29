@@ -75,6 +75,38 @@
           "port": "53",
           "destination": "0.0.0.0/0",
           "comment": "Recursive DNS"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "53",
+          "source": "${networks.management}/24",
+          "destination": "${addresses.dns}/32",
+          "comment": "Selected stack DNS clients"
+        },
+        {
+          "direction": "in",
+          "proto": "udp",
+          "port": "53",
+          "source": "${networks.management}/24",
+          "destination": "${addresses.dns}/32",
+          "comment": "Selected stack DNS clients"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "53",
+          "source": "${networks.frontend}/24",
+          "destination": "${addresses.dns}/32",
+          "comment": "Selected stack DNS clients"
+        },
+        {
+          "direction": "in",
+          "proto": "udp",
+          "port": "53",
+          "source": "${networks.frontend}/24",
+          "destination": "${addresses.dns}/32",
+          "comment": "Selected stack DNS clients"
         }
       ]
     },
