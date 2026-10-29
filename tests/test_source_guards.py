@@ -25,22 +25,29 @@ class StackStagedGuardTests(cases.StagedGuardTests):
 class StackPushGuardTests(unittest.TestCase):
     def test_installed_push_guard_passes_the_shared_behavioral_contract(self):
         with tempfile.TemporaryDirectory() as tmp:
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "pytest",
-                    "-q",
-                    "-p",
-                    "no:cacheprovider",
-                    str(FRAMEWORK / "tests/coverage/test_push_guards.py"),
-                    str(FRAMEWORK / "tests/coverage/test_guard_protocols.py"),
-                    "--basetemp=" + tmp + "/pytest",
-                ],
-                env=dict(os.environ, HOMELAB_TEST_GUARD_ROOT=str(ROOT)),
-                capture_output=True,
-                text=True,
-            )
+            try:
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        "-m",
+                        "pytest",
+                        "-q",
+                        "-p",
+                        "no:cacheprovider",
+                        str(FRAMEWORK / "tests/coverage/test_push_guards.py"),
+                        str(FRAMEWORK / "tests/coverage/test_guard_protocols.py"),
+                        "--basetemp=" + tmp + "/pytest",
+                    ],
+                    env=dict(os.environ, HOMELAB_TEST_GUARD_ROOT=str(ROOT)),
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                )
+            except subprocess.TimeoutExpired as error:
+                self.fail(
+                    "Shared guard suite exceeded 120 seconds; captured output: "
+                    + repr(error.stdout) + "; stderr: " + repr(error.stderr)
+                )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
