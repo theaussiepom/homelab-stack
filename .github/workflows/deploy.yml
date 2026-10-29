@@ -130,3 +130,14 @@ jobs:
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
     secrets: inherit
+  zigbee2mqtt:
+    name: Zigbee2MQTT
+    needs:
+    - automation
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(fromJSON(inputs.enabled), 'zigbee2mqtt')
+    uses: ./.github/workflows/guest-zigbee2mqtt.yml
+    with:
+      enabled: ${{ inputs.enabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets: inherit

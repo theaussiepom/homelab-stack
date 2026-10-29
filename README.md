@@ -26,6 +26,7 @@ flowchart TD
   Auth --> Auto
   Maria --> Auto
   Influx --> Auto
+  Auto --> Radio[Zigbee2MQTT: Radio 209]
   Maria --> Vault[Bitwarden]
   Ingress --> Vault
 ```
@@ -35,6 +36,26 @@ Preparation installs a Linux baseline and, for container workloads, Docker/Compo
 once. PostgreSQL, MariaDB and InfluxDB are native Debian guests. Authentik is one
 application job covering its three containers. These are Debian LXC workflows;
 VM application support has not been qualified.
+
+Zigbee2MQTT is an active Debian LXC with one declared coordinator, Docker in shared
+Preparation, and one Zigbee2MQTT application entity. Its profile enables guest
+startup and boot startup; its container inherits `restart: always`. Infrastructure
+declares the exact device through BPG. Normal reconciliation may attach that
+declared device if absent, but it refuses replacement or removal of an existing
+coordinator. There are no stopped deployment stages or separate radio controllers.
+The separately prepared data includes the existing configuration, device database
+and coordinator backup. Deployment preserves the network identity and never opens
+the radio from a configuration checker or rewrites Zigbee settings.
+
+Automation's `app.published_services.mqtt` is the broker definition. It declares
+the hostname, port, frontend/backend addresses and which address DNS publishes.
+Radio references `automation.mqtt` at its backend address through
+`app.service_connections`. The compiler derives its container hostname alias,
+the Pi-hole record and the matching DNS verification from that definition. An
+address or hostname change therefore updates all of them together. Firewall
+validation checks both ends of the MQTT connection. Pi-hole reconciliation updates
+only the selected hostnames, preserves unrelated aliases and records, and restarts
+only Pi-hole when the actual records change.
 
 | File | Purpose |
 | --- | --- |

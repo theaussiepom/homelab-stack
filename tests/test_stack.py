@@ -54,6 +54,7 @@ class StackTests(unittest.TestCase):
                 "db-tools",
                 "bitwarden",
                 "pegaprox",
+                "zigbee2mqtt",
             },
         )
 

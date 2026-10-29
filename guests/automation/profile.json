@@ -215,6 +215,14 @@
           "source": "${addresses.automation_influxdb}/32",
           "destination": "${addresses.influxdb_backend}/32",
           "comment": "influxdb approved client automation"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "1883",
+          "source": "${addresses.zigbee_backend}/32",
+          "destination": "${addresses.automation_backend}/32",
+          "comment": "Zigbee MQTT client"
         }
       ]
     },
@@ -323,7 +331,18 @@
           "login": "oidc"
         }
       ],
-      "mqtt_hostname": "broker.mqtt"
+      "published_services": {
+        "mqtt": {
+          "hostname": "broker.mqtt",
+          "addresses": {
+            "frontend": "${addresses.automation_frontend}",
+            "backend": "${addresses.automation_backend}"
+          },
+          "dns_address": "frontend",
+          "protocol": "tcp",
+          "port": 1883
+        }
+      }
     }
   },
   "files": {},

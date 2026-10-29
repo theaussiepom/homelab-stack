@@ -76,7 +76,12 @@
     "mac.bitwarden.2": "02:00:07:02:00:01",
     "contact.acme_email": "operator@example.invalid",
     "identity.discovery_token": "root@pam!example-discovery",
-    "identity.pgadmin_client": "example-pgadmin-client"
+    "identity.pgadmin_client": "example-pgadmin-client",
+    "addresses.zigbee_management": "198.18.25.22",
+    "addresses.zigbee_backend": "198.18.30.22",
+    "mac.zigbee.0": "02:00:0a:00:00:01",
+    "mac.zigbee.1": "02:00:0a:01:00:01",
+    "devices.zigbee_coordinator": "/dev/serial/by-id/usb-example-coordinator"
   },
   "guests": {
     "dns": {
@@ -190,6 +195,17 @@
         "configuration-prepared",
         "initial-account-prepared",
         "database-key-retained"
+      ]
+    },
+    "zigbee2mqtt": {
+      "depends_on": [
+        "automation"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared",
+        "old-writers-retired"
       ]
     }
   }
