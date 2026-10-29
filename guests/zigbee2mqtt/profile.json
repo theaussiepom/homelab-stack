@@ -164,6 +164,10 @@
           }
         ]
       }
+    },
+    "paths": {
+      "host_device_key": "/home/homelab-runner/.ssh/proxmox-host-device-209",
+      "host_known_hosts": "/var/lib/homelab-inputs/pve-host-known_hosts"
     }
   },
   "files": {},

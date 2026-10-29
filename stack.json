@@ -205,7 +205,8 @@
         "state-and-trust-reviewed",
         "data-prepared",
         "configuration-prepared",
-        "old-writers-retired"
+        "old-writers-retired",
+        "restricted-host-device-capability-registered"
       ]
     }
   }

@@ -40,9 +40,14 @@ VM application support has not been qualified.
 Zigbee2MQTT is an active Debian LXC with one declared coordinator, Docker in shared
 Preparation, and one Zigbee2MQTT application entity. Its profile enables guest
 startup and boot startup; its container inherits `restart: always`. Infrastructure
-declares the exact device through BPG. Normal reconciliation may attach that
-declared device if absent, but it refuses replacement or removal of an existing
-coordinator. There are no stopped deployment stages or separate radio controllers.
+uses the framework's registered host capability for the exact device. BPG owns
+the active guest and leaves device attachment to that capability because Proxmox
+refuses API-token device updates. Register the restricted forced-command helper
+before accepting `restricted-host-device-capability-registered`; the framework's
+stack contract documents operator registration. Normal reconciliation may attach
+the declared device if absent and verifies it inside the running guest. It refuses
+replacement, removal and pending device changes. There are no stopped deployment
+stages or separate radio controllers.
 The separately prepared data includes the existing configuration, device database
 and coordinator backup. Deployment preserves the network identity and never opens
 the radio from a configuration checker or rewrites Zigbee settings.

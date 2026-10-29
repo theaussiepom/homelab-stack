@@ -42,7 +42,7 @@ jobs:
           GITLEAKS_BIN: ${{ runner.temp }}/homelab-source-tools/gitleaks
         run: |
           python3 framework-source/blueprints/compile.py --stack . --site site.example.json --check
-          python3 framework-source/tools/measure_coverage.py --suite stack --stack . --output "$RUNNER_TEMP/stack-coverage"
+          python3 framework-source/tools/measure_coverage.py --suite stack --stack . --fail-under 100 --output "$RUNNER_TEMP/stack-coverage"
       - name: Save stack coverage reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
