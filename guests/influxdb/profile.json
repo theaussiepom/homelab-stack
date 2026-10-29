@@ -135,7 +135,7 @@
           "argv": [
             "python3",
             "-c",
-            "import json,urllib.request; d=json.load(urllib.request.urlopen('http://127.0.0.1:8086/health',timeout=5)); assert d['status']=='pass' and d['version']=='v2.7.12'; print('INFLUX_OK')"
+            "import json,urllib.request; d=json.load(urllib.request.urlopen('http://${addresses.influxdb_backend}:8086/health',timeout=5)); assert d['status']=='pass' and d['version']=='v2.7.12'; print('INFLUX_OK')"
           ],
           "expect": "INFLUX_OK",
           "name": "InfluxDB health without initial setup or application data"
@@ -183,7 +183,7 @@
             "argv": [
               "python3",
               "-c",
-              "import json,urllib.request; d=json.load(urllib.request.urlopen('http://127.0.0.1:8086/health',timeout=5)); assert d['status']=='pass' and d['version']=='v2.7.12'; print('INFLUX_OK')"
+              "import json,urllib.request; d=json.load(urllib.request.urlopen('http://${addresses.influxdb_backend}:8086/health',timeout=5)); assert d['status']=='pass' and d['version']=='v2.7.12'; print('INFLUX_OK')"
             ],
             "expect": "INFLUX_OK",
             "name": "InfluxDB health without initial setup or application data"

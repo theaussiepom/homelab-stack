@@ -1,12 +1,16 @@
 """Check the executable composition and actual workflow graph without targets."""
 
 import importlib.util
+from contextlib import redirect_stdout
+import io
 import json
 import os
 from pathlib import Path
 import re
 import sys
+import tomllib
 import unittest
+from unittest.mock import patch
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -134,6 +138,37 @@ class StackTests(unittest.TestCase):
             self.assertNotIn(
                 "vmbr30", [n["bridge"] for n in cfg["guest"]["interfaces"]]
             )
+
+    def test_influx_health_probes_the_configured_listener_after_address_overrides(self):
+        for address in (None, "198.18.33.126"):
+            if address is not None:
+                self.overlay["values"]["addresses.influxdb_backend"] = address
+            packet = self.guest("influxdb", [])
+            cfg = json.loads(packet["files"]["site.json"])
+            listener = tomllib.loads(packet["files"]["config.toml"])[
+                "http-bind-address"
+            ]
+            checks = {
+                "guest": cfg["app"]["health_checks"],
+                "application": cfg["app"]["service_health_checks"]["influxdb"],
+            }
+            for scope, selected in checks.items():
+                with self.subTest(address=address, scope=scope):
+                    probe = next(
+                        row for row in selected if row["expect"] == "INFLUX_OK"
+                    )
+                    self.assertEqual(probe["argv"][:2], ["python3", "-c"])
+                    output = io.StringIO()
+                    response = io.BytesIO(b'{"status":"pass","version":"v2.7.12"}')
+                    with patch(
+                        "urllib.request.urlopen", return_value=response
+                    ) as request:
+                        with redirect_stdout(output):
+                            exec(probe["argv"][2], {})
+                        request.assert_called_once_with(
+                            "http://" + listener + "/health", timeout=5
+                        )
+                    self.assertEqual(output.getvalue().strip(), "INFLUX_OK")
 
     def test_automation_and_bitwarden_use_final_database_memberships(self):
         for name, bridges in [

@@ -15,7 +15,7 @@
   },
   {
     "path": "guests/influxdb/profile.json",
-    "sha256": "302205259f50556003535f5c104787b1d85e336bd8a458456cc606959adcbf48",
+    "sha256": "65486d63da6fae58c2d9262b9674c47c647d3d1f2b5c391efd14e41f80798aa1",
     "rule": "generic-api-key",
     "line": 164,
     "reason": "SHA256 of the public influxdb vendor signing key, verified against the vendor.asc bytes embedded in this exact profile; not a credential."
