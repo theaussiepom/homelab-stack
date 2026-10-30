@@ -52,8 +52,8 @@ class StackPushGuardTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
-    def test_push_cli_rejects_oversized_input_before_accepting_a_valid_prefix(self):
-        """A complete 64-KiB deletion prefix cannot hide unchecked suffix refs."""
+    def test_push_cli_bounds_raw_bytes_before_decoding_or_accepting_a_prefix(self):
+        """Raw-byte bounds precede newline handling, UTF-8 decoding and Git calls."""
         zero = "0" * 40
         remote = "a" * 40
         padding = 128 - len(f"(delete) {zero} refs/heads/0000 {remote}\n")
@@ -63,6 +63,13 @@ class StackPushGuardTests(unittest.TestCase):
         )
         self.assertEqual(len(prefix.encode("utf-8")), 65536)
         suffix = f"refs/heads/unsigned {'1' * 40} refs/heads/unsigned {zero}\n"
+        raw = prefix.encode("utf-8")
+        crlf_oversize = raw.replace(b"\n", b"\r\n")
+        crlf_exact = b"".join(raw.splitlines(keepends=True)[:508]).replace(b"\n", b"\r\n")
+        crlf_exact = crlf_exact.replace(b"refs/heads/0507", b"refs/heads/0507xxxx", 1)
+        self.assertEqual(len(crlf_exact), 65536)
+        self.assertGreater(len(crlf_oversize), 65536)
+        invalid_utf8 = f"(delete) {zero} refs/heads/".encode() + b"\xff " + remote.encode() + b"\n"
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             marker = root / "git-calls"
@@ -78,28 +85,44 @@ class StackPushGuardTests(unittest.TestCase):
             executable.chmod(0o700)
             environment = dict(
                 os.environ, PATH=str(root) + os.pathsep + os.environ["PATH"],
-                HOMELAB_TEST_GIT_CALLS=str(marker),
+                HOMELAB_TEST_GIT_CALLS=str(marker), PYTHONIOENCODING="latin-1",
             )
-            for payload, accepted in [
-                (prefix, True),
-                (prefix + suffix, False),
-                (prefix.replace("x", "é"), False),
-            ]:
-                with self.subTest(bytes=len(payload.encode("utf-8")), accepted=accepted):
-                    marker.unlink(missing_ok=True)
-                    result = subprocess.run(
-                        [sys.executable, str(ROOT / ".githooks/push_guard.py"), "origin"],
-                        input=payload, capture_output=True, text=True,
-                        env=environment, timeout=15,
-                    )
-                    if accepted:
-                        self.assertEqual(result.returncode, 0, result.stderr)
-                        self.assertEqual(json.loads(result.stdout)["commits_checked"], 0)
-                        self.assertTrue(marker.is_file())
-                    else:
-                        self.assertNotEqual(result.returncode, 0, result.stdout)
-                        self.assertEqual(json.loads(result.stderr)["reason"], "push_update_input_too_large")
-                        self.assertFalse(marker.exists())
+            scenarios = [
+                (b"", "origin", None, True),
+                (raw, "origin", None, True),
+                (crlf_exact, "origin", None, True),
+                (raw + suffix.encode(), "origin", "push_update_input_too_large", False),
+                (prefix.replace("x", "é").encode(), "origin", "push_update_input_too_large", False),
+                (crlf_oversize, "origin", "push_update_input_too_large", False),
+                (invalid_utf8, "origin", "UnicodeDecodeError", False),
+                (b"", "invalid/remote", "push_to_a_configured_named_remote", False),
+            ]
+            for translated in (False, True):
+                for payload, remote_name, reason, calls_expected in scenarios:
+                    with self.subTest(bytes=len(payload), remote=remote_name, reason=reason, translated=translated):
+                        marker.unlink(missing_ok=True)
+                        command = [sys.executable, str(ROOT / ".githooks/push_guard.py"), remote_name]
+                        if translated:
+                            # A real byte pipe through a standard TextIOWrapper
+                            # configured for universal newline translation.
+                            bootstrap = (
+                                "import runpy,sys; sys.stdin.reconfigure(newline=None); "
+                                "script=sys.argv[1]; sys.argv=sys.argv[1:]; "
+                                "runpy.run_path(script,run_name='__main__')"
+                            )
+                            command = [sys.executable, "-c", bootstrap, *command[1:]]
+                        result = subprocess.run(
+                            command,
+                            input=payload, capture_output=True,
+                            env=environment, timeout=15,
+                        )
+                        if reason is None:
+                            self.assertEqual(result.returncode, 0, result.stderr)
+                            self.assertEqual(json.loads(result.stdout)["commits_checked"], 0)
+                        else:
+                            self.assertNotEqual(result.returncode, 0, result.stdout)
+                            self.assertEqual(json.loads(result.stderr)["reason"], reason)
+                        self.assertEqual(marker.exists(), calls_expected)
 
 
 class PublicPolicyTests(unittest.TestCase):
