@@ -71,7 +71,57 @@ class GeneratedWorkflowTests(unittest.TestCase):
                 self.assertEqual((workflows / "phase.yml").read_bytes(), phase)
                 self.assertEqual({name: (workflows / name).read_bytes() for name in ci_names}, ci)
 
-    def test_named_secrets_survive_reusable_edges_and_remain_guest_scoped(self):
+    def test_guest_groups_contain_the_exact_native_recipe_without_phase_wrappers(self):
+        def load(path):
+            return yaml.load(path.read_text(), Loader=yaml.BaseLoader)
+
+        directory = ROOT / ".github/workflows"
+        framework = load(FRAMEWORK / ".github/workflows/guest-phase.yml")
+        recipe = framework["jobs"]["run"]
+        total_jobs = total_commands = 0
+        for path in sorted(directory.glob("guest-*.yml")):
+            guest = path.stem.removeprefix("guest-")
+            workflow = load(path)
+            self.assertEqual(workflow["defaults"], framework["defaults"])
+            self.assertEqual(workflow["defaults"], {"run": {"shell": "bash"}})
+            self.assertEqual(workflow["on"]["workflow_call"]["inputs"]["disabled"]["default"], "[]")
+            applications = [p for p in workflow["jobs"] if p not in {"infrastructure", "preparation"}]
+            for phase, job in workflow["jobs"].items():
+                with self.subTest(guest=guest, phase=phase):
+                    total_jobs += 1
+                    self.assertEqual(set(job), {"name", "if", "environment", "runs-on", "timeout-minutes", "env", "steps"} | ({"needs"} if phase != "infrastructure" else set()))
+                    expected_name = {"infrastructure": "Infra", "preparation": "Prepare"}.get(phase)
+                    if expected_name is not None:
+                        self.assertEqual(job["name"], expected_name)
+                    elif len(applications) == 1:
+                        self.assertEqual(job["name"], "Deployment")
+                    self.assertEqual(job["if"], "github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), '" + guest + "')")
+                    for key in ("environment", "runs-on", "timeout-minutes", "env"):
+                        self.assertEqual(job[key], recipe[key])
+                    self.assertEqual(len(job["steps"]), 9)
+                    self.assertEqual(len(recipe["steps"]), 9)
+                    for index, (before, after) in enumerate(zip(recipe["steps"], job["steps"])):
+                        self.assertEqual(set(after), set(before))
+                        for key in set(before) - {"env", "name"}:
+                            self.assertEqual(after[key], before[key])
+                        if "name" in before:
+                            self.assertEqual(after["name"], "Deployment" if index == 8 else before["name"])
+                        if "run" in before:
+                            total_commands += 1
+                        if "env" not in before:
+                            continue
+                        self.assertEqual(set(after["env"]), set(before["env"]))
+                        self.assertEqual(after["env"]["GUEST"], guest)
+                        self.assertEqual(after["env"]["PHASE"], phase)
+                        if index == 6:
+                            self.assertEqual(after["env"]["DISABLED"], "${{ inputs.disabled }}")
+                        if index == 7:
+                            for secret in ("APPLICATION_SSH_KEY", "PROXMOX_APP_TOKEN"):
+                                self.assertEqual(after["env"][secret], "${{ secrets." + secret + " }}")
+        self.assertEqual(total_jobs, 36)
+        self.assertEqual(total_commands, 216)
+
+    def test_named_secrets_remain_guest_scoped_inside_native_job_steps(self):
         common = {"APPLICATION_SSH_KEY": "true", "PROXMOX_APP_TOKEN": "true"}
         applications = {
             "automation": {"AUTOMATION_NODE_RED_API_TOKEN": "true"},
@@ -92,37 +142,31 @@ class GeneratedWorkflowTests(unittest.TestCase):
         def declarations(document):
             return {name: row["required"] for name, row in document["on"]["workflow_call"]["secrets"].items()}
 
-        def forward(job, names, supplied):
-            self.assertEqual(set(job["secrets"]), set(names))
-            result = {}
-            for name, expression in job["secrets"].items():
-                self.assertEqual(expression, "${{ secrets." + name + " }}")
-                result[name] = supplied.get(name, "")
-            return result
-
         directory = ROOT / ".github/workflows"
         deploy = load(directory / "deploy.yml")
         phase = load(directory / "phase.yml")
         framework = load(FRAMEWORK / ".github/workflows/guest-phase.yml")
-        self.assertEqual(declarations(deploy), generic)
-        self.assertEqual(declarations(phase), generic)
-        self.assertEqual(declarations(framework), generic)
-        self.assertEqual(deploy["permissions"], {"contents": "read"})
+        for document in (deploy, phase, framework):
+            self.assertEqual(declarations(document), generic)
+            self.assertEqual(document["permissions"], {"contents": "read"})
         self.assertNotIn("secrets", deploy["jobs"]["selection"])
-        final = framework["jobs"]["run"]
-        self.assertEqual(final["environment"], "${{ inputs.environment_name }}")
-        reconcile = next(step for step in final["steps"] if step.get("name") == "Reconcile this phase")
+        # The uncalled anchor keeps the same explicit immutable selection contract.
+        self.assertEqual(set(phase["jobs"]["run"]["secrets"]), set(generic))
+        for name, expression in phase["jobs"]["run"]["secrets"].items():
+            self.assertEqual(expression, "${{ secrets." + name + " }}")
+        recipe = framework["jobs"]["run"]
+        reconcile = recipe["steps"][-1]
         owners = {name: guest for guest, row in applications.items() for name in row}
-        application_bindings = []
-        for expression in reconcile["env"].values():
+        bindings = {}
+        for variable, expression in reconcile["env"].items():
             if "secrets." not in expression:
                 continue
             match = re.fullmatch(r"\$\{\{ inputs\.guest == '([a-z-]+)' && secrets\.([A-Z_]+) \|\| '' \}\}", expression)
             self.assertIsNotNone(match, expression)
             owner, name = match.groups()
             self.assertEqual(owner, owners[name])
-            application_bindings.append((owner, name))
-        self.assertEqual(sorted(name for _, name in application_bindings), sorted(owners))
+            bindings[variable] = (owner, name)
+        self.assertEqual(sorted(name for _, name in bindings.values()), sorted(owners))
         declared = json.loads((ROOT / "stack.json").read_text())["guests"]
         for guest in declared:
             with self.subTest(guest=guest):
@@ -132,23 +176,31 @@ class GeneratedWorkflowTests(unittest.TestCase):
                 self.assertEqual(workflow["permissions"], {"contents": "read"})
                 caller = deploy["jobs"][guest]
                 self.assertEqual(caller["uses"], "./.github/workflows/guest-" + guest + ".yml")
-                guest_values = forward(caller, selected, available)
+                self.assertEqual(set(caller["secrets"]), set(selected))
+                for name, expression in caller["secrets"].items():
+                    self.assertEqual(expression, "${{ secrets." + name + " }}")
                 for job in workflow["jobs"].values():
-                    self.assertEqual(job["uses"], "./.github/workflows/phase.yml")
-                    self.assertEqual(job["with"]["guest"], guest)
-                    phase_values = forward(job, selected, guest_values)
-                    final_values = forward(phase["jobs"]["run"], generic, phase_values)
-                    self.assertEqual(final_values, {name: available[name] if name in selected else "" for name in generic})
-                    for owner, name in application_bindings:
-                        actual = final_values.get(name, "") if guest == owner else ""
-                        self.assertEqual(actual, available[name] if name in applications.get(guest, {}) else "")
-                    # Optional SMTP may be absent throughout the whole chain.
-                    without_smtp = dict(available)
-                    without_smtp.pop("FOUNDATION_AUTHENTIK_SMTP_PASSWORD")
-                    sparse = forward(caller, selected, without_smtp)
-                    sparse = forward(job, selected, sparse)
-                    sparse = forward(phase["jobs"]["run"], generic, sparse)
-                    self.assertEqual(sparse["FOUNDATION_AUTHENTIK_SMTP_PASSWORD"], "")
+                    self.assertNotIn("uses", job)
+                    self.assertNotIn("secrets", job)
+                    self.assertEqual(set(re.findall(r"secrets\.([A-Z_]+)", json.dumps(job))), set(selected))
+                    self.assertEqual(set(job["env"]), {"HOMELAB_DEPLOYMENT_WORKFLOW"})
+                    deployment = job["steps"][-1]
+                    self.assertEqual(deployment["name"], "Deployment")
+                    for index, step in enumerate(job["steps"]):
+                        references = set(re.findall(r"secrets\.([A-Z_]+)", json.dumps(step)))
+                        self.assertEqual(references, set(common) if index == 7 else set(applications.get(guest, {})) if index == 8 else set())
+                    for variable, (owner, name) in bindings.items():
+                        secret_expression = "secrets." + name if owner == guest else "''"
+                        expected = "${{ '" + guest + "' == '" + owner + "' && " + secret_expression + " || '' }}"
+                        self.assertEqual(deployment["env"][variable], expected)
+                        observed = re.fullmatch(r"\$\{\{ '([a-z0-9-]+)' == '([a-z-]+)' && (?:secrets\.([A-Z_]+)|'') \|\| '' \}\}", deployment["env"][variable])
+                        self.assertIsNotNone(observed)
+                        for smtp_present in (True, False):
+                            supplied = {key: available[key] for key in selected if smtp_present or key != "FOUNDATION_AUTHENTIK_SMTP_PASSWORD"}
+                            inherited = {key: supplied.get(key, "") for key in generic}
+                            old_value = inherited[name] if guest == owner else ""
+                            new_value = supplied.get(observed[3], "") if observed[1] == observed[2] and observed[3] else ""
+                            self.assertEqual(new_value, old_value)
 
     def test_actual_selection_preflight_validates_before_any_guest_can_be_skipped(self):
         deploy = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())

@@ -30,7 +30,9 @@ flowchart TD
   Ingress --> Vault
 ```
 
-Each guest expands to **Infrastructure -> Preparation -> Application(s)**.
+Each guest is one reusable-workflow group containing separate **Infra -> Prepare -> application**
+jobs. Single-application guests label that final job **Deployment**; DNS and Automation
+keep each application name. Every job labels its final execution step **Deployment**.
 Preparation installs a Linux baseline and, for container workloads, Docker/Compose
 once. PostgreSQL, MariaDB and InfluxDB are native Debian guests. Authentik is one
 application job covering its three containers. These are Debian LXC workflows;
@@ -68,7 +70,7 @@ only Pi-hole when the actual records change.
 | [images.json](images.json) | Image selection authority |
 | [guests](guests) | Executable profiles and public vendor keys/config templates |
 | [deploy workflow](.github/workflows/deploy.yml) | Generated guest groups and real dependency edges |
-| [phase workflow](.github/workflows/phase.yml) | The single framework revision selection |
+| [phase selection](.github/workflows/phase.yml) | The single framework revision selection; not called by guest jobs |
 | [site.example.json](site.example.json) | Empty private overlay shape |
 
 Follow [setup and local tests](docs/setup.md), [secrets and prerequisites](docs/secrets.md),
@@ -106,7 +108,11 @@ Their required check names remain `Source contracts`, `Dependency review` and
 definitions, called by the private site; public CI uses synthetic fixtures.
 
 The selected framework's `blueprints/workflows.py` generates `deploy.yml` and all
-`guest-*.yml` workflows from the catalogue and stack dependencies. Edit those
+`guest-*.yml` workflows from the catalogue, stack dependencies and its authoritative
+phase job recipe. Each guest contains its actual jobs directly, preserving the
+existing phase IDs, dependency edges, runner/environment controls, command bodies
+and credential step scopes. The generator removes the per-phase wrapper groups
+from the Actions map; jobs remain separate jobs. Edit those
 declarative inputs and regenerate; the checked-in generated files are not edited
 by hand. CI rejects stale generated files. The literal framework selection in
 `phase.yml`, source CI and private-site exclusions remain explicit controls.

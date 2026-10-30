@@ -95,8 +95,14 @@ class StackTests(unittest.TestCase):
                 *c.CATALOGUE[name]["applications"],
             ]
             self.assertEqual(list(guest["jobs"]), phases)
+            apps = c.CATALOGUE[name]["applications"]
+            labels = {"infrastructure": "Infra", "preparation": "Prepare",
+                      **{p: "Deployment" if len(apps) == 1 else c.CATALOGUE[name]["application_names"][p] for p in apps}}
             for n, p in enumerate(phases):
-                self.assertEqual(guest["jobs"][p]["with"]["phase"], p)
+                self.assertEqual(guest["jobs"][p]["name"], labels[p])
+                self.assertEqual(guest["jobs"][p]["steps"][-1]["env"]["PHASE"], p)
+                self.assertEqual(guest["jobs"][p]["steps"][-1]["env"]["GUEST"], name)
+                self.assertNotIn("uses", guest["jobs"][p])
                 if n:
                     self.assertEqual(guest["jobs"][p]["needs"], phases[n - 1])
         c.workflow_selection(ROOT / ".github/workflows/phase.yml", "guest-phase.yml")
