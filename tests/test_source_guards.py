@@ -1,6 +1,7 @@
 """Both public repositories exercise their installed guard copies, without pushes."""
 
 import importlib.util
+import json
 import os
 import subprocess
 import sys
@@ -49,6 +50,56 @@ class StackPushGuardTests(unittest.TestCase):
                     + repr(error.stdout) + "; stderr: " + repr(error.stderr)
                 )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+    def test_push_cli_rejects_oversized_input_before_accepting_a_valid_prefix(self):
+        """A complete 64-KiB deletion prefix cannot hide unchecked suffix refs."""
+        zero = "0" * 40
+        remote = "a" * 40
+        padding = 128 - len(f"(delete) {zero} refs/heads/0000 {remote}\n")
+        prefix = "".join(
+            f"(delete) {zero} refs/heads/{index:04d}{'x' * padding} {remote}\n"
+            for index in range(512)
+        )
+        self.assertEqual(len(prefix.encode("utf-8")), 65536)
+        suffix = f"refs/heads/unsigned {'1' * 40} refs/heads/unsigned {zero}\n"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            marker = root / "git-calls"
+            executable = root / "git"
+            executable.write_text(
+                "#!" + sys.executable + "\n"
+                "import os,sys\n"
+                "with open(os.environ['HOMELAB_TEST_GIT_CALLS'],'a') as calls: calls.write('call\\n')\n"
+                "values={'user.name':'fixture','user.email':'123+fixture@users.noreply.github.com'}\n"
+                "if len(sys.argv)!=3 or sys.argv[1]!='config': raise SystemExit(2)\n"
+                "print(values[sys.argv[2]])\n"
+            )
+            executable.chmod(0o700)
+            environment = dict(
+                os.environ, PATH=str(root) + os.pathsep + os.environ["PATH"],
+                HOMELAB_TEST_GIT_CALLS=str(marker),
+            )
+            for payload, accepted in [
+                (prefix, True),
+                (prefix + suffix, False),
+                (prefix.replace("x", "é"), False),
+            ]:
+                with self.subTest(bytes=len(payload.encode("utf-8")), accepted=accepted):
+                    marker.unlink(missing_ok=True)
+                    result = subprocess.run(
+                        [sys.executable, str(ROOT / ".githooks/push_guard.py"), "origin"],
+                        input=payload, capture_output=True, text=True,
+                        env=environment, timeout=15,
+                    )
+                    if accepted:
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertEqual(json.loads(result.stdout)["commits_checked"], 0)
+                        self.assertTrue(marker.is_file())
+                    else:
+                        self.assertNotEqual(result.returncode, 0, result.stdout)
+                        self.assertEqual(json.loads(result.stderr)["reason"], "push_update_input_too_large")
+                        self.assertFalse(marker.exists())
 
 
 class PublicPolicyTests(unittest.TestCase):
