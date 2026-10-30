@@ -51,6 +51,9 @@ class PegaProxRouteTests(unittest.TestCase):
                 self.assertEqual(route["url"], endpoint.geturl())
                 self.assertNotIn("transport", route)
                 self.assertEqual(stack["trusted_proxy"], values["addresses.ingress_management"] + "/32")
+                clients = [r for r in cfg["guest"]["rules"] if r.get("direction") == "in" and r.get("port") == "5000"]
+                self.assertEqual(len(clients), 1)
+                self.assertEqual((clients[0]["proto"], clients[0]["source"], clients[0]["destination"]), ("tcp", stack["trusted_proxy"], stack["bind_address"] + "/32"))
                 service = render.compose(stack)["services"]["pegaprox"]
                 self.assertEqual(service["ports"], [f"{endpoint.hostname}:5000:5000/tcp"])
                 self.assertEqual(service["environment"]["PEGAPROX_BEHIND_PROXY"], "true")

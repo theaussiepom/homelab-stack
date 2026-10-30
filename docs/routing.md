@@ -91,7 +91,9 @@ PegaProx's closed runtime contract selects behind-proxy HTTP with
 `PEGAPROX_BEHIND_PROXY=true`, `PEGAPROX_HOST=0.0.0.0` inside the container, and
 `PEGAPROX_TRUSTED_PROXIES` set to the centrally selected ingress management address
 as one exact `/32`. The published listener remains bound to the existing PegaProx
-management address on port 5000. Data, key, account, resource and restart settings
+management address on port 5000, with only the exact ingress management `/32`
+admitted by its TCP 5000 rule. Direct home-network access is removed so browser
+clients reach the application through Traefik HTTPS. Data, key, account, resource and restart settings
 are retained. Its read-only loopback health probe must use HTTP without following
 redirects or calling setup/login, and still require an initialized closed setup.
 
@@ -115,7 +117,8 @@ has an explicit ingress NIC; cross-bridge reachability is not assumed. The `host
 `nas` and `proxmox` routes select `management-clients`, limited to policy15 and
 management25. The `pegaprox` route selects only `security-headers`; ingress also
 admits `http_backend`, `frontend` and `policy_50` clients, which can reach PegaProx
-through that route. PegaProx separately permits direct access from `home`. Any
+through that route. Its backend port accepts only the exact ingress management
+endpoint; browser clients use the Traefik route. Any
 private-site restriction must be explicit, and an operator must review allowlist
 changes before rollout.
 

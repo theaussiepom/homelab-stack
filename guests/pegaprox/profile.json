@@ -75,14 +75,6 @@
           "direction": "in",
           "proto": "tcp",
           "port": "5000",
-          "source": "${networks.home}/24",
-          "destination": "${addresses.pegaprox_management}/32",
-          "comment": "Direct client access to PegaProx"
-        },
-        {
-          "direction": "in",
-          "proto": "tcp",
-          "port": "5000",
           "source": "${addresses.ingress_management}/32",
           "destination": "${addresses.pegaprox_management}/32",
           "comment": "Declared HTTP route backend"
