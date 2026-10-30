@@ -115,7 +115,18 @@ class CustodySelectionTests(unittest.TestCase):
     def test_disabled_member_is_never_a_missing_or_conflicting_custody_waiver(self):
         """Real source closure must refuse before any runtime packet is available."""
         original = self.custody_overlay()
-        for case in ("missing-copy", "different-group", "wrong-vmid", "altered-proof", "wrong-proof-name", "unknown-waiver", "old-mariadb-directory", "invalid-immutable-hash", "unknown-receipt-field"):
+        refusals = {
+            "missing-copy": "Configured group provenance copies must agree, including disabled members",
+            "different-group": "Configured group provenance copies must agree, including disabled members",
+            "wrong-vmid": "A custody selection belongs only to its exact guest and role",
+            "altered-proof": "Preserve exact custody source proof bytes during resolution",
+            "wrong-proof-name": "Bind the complete immutable custody source inputs",
+            "unknown-waiver": "Use closed coordinated custody fields",
+            "old-mariadb-directory": "Bind the exact existing group directory",
+            "invalid-immutable-hash": "Pin an exact coordinated evidence digest",
+            "unknown-receipt-field": "Use closed coordinated custody fields",
+        }
+        for case, message in refusals.items():
             changed = copy.deepcopy(original)
             config = changed["guests"]["db-tools"]["config"]
             group = config["coordinated_custody"]["group"]
@@ -131,19 +142,18 @@ class CustodySelectionTests(unittest.TestCase):
             elif case == "wrong-proof-name":
                 group["catalogue"]["file"] = "missing-catalogue.json"
             elif case == "unknown-waiver":
-                config["coordinated_custody"]["completed_release"] = True
+                for role in ("postgresql", "identity", "db-tools"):
+                    changed["guests"][role]["config"]["coordinated_custody"]["completed_release"] = True
             elif case == "old-mariadb-directory":
                 changed["guests"]["mariadb"]["config"]["coordinated_custody"]["group"]["directory"] = "database-server-cutover-mariadb-example"
             elif case == "invalid-immutable-hash":
                 group["members"]["db-tools"]["initial_ordinary"]["immutable_sha256"] = "invalid"
             else:
                 group["members"]["db-tools"]["initial_ordinary"]["canonical_sha256"] = "f" * 64
-            message = ""
-            if case in ("invalid-immutable-hash", "unknown-receipt-field"):
+            if case in ("wrong-proof-name", "invalid-immutable-hash", "unknown-receipt-field"):
                 for role in ("postgresql", "identity", "db-tools"):
                     changed["guests"][role]["config"]["coordinated_custody"]["group"] = copy.deepcopy(group)
-                message = "Pin an exact coordinated evidence digest" if case == "invalid-immutable-hash" else "Use closed coordinated custody fields"
-            with self.subTest(case=case), self.assertRaisesRegex(ValueError, message):
+            with self.subTest(case=case), self.assertRaisesRegex(ValueError, "^" + message + "$"):
                 c.compile_stack(ROOT, changed, ["db-tools"])
 
     def test_valid_exclusions_keep_all_configured_guests_and_actual_dependencies(self):
