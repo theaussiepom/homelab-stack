@@ -48,7 +48,8 @@ class GeneratedWorkflowTests(unittest.TestCase):
                     shutil.copyfile(source, workflows / source.name)
                 # Generation owns phase structure, preserving its deliberate pin.
                 phase = (workflows / "phase.yml").read_bytes()
-                ci = (workflows / "ci.yml").read_bytes()
+                ci_names = ("validate-stack.yml", "review-pr-dependencies.yml", "scan-python-security.yml")
+                ci = {name: (workflows / name).read_bytes() for name in ci_names}
                 path = workflows / changed
                 if changed == "phase.yml":
                     document = yaml.safe_load(path.read_text())
@@ -68,7 +69,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertEqual(generate(root, check=True).returncode, 0)
                 self.assertEqual((workflows / "phase.yml").read_bytes(), phase)
-                self.assertEqual((workflows / "ci.yml").read_bytes(), ci)
+                self.assertEqual({name: (workflows / name).read_bytes() for name in ci_names}, ci)
 
     def test_named_secrets_survive_reusable_edges_and_remain_guest_scoped(self):
         common = {"APPLICATION_SSH_KEY": "true", "PROXMOX_APP_TOKEN": "true"}
