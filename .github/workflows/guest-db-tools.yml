@@ -13,6 +13,13 @@ name: pgAdmin
       environment_name:
         type: string
         required: true
+    secrets:
+      APPLICATION_SSH_KEY:
+        required: true
+      PROXMOX_APP_TOKEN:
+        required: true
+      FOUNDATION_PGADMIN_OAUTH_SECRET:
+        required: true
 permissions:
   contents: read
 jobs:
@@ -25,7 +32,10 @@ jobs:
       environment_name: ${{ inputs.environment_name }}
       guest: db-tools
       phase: infrastructure
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+      FOUNDATION_PGADMIN_OAUTH_SECRET: ${{ secrets.FOUNDATION_PGADMIN_OAUTH_SECRET }}
   preparation:
     name: Preparation
     needs: infrastructure
@@ -36,7 +46,10 @@ jobs:
       environment_name: ${{ inputs.environment_name }}
       guest: db-tools
       phase: preparation
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+      FOUNDATION_PGADMIN_OAUTH_SECRET: ${{ secrets.FOUNDATION_PGADMIN_OAUTH_SECRET }}
   pgadmin:
     name: pgAdmin
     needs: preparation
@@ -47,4 +60,7 @@ jobs:
       environment_name: ${{ inputs.environment_name }}
       guest: db-tools
       phase: pgadmin
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+      FOUNDATION_PGADMIN_OAUTH_SECRET: ${{ secrets.FOUNDATION_PGADMIN_OAUTH_SECRET }}

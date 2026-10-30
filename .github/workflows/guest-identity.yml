@@ -13,6 +13,17 @@ name: Authentik
       environment_name:
         type: string
         required: true
+    secrets:
+      APPLICATION_SSH_KEY:
+        required: true
+      PROXMOX_APP_TOKEN:
+        required: true
+      FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD:
+        required: true
+      FOUNDATION_AUTHENTIK_SECRET_KEY:
+        required: true
+      FOUNDATION_AUTHENTIK_SMTP_PASSWORD:
+        required: false
 permissions:
   contents: read
 jobs:
@@ -25,7 +36,12 @@ jobs:
       environment_name: ${{ inputs.environment_name }}
       guest: identity
       phase: infrastructure
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+      FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD: ${{ secrets.FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD }}
+      FOUNDATION_AUTHENTIK_SECRET_KEY: ${{ secrets.FOUNDATION_AUTHENTIK_SECRET_KEY }}
+      FOUNDATION_AUTHENTIK_SMTP_PASSWORD: ${{ secrets.FOUNDATION_AUTHENTIK_SMTP_PASSWORD }}
   preparation:
     name: Preparation
     needs: infrastructure
@@ -36,7 +52,12 @@ jobs:
       environment_name: ${{ inputs.environment_name }}
       guest: identity
       phase: preparation
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+      FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD: ${{ secrets.FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD }}
+      FOUNDATION_AUTHENTIK_SECRET_KEY: ${{ secrets.FOUNDATION_AUTHENTIK_SECRET_KEY }}
+      FOUNDATION_AUTHENTIK_SMTP_PASSWORD: ${{ secrets.FOUNDATION_AUTHENTIK_SMTP_PASSWORD }}
   authentik:
     name: Authentik
     needs: preparation
@@ -47,4 +68,9 @@ jobs:
       environment_name: ${{ inputs.environment_name }}
       guest: identity
       phase: authentik
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+      FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD: ${{ secrets.FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD }}
+      FOUNDATION_AUTHENTIK_SECRET_KEY: ${{ secrets.FOUNDATION_AUTHENTIK_SECRET_KEY }}
+      FOUNDATION_AUTHENTIK_SMTP_PASSWORD: ${{ secrets.FOUNDATION_AUTHENTIK_SMTP_PASSWORD }}

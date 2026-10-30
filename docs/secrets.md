@@ -8,6 +8,16 @@ bindings reuse existing GitHub Environment Secrets: `PROXMOX_APP_TOKEN`,
 runner compares existing private credential files and never rotates a mismatch.
 Environment secret availability and exact existing names require adoption review.
 
+All reusable-workflow edges declare and forward existing names explicitly. Deploy
+and generic phase wrappers admit the two required common names and six optional
+application names. Each guest requires only its own application names alongside
+the common pair; Authentik SMTP remains optional. Retained PegaProx bootstrap names
+are outside this ordinary runtime contract. The selected framework's final job
+keeps its private Environment and guest-scoped application bindings. Caller name
+presence does not prove a nonempty value; existing runtime validators remain the
+value checks before target operations. These source declarations create no Secrets
+and do not establish Environment value availability or native execution authority.
+
 The retained Traefik service-discovery token stays in its existing private bootstrap
 file. PegaProx's database key stays in its existing mode-600 private controller file;
 its service-owned copy must match. Bitwarden's mode-600 runtime JSON file stays

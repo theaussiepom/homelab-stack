@@ -13,6 +13,23 @@ name: HomeLab stack
       environment_name:
         type: string
         required: true
+    secrets:
+      APPLICATION_SSH_KEY:
+        required: true
+      PROXMOX_APP_TOKEN:
+        required: true
+      AUTOMATION_NODE_RED_API_TOKEN:
+        required: false
+      FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD:
+        required: false
+      FOUNDATION_AUTHENTIK_SECRET_KEY:
+        required: false
+      FOUNDATION_AUTHENTIK_SMTP_PASSWORD:
+        required: false
+      FOUNDATION_PGADMIN_OAUTH_SECRET:
+        required: false
+      FOUNDATION_CLOUDFLARE_DNS_TOKEN:
+        required: false
 permissions:
   contents: read
 jobs:
@@ -37,7 +54,9 @@ jobs:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
   ingress:
     name: Traefik
     needs:
@@ -49,7 +68,10 @@ jobs:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+      FOUNDATION_CLOUDFLARE_DNS_TOKEN: ${{ secrets.FOUNDATION_CLOUDFLARE_DNS_TOKEN }}
   postgresql:
     name: PostgreSQL
     needs:
@@ -61,7 +83,9 @@ jobs:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
   mariadb:
     name: MariaDB
     needs:
@@ -73,7 +97,9 @@ jobs:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
   influxdb:
     name: InfluxDB
     needs:
@@ -85,7 +111,9 @@ jobs:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
   identity:
     name: Authentik
     needs:
@@ -98,7 +126,12 @@ jobs:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+      FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD: ${{ secrets.FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD }}
+      FOUNDATION_AUTHENTIK_SECRET_KEY: ${{ secrets.FOUNDATION_AUTHENTIK_SECRET_KEY }}
+      FOUNDATION_AUTHENTIK_SMTP_PASSWORD: ${{ secrets.FOUNDATION_AUTHENTIK_SMTP_PASSWORD }}
   db-tools:
     name: pgAdmin
     needs:
@@ -112,7 +145,10 @@ jobs:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+      FOUNDATION_PGADMIN_OAUTH_SECRET: ${{ secrets.FOUNDATION_PGADMIN_OAUTH_SECRET }}
   automation:
     name: Automation
     needs:
@@ -127,7 +163,10 @@ jobs:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+      AUTOMATION_NODE_RED_API_TOKEN: ${{ secrets.AUTOMATION_NODE_RED_API_TOKEN }}
   bitwarden:
     name: Bitwarden
     needs:
@@ -140,7 +179,9 @@ jobs:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
   pegaprox:
     name: PegaProx
     needs:
@@ -152,7 +193,9 @@ jobs:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
   zigbee2mqtt:
     name: Zigbee2MQTT
     needs:
@@ -164,4 +207,6 @@ jobs:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
       environment_name: ${{ inputs.environment_name }}
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}

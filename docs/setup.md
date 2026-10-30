@@ -41,8 +41,10 @@ python3 ../homelab/blueprints/workflows.py --stack .
 python3 ../homelab/blueprints/workflows.py --stack . --check
 ```
 
-This manages only `deploy.yml` and the permanent `guest-*.yml` files. `phase.yml`
-keeps the single deliberate framework pin, and `ci.yml` keeps source validation.
+This manages all thirteen composition workflows: `deploy.yml`, the eleven permanent
+`guest-*.yml` files and `phase.yml`. Generation preserves the single deliberate
+framework selection in `phase.yml` while checking its declarations and forwarding
+contract. `ci.yml` keeps source validation.
 The private site's optional disabled list and adopted stack pin remain explicit. There are
 no compatibility formats or transition flags. Obsolete managed paths must be
 removed explicitly; the generator never silently deletes another workflow.

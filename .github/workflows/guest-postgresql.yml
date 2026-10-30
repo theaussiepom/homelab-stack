@@ -13,6 +13,11 @@ name: PostgreSQL
       environment_name:
         type: string
         required: true
+    secrets:
+      APPLICATION_SSH_KEY:
+        required: true
+      PROXMOX_APP_TOKEN:
+        required: true
 permissions:
   contents: read
 jobs:
@@ -25,7 +30,9 @@ jobs:
       environment_name: ${{ inputs.environment_name }}
       guest: postgresql
       phase: infrastructure
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
   preparation:
     name: Preparation
     needs: infrastructure
@@ -36,7 +43,9 @@ jobs:
       environment_name: ${{ inputs.environment_name }}
       guest: postgresql
       phase: preparation
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
   postgresql:
     name: PostgreSQL
     needs: preparation
@@ -47,4 +56,6 @@ jobs:
       environment_name: ${{ inputs.environment_name }}
       guest: postgresql
       phase: postgresql
-    secrets: inherit
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
