@@ -382,8 +382,7 @@
           "ca_file": "/usr/local/share/ca-certificates/homelab-pegaprox.crt"
         },
         "udm": {
-          "server_name": "${domains.udm_backend}",
-          "ca_file": "/usr/local/share/ca-certificates/homelab-udm.crt"
+          "server_name": "${domains.udm_backend}"
         },
         "nas": {
           "server_name": "${domains.nas_backend}",

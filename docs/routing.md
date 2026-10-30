@@ -66,6 +66,19 @@ reviewed before accepting `external-tls-trust-reviewed`; a downloaded certificat
 alone is not independent trust. Never place private keys or passwords in routes,
 Notes, middleware definitions or Git.
 
+The `udm` transport retains `server_name: ${domains.udm_backend}` and deliberately
+omits `ca_file`. It renders only `serverName`, leaving trust to the Traefik
+process's default root store while retaining hostname and certificate verification.
+No UDM-specific CA input, staged `route-udm.pem` or transport CA mount is required.
+The host route's hostname, aliases and middleware remain separate and unchanged;
+the private site retains its existing backend-name binding. Proxmox, PegaProx and
+NAS keep their explicit CA inputs, and the existing PVE provider trust is unchanged.
+
+This source change neither deletes a controller trust file nor activates a route.
+Renderer tests use synthetic inputs and do not establish an actual Traefik-to-UDM
+TLS handshake or accept `external-tls-trust-reviewed`. Route activation and native
+trust/identity acceptance still require their separate reviewed qualification.
+
 PegaProx serves HTTPS on port 5000. Its managed endpoint uses that protocol, and
 the route selects the central `pegaprox` transport. The transport verifies
 `prox.${domains.secondary}` using the public trust bundle at
