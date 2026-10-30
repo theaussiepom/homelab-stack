@@ -103,12 +103,21 @@ clients reach the application through Traefik HTTPS. Data, key, account, resourc
 are retained. Its read-only loopback health probe must use HTTP without following
 redirects or calling setup/login, and still require an initialized closed setup.
 
-Source compilation and synthetic renderer/health tests do not change an existing
-PegaProx process from TLS to HTTP. That environment/mode preparation needs a
-separately reviewed native operation before activation. The NAS HTTP response and
-proxy-header behavior support this source selection; a complete browser login,
-automatic frontend certificate issuance and native service acceptance remain
-separate checks. No prerequisite acceptance is granted by this source change.
+Existing deployments must adopt matching stack/site route inputs: the managed
+PegaProx endpoint uses HTTP on port 5000 and its route omits the optional TLS
+transport. Route validation rejects HTTP with a TLS transport. Frontend readiness
+checks the separately prepared address/gateway/MAC reply-routing settings; it does
+not update backend URLs or TLS transport selections. An authorized normal
+application reconcile replaces the container to apply the HTTP proxy environment
+while retaining its image, key, account and data. A restart alone does not change
+that environment; no backend certificate preparation or application database
+configuration migration is needed.
+
+Source compilation and synthetic renderer/health tests do not activate this mode.
+The NAS HTTP response and proxy-header behavior support this source selection; a
+complete browser login, automatic frontend certificate issuance and native service
+acceptance remain separate checks. No prerequisite acceptance is granted by this
+source change.
 
 Compilation rejects global hostname/alias collisions, unknown endpoints or policy
 references, public or foreign-interface backends, conflicting DNS records and

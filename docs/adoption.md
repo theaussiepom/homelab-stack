@@ -20,12 +20,18 @@ explicit existing-state adoption because its complete commissioned infrastructur
 input was not in the private source seed. Its public profile is a proposal.
 
 The declared NAS/PegaProx HTTP backends retain automatic browser-facing Traefik
-HTTPS. For an existing PegaProx instance still serving TLS, the process environment
-must be prepared and verified through a separately reviewed native action; a
-source edit or restart alone does not change its HTTP mode. Preserve the retained
-key, account, encrypted data, config/log paths and custody evidence. Verify trusted
-forwarding and secure browser session behavior before activation; ordinary CD
-must not bootstrap an account or manufacture acceptance to select HTTP.
+HTTPS. Existing deployments must adopt matching stack/site route inputs: select
+PegaProx's managed endpoint as HTTP on port 5000 and omit its route's optional TLS
+transport. Route validation rejects HTTP with a TLS transport. Frontend readiness
+checks separately prepared address/gateway/MAC reply-routing settings; it does not
+update backend URLs or TLS transport selections. An authorized normal application
+reconcile replaces the container to apply the HTTP proxy environment while
+retaining its image, key, account, encrypted data and config/log paths. A source
+edit or restart alone does not apply a changed container environment. No backend
+certificate preparation or application database configuration migration is needed.
+Preserve custody evidence and verify trusted forwarding and secure browser session
+behavior before native acceptance. Ordinary CD must not bootstrap an account or
+manufacture acceptance to select HTTP.
 
 Keep the state root and backend identities. Do not import, recreate or rename an
 installed guest through ordinary CD. Every admitted runner must see the same durable
