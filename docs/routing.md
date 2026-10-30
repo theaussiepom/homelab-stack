@@ -29,9 +29,8 @@ The separate route map references it:
   "nas": {
     "host": "nas.${domains.secondary}",
     "aliases": ["nas.${domains.primary}"],
-    "target": {"url": "https://${addresses.nas}:31764"},
-    "middlewares": ["security-headers", "management-clients"],
-    "transport": "nas"
+    "target": {"url": "http://${addresses.nas}:31763"},
+    "middlewares": ["security-headers", "management-clients"]
   }
 }
 ```
@@ -71,24 +70,37 @@ omits `ca_file`. It renders only `serverName`, leaving trust to the Traefik
 process's default root store while retaining hostname and certificate verification.
 No UDM-specific CA input, staged `route-udm.pem` or transport CA mount is required.
 The host route's hostname, aliases and middleware remain separate and unchanged;
-the private site retains its existing backend-name binding. Proxmox, PegaProx and
-NAS keep their explicit CA inputs, and the existing PVE provider trust is unchanged.
+the private site retains its existing backend-name binding. Proxmox keeps its
+explicit CA input, and the existing verified PVE provider trust is unchanged.
 
 This source change neither deletes a controller trust file nor activates a route.
 Renderer tests use synthetic inputs and do not establish an actual Traefik-to-UDM
 TLS handshake or accept `external-tls-trust-reviewed`. Route activation and native
 trust/identity acceptance still require their separate reviewed qualification.
 
-PegaProx serves HTTPS on port 5000. Its managed endpoint uses that protocol, and
-the route selects the central `pegaprox` transport. The transport verifies
-`prox.${domains.secondary}` using the public trust bundle at
-`/usr/local/share/ca-certificates/homelab-pegaprox.crt` on the controller. Ingress
-stages this as `route-pegaprox.pem`, mounts it read-only, and references it from
-`pegaprox@file` in the guest's Notes. Include this backend in the existing
-state-and-trust review: independently verify the certificate/issuer and matching
-DNS SAN before adoption. A default self-signed certificate without a matching
-SAN needs separate certificate preparation; ordinary CD does not issue or replace
-the application's retained certificate. Missing trust input prevents staging.
+Traefik owns browser-facing HTTPS for NAS and PegaProx. Their routers keep
+`websecure`, the automatic `letsencrypt` resolver, existing hostnames/aliases and
+middleware. Internal NAS traffic uses HTTP on port 31763; PegaProx's managed
+`pegaprox.web` endpoint uses HTTP on port 5000. The PegaProx route still references
+that endpoint rather than declaring a second backend URL. Neither backend selects
+a TLS transport, so their unused transport CA definitions, staged CA files and
+mounts are absent. There is no manual NAS/PegaProx backend certificate lifecycle.
+UDM and PVE remain verified HTTPS connections.
+
+PegaProx's closed runtime contract selects behind-proxy HTTP with
+`PEGAPROX_BEHIND_PROXY=true`, `PEGAPROX_HOST=0.0.0.0` inside the container, and
+`PEGAPROX_TRUSTED_PROXIES` set to the centrally selected ingress management address
+as one exact `/32`. The published listener remains bound to the existing PegaProx
+management address on port 5000. Data, key, account, resource and restart settings
+are retained. Its read-only loopback health probe must use HTTP without following
+redirects or calling setup/login, and still require an initialized closed setup.
+
+Source compilation and synthetic renderer/health tests do not change an existing
+PegaProx process from TLS to HTTP. That environment/mode preparation needs a
+separately reviewed native operation before activation. The NAS HTTP response and
+proxy-header behavior support this source selection; a complete browser login,
+automatic frontend certificate issuance and native service acceptance remain
+separate checks. No prerequisite acceptance is granted by this source change.
 
 Compilation rejects global hostname/alias collisions, unknown endpoints or policy
 references, public or foreign-interface backends, conflicting DNS records and

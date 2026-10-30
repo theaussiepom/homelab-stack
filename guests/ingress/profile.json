@@ -223,7 +223,7 @@
         {
           "direction": "out",
           "proto": "tcp",
-          "port": "31764",
+          "port": "31763",
           "source": "${addresses.ingress_management}/32",
           "destination": "${addresses.nas}/32",
           "comment": "Declared HTTP route backend"
@@ -377,16 +377,8 @@
         "proxmox": {
           "ca_file": "/usr/local/share/ca-certificates/homelab-pve.crt"
         },
-        "pegaprox": {
-          "server_name": "prox.${domains.secondary}",
-          "ca_file": "/usr/local/share/ca-certificates/homelab-pegaprox.crt"
-        },
         "udm": {
           "server_name": "${domains.udm_backend}"
-        },
-        "nas": {
-          "server_name": "${domains.nas_backend}",
-          "ca_file": "/usr/local/share/ca-certificates/homelab-nas.crt"
         }
       }
     }

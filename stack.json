@@ -274,8 +274,7 @@
       "host": "prox.${domains.secondary}",
       "target": {
         "endpoint": "pegaprox.pegaprox.web"
-      },
-      "transport": "pegaprox"
+      }
     },
     "zigbee1": {
       "host": "zigbee1.${domains.primary}",
@@ -297,9 +296,8 @@
     "nas": {
       "host": "nas.${domains.secondary}",
       "target": {
-        "url": "https://${addresses.nas}:31764"
+        "url": "http://${addresses.nas}:31763"
       },
-      "transport": "nas",
       "middlewares": [
         "security-headers",
         "management-clients"

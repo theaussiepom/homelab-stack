@@ -57,7 +57,7 @@ class UdmTransportTests(unittest.TestCase):
         profile = compiler.read(ROOT / "guests/ingress/profile.json")
         transports = profile["stack"]["routing"]["transports"]
         self.assertEqual(transports["udm"], {"server_name": "${domains.udm_backend}"})
-        self.assertEqual({name for name, row in transports.items() if "ca_file" in row}, {"proxmox", "pegaprox", "nas"})
+        self.assertEqual({name for name, row in transports.items() if "ca_file" in row}, {"proxmox"})
 
     def test_compiled_name_follows_central_binding_without_a_tls_bypass(self):
         for changed in (False, True):
@@ -105,11 +105,11 @@ class UdmTransportTests(unittest.TestCase):
             self.assertNotIn(str(missing), [str(call.args[0]) for call in reader.call_args_list])
             paths = {row["path"] for row in artifacts}
             self.assertNotIn("route-udm.pem", paths)
-            self.assertTrue({"route-proxmox.pem", "route-pegaprox.pem", "route-nas.pem", "pve-ca.pem"} <= paths)
+            self.assertTrue({"route-proxmox.pem", "pve-ca.pem"} <= paths)
             service = render.compose(stack)["services"]["traefik"]
             mounts = {row["target"]: row for row in service["volumes"]}
             self.assertNotIn(discovery.ca_path("udm"), mounts)
-            for name in ("proxmox", "pegaprox", "nas"):
+            for name in ("proxmox",):
                 self.assertIn(stack["routing"]["transports"][name]["ca_file"], foundation.source_files(stack))
                 self.assertEqual(discovery.shared(stack["routing"])["http"]["serversTransports"][name]["rootCAs"], [discovery.ca_path(name)])
                 self.assertTrue(mounts[discovery.ca_path(name)]["read_only"])
@@ -118,7 +118,7 @@ class UdmTransportTests(unittest.TestCase):
             self.assertFalse(missing.exists())
 
     def test_other_missing_ca_files_and_invalid_tls_transports_still_fail(self):
-        for name in ("proxmox", "pegaprox", "nas"):
+        for name in ("proxmox",):
             with self.subTest(missing_ca=name), tempfile.TemporaryDirectory() as directory:
                 stack = self.staged(Path(directory))
                 Path(stack["routing"]["transports"][name]["ca_file"]).unlink()

@@ -130,7 +130,7 @@
       },
       "endpoints": {
         "pegaprox": {
-          "web": "https://${addresses.pegaprox_management}:5000"
+          "web": "http://${addresses.pegaprox_management}:5000"
         }
       }
     }
@@ -143,6 +143,7 @@
     "container_memory_mib": 1536,
     "cpus": 2,
     "pids_limit": 256,
-    "image_ref": "pegaprox"
+    "image_ref": "pegaprox",
+    "trusted_proxy": "${addresses.ingress_management}/32"
   }
 }

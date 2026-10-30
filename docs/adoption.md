@@ -19,6 +19,14 @@ identities, UID/GID/modes, CA/SSH trust, backend state and all holds. DNS needs 
 explicit existing-state adoption because its complete commissioned infrastructure
 input was not in the private source seed. Its public profile is a proposal.
 
+The declared NAS/PegaProx HTTP backends retain automatic browser-facing Traefik
+HTTPS. For an existing PegaProx instance still serving TLS, the process environment
+must be prepared and verified through a separately reviewed native action; a
+source edit or restart alone does not change its HTTP mode. Preserve the retained
+key, account, encrypted data, config/log paths and custody evidence. Verify trusted
+forwarding and secure browser session behavior before activation; ordinary CD
+must not bootstrap an account or manufacture acceptance to select HTTP.
+
 Keep the state root and backend identities. Do not import, recreate or rename an
 installed guest through ordinary CD. Every admitted runner must see the same durable
 state and private inputs; jobs may move between admitted slots. The parent retains
