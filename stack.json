@@ -90,7 +90,10 @@
     "domains.udm_backend": "udm.example.invalid",
     "domains.nas_backend": "nas.example.invalid",
     "mac.ingress.3": "02:00:05:03:00:01",
-    "identity.node_red_client": "example-node-red-client"
+    "identity.node_red_client": "example-node-red-client",
+    "custody.catalogue": "{}\n",
+    "custody.postgresql_acceptance": "{}\n",
+    "custody.mariadb_acceptance": "{}\n"
   },
   "guests": {
     "dns": {

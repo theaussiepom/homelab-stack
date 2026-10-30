@@ -9,7 +9,7 @@
       "storage_id": "local-zfs",
       "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
       "started": true,
-      "start_on_boot": false,
+      "start_on_boot": true,
       "boot_order": 60,
       "nesting": true,
       "keyctl": false,

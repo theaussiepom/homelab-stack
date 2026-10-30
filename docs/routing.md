@@ -100,7 +100,9 @@ as one exact `/32`. The published listener remains bound to the existing PegaPro
 management address on port 5000, with only the exact ingress management `/32`
 admitted by its TCP 5000 rule. Direct home-network access is removed so browser
 clients reach the application through Traefik HTTPS. Data, key, account, resource and restart settings
-are retained. Its read-only loopback health probe must use HTTP without following
+are retained. The guest remains started and boots with the host at order 60,
+independently of the container's `restart: always` policy. Its read-only loopback
+health probe must use HTTP without following
 redirects or calling setup/login, and still require an initialized closed setup.
 
 Existing deployments must adopt matching stack/site route inputs: the managed

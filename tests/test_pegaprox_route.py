@@ -87,6 +87,17 @@ class PegaProxRouteTests(unittest.TestCase):
                 self.assertEqual(labels["traefik.http.routers.pegaprox.entrypoints"], "websecure")
                 self.assertEqual(labels["traefik.http.routers.pegaprox.tls.certresolver"], "letsencrypt")
 
+    def test_guest_boot_policy_preserves_startup_independently_of_container_restart(self):
+        """The compiled LXC must boot with its host as well as restart its service."""
+        packet = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])["pegaprox"]
+        cfg = json.loads(packet["files"]["site.json"])
+        stack = json.loads(packet["files"]["stack.json"])
+        self.assertEqual(cfg["guest"]["vmid"], 214)
+        self.assertIs(cfg["guest"]["started"], True)
+        self.assertIs(cfg["guest"]["start_on_boot"], True)
+        self.assertEqual(cfg["guest"]["boot_order"], 60)
+        self.assertEqual(render.compose(stack)["services"]["pegaprox"]["restart"], "always")
+
     def test_trusted_proxy_must_stay_a_single_admitted_ingress_endpoint(self):
         """A runtime proxy field cannot replace the guest's finite client policy."""
         packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])

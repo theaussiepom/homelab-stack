@@ -33,6 +33,11 @@ Preserve custody evidence and verify trusted forwarding and secure browser sessi
 behavior before native acceptance. Ordinary CD must not bootstrap an account or
 manufacture acceptance to select HTTP.
 
+For completed commissioning groups, follow the [exact custody contract](coordinated-custody.md).
+Configured provenance remains mandatory for disabled members; valid exclusions
+still follow the existing dependency graph. Selecting custody does not accept a
+prerequisite or establish an exclusive-writer window.
+
 Keep the state root and backend identities. Do not import, recreate or rename an
 installed guest through ordinary CD. Every admitted runner must see the same durable
 state and private inputs; jobs may move between admitted slots. The parent retains

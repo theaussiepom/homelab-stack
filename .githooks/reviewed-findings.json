@@ -1,14 +1,14 @@
 [
   {
     "path": "guests/postgresql/profile.json",
-    "sha256": "895b9da8c502e1b191e67f4cfdc789d344855698bdbc81871684ab4847c7f187",
+    "sha256": "3a1eed3e1cac1a142b27a0ac308b137a40d8ece9718bee81e72497d67b803214",
     "rule": "generic-api-key",
     "line": 190,
     "reason": "SHA256 of the public postgresql vendor signing key, verified against the vendor.asc bytes embedded in this exact profile; not a credential."
   },
   {
     "path": "guests/mariadb/profile.json",
-    "sha256": "003465a934fb6c62fa8a7205a4d749087ae493e3360239aae6a94c637d3c5bf5",
+    "sha256": "cdd4a08b8f02a7dfe6672e34f0cc49dd71e91205ddaf8491d83918ab45566c27",
     "rule": "generic-api-key",
     "line": 167,
     "reason": "SHA256 of the public mariadb vendor signing key, verified against the vendor.asc bytes embedded in this exact profile; not a credential."
