@@ -18,11 +18,14 @@ This selection is provenance, not a readiness or exclusive-writer acceptance.
 
 ## Private proof inputs
 
-The selected [framework contract](https://github.com/theaussiepom/homelab/blob/84cfff2e5a5c2bc664c1277f5508d42d3a2df1ba/docs/coordinated-custody.md)
+The selected [framework contract](https://github.com/theaussiepom/homelab/blob/30be80c82eba79a734c808b695bd25066ecf9684/docs/coordinated-custody.md)
 defines the closed `homelab-coordinated-custody-v1` selection. Supply it under
 `guests.<member>.config.coordinated_custody`, and set that member's
 `config.paths.coordinated_custody_inputs` to `${inputs}`. The compiler binds this
 to the exact guest packet directory; all members still carry the same selection.
+Both supported group schemas use `database-network-cutover-<operation>` for the
+existing group directory, including MariaDB. Do not rename a retained group to
+match a different prefix.
 
 The four public profiles provide these immutable text-file slots:
 
@@ -80,8 +83,14 @@ a hold to obtain admission.
 
 The first run requires the exact qualified starting backend generation and the
 selected absent-or-exact starting ordinary receipt. A selected older four-field
-receipt is recognized only by its exact raw digest and matching immutable
-operation copy; it is initial provenance, never a current-framework success.
+receipt is recognized only by exact selected raw bytes: `initial_ordinary.sha256`
+pins the canonical receipt, while optional `immutable_sha256` pins its immutable
+operation copy separately. Omitting `immutable_sha256` requires that copy to have
+the same raw hash. After both raw pins pass, the complete decoded records must
+match with nested values and JSON types preserved. Different historical key order
+is supported; a changed value or type is refused. Neither file is normalized or
+rewritten. This is initial provenance, never a current-framework success; later
+framework receipts still require exact canonical/immutable byte equality.
 Identity and db-tools can start from their separately qualified later ordinary-CD
 generation instead of being forced back to an older overlay state.
 

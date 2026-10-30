@@ -35,7 +35,7 @@ class CustodySelectionTests(unittest.TestCase):
             paths = cfgs[engine]["paths"]
             request = digest(engine + "-request")
             group = {
-                "directory": ("database-network-cutover-" if engine == "postgresql" else "database-server-cutover-") + engine + "-example",
+                "directory": "database-network-cutover-" + engine + "-example",
                 "schema": "homelab-postgresql-cutover-v1" if engine == "postgresql" else "homelab-database-server-cutover-v1",
                 "operation": engine + "-example",
                 "records": {"request.json": request, "claim.json": request, "complete.json": digest(engine + "-complete")},
@@ -84,10 +84,38 @@ class CustodySelectionTests(unittest.TestCase):
                     self.assertNotIn("coordinated_custody", json.loads(packets[role]["files"]["site.json"]))
                 self.assertEqual(overlay["accepted"], {})
 
+    def test_source_preserves_separately_pinned_initial_receipt_serializations(self):
+        """Keep both raw starting pins through real profiles, including a disabled leaf."""
+        overlay = self.custody_overlay()
+        expected = {}
+        for engine, roles in (("postgresql", ("postgresql", "identity", "db-tools")), ("mariadb", ("mariadb",))):
+            group = overlay["guests"][engine]["config"]["coordinated_custody"]["group"]
+            self.assertEqual(group["directory"], "database-network-cutover-" + group["operation"])
+            for role, member in group["members"].items():
+                source_hash = hashlib.sha256(("synthetic-source-" + role).encode()).hexdigest()
+                record = {"status": "passed", "binding": {"vmid": member["vmid"], "source_sha256": source_hash},
+                          "state_sha256": member["initial_state_sha256"], "result": {"fixture": role}}
+                canonical = (json.dumps(record, indent=2) + "\n").encode()
+                immutable = (json.dumps(record, sort_keys=True, indent=2) + "\n").encode()
+                self.assertNotEqual(canonical, immutable)
+                expected[role] = {"operation": "ordinary-100-1", "sha256": hashlib.sha256(canonical).hexdigest(),
+                                  "immutable_sha256": hashlib.sha256(immutable).hexdigest(), "source_sha256": source_hash}
+                member["initial_ordinary"] = expected[role]
+            for role in roles:
+                overlay["guests"][role]["config"]["coordinated_custody"]["group"] = copy.deepcopy(group)
+        packets = c.compile_stack(ROOT, overlay, ["db-tools"])
+        for role, initial in expected.items():
+            cfg = json.loads(packets[role]["files"]["site.json"])
+            for member_role, member in cfg["coordinated_custody"]["group"]["members"].items():
+                self.assertEqual(member["initial_ordinary"], expected[member_role])
+            self.assertEqual(cfg["coordinated_custody"]["group"]["members"][role]["initial_ordinary"], initial)
+        self.assertFalse(packets["db-tools"]["enabled"])
+        self.assertEqual(overlay["accepted"], {})
+
     def test_disabled_member_is_never_a_missing_or_conflicting_custody_waiver(self):
         """Real source closure must refuse before any runtime packet is available."""
         original = self.custody_overlay()
-        for case in ("missing-copy", "different-group", "wrong-vmid", "altered-proof", "wrong-proof-name", "unknown-waiver"):
+        for case in ("missing-copy", "different-group", "wrong-vmid", "altered-proof", "wrong-proof-name", "unknown-waiver", "old-mariadb-directory", "invalid-immutable-hash", "unknown-receipt-field"):
             changed = copy.deepcopy(original)
             config = changed["guests"]["db-tools"]["config"]
             group = config["coordinated_custody"]["group"]
@@ -102,8 +130,14 @@ class CustodySelectionTests(unittest.TestCase):
                 changed["values"]["custody.catalogue"] += " "
             elif case == "wrong-proof-name":
                 group["catalogue"]["file"] = "missing-catalogue.json"
-            else:
+            elif case == "unknown-waiver":
                 config["coordinated_custody"]["completed_release"] = True
+            elif case == "old-mariadb-directory":
+                changed["guests"]["mariadb"]["config"]["coordinated_custody"]["group"]["directory"] = "database-server-cutover-mariadb-example"
+            elif case == "invalid-immutable-hash":
+                group["members"]["db-tools"]["initial_ordinary"]["immutable_sha256"] = "invalid"
+            else:
+                group["members"]["db-tools"]["initial_ordinary"]["canonical_sha256"] = "f" * 64
             with self.subTest(case=case), self.assertRaises(ValueError):
                 c.compile_stack(ROOT, changed, ["db-tools"])
 
