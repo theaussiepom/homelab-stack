@@ -101,6 +101,20 @@ class PegaProxRouteTests(unittest.TestCase):
         changed["guest"]["rules"] = [row for row in changed["guest"]["rules"] if not (row.get("direction") == "in" and row.get("port") == "5000" and row.get("source") == stack["trusted_proxy"])]
         with self.assertRaises(ValueError):
             pegaprox.validate_deployment(changed, stack)
+        client = next(row for row in cfg["guest"]["rules"] if row.get("direction") == "in" and row.get("port") == "5000")
+        ingress_subnet = stack["trusted_proxy"].rsplit(".", 1)[0] + ".0/24"
+        home_subnet = c.manifest(ROOT)["values"]["networks.home"] + "/24"
+        for source in (ingress_subnet, home_subnet, stack["bind_address"] + "/32"):
+            for extra in (False, True):
+                with self.subTest(client_source=source, extra_client=extra):
+                    changed = copy.deepcopy(cfg)
+                    altered = dict(client, source=source)
+                    if extra:
+                        changed["guest"]["rules"].append(altered)
+                    else:
+                        changed["guest"]["rules"] = [altered if row == client else row for row in changed["guest"]["rules"]]
+                    with self.assertRaises(ValueError):
+                        pegaprox.validate_deployment(changed, stack)
 
     def test_nas_http_route_keeps_frontend_tls_aliases_and_narrow_egress(self):
         """Compile the qualified port while preserving browser routing and policy."""
