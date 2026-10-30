@@ -1,0 +1,257 @@
+{
+  "config": {
+    "guest": {
+      "boot_order": 20,
+      "cpu": 2,
+      "dns_servers": [
+        "${addresses.dns}",
+        "${addresses.fallback_dns}"
+      ],
+      "hostname": "postgresql",
+      "interfaces": [
+        {
+          "bridge": "vmbr0",
+          "gateway": "${gateways.management}",
+          "ipv4": "${addresses.postgresql_management}/24",
+          "ipv6": "manual",
+          "mac": "${mac.postgresql.0}",
+          "vlan": 25
+        },
+        {
+          "bridge": "vmbr31",
+          "ipv4": "${addresses.postgresql_backend}/24",
+          "ipv6": "manual",
+          "mac": "${mac.postgresql.1}",
+          "vlan": null
+        }
+      ],
+      "keyctl": false,
+      "memory_mib": 2048,
+      "nesting": true,
+      "root_gib": 4,
+      "rules": [
+        {
+          "comment": "Deployment runner SSH only",
+          "direction": "in",
+          "port": "22",
+          "proto": "tcp",
+          "source": "${addresses.runner}/32"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "udp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "udp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Signed package downloads",
+          "destination": "0.0.0.0/0",
+          "direction": "out",
+          "port": "80,443",
+          "proto": "tcp"
+        },
+        {
+          "comment": "postgresql approved client db-tools",
+          "destination": "${addresses.postgresql_backend}/32",
+          "direction": "in",
+          "port": "5432",
+          "proto": "tcp",
+          "source": "${addresses.pgadmin_postgresql}/32"
+        },
+        {
+          "comment": "postgresql approved client security",
+          "destination": "${addresses.postgresql_backend}/32",
+          "direction": "in",
+          "port": "5432",
+          "proto": "tcp",
+          "source": "${addresses.identity_postgresql}/32"
+        }
+      ],
+      "start_on_boot": true,
+      "started": true,
+      "storage_id": "local-zfs",
+      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "vmid": 208,
+      "volumes": {
+        "database": {
+          "path": "/var/lib/postgresql",
+          "size_gib": 16
+        }
+      }
+    },
+    "app": {
+      "address": "${addresses.postgresql_management}",
+      "database": {
+        "config_files": [
+          {
+            "destination": "/etc/postgresql/16/main/conf.d/homelab.conf",
+            "source": "${inputs}/homelab.conf"
+          },
+          {
+            "destination": "/etc/postgresql/16/main/pg_hba.conf",
+            "source": "${inputs}/pg_hba.conf"
+          }
+        ],
+        "gid": 1000,
+        "group": "postgres",
+        "home": "/var/lib/postgresql",
+        "uid": 70,
+        "user": "postgres",
+        "version_command": [
+          "/usr/lib/postgresql/16/bin/postgres",
+          "--version"
+        ],
+        "version_pattern": "16.10"
+      },
+      "health_checks": [
+        {
+          "argv": [
+            "python3",
+            "-c",
+            "import subprocess; assert subprocess.check_output(['systemctl','is-enabled','postgresql'],text=True).strip()=='enabled'; subprocess.run(['systemctl','is-active','--quiet','postgresql'],check=True); print('SERVICE_OK')"
+          ],
+          "expect": "SERVICE_OK",
+          "name": "Service is enabled and active"
+        },
+        {
+          "argv": [
+            "pg_isready",
+            "-h",
+            "${addresses.postgresql_backend}",
+            "-p",
+            "5432"
+          ],
+          "expect": "accepting connections",
+          "name": "PostgreSQL backend listener accepts connections"
+        },
+        {
+          "argv": [
+            "runuser",
+            "-u",
+            "postgres",
+            "--",
+            "psql",
+            "-X",
+            "-At",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-d",
+            "postgres",
+            "-c",
+            "SELECT 1"
+          ],
+          "expect": "1",
+          "name": "Local maintenance query"
+        },
+        {
+          "argv": [
+            "python3",
+            "-c",
+            "import socket; s=socket.create_connection(('${addresses.postgresql_backend}',5432),timeout=5); s.close(); print('BACKEND_OK')"
+          ],
+          "expect": "BACKEND_OK",
+          "name": "Backend TCP listener"
+        }
+      ],
+      "hostname": "postgresql",
+      "kind": "postgresql",
+      "mac": "${mac.postgresql.0}",
+      "memory_mib": 2048,
+      "packages": [
+        "postgresql-16=16.10-1.pgdg13+1",
+        "postgresql-client-16=16.10-1.pgdg13+1",
+        "libpq5=16.10-1.pgdg13+1"
+      ],
+      "repositories": [
+        {
+          "key_path": "${inputs}/vendor.asc",
+          "key_sha256": "0144068502a1eddd2a0280ede10ef607d1ec592ce819940991203941564e8e76",
+          "name": "postgresql",
+          "source": "Types: deb\nURIs: https://apt-archive.postgresql.org/pub/repos/apt\nSuites: trixie-pgdg-archive\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/postgresql.asc\n"
+        }
+      ],
+      "vmid": 208,
+      "exclusive_writer_confirmed": false,
+      "service_health_checks": {
+        "postgresql": [
+          {
+            "argv": [
+              "python3",
+              "-c",
+              "import subprocess; assert subprocess.check_output(['systemctl','is-enabled','postgresql'],text=True).strip()=='enabled'; subprocess.run(['systemctl','is-active','--quiet','postgresql'],check=True); print('SERVICE_OK')"
+            ],
+            "expect": "SERVICE_OK",
+            "name": "Service is enabled and active"
+          },
+          {
+            "argv": [
+              "pg_isready",
+              "-h",
+              "${addresses.postgresql_backend}",
+              "-p",
+              "5432"
+            ],
+            "expect": "accepting connections",
+            "name": "PostgreSQL backend listener accepts connections"
+          },
+          {
+            "argv": [
+              "runuser",
+              "-u",
+              "postgres",
+              "--",
+              "psql",
+              "-X",
+              "-At",
+              "-v",
+              "ON_ERROR_STOP=1",
+              "-d",
+              "postgres",
+              "-c",
+              "SELECT 1"
+            ],
+            "expect": "1",
+            "name": "Local maintenance query"
+          },
+          {
+            "argv": [
+              "python3",
+              "-c",
+              "import socket; s=socket.create_connection(('${addresses.postgresql_backend}',5432),timeout=5); s.close(); print('BACKEND_OK')"
+            ],
+            "expect": "BACKEND_OK",
+            "name": "Backend TCP listener"
+          }
+        ]
+      }
+    }
+  },
+  "files": {
+    "vendor.asc": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\n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\n=DA1T\n-----END PGP PUBLIC KEY BLOCK-----\n",
+    "pg_hba.conf": "local all postgres peer\nlocal all all peer\nhost all all 127.0.0.1/32 scram-sha-256\nhost all all ::1/128 scram-sha-256\nhost all all ${addresses.pgadmin_postgresql}/32 scram-sha-256\nhost all all ${addresses.identity_postgresql}/32 scram-sha-256\n",
+    "homelab.conf": "listen_addresses = '127.0.0.1,${addresses.postgresql_backend}'\npassword_encryption = 'scram-sha-256'\nshared_buffers = '256MB'\nmax_connections = 100\n"
+  },
+  "stack": null
+}

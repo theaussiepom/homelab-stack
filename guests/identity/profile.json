@@ -1,0 +1,253 @@
+{
+  "config": {
+    "guest": {
+      "boot_order": 40,
+      "cpu": 2,
+      "dns_servers": [
+        "${addresses.dns}",
+        "${addresses.fallback_dns}"
+      ],
+      "hostname": "security",
+      "interfaces": [
+        {
+          "bridge": "vmbr0",
+          "gateway": "${gateways.management}",
+          "ipv4": "${addresses.identity_management}/24",
+          "ipv6": "manual",
+          "mac": "${mac.identity.0}",
+          "vlan": 25
+        },
+        {
+          "bridge": "vmbr30",
+          "ipv4": "${addresses.identity_backend}/24",
+          "ipv6": "manual",
+          "mac": "${mac.identity.1}",
+          "vlan": null
+        },
+        {
+          "bridge": "vmbr31",
+          "ipv4": "${addresses.identity_postgresql}/24",
+          "ipv6": "manual",
+          "mac": "${mac.identity.2}",
+          "vlan": null
+        }
+      ],
+      "keyctl": false,
+      "memory_mib": 2048,
+      "nesting": true,
+      "root_gib": 8,
+      "rules": [
+        {
+          "comment": "Deployment runner SSH only",
+          "direction": "in",
+          "port": "22",
+          "proto": "tcp",
+          "source": "${addresses.runner}/32"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "udp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "udp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Signed packages, pinned images, provider and HTTPS",
+          "destination": "0.0.0.0/0",
+          "direction": "out",
+          "port": "80,443",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Traefik backend only",
+          "destination": "${addresses.identity_backend}/32",
+          "direction": "in",
+          "port": "9000",
+          "proto": "tcp",
+          "source": "${addresses.ingress_backend}/32"
+        },
+        {
+          "comment": "Existing Google Workspace SMTP relay",
+          "destination": "0.0.0.0/0",
+          "direction": "out",
+          "port": "587",
+          "proto": "tcp"
+        },
+        {
+          "comment": "postgresql approved client security",
+          "destination": "${addresses.postgresql_backend}/32",
+          "direction": "out",
+          "port": "5432",
+          "proto": "tcp",
+          "source": "${addresses.identity_postgresql}/32"
+        }
+      ],
+      "start_on_boot": true,
+      "started": true,
+      "storage_id": "local-zfs",
+      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "vmid": 211,
+      "volumes": {
+        "data": {
+          "path": "/srv/homelab",
+          "size_gib": 4
+        }
+      }
+    },
+    "app": {
+      "address": "${addresses.identity_management}",
+      "exclusive_writer_confirmed": false,
+      "health_checks": [
+        {
+          "argv": [
+            "curl",
+            "--retry",
+            "30",
+            "--retry-delay",
+            "2",
+            "--retry-all-errors",
+            "--retry-max-time",
+            "180",
+            "--fail",
+            "--silent",
+            "--show-error",
+            "--max-time",
+            "15",
+            "http://${addresses.identity_backend}:9000/-/health/ready/"
+          ],
+          "expect": "",
+          "name": "Authentik application ready on its backend"
+        }
+      ],
+      "hostname": "security",
+      "kind": "identity",
+      "mac": "${mac.identity.0}",
+      "memory_mib": 2048,
+      "packages": [
+        "docker.io=26.1.5+dfsg1-9+deb13u1",
+        "docker-cli=26.1.5+dfsg1-9+deb13u1",
+        "docker-compose=2.26.1-4",
+        "curl=8.14.1-2+deb13u7"
+      ],
+      "stack_config": "${inputs}/stack.json",
+      "vmid": 211,
+      "service_health_checks": {
+        "authentik": [
+          {
+            "argv": [
+              "curl",
+              "--retry",
+              "30",
+              "--retry-delay",
+              "2",
+              "--retry-all-errors",
+              "--retry-max-time",
+              "180",
+              "--fail",
+              "--silent",
+              "--show-error",
+              "--max-time",
+              "15",
+              "http://${addresses.identity_backend}:9000/-/health/ready/"
+            ],
+            "expect": "",
+            "name": "Authentik application ready on its backend"
+          }
+        ]
+      },
+      "endpoints": {
+        "authentik": {
+          "web": "http://${addresses.identity_backend}:9000"
+        }
+      }
+    }
+  },
+  "files": {},
+  "stack": {
+    "data_root": "/srv/homelab/data",
+    "foundation": {
+      "bind_address": "${addresses.identity_backend}",
+      "postgresql_database": "authentik",
+      "postgresql_host": "${addresses.postgresql_backend}",
+      "postgresql_user": "authentik",
+      "secret_files": {
+        "postgresql_password": "${inputs}/postgresql-password",
+        "secret_key": "${inputs}/authentik-secret-key"
+      },
+      "version": 1
+    },
+    "guest_memory_mib": 2048,
+    "kind": "identity",
+    "services": {
+      "redis": {
+        "command": [
+          "--save",
+          "60",
+          "1",
+          "--loglevel",
+          "warning"
+        ],
+        "cpus": 1,
+        "environment": {},
+        "extra_mounts": [],
+        "memory_mib": 128,
+        "pids_limit": 256,
+        "image_ref": "redis"
+      },
+      "server": {
+        "cpus": 1,
+        "environment": {
+          "AUTHENTIK_EMAIL__FROM": "sso@${domains.primary}",
+          "AUTHENTIK_EMAIL__HOST": "smtp-relay.gmail.com",
+          "AUTHENTIK_EMAIL__PORT": "587",
+          "AUTHENTIK_EMAIL__USERNAME": "",
+          "AUTHENTIK_EMAIL__USE_SSL": "false",
+          "AUTHENTIK_EMAIL__USE_TLS": "true"
+        },
+        "extra_mounts": [],
+        "memory_mib": 768,
+        "pids_limit": 256,
+        "user": "1000",
+        "image_ref": "authentik"
+      },
+      "worker": {
+        "cpus": 1,
+        "environment": {
+          "AUTHENTIK_EMAIL__FROM": "sso@${domains.primary}",
+          "AUTHENTIK_EMAIL__HOST": "smtp-relay.gmail.com",
+          "AUTHENTIK_EMAIL__PORT": "587",
+          "AUTHENTIK_EMAIL__USERNAME": "",
+          "AUTHENTIK_EMAIL__USE_SSL": "false",
+          "AUTHENTIK_EMAIL__USE_TLS": "true"
+        },
+        "extra_mounts": [],
+        "memory_mib": 768,
+        "pids_limit": 256,
+        "user": "1000",
+        "image_ref": "authentik"
+      }
+    },
+    "timezone": "Australia/Brisbane"
+  }
+}

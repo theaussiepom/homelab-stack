@@ -1,0 +1,19 @@
+{
+  "site": {
+    "node": "example-pve",
+    "api_endpoint": "https://${addresses.pve}:8006/"
+  },
+  "paths": {
+    "api_token": "/var/lib/homelab-inputs/pve-token",
+    "backup_directory": "/srv/homelab-backups/applications",
+    "backup_mount": "/srv/homelab-backups",
+    "backup_source": "nas.example.invalid:/backups/homelab",
+    "ca_file": "/usr/local/share/ca-certificates/homelab-pve.crt",
+    "known_hosts": "/var/lib/homelab-inputs/known_hosts",
+    "private_key": "/home/homelab-runner/.ssh/applications",
+    "state_root": "/var/lib/homelab-applications"
+  },
+  "ssh_public_keys": [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  ]
+}

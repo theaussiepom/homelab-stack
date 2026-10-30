@@ -1,0 +1,209 @@
+{
+  "config": {
+    "guest": {
+      "vmid": 209,
+      "hostname": "radio",
+      "cpu": 2,
+      "memory_mib": 768,
+      "root_gib": 8,
+      "storage_id": "local-zfs",
+      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "started": true,
+      "start_on_boot": true,
+      "boot_order": 70,
+      "nesting": true,
+      "keyctl": false,
+      "dns_servers": [
+        "${addresses.dns}",
+        "${addresses.fallback_dns}"
+      ],
+      "interfaces": [
+        {
+          "role": "management",
+          "bridge": "vmbr0",
+          "vlan": 25,
+          "mac": "${mac.zigbee.0}",
+          "ipv4": "${addresses.zigbee_management}/24",
+          "ipv6": "manual",
+          "gateway": "${gateways.management}"
+        },
+        {
+          "role": "backend",
+          "bridge": "vmbr30",
+          "vlan": null,
+          "mac": "${mac.zigbee.1}",
+          "ipv4": "${addresses.zigbee_backend}/24",
+          "ipv6": "manual"
+        }
+      ],
+      "volumes": {
+        "data": {
+          "path": "/srv/homelab",
+          "size_gib": 4
+        }
+      },
+      "rules": [
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "22",
+          "source": "${addresses.runner}/32",
+          "comment": "Deployment runner SSH only",
+          "destination": "${addresses.zigbee_management}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "destination": "${addresses.dns}/32",
+          "comment": "Selected internal DNS only"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "destination": "${addresses.dns}/32",
+          "comment": "Selected internal DNS only"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "destination": "${addresses.fallback_dns}/32",
+          "comment": "Selected internal DNS only"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "destination": "${addresses.fallback_dns}/32",
+          "comment": "Selected internal DNS only"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "80,443",
+          "destination": "0.0.0.0/0",
+          "comment": "Signed Debian packages and immutable image retrieval"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "1883",
+          "destination": "${addresses.automation_backend}/32",
+          "comment": "Selected automation MQTT broker only"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "8099",
+          "source": "${addresses.automation_backend}/32",
+          "comment": "Automation Zigbee API client",
+          "destination": "${addresses.zigbee_backend}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "8099",
+          "source": "${addresses.ingress_backend}/32",
+          "comment": "Existing ingress backend",
+          "destination": "${addresses.zigbee_backend}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "8099",
+          "source": "${addresses.ingress_backend}/32",
+          "destination": "${addresses.zigbee_backend}/32",
+          "comment": "Declared HTTP route backend"
+        }
+      ],
+      "serial_device": {
+        "path": "${devices.zigbee_coordinator}"
+      }
+    },
+    "app": {
+      "kind": "zigbee2mqtt",
+      "vmid": 209,
+      "hostname": "radio",
+      "memory_mib": 768,
+      "address": "${addresses.zigbee_management}",
+      "mac": "${mac.zigbee.0}",
+      "packages": [
+        "docker.io=26.1.5+dfsg1-9+deb13u1",
+        "docker-cli=26.1.5+dfsg1-9+deb13u1",
+        "docker-compose=2.26.1-4",
+        "curl=8.14.1-2+deb13u7",
+        "python3-yaml=6.0.2-1+b2"
+      ],
+      "stack_config": "${inputs}/stack.json",
+      "exclusive_writer_confirmed": false,
+      "service_connections": {
+        "zigbee2mqtt": {
+          "service": "automation.mqtt",
+          "address": "backend"
+        }
+      },
+      "health_checks": [
+        {
+          "name": "Zigbee frontend and preserved network configuration",
+          "argv": [
+            "python3",
+            "/opt/homelab-app/zigbee2mqtt.py",
+            "health",
+            "--settings",
+            "/opt/homelab-app/zigbee-settings.json"
+          ],
+          "expect": "\"healthy\": true"
+        }
+      ],
+      "service_health_checks": {
+        "zigbee2mqtt": [
+          {
+            "name": "Zigbee frontend and preserved network configuration",
+            "argv": [
+              "python3",
+              "/opt/homelab-app/zigbee2mqtt.py",
+              "health",
+              "--settings",
+              "/opt/homelab-app/zigbee-settings.json"
+            ],
+            "expect": "\"healthy\": true"
+          }
+        ]
+      },
+      "endpoints": {
+        "zigbee2mqtt": {
+          "web": "http://${addresses.zigbee_backend}:8099"
+        }
+      }
+    },
+    "paths": {
+      "host_device_key": "/home/homelab-runner/.ssh/proxmox-host-device-209",
+      "host_known_hosts": "/var/lib/homelab-inputs/pve-host-known_hosts"
+    }
+  },
+  "files": {},
+  "stack": {
+    "kind": "zigbee2mqtt",
+    "data_root": "/srv/homelab/data",
+    "guest_memory_mib": 768,
+    "timezone": "Australia/Brisbane",
+    "zigbee": {
+      "adapter": "ember",
+      "bind_address": "${addresses.zigbee_backend}",
+      "frontend_port": 8099,
+      "mqtt_base_topic": "home",
+      "mqtt_server": "",
+      "serial_device": "${devices.zigbee_coordinator}"
+    },
+    "services": {
+      "zigbee2mqtt": {
+        "memory_mib": 512,
+        "cpus": 2,
+        "pids_limit": 128,
+        "image_ref": "zigbee2mqtt"
+      }
+    }
+  }
+}

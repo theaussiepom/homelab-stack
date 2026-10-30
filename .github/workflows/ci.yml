@@ -1,0 +1,80 @@
+name: Stack source checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  source:
+    name: Source contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Read framework selection
+        id: framework
+        run: |
+          python3 - <<'PYCODE' >> "$GITHUB_OUTPUT"
+          import pathlib,re
+          text=pathlib.Path('.github/workflows/phase.yml').read_text()
+          pins=re.findall(r'^\s*uses: ([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/\.github/workflows/guest-phase\.yml@([0-9a-f]{40})\s*$',text,re.M)
+          if len(pins)!=1:raise SystemExit('Use one immutable source selection')
+          print('repository='+pins[0][0]);print('revision='+pins[0][1])
+          PYCODE
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: ${{ steps.framework.outputs.repository }}
+          ref: ${{ steps.framework.outputs.revision }}
+          path: framework-source
+          persist-credentials: false
+      - name: Install source test requirements
+        run: python3 -m pip install --require-hashes -r framework-source/requirements.lock.txt
+      - name: Check generated workflow synchronization
+        run: python3 framework-source/blueprints/workflows.py --stack . --check
+      - name: Install the integrity-pinned source scanner
+        run: python3 framework-source/.github/scripts/install_gitleaks.py "$RUNNER_TEMP/homelab-source-tools"
+      - name: Test all profiles and dependencies
+        env:
+          HOMELAB_FRAMEWORK: framework-source
+          GITLEAKS_BIN: ${{ runner.temp }}/homelab-source-tools/gitleaks
+        run: |
+          python3 framework-source/blueprints/compile.py --stack . --site site.example.json --check
+          python3 framework-source/tools/measure_coverage.py --suite stack --stack . --fail-under 100 --output "$RUNNER_TEMP/stack-coverage"
+      - name: Check source safety and full history
+        run: python3 .github/scripts/check_history.py --framework framework-source --scanner "$RUNNER_TEMP/homelab-source-tools/gitleaks"
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: never
+  analyze:
+    name: CodeQL (python)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee
+        with:
+          languages: python
+          build-mode: none
+          queries: security-extended
+      - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee
+        with:
+          category: /language:python

@@ -1,0 +1,205 @@
+{
+  "config": {
+    "guest": {
+      "vmid": 215,
+      "hostname": "bitwarden",
+      "cpu": 1,
+      "memory_mib": 2048,
+      "root_gib": 8,
+      "storage_id": "local-zfs",
+      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "started": true,
+      "start_on_boot": true,
+      "boot_order": 40,
+      "nesting": true,
+      "keyctl": false,
+      "dns_servers": [
+        "${addresses.dns}",
+        "${addresses.fallback_dns}"
+      ],
+      "interfaces": [
+        {
+          "bridge": "vmbr0",
+          "vlan": 25,
+          "mac": "${mac.bitwarden.0}",
+          "ipv4": "${addresses.bitwarden_management}/24",
+          "ipv6": "manual",
+          "gateway": "${gateways.management}"
+        },
+        {
+          "bridge": "vmbr30",
+          "vlan": null,
+          "mac": "${mac.bitwarden.1}",
+          "ipv4": "${addresses.bitwarden_backend}/24",
+          "ipv6": "manual"
+        },
+        {
+          "bridge": "vmbr32",
+          "vlan": null,
+          "mac": "${mac.bitwarden.2}",
+          "ipv4": "${addresses.bitwarden_mariadb}/24",
+          "ipv6": "manual"
+        }
+      ],
+      "volumes": {
+        "data": {
+          "path": "/srv/homelab/data",
+          "size_gib": 4
+        }
+      },
+      "rules": [
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "22",
+          "source": "${addresses.runner}/32",
+          "comment": "Deployment runner SSH only"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "8080",
+          "source": "${addresses.ingress_backend}/32",
+          "destination": "${addresses.bitwarden_backend}/32",
+          "comment": "Existing Traefik backend only"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "destination": "${addresses.dns}/32",
+          "comment": "Existing internal DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "destination": "${addresses.dns}/32",
+          "comment": "Existing internal DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "destination": "${addresses.fallback_dns}/32",
+          "comment": "Existing internal DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "destination": "${addresses.fallback_dns}/32",
+          "comment": "Existing internal DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "80,443",
+          "destination": "0.0.0.0/0",
+          "comment": "Signed package downloads"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "587",
+          "destination": "0.0.0.0/0",
+          "comment": "Retained SMTP relay STARTTLS"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "3306",
+          "source": "${addresses.bitwarden_mariadb}/32",
+          "destination": "${addresses.mariadb_backend}/32",
+          "comment": "mariadb approved client bitwarden"
+        }
+      ]
+    },
+    "app": {
+      "kind": "bitwarden",
+      "vmid": 215,
+      "hostname": "bitwarden",
+      "memory_mib": 2048,
+      "address": "${addresses.bitwarden_management}",
+      "mac": "${mac.bitwarden.0}",
+      "packages": [
+        "docker.io=26.1.5+dfsg1-9+deb13u1",
+        "docker-cli=26.1.5+dfsg1-9+deb13u1",
+        "docker-compose=2.26.1-4",
+        "curl=8.14.1-2+deb13u7",
+        "mariadb-client-core=1:11.8.6-0+deb13u1"
+      ],
+      "stack_config": "${inputs}/stack.json",
+      "exclusive_writer_confirmed": false,
+      "bitwarden": {
+        "public_origin": "https://${domains.bitwarden}",
+        "issuer": "http://localhost",
+        "schema": "homelab-bitwarden-runtime-v1",
+        "environment_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "runtime_env_file": "/var/lib/homelab-inputs/bitwarden/runtime.json"
+      },
+      "health_checks": [
+        {
+          "name": "Bitwarden alive/config/identity",
+          "argv": [
+            "python3",
+            "/opt/homelab-app/bitwarden.py",
+            "--origin",
+            "http://${addresses.bitwarden_backend}:8080",
+            "--issuer",
+            "http://localhost",
+            "--backend"
+          ],
+          "expect": "\"status\": \"passed\""
+        }
+      ],
+      "service_health_checks": {
+        "bitwarden": [
+          {
+            "name": "Bitwarden alive/config/identity",
+            "argv": [
+              "python3",
+              "/opt/homelab-app/bitwarden.py",
+              "--origin",
+              "http://${addresses.bitwarden_backend}:8080",
+              "--issuer",
+              "http://localhost",
+              "--backend"
+            ],
+            "expect": "\"status\": \"passed\""
+          }
+        ]
+      },
+      "endpoints": {
+        "bitwarden": {
+          "web": "http://${addresses.bitwarden_backend}:8080"
+        }
+      }
+    }
+  },
+  "files": {},
+  "stack": {
+    "kind": "bitwarden",
+    "guest_memory_mib": 2048,
+    "timezone": "Australia/Brisbane",
+    "bitwarden": {
+      "schema": "homelab-bitwarden-runtime-v1",
+      "bind_address": "${addresses.bitwarden_backend}",
+      "image_id": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "database_server": "${addresses.mariadb_backend}",
+      "database_provider": "mysql",
+      "database_name": "bitwarden_vault",
+      "data_uid": 1000,
+      "data_gid": 1000
+    },
+    "services": {
+      "bitwarden": {
+        "memory_mib": 1536,
+        "cpus": 1,
+        "pids_limit": 256,
+        "environment": {},
+        "image_ref": "bitwarden"
+      }
+    }
+  }
+}

@@ -1,0 +1,214 @@
+{
+  "config": {
+    "guest": {
+      "boot_order": 20,
+      "cpu": 2,
+      "dns_servers": [
+        "${addresses.dns}",
+        "${addresses.fallback_dns}"
+      ],
+      "hostname": "influxdb",
+      "interfaces": [
+        {
+          "bridge": "vmbr0",
+          "gateway": "${gateways.management}",
+          "ipv4": "${addresses.influxdb_management}/24",
+          "ipv6": "manual",
+          "mac": "${mac.influxdb.0}",
+          "vlan": 25
+        },
+        {
+          "bridge": "vmbr33",
+          "ipv4": "${addresses.influxdb_backend}/24",
+          "ipv6": "manual",
+          "mac": "${mac.influxdb.1}",
+          "vlan": null
+        }
+      ],
+      "keyctl": false,
+      "memory_mib": 2048,
+      "nesting": true,
+      "root_gib": 4,
+      "rules": [
+        {
+          "comment": "Deployment runner SSH only",
+          "direction": "in",
+          "port": "22",
+          "proto": "tcp",
+          "source": "${addresses.runner}/32"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "udp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "udp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Signed package downloads",
+          "destination": "0.0.0.0/0",
+          "direction": "out",
+          "port": "80,443",
+          "proto": "tcp"
+        },
+        {
+          "comment": "influxdb approved client automation",
+          "destination": "${addresses.influxdb_backend}/32",
+          "direction": "in",
+          "port": "8086",
+          "proto": "tcp",
+          "source": "${addresses.automation_influxdb}/32"
+        },
+        {
+          "comment": "influxdb approved client traefik",
+          "destination": "${addresses.influxdb_backend}/32",
+          "direction": "in",
+          "port": "8086",
+          "proto": "tcp",
+          "source": "${addresses.ingress_influxdb}/32"
+        }
+      ],
+      "start_on_boot": true,
+      "started": true,
+      "storage_id": "local-zfs",
+      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "vmid": 204,
+      "volumes": {
+        "database": {
+          "path": "/var/lib/influxdb",
+          "size_gib": 32
+        }
+      }
+    },
+    "app": {
+      "address": "${addresses.influxdb_management}",
+      "database": {
+        "config_files": [
+          {
+            "destination": "/etc/influxdb/config.toml",
+            "source": "${inputs}/config.toml"
+          }
+        ],
+        "gid": 1000,
+        "group": "influxdb",
+        "home": "/var/lib/influxdb",
+        "uid": 1000,
+        "user": "influxdb",
+        "version_command": [
+          "influxd",
+          "version"
+        ],
+        "version_pattern": "2.7.12"
+      },
+      "health_checks": [
+        {
+          "argv": [
+            "python3",
+            "-c",
+            "import subprocess; assert subprocess.check_output(['systemctl','is-enabled','influxdb'],text=True).strip()=='enabled'; subprocess.run(['systemctl','is-active','--quiet','influxdb'],check=True); print('SERVICE_OK')"
+          ],
+          "expect": "SERVICE_OK",
+          "name": "Service is enabled and active"
+        },
+        {
+          "argv": [
+            "python3",
+            "-c",
+            "import json,urllib.request; d=json.load(urllib.request.urlopen('http://${addresses.influxdb_backend}:8086/health',timeout=5)); assert d['status']=='pass' and d['version']=='v2.7.12'; print('INFLUX_OK')"
+          ],
+          "expect": "INFLUX_OK",
+          "name": "InfluxDB health without initial setup or application data"
+        },
+        {
+          "argv": [
+            "python3",
+            "-c",
+            "import socket; s=socket.create_connection(('${addresses.influxdb_backend}',8086),timeout=5); s.close(); print('BACKEND_OK')"
+          ],
+          "expect": "BACKEND_OK",
+          "name": "Backend TCP listener"
+        }
+      ],
+      "hostname": "influxdb",
+      "kind": "influxdb",
+      "mac": "${mac.influxdb.0}",
+      "memory_mib": 2048,
+      "packages": [
+        "influxdb2=2.7.12-1",
+        "influxdb2-cli=2.7.5-1"
+      ],
+      "repositories": [
+        {
+          "key_path": "${inputs}/vendor.asc",
+          "key_sha256": "40557e261cdbdccac91a2dde474cbf101ef672661e64b211b711cc0b904d5dac",
+          "name": "influxdata",
+          "source": "Types: deb\nURIs: https://repos.influxdata.com/debian\nSuites: stable\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/influxdata.asc\n"
+        }
+      ],
+      "vmid": 204,
+      "exclusive_writer_confirmed": false,
+      "service_health_checks": {
+        "influxdb": [
+          {
+            "argv": [
+              "python3",
+              "-c",
+              "import subprocess; assert subprocess.check_output(['systemctl','is-enabled','influxdb'],text=True).strip()=='enabled'; subprocess.run(['systemctl','is-active','--quiet','influxdb'],check=True); print('SERVICE_OK')"
+            ],
+            "expect": "SERVICE_OK",
+            "name": "Service is enabled and active"
+          },
+          {
+            "argv": [
+              "python3",
+              "-c",
+              "import json,urllib.request; d=json.load(urllib.request.urlopen('http://${addresses.influxdb_backend}:8086/health',timeout=5)); assert d['status']=='pass' and d['version']=='v2.7.12'; print('INFLUX_OK')"
+            ],
+            "expect": "INFLUX_OK",
+            "name": "InfluxDB health without initial setup or application data"
+          },
+          {
+            "argv": [
+              "python3",
+              "-c",
+              "import socket; s=socket.create_connection(('${addresses.influxdb_backend}',8086),timeout=5); s.close(); print('BACKEND_OK')"
+            ],
+            "expect": "BACKEND_OK",
+            "name": "Backend TCP listener"
+          }
+        ]
+      },
+      "endpoints": {
+        "influxdb": {
+          "web": "http://${addresses.influxdb_backend}:8086"
+        }
+      }
+    }
+  },
+  "files": {
+    "vendor.asc": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\n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\nAHMnjg==\n=UiOS\n-----END PGP PUBLIC KEY BLOCK-----\n",
+    "config.toml": "bolt-path = \"/var/lib/influxdb/influxd.bolt\"\nengine-path = \"/var/lib/influxdb/engine\"\nhttp-bind-address = \"${addresses.influxdb_backend}:8086\"\nreporting-disabled = true\n"
+  },
+  "stack": null
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "path": "guests/postgresql/profile.json",
+    "sha256": "895b9da8c502e1b191e67f4cfdc789d344855698bdbc81871684ab4847c7f187",
+    "rule": "generic-api-key",
+    "line": 190,
+    "reason": "SHA256 of the public postgresql vendor signing key, verified against the vendor.asc bytes embedded in this exact profile; not a credential."
+  },
+  {
+    "path": "guests/mariadb/profile.json",
+    "sha256": "003465a934fb6c62fa8a7205a4d749087ae493e3360239aae6a94c637d3c5bf5",
+    "rule": "generic-api-key",
+    "line": 167,
+    "reason": "SHA256 of the public mariadb vendor signing key, verified against the vendor.asc bytes embedded in this exact profile; not a credential."
+  },
+  {
+    "path": "guests/influxdb/profile.json",
+    "sha256": "65486d63da6fae58c2d9262b9674c47c647d3d1f2b5c391efd14e41f80798aa1",
+    "rule": "generic-api-key",
+    "line": 164,
+    "reason": "SHA256 of the public influxdb vendor signing key, verified against the vendor.asc bytes embedded in this exact profile; not a credential."
+  }
+]

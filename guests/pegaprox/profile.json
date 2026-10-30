@@ -1,0 +1,148 @@
+{
+  "config": {
+    "guest": {
+      "vmid": 214,
+      "hostname": "pegaprox",
+      "cpu": 2,
+      "memory_mib": 2048,
+      "root_gib": 8,
+      "storage_id": "local-zfs",
+      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "started": true,
+      "start_on_boot": false,
+      "boot_order": 60,
+      "nesting": true,
+      "keyctl": false,
+      "dns_servers": [
+        "${addresses.dns}",
+        "${addresses.fallback_dns}"
+      ],
+      "interfaces": [
+        {
+          "bridge": "vmbr0",
+          "vlan": 25,
+          "mac": "${mac.pegaprox.0}",
+          "ipv4": "${addresses.pegaprox_management}/24",
+          "gateway": "${gateways.management}",
+          "ipv6": "manual"
+        }
+      ],
+      "volumes": {},
+      "rules": [
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "22",
+          "source": "${addresses.runner}/32",
+          "comment": "Existing deployment runner only"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "80,443",
+          "destination": "0.0.0.0/0",
+          "comment": "Reviewed package and immutable image downloads"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "destination": "${addresses.dns}/32",
+          "comment": "Existing DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "destination": "${addresses.fallback_dns}/32",
+          "comment": "Existing DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "destination": "${addresses.dns}/32",
+          "comment": "Existing DNS"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "destination": "${addresses.fallback_dns}/32",
+          "comment": "Existing DNS"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "5000",
+          "source": "${networks.home}/24",
+          "destination": "${addresses.pegaprox_management}/32",
+          "comment": "Direct client access to PegaProx"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "5000",
+          "source": "${addresses.ingress_management}/32",
+          "destination": "${addresses.pegaprox_management}/32",
+          "comment": "Declared HTTP route backend"
+        }
+      ]
+    },
+    "app": {
+      "kind": "pegaprox",
+      "vmid": 214,
+      "hostname": "pegaprox",
+      "memory_mib": 2048,
+      "address": "${addresses.pegaprox_management}",
+      "mac": "${mac.pegaprox.0}",
+      "exclusive_writer_confirmed": false,
+      "packages": [
+        "docker.io=26.1.5+dfsg1-9+deb13u1",
+        "docker-cli=26.1.5+dfsg1-9+deb13u1",
+        "docker-compose=2.26.1-4"
+      ],
+      "stack_config": "${inputs}/stack.json",
+      "pegaprox": {
+        "key_source": "/var/lib/homelab-inputs/pegaprox/db-key"
+      },
+      "health_checks": [
+        {
+          "name": "PegaProx health and closed initial setup",
+          "argv": [
+            "python3",
+            "/opt/homelab-app/pegaprox-health.py"
+          ],
+          "expect": "PegaProx verification passed"
+        }
+      ],
+      "service_health_checks": {
+        "pegaprox": [
+          {
+            "name": "PegaProx health and closed initial setup",
+            "argv": [
+              "python3",
+              "/opt/homelab-app/pegaprox-health.py"
+            ],
+            "expect": "PegaProx verification passed"
+          }
+        ]
+      },
+      "endpoints": {
+        "pegaprox": {
+          "web": "https://${addresses.pegaprox_management}:5000"
+        }
+      }
+    }
+  },
+  "files": {},
+  "stack": {
+    "kind": "pegaprox",
+    "bind_address": "${addresses.pegaprox_management}",
+    "guest_memory_mib": 2048,
+    "container_memory_mib": 1536,
+    "cpus": 2,
+    "pids_limit": 256,
+    "image_ref": "pegaprox"
+  }
+}
