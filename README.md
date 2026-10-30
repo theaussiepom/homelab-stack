@@ -93,6 +93,18 @@ depend on DNS. The profile also supplies pinned packages, repository/configurati
 files, interfaces, firewall rules and health checks. Actual addresses and keys
 are supplied by the private site. No Actions jobs are written inside a profile.
 
+CI has three separate workflows, each with its own purpose and progress:
+
+| Workflow | When it runs | Checks |
+| --- | --- | --- |
+| [Validate stack](.github/workflows/validate-stack.yml) | Pull requests and pushes to main | Profiles, generated workflows, tests, 100% per-file coverage and complete-history source scanning |
+| [Review PR dependencies](.github/workflows/review-pr-dependencies.yml) | Pull requests only | Changed dependency vulnerabilities |
+| [Scan Python security](.github/workflows/scan-python-security.yml) | Pull requests and pushes to main | CodeQL Python analysis |
+
+Their required check names remain `Source contracts`, `Dependency review` and
+`CodeQL (python)`. The guest/deploy/phase workflows are separate reusable deployment
+definitions, called by the private site; public CI uses synthetic fixtures.
+
 The selected framework's `blueprints/workflows.py` generates `deploy.yml` and all
 `guest-*.yml` workflows from the catalogue and stack dependencies. Edit those
 declarative inputs and regenerate; the checked-in generated files are not edited
