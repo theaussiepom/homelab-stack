@@ -138,7 +138,12 @@ class CustodySelectionTests(unittest.TestCase):
                 group["members"]["db-tools"]["initial_ordinary"]["immutable_sha256"] = "invalid"
             else:
                 group["members"]["db-tools"]["initial_ordinary"]["canonical_sha256"] = "f" * 64
-            with self.subTest(case=case), self.assertRaises(ValueError):
+            message = ""
+            if case in ("invalid-immutable-hash", "unknown-receipt-field"):
+                for role in ("postgresql", "identity", "db-tools"):
+                    changed["guests"][role]["config"]["coordinated_custody"]["group"] = copy.deepcopy(group)
+                message = "Pin an exact coordinated evidence digest" if case == "invalid-immutable-hash" else "Use closed coordinated custody fields"
+            with self.subTest(case=case), self.assertRaisesRegex(ValueError, message):
                 c.compile_stack(ROOT, changed, ["db-tools"])
 
     def test_valid_exclusions_keep_all_configured_guests_and_actual_dependencies(self):
