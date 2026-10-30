@@ -87,6 +87,12 @@ a TLS transport, so their unused transport CA definitions, staged CA files and
 mounts are absent. There is no manual NAS/PegaProx backend certificate lifecycle.
 UDM and PVE remain verified HTTPS connections.
 
+The internal HTTP hops provide no transport encryption. Browser-facing HTTPS
+protects the browser-to-Traefik hop only; it does not protect credentials or session
+data sent onward over HTTP. This is an explicit internal-network routing choice,
+not a claim of an encrypted tunnel. Review the internal path, effective firewall
+isolation and complete login/session behavior before native acceptance or activation.
+
 PegaProx's closed runtime contract selects behind-proxy HTTP with
 `PEGAPROX_BEHIND_PROXY=true`, `PEGAPROX_HOST=0.0.0.0` inside the container, and
 `PEGAPROX_TRUSTED_PROXIES` set to the centrally selected ingress management address
