@@ -147,7 +147,10 @@ allowlist matches the peer seen by Traefik. One matching guest-firewall rule
 admits only that VPN `/28` to the ingress frontend `/32` on TCP 80 and 443.
 Other ports, destinations and guest rules remain unchanged. This source policy
 does not establish the actual VPN route, NAT behavior or effective runtime
-firewall; those remain separate qualification gates. The `pegaprox` route selects only `security-headers`; ingress also
+firewall; those remain separate qualification gates. Zabbix uses only
+`security-headers` on its HTTPS route and retains its native login. It has no
+Traefik client IP allowlist; network access policy belongs to the site's firewall
+controls. The `pegaprox` route selects only `security-headers`; ingress also
 admits `http_backend`, `frontend` and `policy_50` clients, which can reach PegaProx
 through that route. Its backend port accepts only the exact ingress management
 endpoint; browser clients use the Traefik route. Any

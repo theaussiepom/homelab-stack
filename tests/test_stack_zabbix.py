@@ -31,7 +31,7 @@ class MonitoringFeatureTests(unittest.TestCase):
         self.assertEqual(cfg['guest']['hostname'],'zabbix')
         self.assertEqual(cfg['app']['kind'],'monitoring')
         self.assertEqual(cfg['routes']['zabbix']['host'],'zabbix.example.invalid')
-        self.assertEqual(cfg['routes']['zabbix']['middlewares'],['security-headers','management-clients'])
+        self.assertEqual(cfg['routes']['zabbix']['middlewares'],['security-headers'])
         self.assertNotIn('monitoring',cfg['app']['monitoring']['proxmox']['hostname'])
 
     def test_profiles_are_derived_and_source_contains_no_generated_credentials(self):
@@ -47,6 +47,23 @@ class MonitoringFeatureTests(unittest.TestCase):
         storage=json.loads(packets['monitoring']['files']['stack.json'])['monitoring']
         self.assertEqual(storage['postgresql_user'],'zabbix')
         self.assertEqual(storage['postgresql_database'],'zabbix')
+
+    def test_zabbix_has_no_client_allowlist_and_other_management_routes_keep_theirs(self):
+        import discovery
+        packets = self.packets()
+        ingress = json.loads(packets['ingress']['files']['stack.json'])
+        shared = discovery.shared(ingress['routing'])['http']
+        cfg = json.loads(packets['monitoring']['files']['site.json'])
+        labels = discovery.labels(cfg)
+        prefix = 'traefik.http.routers.zabbix.'
+        self.assertEqual(labels[prefix + 'middlewares'], 'security-headers@file')
+        self.assertEqual(labels[prefix + 'entrypoints'], 'websecure')
+        self.assertEqual(labels[prefix + 'tls'], 'true')
+        self.assertEqual(labels[prefix + 'tls.certresolver'], 'letsencrypt')
+        for name in ['host', 'nas', 'proxmox']:
+            self.assertEqual(shared['routers'][name]['middlewares'],
+                             ['security-headers@file', 'management-clients@file'])
+        self.assertIn('ipAllowList', shared['middlewares']['management-clients'])
 
     def test_empty_value_only_and_default_guest_identity_collisions_refuse(self):
         for value in [True,False,{},[],0]:
