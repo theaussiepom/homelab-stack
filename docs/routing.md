@@ -150,7 +150,11 @@ does not establish the actual VPN route, NAT behavior or effective runtime
 firewall; those remain separate qualification gates. Zabbix uses only
 `security-headers` on its HTTPS route and retains its native login. It has no
 Traefik client IP allowlist; network access policy belongs to the site's firewall
-controls. The `pegaprox` route selects only `security-headers`; ingress also
+controls. A private monitoring override may supply the framework's closed
+`monitoring.saml` public HTTPS origin and existing IdP signing certificate. That
+configures strict native frontend trust through normal CD and does not add a
+Traefik authentication middleware; provider and user mappings still require
+verified SAML setup in the applications. The `pegaprox` route selects only `security-headers`; ingress also
 admits `http_backend`, `frontend` and `policy_50` clients, which can reach PegaProx
 through that route. Its backend port accepts only the exact ingress management
 endpoint; browser clients use the Traefik route. Any
