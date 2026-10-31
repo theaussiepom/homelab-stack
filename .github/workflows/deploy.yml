@@ -158,7 +158,7 @@ jobs:
       PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
       FOUNDATION_PGADMIN_OAUTH_SECRET: ${{ secrets.FOUNDATION_PGADMIN_OAUTH_SECRET }}
   automation:
-    name: Automation
+    name: Home Automation
     needs:
     - selection
     - ingress
