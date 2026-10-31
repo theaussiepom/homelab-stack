@@ -92,6 +92,34 @@
         },
         {
           "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "comment": "ACME recursive DNS only",
+          "destination": "${addresses.acme_dns_primary}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "comment": "ACME recursive DNS only",
+          "destination": "${addresses.acme_dns_primary}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "udp",
+          "port": "53",
+          "comment": "ACME recursive DNS only",
+          "destination": "${addresses.acme_dns_secondary}/32"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "53",
+          "comment": "ACME recursive DNS only",
+          "destination": "${addresses.acme_dns_secondary}/32"
+        },
+        {
+          "direction": "out",
           "proto": "tcp",
           "port": "80,443",
           "comment": "Signed packages, pinned images, provider and HTTPS",
@@ -119,6 +147,14 @@
           "port": "80,443",
           "comment": "Selected internal HTTPS clients",
           "source": "${networks.management}/24",
+          "destination": "${addresses.ingress_frontend}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "80,443",
+          "comment": "Qualified admin VPN HTTPS clients",
+          "source": "${networks.admin_vpn}/28",
           "destination": "${addresses.ingress_frontend}/32"
         },
         {
@@ -359,7 +395,8 @@
         "cloudflare_dns_token": "${inputs}/cloudflare-dns-token"
       },
       "acme_dns_resolvers": [
-        "${addresses.dns}:53"
+        "${addresses.acme_dns_primary}:53",
+        "${addresses.acme_dns_secondary}:53"
       ]
     },
     "routing": {
@@ -368,7 +405,8 @@
           "ipAllowList": {
             "sourceRange": [
               "${networks.policy_15}/24",
-              "${networks.management}/24"
+              "${networks.management}/24",
+              "${networks.admin_vpn}/28"
             ]
           }
         }

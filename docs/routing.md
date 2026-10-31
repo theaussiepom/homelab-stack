@@ -65,6 +65,14 @@ reviewed before accepting `external-tls-trust-reviewed`; a downloaded certificat
 alone is not independent trust. Never place private keys or passwords in routes,
 Notes, middleware definitions or Git.
 
+ACME DNS discovery uses the explicit public recursive resolvers
+`1.1.1.1:53` and `1.0.0.1:53`, selected through central values. Ingress has
+separate TCP and UDP port 53 egress rules for only those two `/32` destinations.
+Its ordinary guest DNS and local application records remain on the existing
+Pi-hole resolvers. Existing DNS-challenge propagation flags, Cloudflare token,
+ACME account and retained certificate storage are unchanged. This source selection
+does not itself issue a certificate or prove offsite reachability.
+
 The `udm` transport retains `server_name: ${domains.udm_backend}` and deliberately
 omits `ca_file`. It renders only `serverName`, leaving trust to the Traefik
 process's default root store while retaining hostname and certificate verification.
@@ -131,8 +139,15 @@ and real client resolution remain separate rollout checks.
 Ingress egress and managed app ingress rules remain explicit. External host
 firewalls are outside this stack's ownership. InfluxDB's isolated bridge therefore
 has an explicit ingress NIC; cross-bridge reachability is not assumed. The `host`,
-`nas` and `proxmox` routes select `management-clients`, limited to policy15 and
-management25. The `pegaprox` route selects only `security-headers`; ingress also
+`nas` and `proxmox` routes select `management-clients`, limited to policy15,
+management25 and the explicitly selected admin VPN `/28`. Bind
+`values["networks.admin_vpn"]` to the privately qualified VPN pool base; the public
+benchmark value is inert. This pool is independent of any VLAN number. The
+allowlist matches the peer seen by Traefik. One matching guest-firewall rule
+admits only that VPN `/28` to the ingress frontend `/32` on TCP 80 and 443.
+Other ports, destinations and guest rules remain unchanged. This source policy
+does not establish the actual VPN route, NAT behavior or effective runtime
+firewall; those remain separate qualification gates. The `pegaprox` route selects only `security-headers`; ingress also
 admits `http_backend`, `frontend` and `policy_50` clients, which can reach PegaProx
 through that route. Its backend port accepts only the exact ingress management
 endpoint; browser clients use the Traefik route. Any
