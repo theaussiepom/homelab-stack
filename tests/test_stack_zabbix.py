@@ -83,3 +83,12 @@ class MonitoringFeatureTests(unittest.TestCase):
                     env=dict(os.environ,DISABLED='[]',DEPENDENCIES=step['env']['DEPENDENCIES'],GITHUB_OUTPUT=str(out)),capture_output=True,text=True)
                 self.assertEqual(run.returncode,0,run.stderr)
                 self.assertEqual(out.read_text(),'zabbix='+str(active).lower()+'\n')
+
+    def test_monitoring_accounts_have_explicit_loopback_and_exact_remote_storage_rules(self):
+        hba=self.packets()['postgresql']['files']['pg_hba.conf']
+        prefix=hba.splitlines()[:4]
+        self.assertEqual(prefix,['# Root Zabbix: dedicated storage and local statistics only',
+            'host postgres zbx_monitor 127.0.0.1/32 scram-sha-256',
+            'host zabbix zabbix 127.0.0.1/32 scram-sha-256',
+            'host zabbix zabbix 198.18.31.36/32 scram-sha-256'])
+        self.assertTrue(hba.endswith(self.packets(False)['postgresql']['files']['pg_hba.conf']))
