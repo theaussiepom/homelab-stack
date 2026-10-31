@@ -7,7 +7,7 @@ settings and deployment controls.
 
 The source is executable: profiles compile to the framework's guarded ordinary
 packet; reusable workflows run infrastructure, preparation, and the real app jobs.
-The addresses and MACs here are sanitized examples. This repository publishes source only; the redesign has not been deployed.
+The addresses and MACs here are sanitized examples. This repository publishes source; the private site owns reviewed deployment.
 
 ```mermaid
 flowchart TD
@@ -130,3 +130,24 @@ hostnames and optional middleware references. Managed routes compile to Proxmox
 Notes; external NAS/host/Pi routes compile to the Traefik file provider. DNS records
 point their hostnames to ingress. Read [the routing contract](docs/routing.md) for
 examples, TLS trust, middleware definitions and explicit firewall requirements.
+
+## Root Zabbix feature
+
+An empty root `zabbix:` property in the private blueprint (JSON: `"zabbix": null`)
+adds the **Zabbix** guest. Without that property, the existing eleven guests and
+their packets remain unchanged. A boolean or custom object is rejected.
+
+The monitoring profile proposes VMID216, Debian LXC, 2 CPUs/2 GiB RAM and 12 GiB
+root storage. It uses the management, PostgreSQL and InfluxDB networks and depends
+on PostgreSQL and Traefik. The compiler creates the browser route, DNS and exact
+monitoring firewall edges; existing guest dependency ordering remains intact.
+The example domain is `zabbix.example.invalid`; real values belong in the site.
+
+Every enabled guest receives an active Agent2 with a retained individual PSK.
+Docker-capable guests get Docker monitoring; the owning PostgreSQL/MariaDB guests
+manage dedicated statistics readers; InfluxDB supplies instance/health metrics.
+The server uses the official Proxmox HTTP template and dedicated read-only token.
+See the framework's `docs/zabbix-blueprint.md` for bootstrap/trust prerequisites,
+first-install behavior, local Docker privilege scope and verification limits.
+The optional workflow is skipped when the root property is absent; it does not
+make any existing guest depend on the monitoring server.

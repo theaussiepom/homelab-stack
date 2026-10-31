@@ -39,11 +39,18 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
+    - name: Get settings
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
     - name: Check guests
       env:
         DISABLED: ${{ inputs.disabled }}
-        DEPENDENCIES: '{"dns": [], "ingress": ["dns"], "postgresql": ["dns"], "mariadb": ["dns"], "influxdb": ["dns"], "identity": ["postgresql", "ingress"], "db-tools": ["postgresql", "ingress", "identity"], "automation": ["ingress", "identity", "mariadb", "influxdb"], "bitwarden": ["ingress", "mariadb"], "pegaprox": ["dns"], "zigbee2mqtt": ["automation"]}'
-      run: "python3 - <<'PYCODE'\nimport json, os\nspec = json.loads(os.environ['DEPENDENCIES'])\ndisabled = json.loads(os.environ['DISABLED'] or '[]')\nif not (isinstance(disabled, list) and all(isinstance(name, str) for name in disabled)\n        and len(set(disabled)) == len(disabled) and set(disabled) <= set(spec)):\n    raise SystemExit('Disable only unique known guest names')\nactive = set(spec) - set(disabled)\nif any(not set(spec[name]) <= active for name in active):\n    raise SystemExit('Cannot disable a prerequisite while its consumers remain active')\nPYCODE\n"
+        DEPENDENCIES: '{"dns": [], "ingress": ["dns"], "postgresql": ["dns"], "mariadb": ["dns"], "influxdb": ["dns"], "identity": ["postgresql", "ingress"], "db-tools": ["postgresql", "ingress", "identity"], "automation": ["ingress", "identity", "mariadb", "influxdb"], "bitwarden": ["ingress", "mariadb"], "pegaprox": ["dns"], "zigbee2mqtt": ["automation"], "monitoring": ["postgresql", "ingress"]}'
+      run: "python3 - <<'PYCODE'\nimport json, os\nfrom pathlib import Path\nspec = json.loads(os.environ['DEPENDENCIES'])\ndisabled = json.loads(os.environ['DISABLED'] or '[]')\nif not (isinstance(disabled, list) and all(isinstance(name, str) for name in disabled)\n        and len(set(disabled)) == len(disabled) and set(disabled) <= set(spec)):\n    raise SystemExit('Disable only unique known guest names')\noverlay = json.loads(Path('site.json').read_text())\nif 'zabbix' in overlay and overlay['zabbix'] is not None:\n    raise SystemExit('Use an empty root zabbix property')\nmonitoring = 'zabbix' in overlay\nwith open(os.environ['GITHUB_OUTPUT'], 'a') as output:\n    print('zabbix=' + str(monitoring).lower(), file=output)\nactive = set(spec) - set(disabled)\nif not monitoring: active.discard('monitoring')\nif any(not set(spec[name]) <= active for name in active):\n    raise SystemExit('Cannot disable a prerequisite while its consumers remain active')\nPYCODE\n"
+      id: selection
+    outputs:
+      zabbix: ${{ steps.selection.outputs.zabbix }}
   dns:
     name: DNS
     needs:
@@ -203,6 +210,21 @@ jobs:
     - automation
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'zigbee2mqtt')
     uses: ./.github/workflows/guest-zigbee2mqtt.yml
+    with:
+      disabled: ${{ inputs.disabled }}
+      runner_labels: ${{ inputs.runner_labels }}
+      environment_name: ${{ inputs.environment_name }}
+    secrets:
+      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+  monitoring:
+    name: Zabbix
+    needs:
+    - selection
+    - postgresql
+    - ingress
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'monitoring') && needs.selection.outputs.zabbix == 'true'
+    uses: ./.github/workflows/guest-monitoring.yml
     with:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}

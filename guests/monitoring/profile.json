@@ -1,0 +1,198 @@
+{
+  "config": {
+    "guest": {
+      "boot_order": 60,
+      "cpu": 2,
+      "dns_servers": [
+        "${addresses.dns}",
+        "${addresses.fallback_dns}"
+      ],
+      "hostname": "zabbix",
+      "interfaces": [
+        {
+          "bridge": "vmbr0",
+          "gateway": "${gateways.management}",
+          "ipv4": "${addresses.monitoring_management}/24",
+          "ipv6": "manual",
+          "mac": "${mac.monitoring.0}",
+          "vlan": 25
+        },
+        {
+          "bridge": "vmbr31",
+          "ipv4": "${addresses.monitoring_postgresql}/24",
+          "ipv6": "manual",
+          "mac": "${mac.monitoring.1}",
+          "vlan": null
+        },
+        {
+          "bridge": "vmbr33",
+          "ipv4": "${addresses.monitoring_influxdb}/24",
+          "ipv6": "manual",
+          "mac": "${mac.monitoring.2}",
+          "vlan": null
+        }
+      ],
+      "keyctl": false,
+      "memory_mib": 2048,
+      "nesting": true,
+      "root_gib": 12,
+      "rules": [
+        {
+          "comment": "Deployment runner SSH only",
+          "direction": "in",
+          "port": "22",
+          "proto": "tcp",
+          "source": "${addresses.runner}/32"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "udp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "udp"
+        },
+        {
+          "comment": "Existing internal DNS",
+          "destination": "${addresses.fallback_dns}/32",
+          "direction": "out",
+          "port": "53",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Signed packages, pinned images, provider and HTTPS",
+          "destination": "0.0.0.0/0",
+          "direction": "out",
+          "port": "80,443",
+          "proto": "tcp"
+        },
+        {
+          "comment": "Traefik backend only",
+          "destination": "${addresses.identity_backend}/32",
+          "direction": "in",
+          "port": "9000",
+          "proto": "tcp",
+          "source": "${addresses.ingress_backend}/32"
+        },
+        {
+          "comment": "Traefik monitoring UI",
+          "direction": "in",
+          "source": "${addresses.ingress_management}/32",
+          "destination": "${addresses.monitoring_management}/32",
+          "proto": "tcp",
+          "port": "8080"
+        },
+        {
+          "comment": "Proxmox read-only monitoring API",
+          "direction": "out",
+          "destination": "${addresses.pve}/32",
+          "proto": "tcp",
+          "port": "8006"
+        }
+      ],
+      "start_on_boot": true,
+      "started": true,
+      "storage_id": "local-zfs",
+      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "vmid": 216,
+      "volumes": {}
+    },
+    "app": {
+      "kind": "monitoring",
+      "vmid": 216,
+      "hostname": "zabbix",
+      "address": "${addresses.monitoring_management}",
+      "mac": "${mac.monitoring.0}",
+      "memory_mib": 2048,
+      "packages": [
+        "docker.io=26.1.5+dfsg1-9+deb13u1",
+        "docker-cli=26.1.5+dfsg1-9+deb13u1",
+        "docker-compose=2.26.1-4",
+        "curl=8.14.1-2+deb13u7"
+      ],
+      "exclusive_writer_confirmed": true,
+      "stack_config": "${inputs}/stack.json",
+      "health_checks": [
+        {
+          "name": "Zabbix frontend ready",
+          "argv": [
+            "curl",
+            "--fail",
+            "--silent",
+            "--show-error",
+            "--max-time",
+            "10",
+            "http://${addresses.monitoring_management}:8080/"
+          ],
+          "expect": ""
+        }
+      ],
+      "service_health_checks": {
+        "zabbix": [
+          {
+            "name": "Zabbix frontend ready",
+            "argv": [
+              "curl",
+              "--fail",
+              "--silent",
+              "--show-error",
+              "--max-time",
+              "10",
+              "http://${addresses.monitoring_management}:8080/"
+            ],
+            "expect": ""
+          }
+        ]
+      },
+      "endpoints": {
+        "zabbix": {
+          "web": "http://${addresses.monitoring_management}:8080"
+        }
+      }
+    }
+  },
+  "files": {},
+  "stack": {
+    "kind": "monitoring",
+    "guest_memory_mib": 2048,
+    "timezone": "Australia/Brisbane",
+    "monitoring": {
+      "version": "7.0.32",
+      "bind_address": "${addresses.monitoring_management}",
+      "postgresql_host": "${addresses.postgresql_backend}",
+      "postgresql_database": "zabbix",
+      "postgresql_user": "zabbix",
+      "secret_files": {
+        "database_password": "${inputs}/database-password",
+        "proxmox_ca": "${inputs}/proxmox-ca.pem"
+      }
+    },
+    "services": {
+      "zabbix_server": {
+        "image_ref": "zabbix_server",
+        "memory_mib": 768,
+        "cpus": 1,
+        "pids_limit": 256
+      },
+      "zabbix_web": {
+        "image_ref": "zabbix_web",
+        "memory_mib": 512,
+        "cpus": 1,
+        "pids_limit": 256
+      }
+    }
+  }
+}

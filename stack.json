@@ -96,7 +96,14 @@
     "identity.node_red_client": "example-node-red-client",
     "custody.catalogue": "{}\n",
     "custody.postgresql_acceptance": "{}\n",
-    "custody.mariadb_acceptance": "{}\n"
+    "custody.mariadb_acceptance": "{}\n",
+    "addresses.monitoring_management": "198.18.25.36",
+    "addresses.monitoring_postgresql": "198.18.31.36",
+    "addresses.monitoring_influxdb": "198.18.33.36",
+    "domains.monitoring": "zabbix.example.invalid",
+    "mac.monitoring.0": "02:00:0b:00:00:01",
+    "mac.monitoring.1": "02:00:0b:01:00:01",
+    "mac.monitoring.2": "02:00:0b:02:00:01"
   },
   "guests": {
     "dns": {
@@ -225,6 +232,13 @@
         "old-writers-retired",
         "restricted-host-device-capability-registered"
       ]
+    },
+    "monitoring": {
+      "depends_on": [
+        "postgresql",
+        "ingress"
+      ],
+      "prerequisites": []
     }
   },
   "routes": {
