@@ -29,9 +29,8 @@ The separate route map references it:
   "nas": {
     "host": "nas.${domains.secondary}",
     "aliases": ["nas.${domains.primary}"],
-    "target": {"url": "https://${addresses.nas}:31764"},
-    "middlewares": ["security-headers", "management-clients"],
-    "transport": "nas"
+    "target": {"url": "http://${addresses.nas}:31763"},
+    "middlewares": ["security-headers", "management-clients"]
   }
 }
 ```
@@ -66,16 +65,69 @@ reviewed before accepting `external-tls-trust-reviewed`; a downloaded certificat
 alone is not independent trust. Never place private keys or passwords in routes,
 Notes, middleware definitions or Git.
 
-PegaProx serves HTTPS on port 5000. Its managed endpoint uses that protocol, and
-the route selects the central `pegaprox` transport. The transport verifies
-`prox.${domains.secondary}` using the public trust bundle at
-`/usr/local/share/ca-certificates/homelab-pegaprox.crt` on the controller. Ingress
-stages this as `route-pegaprox.pem`, mounts it read-only, and references it from
-`pegaprox@file` in the guest's Notes. Include this backend in the existing
-state-and-trust review: independently verify the certificate/issuer and matching
-DNS SAN before adoption. A default self-signed certificate without a matching
-SAN needs separate certificate preparation; ordinary CD does not issue or replace
-the application's retained certificate. Missing trust input prevents staging.
+ACME DNS discovery uses the explicit public recursive resolvers
+`1.1.1.1:53` and `1.0.0.1:53`, selected through central values. Ingress has
+separate TCP and UDP port 53 egress rules for only those two `/32` destinations.
+Its ordinary guest DNS and local application records remain on the existing
+Pi-hole resolvers. Existing DNS-challenge propagation flags, Cloudflare token,
+ACME account and retained certificate storage are unchanged. This source selection
+does not itself issue a certificate or prove offsite reachability.
+
+The `udm` transport retains `server_name: ${domains.udm_backend}` and deliberately
+omits `ca_file`. It renders only `serverName`, leaving trust to the Traefik
+process's default root store while retaining hostname and certificate verification.
+No UDM-specific CA input, staged `route-udm.pem` or transport CA mount is required.
+The host route's hostname, aliases and middleware remain separate and unchanged;
+the private site retains its existing backend-name binding. Proxmox keeps its
+explicit CA input, and the existing verified PVE provider trust is unchanged.
+
+This source change neither deletes a controller trust file nor activates a route.
+Renderer tests use synthetic inputs and do not establish an actual Traefik-to-UDM
+TLS handshake or accept `external-tls-trust-reviewed`. Route activation and native
+trust/identity acceptance still require their separate reviewed qualification.
+
+Traefik owns browser-facing HTTPS for NAS and PegaProx. Their routers keep
+`websecure`, the automatic `letsencrypt` resolver, existing hostnames/aliases and
+middleware. Internal NAS traffic uses HTTP on port 31763; PegaProx's managed
+`pegaprox.web` endpoint uses HTTP on port 5000. The PegaProx route still references
+that endpoint rather than declaring a second backend URL. Neither backend selects
+a TLS transport, so their unused transport CA definitions, staged CA files and
+mounts are absent. There is no manual NAS/PegaProx backend certificate lifecycle.
+UDM and PVE remain verified HTTPS connections.
+
+The internal HTTP hops provide no transport encryption. Browser-facing HTTPS
+protects the browser-to-Traefik hop only; it does not protect credentials or session
+data sent onward over HTTP. This is an explicit internal-network routing choice,
+not a claim of an encrypted tunnel. Review the internal path, effective firewall
+isolation and complete login/session behavior before native acceptance or activation.
+
+PegaProx's closed runtime contract selects behind-proxy HTTP with
+`PEGAPROX_BEHIND_PROXY=true`, `PEGAPROX_HOST=0.0.0.0` inside the container, and
+`PEGAPROX_TRUSTED_PROXIES` set to the centrally selected ingress management address
+as one exact `/32`. The published listener remains bound to the existing PegaProx
+management address on port 5000, with only the exact ingress management `/32`
+admitted by its TCP 5000 rule. Direct home-network access is removed so browser
+clients reach the application through Traefik HTTPS. Data, key, account, resource and restart settings
+are retained. The guest remains started and boots with the host at order 60,
+independently of the container's `restart: always` policy. Its read-only loopback
+health probe must use HTTP without following
+redirects or calling setup/login, and still require an initialized closed setup.
+
+Existing deployments must adopt matching stack/site route inputs: the managed
+PegaProx endpoint uses HTTP on port 5000 and its route omits the optional TLS
+transport. Route validation rejects HTTP with a TLS transport. Frontend readiness
+checks the separately prepared address/gateway/MAC reply-routing settings; it does
+not update backend URLs or TLS transport selections. An authorized normal
+application reconcile replaces the container to apply the HTTP proxy environment
+while retaining its image, key, account and data. A restart alone does not change
+that environment; no backend certificate preparation or application database
+configuration migration is needed.
+
+Source compilation and synthetic renderer/health tests do not activate this mode.
+The NAS HTTP response and proxy-header behavior support this source selection; a
+complete browser login, automatic frontend certificate issuance and native service
+acceptance remain separate checks. No prerequisite acceptance is granted by this
+source change.
 
 Compilation rejects global hostname/alias collisions, unknown endpoints or policy
 references, public or foreign-interface backends, conflicting DNS records and
@@ -87,10 +139,18 @@ and real client resolution remain separate rollout checks.
 Ingress egress and managed app ingress rules remain explicit. External host
 firewalls are outside this stack's ownership. InfluxDB's isolated bridge therefore
 has an explicit ingress NIC; cross-bridge reachability is not assumed. The `host`,
-`nas` and `proxmox` routes select `management-clients`, limited to policy15 and
-management25. The `pegaprox` route selects only `security-headers`; ingress also
+`nas` and `proxmox` routes select `management-clients`, limited to policy15,
+management25 and the explicitly selected admin VPN `/28`. Bind
+`values["networks.admin_vpn"]` to the privately qualified VPN pool base; the public
+benchmark value is inert. This pool is independent of any VLAN number. The
+allowlist matches the peer seen by Traefik. One matching guest-firewall rule
+admits only that VPN `/28` to the ingress frontend `/32` on TCP 80 and 443.
+Other ports, destinations and guest rules remain unchanged. This source policy
+does not establish the actual VPN route, NAT behavior or effective runtime
+firewall; those remain separate qualification gates. The `pegaprox` route selects only `security-headers`; ingress also
 admits `http_backend`, `frontend` and `policy_50` clients, which can reach PegaProx
-through that route. PegaProx separately permits direct access from `home`. Any
+through that route. Its backend port accepts only the exact ingress management
+endpoint; browser clients use the Traefik route. Any
 private-site restriction must be explicit, and an operator must review allowlist
 changes before rollout.
 

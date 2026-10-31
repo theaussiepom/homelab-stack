@@ -19,6 +19,25 @@ identities, UID/GID/modes, CA/SSH trust, backend state and all holds. DNS needs 
 explicit existing-state adoption because its complete commissioned infrastructure
 input was not in the private source seed. Its public profile is a proposal.
 
+The declared NAS/PegaProx HTTP backends retain automatic browser-facing Traefik
+HTTPS. Existing deployments must adopt matching stack/site route inputs: select
+PegaProx's managed endpoint as HTTP on port 5000 and omit its route's optional TLS
+transport. Route validation rejects HTTP with a TLS transport. Frontend readiness
+checks separately prepared address/gateway/MAC reply-routing settings; it does not
+update backend URLs or TLS transport selections. An authorized normal application
+reconcile replaces the container to apply the HTTP proxy environment while
+retaining its image, key, account, encrypted data and config/log paths. A source
+edit or restart alone does not apply a changed container environment. No backend
+certificate preparation or application database configuration migration is needed.
+Preserve custody evidence and verify trusted forwarding and secure browser session
+behavior before native acceptance. Ordinary CD must not bootstrap an account or
+manufacture acceptance to select HTTP.
+
+For completed commissioning groups, follow the [exact custody contract](coordinated-custody.md).
+Configured provenance remains mandatory for disabled members; valid exclusions
+still follow the existing dependency graph. Selecting custody does not accept a
+prerequisite or establish an exclusive-writer window.
+
 Keep the state root and backend identities. Do not import, recreate or rename an
 installed guest through ordinary CD. Every admitted runner must see the same durable
 state and private inputs; jobs may move between admitted slots. The parent retains

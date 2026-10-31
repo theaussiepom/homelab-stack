@@ -1,6 +1,7 @@
 {
   "schema": "homelab-stack-v2",
   "values": {
+    "networks.admin_vpn": "198.18.10.0",
     "networks.policy_15": "198.18.15.0",
     "networks.management": "198.18.25.0",
     "gateways.management": "198.18.25.1",
@@ -33,6 +34,8 @@
     "networks.frontend": "198.18.40.0",
     "gateways.frontend": "198.18.40.1",
     "addresses.dns": "198.18.40.2",
+    "addresses.acme_dns_primary": "1.1.1.1",
+    "addresses.acme_dns_secondary": "1.0.0.1",
     "addresses.automation_frontend": "198.18.40.21",
     "addresses.ingress_frontend": "198.18.40.33",
     "networks.policy_50": "198.18.50.0",
@@ -90,7 +93,10 @@
     "domains.udm_backend": "udm.example.invalid",
     "domains.nas_backend": "nas.example.invalid",
     "mac.ingress.3": "02:00:05:03:00:01",
-    "identity.node_red_client": "example-node-red-client"
+    "identity.node_red_client": "example-node-red-client",
+    "custody.catalogue": "{}\n",
+    "custody.postgresql_acceptance": "{}\n",
+    "custody.mariadb_acceptance": "{}\n"
   },
   "guests": {
     "dns": {
@@ -274,8 +280,7 @@
       "host": "prox.${domains.secondary}",
       "target": {
         "endpoint": "pegaprox.pegaprox.web"
-      },
-      "transport": "pegaprox"
+      }
     },
     "zigbee1": {
       "host": "zigbee1.${domains.primary}",
@@ -297,9 +302,8 @@
     "nas": {
       "host": "nas.${domains.secondary}",
       "target": {
-        "url": "https://${addresses.nas}:31764"
+        "url": "http://${addresses.nas}:31763"
       },
-      "transport": "nas",
       "middlewares": [
         "security-headers",
         "management-clients"

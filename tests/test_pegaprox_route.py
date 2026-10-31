@@ -1,4 +1,4 @@
-"""PegaProx routing must agree with its TLS runtime and retain verified trust."""
+"""Browser TLS stays automatic while managed PegaProx uses scoped proxy HTTP."""
 
 from contextlib import redirect_stdout
 import copy
@@ -15,149 +15,186 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 FRAMEWORK = Path(os.environ.get("HOMELAB_FRAMEWORK", ROOT.parent / "homelab")).resolve()
-spec = importlib.util.spec_from_file_location(
-    "pegaprox_route_compiler", FRAMEWORK / "blueprints/compile.py"
-)
+spec = importlib.util.spec_from_file_location("pegaprox_route_compiler", FRAMEWORK / "blueprints/compile.py")
 c = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(c)
 sys.path.insert(0, str(FRAMEWORK / "proxmox/applications"))
 import discovery
 import foundation
+import pegaprox
 import pegaprox_health
 import render
 
 
 class PegaProxRouteTests(unittest.TestCase):
-    def test_endpoint_notes_and_published_port_agree_with_actual_health_requests(self):
+    def test_endpoint_proxy_binding_and_actual_health_requests_agree(self):
+        """Execute the real read-only health code with invented closed-setup replies."""
         for changed in (False, True):
             overlay = c.read(ROOT / "site.example.json")
             if changed:
-                overlay["values"].update(
-                    {
-                        "addresses.pegaprox_management": "198.18.25.134",
-                        "domains.secondary": "changed.example.invalid",
-                    }
-                )
+                overlay["values"].update({
+                    "addresses.pegaprox_management": "198.18.25.134",
+                    "addresses.ingress_management": "198.18.25.133",
+                    "domains.secondary": "changed.example.invalid",
+                })
             with self.subTest(central_values_changed=changed):
+                values = dict(c.manifest(ROOT)["values"], **overlay["values"])
                 packets = c.compile_stack(ROOT, overlay, [])
                 packet = packets["pegaprox"]
                 cfg = json.loads(packet["files"]["site.json"])
                 stack = json.loads(packet["files"]["stack.json"])
                 route = cfg["routes"]["pegaprox"]
-                ingress = json.loads(packets["ingress"]["files"]["stack.json"])
-                self.assertEqual(
-                    ingress["routing"]["transports"]["pegaprox"]["server_name"],
-                    route["host"],
-                )
                 endpoint = urlsplit(cfg["app"]["endpoints"]["pegaprox"]["web"])
+                self.assertEqual(endpoint.scheme, "http")
+                self.assertEqual(endpoint.port, 5000)
+                self.assertEqual(endpoint.hostname, stack["bind_address"])
+                self.assertEqual(route["url"], endpoint.geturl())
+                self.assertNotIn("transport", route)
+                self.assertEqual(stack["trusted_proxy"], values["addresses.ingress_management"] + "/32")
+                clients = [r for r in cfg["guest"]["rules"] if r.get("direction") == "in" and r.get("port") == "5000"]
+                self.assertEqual(len(clients), 1)
+                self.assertEqual((clients[0]["proto"], clients[0]["source"], clients[0]["destination"]), ("tcp", stack["trusted_proxy"], stack["bind_address"] + "/32"))
+                service = render.compose(stack)["services"]["pegaprox"]
+                self.assertEqual(service["ports"], [f"{endpoint.hostname}:5000:5000/tcp"])
+                self.assertEqual(service["environment"]["PEGAPROX_BEHIND_PROXY"], "true")
+                self.assertEqual(service["environment"]["PEGAPROX_HOST"], "0.0.0.0")
+                self.assertEqual(service["environment"]["PEGAPROX_TRUSTED_PROXIES"], stack["trusted_proxy"])
+                self.assertEqual(service["restart"], "always")
+                self.assertTrue(service["read_only"])
+                self.assertEqual(service["cap_drop"], ["ALL"])
+                pegaprox.validate_deployment(cfg, stack)
                 responses = []
-                for status, body in (
-                    (200, {"status": "ok", "version": "fixture"}),
-                    (401, {"authenticated": False, "initialized": True}),
-                ):
+                for status, body in ((200, {"status": "ok", "version": "fixture"}), (401, {"authenticated": False, "initialized": True})):
                     response = io.BytesIO(json.dumps(body).encode())
                     response.code = status
                     responses.append(response)
                 output = io.StringIO()
-                with (
-                    patch("urllib.request.build_opener") as opener,
-                    patch("ssl.SSLContext"),
-                    redirect_stdout(output),
-                ):
+                with patch("urllib.request.build_opener") as opener, patch("ssl.SSLContext") as tls, redirect_stdout(output):
                     opener.return_value.open.side_effect = responses
                     exec(pegaprox_health.CONTAINER_CODE, {})
-                self.assertEqual(
-                    output.getvalue().strip(), "PegaProx verification passed"
-                )
-                probes = [
-                    urlsplit(call.args[0].full_url)
-                    for call in opener.return_value.open.call_args_list
-                ]
-                self.assertEqual(
-                    [url.path for url in probes], ["/api/health", "/api/auth/check"]
-                )
-                for url in probes:
-                    self.assertEqual(
-                        (endpoint.scheme, endpoint.port), (url.scheme, url.port)
-                    )
-                self.assertEqual(endpoint.scheme, "https")
-                self.assertEqual(endpoint.hostname, stack["bind_address"])
-                self.assertEqual(route["url"], endpoint.geturl())
-                self.assertEqual(
-                    render.compose(stack)["services"]["pegaprox"]["ports"],
-                    [f"{endpoint.hostname}:{endpoint.port}:{endpoint.port}/tcp"],
-                )
+                tls.assert_not_called()
+                self.assertEqual(output.getvalue().strip(), "PegaProx verification passed")
+                requests = [call.args[0] for call in opener.return_value.open.call_args_list]
+                self.assertEqual([urlsplit(request.full_url).path for request in requests], ["/api/health", "/api/auth/check"])
+                for request in requests:
+                    url = urlsplit(request.full_url)
+                    self.assertEqual((url.scheme, url.hostname, url.port), ("http", "127.0.0.1", 5000))
+                    self.assertEqual(request.get_header("Origin"), "http://127.0.0.1:5000")
                 labels = discovery.labels(cfg)
                 prefix = "traefik.http.services.pegaprox.loadbalancer"
                 self.assertEqual(labels[prefix + ".server.url"], endpoint.geturl())
-                self.assertEqual(labels[prefix + ".serverstransport"], "pegaprox@file")
+                self.assertNotIn(prefix + ".serverstransport", labels)
+                self.assertEqual(labels["traefik.http.routers.pegaprox.entrypoints"], "websecure")
+                self.assertEqual(labels["traefik.http.routers.pegaprox.tls.certresolver"], "letsencrypt")
 
-    def test_transport_stages_required_public_trust_and_mounts_it_readonly(self):
+    def test_guest_boot_policy_preserves_startup_independently_of_container_restart(self):
+        """The compiled LXC must boot with its host as well as restart its service."""
+        packet = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])["pegaprox"]
+        cfg = json.loads(packet["files"]["site.json"])
+        stack = json.loads(packet["files"]["stack.json"])
+        self.assertEqual(cfg["guest"]["vmid"], 214)
+        self.assertIs(cfg["guest"]["started"], True)
+        self.assertIs(cfg["guest"]["start_on_boot"], True)
+        self.assertEqual(cfg["guest"]["boot_order"], 60)
+        self.assertEqual(render.compose(stack)["services"]["pegaprox"]["restart"], "always")
+
+    def test_trusted_proxy_must_stay_a_single_admitted_ingress_endpoint(self):
+        """A runtime proxy field cannot replace the guest's finite client policy."""
         packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])
-        guest = json.loads(packets["pegaprox"]["files"]["site.json"])
-        stack = json.loads(packets["ingress"]["files"]["stack.json"])
-        self.assertEqual(guest["routes"]["pegaprox"].get("transport"), "pegaprox")
-        transport = stack["routing"]["transports"]["pegaprox"]
-        self.assertEqual(
-            transport,
-            {
-                "server_name": guest["routes"]["pegaprox"]["host"],
-                "ca_file": "/usr/local/share/ca-certificates/homelab-pegaprox.crt",
-            },
-        )
-        self.assertIn(transport["ca_file"], foundation.source_files(stack))
-        self.assertEqual(
-            discovery.shared(stack["routing"])["http"]["serversTransports"]["pegaprox"],
-            {
-                "serverName": transport["server_name"],
-                "rootCAs": ["/etc/ssl/certs/route-pegaprox.pem"],
-            },
-        )
-        mount = next(
-            row
-            for row in render.compose(stack)["services"]["traefik"]["volumes"]
-            if row["target"] == "/etc/ssl/certs/route-pegaprox.pem"
-        )
-        self.assertTrue(mount["read_only"])
-        self.assertFalse(mount["bind"]["create_host_path"])
-        with tempfile.TemporaryDirectory() as tmp:
-            staged = copy.deepcopy(stack)
-            root = Path(tmp)
-            # Exercise file staging with disposable inputs; this fixture does not
-            # qualify any real certificate or perform a TLS handshake.
-            public = "-----BEGIN CERTIFICATE-----\nsynthetic-public-fixture\n-----END CERTIFICATE-----\n"
-            ca = root / "ca.pem"
-            ca.write_text(public)
+        cfg = json.loads(packets["pegaprox"]["files"]["site.json"])
+        stack = json.loads(packets["pegaprox"]["files"]["stack.json"])
+        for bad in ("0.0.0.0/0", "198.18.25.0/24", "198.51.100.1/32", stack["bind_address"] + "/32", [stack["trusted_proxy"]]):
+            with self.subTest(trusted_proxy=bad), self.assertRaises(ValueError):
+                changed = copy.deepcopy(stack)
+                changed["trusted_proxy"] = bad
+                render.compose(changed)
+        changed = copy.deepcopy(cfg)
+        changed["guest"]["rules"] = [row for row in changed["guest"]["rules"] if not (row.get("direction") == "in" and row.get("port") == "5000" and row.get("source") == stack["trusted_proxy"])]
+        with self.assertRaises(ValueError):
+            pegaprox.validate_deployment(changed, stack)
+        client = next(row for row in cfg["guest"]["rules"] if row.get("direction") == "in" and row.get("port") == "5000")
+        ingress_subnet = stack["trusted_proxy"].rsplit(".", 1)[0] + ".0/24"
+        home_subnet = c.manifest(ROOT)["values"]["networks.home"] + "/24"
+        for source in (ingress_subnet, home_subnet, stack["bind_address"] + "/32"):
+            for extra in (False, True):
+                with self.subTest(client_source=source, extra_client=extra):
+                    changed = copy.deepcopy(cfg)
+                    altered = dict(client, source=source)
+                    if extra:
+                        changed["guest"]["rules"].append(altered)
+                    else:
+                        changed["guest"]["rules"] = [altered if row == client else row for row in changed["guest"]["rules"]]
+                    with self.assertRaises(ValueError):
+                        pegaprox.validate_deployment(changed, stack)
+
+    def test_nas_http_route_keeps_frontend_tls_aliases_and_narrow_egress(self):
+        """Compile the qualified port while preserving browser routing and policy."""
+        for changed in (False, True):
+            overlay = c.read(ROOT / "site.example.json")
+            if changed:
+                overlay["values"].update({"addresses.nas": "198.18.25.102", "domains.secondary": "secondary.changed.example.invalid", "domains.primary": "primary.changed.example.invalid"})
+            with self.subTest(central_values_changed=changed):
+                values = dict(c.manifest(ROOT)["values"], **overlay["values"])
+                packets = c.compile_stack(ROOT, overlay, [])
+                ingress = json.loads(packets["ingress"]["files"]["stack.json"])
+                cfg = json.loads(packets["ingress"]["files"]["site.json"])
+                route = ingress["routing"]["routes"]["nas"]
+                self.assertEqual(route["url"], "http://" + values["addresses.nas"] + ":31763")
+                self.assertEqual(route["host"], "nas." + values["domains.secondary"])
+                self.assertEqual(route["aliases"], ["nas." + values["domains.primary"]])
+                self.assertEqual(route["middlewares"], ["security-headers", "management-clients"])
+                self.assertNotIn("transport", route)
+                shared = discovery.shared(ingress["routing"])
+                router = shared["http"]["routers"]["nas"]
+                self.assertEqual(router["entryPoints"], ["websecure"])
+                self.assertEqual(router["tls"], {"certResolver": "letsencrypt"})
+                self.assertNotIn("serversTransport", shared["http"]["services"]["nas"]["loadBalancer"])
+                rules = [r for r in cfg["guest"]["rules"] if r.get("direction") == "out" and r.get("destination") == values["addresses.nas"] + "/32"]
+                self.assertEqual(len(rules), 1)
+                self.assertEqual((rules[0]["source"], rules[0]["port"], rules[0]["proto"]), (values["addresses.ingress_management"] + "/32", "31763", "tcp"))
+        overlay = c.read(ROOT / "site.example.json")
+        profile = c.read(ROOT / "guests/ingress/profile.json")
+        overlay["guests"]["ingress"] = {"config": {"guest": {"rules": [r for r in profile["config"]["guest"]["rules"] if r.get("port") != "31763"]}}}
+        with self.assertRaises(ValueError):
+            c.compile_stack(ROOT, overlay, [])
+
+    def test_no_backend_ca_lifecycle_is_staged_and_pve_trust_acme_are_preserved(self):
+        """Render invented inputs; no real certificate, process or login is touched."""
+        packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])
+        ingress = json.loads(packets["ingress"]["files"]["stack.json"])
+        self.assertEqual(set(ingress["routing"]["transports"]), {"udm", "proxmox"})
+        self.assertEqual(ingress["routing"]["transports"]["udm"], {"server_name": c.manifest(ROOT)["values"]["domains.udm_backend"]})
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staged = copy.deepcopy(ingress)
+            ca = root / "pve.pem"
+            ca.write_text("-----BEGIN CERTIFICATE-----\nsynthetic-public-fixture\n-----END CERTIFICATE-----\n")
             ca.chmod(0o600)
             staged["foundation"]["pve_ca_file"] = str(ca)
+            staged["routing"]["transports"]["proxmox"]["ca_file"] = str(ca)
             for key in staged["foundation"]["secret_files"]:
                 path = root / key
                 path.write_text("synthetic-retained-value")
                 path.chmod(0o600)
                 staged["foundation"]["secret_files"][key] = str(path)
-            for row in staged["routing"]["transports"].values():
-                row["ca_file"] = str(ca)
-            selected = root / "pegaprox.pem"
-            staged["routing"]["transports"]["pegaprox"]["ca_file"] = str(selected)
+            with patch.object(foundation, "read_private", wraps=foundation.read_private) as reader:
+                artifacts = foundation.files(staged)
+            self.assertTrue(all(Path(call.args[0]).name in {"pve.pem", *staged["foundation"]["secret_files"]} for call in reader.call_args_list))
+            files = {row["path"]: row["content"] for row in artifacts}
+            self.assertTrue({"route-proxmox.pem", "pve-ca.pem"} <= set(files))
+            self.assertTrue({"route-pegaprox.pem", "route-nas.pem", "route-udm.pem"}.isdisjoint(files))
+            static = json.loads(files["traefik.yml"])
+            self.assertEqual(static["entryPoints"]["web"]["http"]["redirections"]["entryPoint"], {"to": "websecure", "scheme": "https"})
+            acme = static["certificatesResolvers"]["letsencrypt"]["acme"]
+            self.assertEqual(acme["storage"], "/var/traefik/certs/acme.json")
+            self.assertEqual(acme["dnsChallenge"]["provider"], "cloudflare")
+            self.assertEqual(static["providers"]["plugin"][foundation.PLUGIN]["apiValidateSSL"], "true")
+            mounts = {r["target"]: r for r in render.compose(staged)["services"]["traefik"]["volumes"]}
+            self.assertTrue({discovery.ca_path("pegaprox"), discovery.ca_path("nas"), discovery.ca_path("udm")}.isdisjoint(mounts))
+            self.assertTrue(mounts[discovery.ca_path("proxmox")]["read_only"])
+            ca.unlink()
             with self.assertRaises(FileNotFoundError):
                 foundation.files(staged)
-            selected.write_text(public)
-            selected.chmod(0o600)
-            artifact = next(
-                row
-                for row in foundation.files(staged)
-                if row["path"] == "route-pegaprox.pem"
-            )
-            self.assertEqual(
-                artifact,
-                {
-                    "path": "route-pegaprox.pem",
-                    "content": public,
-                    "uid": 0,
-                    "gid": 0,
-                    "mode": "0400",
-                },
-            )
 
 
 if __name__ == "__main__":

@@ -264,7 +264,10 @@
       }
     }
   },
-  "files": {},
+  "files": {
+    "custody-catalogue.json": "${custody.catalogue}",
+    "custody-acceptance.json": "${custody.postgresql_acceptance}"
+  },
   "stack": {
     "data_root": "/srv/homelab/data",
     "foundation": {

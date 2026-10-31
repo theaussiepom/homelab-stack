@@ -30,10 +30,17 @@ flowchart TD
   Ingress --> Vault
 ```
 
-Each guest expands to **Infrastructure -> Preparation -> Application(s)**.
+Each guest has one reusable workflow with one **Deploy** job. Its infrastructure,
+preparation and application phases run as ordered steps, labelled **Update container**,
+**Prepare service** and **Deploy service**. DNS and Automation use short application
+labels such as **Deploy resolver**, **Deploy DNS**, **Deploy MQTT**, **Deploy Home
+Assistant** and **Deploy Node-RED**. Each phase first checks bootstrap readiness,
+then checks inputs and loads its existing credentials. Five settings, service and
+tool setup steps run once per guest. Each step has a 45-minute cap; the guest job
+budget adds the former 45-minute phase allowances.
 Preparation installs a Linux baseline and, for container workloads, Docker/Compose
 once. PostgreSQL, MariaDB and InfluxDB are native Debian guests. Authentik is one
-application job covering its three containers. These are Debian LXC workflows;
+application phase covering its three containers. These are Debian LXC workflows;
 VM application support has not been qualified.
 
 Zigbee2MQTT is an active Debian LXC with one declared coordinator, Docker in shared
@@ -67,8 +74,8 @@ only Pi-hole when the actual records change.
 | [common.json](common.json) | Shared runner paths and PVE connection shape |
 | [images.json](images.json) | Image selection authority |
 | [guests](guests) | Executable profiles and public vendor keys/config templates |
-| [deploy workflow](.github/workflows/deploy.yml) | Generated guest groups and real dependency edges |
-| [phase workflow](.github/workflows/phase.yml) | The single framework revision selection |
+| [deploy workflow](.github/workflows/deploy.yml) | Generated guest workflow calls and real dependency edges |
+| [phase selection](.github/workflows/phase.yml) | The single framework revision selection; not called by guest jobs |
 | [site.example.json](site.example.json) | Empty private overlay shape |
 
 Follow [setup and local tests](docs/setup.md), [secrets and prerequisites](docs/secrets.md),
@@ -106,7 +113,14 @@ Their required check names remain `Source contracts`, `Dependency review` and
 definitions, called by the private site; public CI uses synthetic fixtures.
 
 The selected framework's `blueprints/workflows.py` generates `deploy.yml` and all
-`guest-*.yml` workflows from the catalogue and stack dependencies. Edit those
+`guest-*.yml` workflows from the catalogue, stack dependencies and its authoritative
+phase recipe. Each guest has one deployment job containing all its logical phases
+in order. The existing phase commands, packet names, guest dependency edges,
+runner/environment selection and credential step scopes are preserved. Phases
+share one runner/workspace per guest, with a combined phase budget and bounded
+steps; default step failure behavior stops later phases. Source checks establish
+the configured job count and command/security contract. Actual run names, rendering and service
+acceptance remain separate native checks. Edit the
 declarative inputs and regenerate; the checked-in generated files are not edited
 by hand. CI rejects stale generated files. The literal framework selection in
 `phase.yml`, source CI and private-site exclusions remain explicit controls.

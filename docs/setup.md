@@ -42,9 +42,30 @@ python3 ../homelab/blueprints/workflows.py --stack . --check
 ```
 
 This manages all thirteen composition workflows: `deploy.yml`, the eleven permanent
-`guest-*.yml` files and `phase.yml`. Generation preserves the single deliberate
-framework selection in `phase.yml` while checking its declarations and forwarding
-contract. Three separate CI workflows validate the stack, review PR dependencies
+`guest-*.yml` files and `phase.yml`. Each guest workflow contains one Deploy job.
+Five settings, service and tool setup steps run once. Each logical infrastructure,
+preparation and application phase first checks bootstrap readiness, then runs its
+existing check-inputs, load-credentials and phase-deployment command in order.
+The eleven guest jobs contain 36 early readiness checks, all 36 logical phases
+and 108 unchanged phase command bodies. Short labels describe the actions:
+Update container, Prepare service and Deploy service, with application names for
+DNS and Automation.
+
+Configured runner/environment selection, Bash defaults, guest dependencies,
+private-main/disabled conditions and per-guest declared secrets are preserved.
+Credentials remain scoped to their existing steps. A guest shares one runner
+workspace. Its job budget preserves 45 minutes per logical phase: 135 minutes for
+three phases, 180 for DNS and 225 for Automation. Each step has an explicit
+45-minute cap. Default step failure behavior prevents later commands from running;
+there is no retry or dispatcher.
+
+Generation preserves the single deliberate framework selection in `phase.yml`
+while checking its declarations and forwarding contract. This file remains an
+uncalled selection anchor for source/CI/runtime pin readers. Source tests verify
+eleven configured guest jobs and the ordered phase contracts; actual next-run
+names/rendering and all-guest deployment success are separate native checks.
+
+Three separate CI workflows validate the stack, review PR dependencies
 and scan Python security; the generator leaves these workflows unchanged.
 The private site's optional disabled list and adopted stack pin remain explicit. There are
 no compatibility formats or transition flags. Obsolete managed paths must be

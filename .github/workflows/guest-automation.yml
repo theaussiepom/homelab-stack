@@ -22,73 +22,244 @@ name: Automation
         required: true
 permissions:
   contents: read
+defaults:
+  run:
+    shell: bash
 jobs:
-  infrastructure:
-    name: Infrastructure
-    uses: ./.github/workflows/phase.yml
-    with:
-      disabled: ${{ inputs.disabled }}
-      runner_labels: ${{ inputs.runner_labels }}
-      environment_name: ${{ inputs.environment_name }}
-      guest: automation
-      phase: infrastructure
-    secrets:
-      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
-      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
-      AUTOMATION_NODE_RED_API_TOKEN: ${{ secrets.AUTOMATION_NODE_RED_API_TOKEN }}
-  preparation:
-    name: Preparation
-    needs: infrastructure
-    uses: ./.github/workflows/phase.yml
-    with:
-      disabled: ${{ inputs.disabled }}
-      runner_labels: ${{ inputs.runner_labels }}
-      environment_name: ${{ inputs.environment_name }}
-      guest: automation
-      phase: preparation
-    secrets:
-      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
-      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
-      AUTOMATION_NODE_RED_API_TOKEN: ${{ secrets.AUTOMATION_NODE_RED_API_TOKEN }}
-  mqtt:
-    name: MQTT
-    needs: preparation
-    uses: ./.github/workflows/phase.yml
-    with:
-      disabled: ${{ inputs.disabled }}
-      runner_labels: ${{ inputs.runner_labels }}
-      environment_name: ${{ inputs.environment_name }}
-      guest: automation
-      phase: mqtt
-    secrets:
-      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
-      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
-      AUTOMATION_NODE_RED_API_TOKEN: ${{ secrets.AUTOMATION_NODE_RED_API_TOKEN }}
-  homeassistant:
-    name: Home Assistant
-    needs: mqtt
-    uses: ./.github/workflows/phase.yml
-    with:
-      disabled: ${{ inputs.disabled }}
-      runner_labels: ${{ inputs.runner_labels }}
-      environment_name: ${{ inputs.environment_name }}
-      guest: automation
-      phase: homeassistant
-    secrets:
-      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
-      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
-      AUTOMATION_NODE_RED_API_TOKEN: ${{ secrets.AUTOMATION_NODE_RED_API_TOKEN }}
-  node_red:
-    name: Node-RED
-    needs: homeassistant
-    uses: ./.github/workflows/phase.yml
-    with:
-      disabled: ${{ inputs.disabled }}
-      runner_labels: ${{ inputs.runner_labels }}
-      environment_name: ${{ inputs.environment_name }}
-      guest: automation
-      phase: node_red
-    secrets:
-      APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
-      PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
-      AUTOMATION_NODE_RED_API_TOKEN: ${{ secrets.AUTOMATION_NODE_RED_API_TOKEN }}
+  deploy:
+    name: Deploy
+    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'automation')
+    environment: ${{ inputs.environment_name }}
+    runs-on: ${{ fromJSON(inputs.runner_labels) }}
+    timeout-minutes: 225
+    env:
+      HOMELAB_DEPLOYMENT_WORKFLOW: ${{ github.workflow_ref }}
+    steps:
+    - name: Check readiness
+      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
+
+        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
+
+        '
+      timeout-minutes: 45
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+      name: Get settings
+      timeout-minutes: 45
+    - name: Choose services
+      id: stack
+      run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
+
+        import pathlib, re
+
+        text = pathlib.Path(''.github/workflows/deploy.yml'').read_text()
+
+        pins = re.findall(r''^\s*uses: ([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/\.github/workflows/deploy\.yml@([0-9a-f]{40})\s*$'', text, re.M)
+
+        if len(pins) != 1: raise SystemExit(''Select one immutable stack workflow'')
+
+        print(''repository=''+pins[0][0]); print(''revision=''+pins[0][1])
+
+        PYCODE
+
+        '
+      timeout-minutes: 45
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        repository: ${{ steps.stack.outputs.repository }}
+        ref: ${{ steps.stack.outputs.revision }}
+        path: stack-source
+        persist-credentials: false
+      name: Get services
+      timeout-minutes: 45
+    - name: Choose tools
+      id: framework
+      run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
+
+        import pathlib, re
+
+        text = pathlib.Path(''stack-source/.github/workflows/phase.yml'').read_text()
+
+        pins = re.findall(r''^\s*uses: ([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/\.github/workflows/guest-phase\.yml@([0-9a-f]{40})\s*$'', text, re.M)
+
+        if len(pins) != 1: raise SystemExit(''Select one immutable framework workflow'')
+
+        print(''repository=''+pins[0][0]); print(''revision=''+pins[0][1])
+
+        PYCODE
+
+        '
+      timeout-minutes: 45
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        repository: ${{ steps.framework.outputs.repository }}
+        ref: ${{ steps.framework.outputs.revision }}
+        path: framework-source
+        persist-credentials: false
+      name: Get tools
+      timeout-minutes: 45
+    - name: Check inputs
+      env:
+        GUEST: automation
+        PHASE: infrastructure
+        DISABLED: ${{ inputs.disabled }}
+      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
+      timeout-minutes: 45
+    - name: Load credentials
+      env:
+        GUEST: automation
+        PHASE: infrastructure
+        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Update container
+      env:
+        GUEST: automation
+        PHASE: infrastructure
+        NODE_RED_API_TOKEN: ${{ 'automation' == 'automation' && secrets.AUTOMATION_NODE_RED_API_TOKEN || '' }}
+        AUTHENTIK_SECRET_KEY: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_SMTP_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        PGADMIN_OAUTH_SECRET: ${{ 'automation' == 'db-tools' && '' || '' }}
+        CLOUDFLARE_DNS_TOKEN: ${{ 'automation' == 'ingress' && '' || '' }}
+      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Check readiness
+      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
+
+        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
+
+        '
+      timeout-minutes: 45
+    - name: Check inputs
+      env:
+        GUEST: automation
+        PHASE: preparation
+        DISABLED: ${{ inputs.disabled }}
+      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
+      timeout-minutes: 45
+    - name: Load credentials
+      env:
+        GUEST: automation
+        PHASE: preparation
+        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Prepare service
+      env:
+        GUEST: automation
+        PHASE: preparation
+        NODE_RED_API_TOKEN: ${{ 'automation' == 'automation' && secrets.AUTOMATION_NODE_RED_API_TOKEN || '' }}
+        AUTHENTIK_SECRET_KEY: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_SMTP_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        PGADMIN_OAUTH_SECRET: ${{ 'automation' == 'db-tools' && '' || '' }}
+        CLOUDFLARE_DNS_TOKEN: ${{ 'automation' == 'ingress' && '' || '' }}
+      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Check readiness
+      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
+
+        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
+
+        '
+      timeout-minutes: 45
+    - name: Check inputs
+      env:
+        GUEST: automation
+        PHASE: mqtt
+        DISABLED: ${{ inputs.disabled }}
+      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
+      timeout-minutes: 45
+    - name: Load credentials
+      env:
+        GUEST: automation
+        PHASE: mqtt
+        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Deploy MQTT
+      env:
+        GUEST: automation
+        PHASE: mqtt
+        NODE_RED_API_TOKEN: ${{ 'automation' == 'automation' && secrets.AUTOMATION_NODE_RED_API_TOKEN || '' }}
+        AUTHENTIK_SECRET_KEY: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_SMTP_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        PGADMIN_OAUTH_SECRET: ${{ 'automation' == 'db-tools' && '' || '' }}
+        CLOUDFLARE_DNS_TOKEN: ${{ 'automation' == 'ingress' && '' || '' }}
+      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Check readiness
+      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
+
+        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
+
+        '
+      timeout-minutes: 45
+    - name: Check inputs
+      env:
+        GUEST: automation
+        PHASE: homeassistant
+        DISABLED: ${{ inputs.disabled }}
+      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
+      timeout-minutes: 45
+    - name: Load credentials
+      env:
+        GUEST: automation
+        PHASE: homeassistant
+        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Deploy Home Assistant
+      env:
+        GUEST: automation
+        PHASE: homeassistant
+        NODE_RED_API_TOKEN: ${{ 'automation' == 'automation' && secrets.AUTOMATION_NODE_RED_API_TOKEN || '' }}
+        AUTHENTIK_SECRET_KEY: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_SMTP_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        PGADMIN_OAUTH_SECRET: ${{ 'automation' == 'db-tools' && '' || '' }}
+        CLOUDFLARE_DNS_TOKEN: ${{ 'automation' == 'ingress' && '' || '' }}
+      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Check readiness
+      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
+
+        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
+
+        '
+      timeout-minutes: 45
+    - name: Check inputs
+      env:
+        GUEST: automation
+        PHASE: node_red
+        DISABLED: ${{ inputs.disabled }}
+      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
+      timeout-minutes: 45
+    - name: Load credentials
+      env:
+        GUEST: automation
+        PHASE: node_red
+        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Deploy Node-RED
+      env:
+        GUEST: automation
+        PHASE: node_red
+        NODE_RED_API_TOKEN: ${{ 'automation' == 'automation' && secrets.AUTOMATION_NODE_RED_API_TOKEN || '' }}
+        AUTHENTIK_SECRET_KEY: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_SMTP_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        PGADMIN_OAUTH_SECRET: ${{ 'automation' == 'db-tools' && '' || '' }}
+        CLOUDFLARE_DNS_TOKEN: ${{ 'automation' == 'ingress' && '' || '' }}
+      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45

@@ -9,7 +9,7 @@
       "storage_id": "local-zfs",
       "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
       "started": true,
-      "start_on_boot": false,
+      "start_on_boot": true,
       "boot_order": 60,
       "nesting": true,
       "keyctl": false,
@@ -75,14 +75,6 @@
           "direction": "in",
           "proto": "tcp",
           "port": "5000",
-          "source": "${networks.home}/24",
-          "destination": "${addresses.pegaprox_management}/32",
-          "comment": "Direct client access to PegaProx"
-        },
-        {
-          "direction": "in",
-          "proto": "tcp",
-          "port": "5000",
           "source": "${addresses.ingress_management}/32",
           "destination": "${addresses.pegaprox_management}/32",
           "comment": "Declared HTTP route backend"
@@ -130,7 +122,7 @@
       },
       "endpoints": {
         "pegaprox": {
-          "web": "https://${addresses.pegaprox_management}:5000"
+          "web": "http://${addresses.pegaprox_management}:5000"
         }
       }
     }
@@ -143,6 +135,7 @@
     "container_memory_mib": 1536,
     "cpus": 2,
     "pids_limit": 256,
-    "image_ref": "pegaprox"
+    "image_ref": "pegaprox",
+    "trusted_proxy": "${addresses.ingress_management}/32"
   }
 }

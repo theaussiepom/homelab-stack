@@ -94,11 +94,13 @@ class StackTests(unittest.TestCase):
                 "preparation",
                 *c.CATALOGUE[name]["applications"],
             ]
-            self.assertEqual(list(guest["jobs"]), phases)
-            for n, p in enumerate(phases):
-                self.assertEqual(guest["jobs"][p]["with"]["phase"], p)
-                if n:
-                    self.assertEqual(guest["jobs"][p]["needs"], phases[n - 1])
+            self.assertEqual(list(guest["jobs"]), ["deploy"])
+            steps = guest["jobs"]["deploy"]["steps"]
+            self.assertEqual(len(steps), 5 + 4 * len(phases))
+            self.assertEqual([step["env"]["PHASE"] for step in steps[8::4]], phases)
+            self.assertEqual([step["env"]["GUEST"] for step in steps[8::4]], [name] * len(phases))
+            self.assertNotIn("uses", guest["jobs"]["deploy"])
+            self.assertNotIn("needs", guest["jobs"]["deploy"])
         c.workflow_selection(ROOT / ".github/workflows/phase.yml", "guest-phase.yml")
 
     def test_admission_still_requires_reviewed_private_inputs_and_active_guests(
