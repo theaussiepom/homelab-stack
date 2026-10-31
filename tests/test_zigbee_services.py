@@ -62,8 +62,11 @@ class ZigbeeServiceTests(unittest.TestCase):
         )
         self.assertEqual(
             list(graph["guest-zigbee2mqtt.yml"]["jobs"]),
-            ["infrastructure", "preparation", "zigbee2mqtt"],
+            ["deploy"],
         )
+        steps = graph["guest-zigbee2mqtt.yml"]["jobs"]["deploy"]["steps"]
+        self.assertEqual([step["env"]["PHASE"] for step in steps[8::3]],
+                         ["infrastructure", "preparation", "zigbee2mqtt"])
 
     def test_broker_definition_owns_dns_check_and_the_backend_radio_alias(self):
         overlay = compiler.read(ROOT / "site.example.json")

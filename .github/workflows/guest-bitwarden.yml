@@ -24,8 +24,8 @@ defaults:
   run:
     shell: bash
 jobs:
-  infrastructure:
-    name: Infra
+  deploy:
+    name: Deploy
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'bitwarden')
     environment: ${{ inputs.environment_name }}
     runs-on: ${{ fromJSON(inputs.runner_labels) }}
@@ -33,7 +33,7 @@ jobs:
     env:
       HOMELAB_DEPLOYMENT_WORKFLOW: ${{ github.workflow_ref }}
     steps:
-    - name: Preserve bootstrap custody
+    - name: Check readiness
       run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
 
         test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
@@ -43,7 +43,8 @@ jobs:
       with:
         fetch-depth: 0
         persist-credentials: false
-    - name: Read the private stack selection
+      name: Get settings
+    - name: Choose services
       id: stack
       run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
 
@@ -66,7 +67,8 @@ jobs:
         ref: ${{ steps.stack.outputs.revision }}
         path: stack-source
         persist-credentials: false
-    - name: Read the framework selection
+      name: Get services
+    - name: Choose tools
       id: framework
       run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
 
@@ -89,20 +91,21 @@ jobs:
         ref: ${{ steps.framework.outputs.revision }}
         path: framework-source
         persist-credentials: false
-    - name: Compile the admitted guest
+      name: Get tools
+    - name: Check inputs
       env:
         GUEST: bitwarden
         PHASE: infrastructure
         DISABLED: ${{ inputs.disabled }}
       run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
-    - name: Bind existing credentials
+    - name: Load credentials
       env:
         GUEST: bitwarden
         PHASE: infrastructure
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
       run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-    - name: Deployment
+    - name: Update container
       env:
         GUEST: bitwarden
         PHASE: infrastructure
@@ -113,85 +116,20 @@ jobs:
         PGADMIN_OAUTH_SECRET: ${{ 'bitwarden' == 'db-tools' && '' || '' }}
         CLOUDFLARE_DNS_TOKEN: ${{ 'bitwarden' == 'ingress' && '' || '' }}
       run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-  preparation:
-    name: Prepare
-    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'bitwarden')
-    environment: ${{ inputs.environment_name }}
-    runs-on: ${{ fromJSON(inputs.runner_labels) }}
-    timeout-minutes: 45
-    env:
-      HOMELAB_DEPLOYMENT_WORKFLOW: ${{ github.workflow_ref }}
-    steps:
-    - name: Preserve bootstrap custody
-      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
-
-        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
-
-        '
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      with:
-        fetch-depth: 0
-        persist-credentials: false
-    - name: Read the private stack selection
-      id: stack
-      run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
-
-        import pathlib, re
-
-        text = pathlib.Path(''.github/workflows/deploy.yml'').read_text()
-
-        pins = re.findall(r''^\s*uses: ([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/\.github/workflows/deploy\.yml@([0-9a-f]{40})\s*$'', text, re.M)
-
-        if len(pins) != 1: raise SystemExit(''Select one immutable stack workflow'')
-
-        print(''repository=''+pins[0][0]); print(''revision=''+pins[0][1])
-
-        PYCODE
-
-        '
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      with:
-        repository: ${{ steps.stack.outputs.repository }}
-        ref: ${{ steps.stack.outputs.revision }}
-        path: stack-source
-        persist-credentials: false
-    - name: Read the framework selection
-      id: framework
-      run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
-
-        import pathlib, re
-
-        text = pathlib.Path(''stack-source/.github/workflows/phase.yml'').read_text()
-
-        pins = re.findall(r''^\s*uses: ([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/\.github/workflows/guest-phase\.yml@([0-9a-f]{40})\s*$'', text, re.M)
-
-        if len(pins) != 1: raise SystemExit(''Select one immutable framework workflow'')
-
-        print(''repository=''+pins[0][0]); print(''revision=''+pins[0][1])
-
-        PYCODE
-
-        '
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      with:
-        repository: ${{ steps.framework.outputs.repository }}
-        ref: ${{ steps.framework.outputs.revision }}
-        path: framework-source
-        persist-credentials: false
-    - name: Compile the admitted guest
+    - name: Check inputs
       env:
         GUEST: bitwarden
         PHASE: preparation
         DISABLED: ${{ inputs.disabled }}
       run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
-    - name: Bind existing credentials
+    - name: Load credentials
       env:
         GUEST: bitwarden
         PHASE: preparation
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
       run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-    - name: Deployment
+    - name: Prepare service
       env:
         GUEST: bitwarden
         PHASE: preparation
@@ -202,86 +140,20 @@ jobs:
         PGADMIN_OAUTH_SECRET: ${{ 'bitwarden' == 'db-tools' && '' || '' }}
         CLOUDFLARE_DNS_TOKEN: ${{ 'bitwarden' == 'ingress' && '' || '' }}
       run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-    needs: infrastructure
-  bitwarden:
-    name: Deployment
-    if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'bitwarden')
-    environment: ${{ inputs.environment_name }}
-    runs-on: ${{ fromJSON(inputs.runner_labels) }}
-    timeout-minutes: 45
-    env:
-      HOMELAB_DEPLOYMENT_WORKFLOW: ${{ github.workflow_ref }}
-    steps:
-    - name: Preserve bootstrap custody
-      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
-
-        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
-
-        '
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      with:
-        fetch-depth: 0
-        persist-credentials: false
-    - name: Read the private stack selection
-      id: stack
-      run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
-
-        import pathlib, re
-
-        text = pathlib.Path(''.github/workflows/deploy.yml'').read_text()
-
-        pins = re.findall(r''^\s*uses: ([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/\.github/workflows/deploy\.yml@([0-9a-f]{40})\s*$'', text, re.M)
-
-        if len(pins) != 1: raise SystemExit(''Select one immutable stack workflow'')
-
-        print(''repository=''+pins[0][0]); print(''revision=''+pins[0][1])
-
-        PYCODE
-
-        '
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      with:
-        repository: ${{ steps.stack.outputs.repository }}
-        ref: ${{ steps.stack.outputs.revision }}
-        path: stack-source
-        persist-credentials: false
-    - name: Read the framework selection
-      id: framework
-      run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
-
-        import pathlib, re
-
-        text = pathlib.Path(''stack-source/.github/workflows/phase.yml'').read_text()
-
-        pins = re.findall(r''^\s*uses: ([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/\.github/workflows/guest-phase\.yml@([0-9a-f]{40})\s*$'', text, re.M)
-
-        if len(pins) != 1: raise SystemExit(''Select one immutable framework workflow'')
-
-        print(''repository=''+pins[0][0]); print(''revision=''+pins[0][1])
-
-        PYCODE
-
-        '
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      with:
-        repository: ${{ steps.framework.outputs.repository }}
-        ref: ${{ steps.framework.outputs.revision }}
-        path: framework-source
-        persist-credentials: false
-    - name: Compile the admitted guest
+    - name: Check inputs
       env:
         GUEST: bitwarden
         PHASE: bitwarden
         DISABLED: ${{ inputs.disabled }}
       run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
-    - name: Bind existing credentials
+    - name: Load credentials
       env:
         GUEST: bitwarden
         PHASE: bitwarden
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
       run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-    - name: Deployment
+    - name: Deploy service
       env:
         GUEST: bitwarden
         PHASE: bitwarden
@@ -292,4 +164,3 @@ jobs:
         PGADMIN_OAUTH_SECRET: ${{ 'bitwarden' == 'db-tools' && '' || '' }}
         CLOUDFLARE_DNS_TOKEN: ${{ 'bitwarden' == 'ingress' && '' || '' }}
       run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-    needs: preparation

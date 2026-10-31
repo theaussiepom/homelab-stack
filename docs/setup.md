@@ -42,20 +42,25 @@ python3 ../homelab/blueprints/workflows.py --stack . --check
 ```
 
 This manages all thirteen composition workflows: `deploy.yml`, the eleven permanent
-`guest-*.yml` files and `phase.yml`. Each guest workflow directly contains its Infra,
-Prepare and application jobs, materialized from the selected framework's phase
-recipe. The logical phase IDs, command bodies, Bash default, dependency graph and
-runner/environment/credential scopes are preserved. Single-application jobs use
-the display name Deployment; DNS and Automation retain their application names.
-The final execution step in every job is Deployment.
+`guest-*.yml` files and `phase.yml`. Each guest workflow contains one Deploy job.
+Six common setup steps run once; each logical infrastructure, preparation and
+application phase then runs its existing check-inputs, load-credentials and
+phase-deployment command in order. The eleven guest jobs contain all 36 logical
+phases and 108 unchanged phase command bodies. Short labels describe the actions:
+Update container, Prepare service and Deploy service, with application names for
+DNS and Automation.
+
+Configured runner/environment selection, Bash defaults, guest dependencies,
+private-main/disabled conditions and per-guest declared secrets are preserved.
+Credentials remain scoped to their existing steps. A guest now shares one runner
+workspace and a single 45-minute job limit across its phases. Default step failure
+behavior prevents later commands from running; there is no retry or dispatcher.
 
 Generation preserves the single deliberate framework selection in `phase.yml`
 while checking its declarations and forwarding contract. This file remains an
-uncalled selection anchor for source/CI/runtime pin readers; guest jobs do not call
-it or introduce per-phase nested workflow calls. This shortens job paths but has
-not achieved the requested native per-guest graph containers. Source equivalence
-checks establish execution preservation only. Native grouping of the sequential
-guest jobs remains unverified; all-guest deployment success is a separate CD gate.
+uncalled selection anchor for source/CI/runtime pin readers. Source tests verify
+eleven configured guest jobs and the ordered phase contracts; actual next-run
+names/rendering and all-guest deployment success are separate native checks.
 
 Three separate CI workflows validate the stack, review PR dependencies
 and scan Python security; the generator leaves these workflows unchanged.

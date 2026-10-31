@@ -30,12 +30,16 @@ flowchart TD
   Ingress --> Vault
 ```
 
-Each guest has one reusable workflow containing separate **Infra -> Prepare -> application**
-jobs. Single-application guests label that final job **Deployment**; DNS and Automation
-keep each application name. Every job labels its final execution step **Deployment**.
+Each guest has one reusable workflow with one **Deploy** job. Its infrastructure,
+preparation and application phases run as ordered steps, labelled **Update container**,
+**Prepare service** and **Deploy service**. DNS and Automation use short application
+labels such as **Deploy resolver**, **Deploy DNS**, **Deploy MQTT**, **Deploy Home
+Assistant** and **Deploy Node-RED**. Each phase first checks inputs and loads its
+existing credentials. Six common setup steps run once per guest. The 45-minute
+job limit covers the whole guest.
 Preparation installs a Linux baseline and, for container workloads, Docker/Compose
 once. PostgreSQL, MariaDB and InfluxDB are native Debian guests. Authentik is one
-application job covering its three containers. These are Debian LXC workflows;
+application phase covering its three containers. These are Debian LXC workflows;
 VM application support has not been qualified.
 
 Zigbee2MQTT is an active Debian LXC with one declared coordinator, Docker in shared
@@ -109,12 +113,13 @@ definitions, called by the private site; public CI uses synthetic fixtures.
 
 The selected framework's `blueprints/workflows.py` generates `deploy.yml` and all
 `guest-*.yml` workflows from the catalogue, stack dependencies and its authoritative
-phase job recipe. Each guest contains its actual jobs directly, preserving the
-existing phase IDs, dependency edges, runner/environment controls, command bodies
-and credential step scopes. The generator removes the nested per-phase workflow
-calls and shortens job paths; jobs remain separate jobs. This source layout has
-not achieved one native GitHub Actions graph container per guest. Static workflow
-equivalence verifies execution preservation, not visual grouping. Edit those
+phase recipe. Each guest has one deployment job containing all its logical phases
+in order. The existing phase commands, packet names, guest dependency edges,
+runner/environment selection and credential step scopes are preserved. Phases
+share one runner/workspace and one 45-minute job cap per guest; default step
+failure behavior stops later phases. Source checks establish the configured job
+count and command/security contract. Actual run names, rendering and service
+acceptance remain separate native checks. Edit the
 declarative inputs and regenerate; the checked-in generated files are not edited
 by hand. CI rejects stale generated files. The literal framework selection in
 `phase.yml`, source CI and private-site exclusions remain explicit controls.

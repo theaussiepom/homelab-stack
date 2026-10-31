@@ -71,55 +71,73 @@ class GeneratedWorkflowTests(unittest.TestCase):
                 self.assertEqual((workflows / "phase.yml").read_bytes(), phase)
                 self.assertEqual({name: (workflows / name).read_bytes() for name in ci_names}, ci)
 
-    def test_guest_groups_contain_the_exact_native_recipe_without_phase_wrappers(self):
+    def test_one_guest_job_preserves_all_ordered_phase_commands_and_policies(self):
         def load(path):
             return yaml.load(path.read_text(), Loader=yaml.BaseLoader)
 
+        phases = {
+            "dns": ["infrastructure", "preparation", "unbound", "pihole"],
+            "ingress": ["infrastructure", "preparation", "traefik"],
+            "postgresql": ["infrastructure", "preparation", "postgresql"],
+            "mariadb": ["infrastructure", "preparation", "mariadb"],
+            "influxdb": ["infrastructure", "preparation", "influxdb"],
+            "identity": ["infrastructure", "preparation", "authentik"],
+            "db-tools": ["infrastructure", "preparation", "pgadmin"],
+            "automation": ["infrastructure", "preparation", "mqtt", "homeassistant", "node_red"],
+            "bitwarden": ["infrastructure", "preparation", "bitwarden"],
+            "pegaprox": ["infrastructure", "preparation", "pegaprox"],
+            "zigbee2mqtt": ["infrastructure", "preparation", "zigbee2mqtt"],
+        }
+        labels = {"infrastructure": "Update container", "preparation": "Prepare service",
+                  "unbound": "Deploy resolver", "pihole": "Deploy DNS", "mqtt": "Deploy MQTT",
+                  "homeassistant": "Deploy Home Assistant", "node_red": "Deploy Node-RED"}
+        setup_names = ["Check readiness", "Get settings", "Choose services", "Get services", "Choose tools", "Get tools"]
         directory = ROOT / ".github/workflows"
         framework = load(FRAMEWORK / ".github/workflows/guest-phase.yml")
         recipe = framework["jobs"]["run"]
-        total_jobs = total_commands = 0
-        for path in sorted(directory.glob("guest-*.yml")):
-            guest = path.stem.removeprefix("guest-")
-            workflow = load(path)
-            self.assertEqual(workflow["defaults"], framework["defaults"])
-            self.assertEqual(workflow["defaults"], {"run": {"shell": "bash"}})
-            self.assertEqual(workflow["on"]["workflow_call"]["inputs"]["disabled"]["default"], "[]")
-            applications = [p for p in workflow["jobs"] if p not in {"infrastructure", "preparation"}]
-            for phase, job in workflow["jobs"].items():
-                with self.subTest(guest=guest, phase=phase):
-                    total_jobs += 1
-                    self.assertEqual(set(job), {"name", "if", "environment", "runs-on", "timeout-minutes", "env", "steps"} | ({"needs"} if phase != "infrastructure" else set()))
-                    expected_name = {"infrastructure": "Infra", "preparation": "Prepare"}.get(phase)
-                    if expected_name is not None:
-                        self.assertEqual(job["name"], expected_name)
-                    elif len(applications) == 1:
-                        self.assertEqual(job["name"], "Deployment")
-                    self.assertEqual(job["if"], "github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), '" + guest + "')")
-                    for key in ("environment", "runs-on", "timeout-minutes", "env"):
-                        self.assertEqual(job[key], recipe[key])
-                    self.assertEqual(len(job["steps"]), 9)
-                    self.assertEqual(len(recipe["steps"]), 9)
-                    for index, (before, after) in enumerate(zip(recipe["steps"], job["steps"])):
+        self.assertEqual({p.stem.removeprefix("guest-") for p in directory.glob("guest-*.yml")}, set(phases))
+        total_jobs = total_phases = total_phase_commands = 0
+        for guest, expected_phases in phases.items():
+            with self.subTest(guest=guest):
+                workflow = load(directory / ("guest-" + guest + ".yml"))
+                self.assertEqual(list(workflow["jobs"]), ["deploy"])
+                self.assertEqual(workflow["defaults"], framework["defaults"])
+                self.assertEqual(workflow["defaults"], {"run": {"shell": "bash"}})
+                self.assertEqual(workflow["on"]["workflow_call"]["inputs"]["disabled"]["default"], "[]")
+                job = workflow["jobs"]["deploy"]
+                self.assertEqual(set(job), {"name", "if", "environment", "runs-on", "timeout-minutes", "env", "steps"})
+                self.assertEqual(job["name"], "Deploy")
+                self.assertEqual(job["if"], "github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), '" + guest + "')")
+                for key in ("environment", "runs-on", "timeout-minutes", "env"):
+                    self.assertEqual(job[key], recipe[key])
+                self.assertEqual(job["timeout-minutes"], "45")  # Whole-guest cap.
+                self.assertEqual(len(job["steps"]), 6 + 3 * len(expected_phases))
+                self.assertEqual([step["id"] for step in job["steps"] if "id" in step], ["stack", "framework"])
+                for step in job["steps"]:
+                    self.assertNotIn("if", step)
+                    self.assertNotIn("continue-on-error", step)
+                for before, after, name in zip(recipe["steps"][:6], job["steps"][:6], setup_names):
+                    self.assertEqual(set(after), set(before) | {"name"})
+                    self.assertEqual(after["name"], name)
+                    for key in set(before) - {"name"}:
+                        self.assertEqual(after[key], before[key])
+                for index, phase in enumerate(expected_phases):
+                    triple = job["steps"][6 + 3 * index:9 + 3 * index]
+                    display = labels.get(phase, "Deploy service")
+                    self.assertEqual([step["name"] for step in triple], ["Check inputs", "Load credentials", display])
+                    for before, after in zip(recipe["steps"][6:], triple):
                         self.assertEqual(set(after), set(before))
-                        for key in set(before) - {"env", "name"}:
-                            self.assertEqual(after[key], before[key])
-                        if "name" in before:
-                            self.assertEqual(after["name"], "Deployment" if index == 8 else before["name"])
-                        if "run" in before:
-                            total_commands += 1
-                        if "env" not in before:
-                            continue
+                        self.assertEqual(after["run"], before["run"])
                         self.assertEqual(set(after["env"]), set(before["env"]))
                         self.assertEqual(after["env"]["GUEST"], guest)
                         self.assertEqual(after["env"]["PHASE"], phase)
-                        if index == 6:
-                            self.assertEqual(after["env"]["DISABLED"], "${{ inputs.disabled }}")
-                        if index == 7:
-                            for secret in ("APPLICATION_SSH_KEY", "PROXMOX_APP_TOKEN"):
-                                self.assertEqual(after["env"][secret], "${{ secrets." + secret + " }}")
-        self.assertEqual(total_jobs, 36)
-        self.assertEqual(total_commands, 216)
+                        total_phase_commands += 1
+                    self.assertEqual(triple[0]["env"]["DISABLED"], "${{ inputs.disabled }}")
+                    for secret in ("APPLICATION_SSH_KEY", "PROXMOX_APP_TOKEN"):
+                        self.assertEqual(triple[1]["env"][secret], "${{ secrets." + secret + " }}")
+                    total_phases += 1
+                total_jobs += 1
+        self.assertEqual((total_jobs, total_phases, total_phase_commands), (11, 36, 108))
 
     def test_named_secrets_remain_guest_scoped_inside_native_job_steps(self):
         common = {"APPLICATION_SSH_KEY": "true", "PROXMOX_APP_TOKEN": "true"}
@@ -184,23 +202,25 @@ class GeneratedWorkflowTests(unittest.TestCase):
                     self.assertNotIn("secrets", job)
                     self.assertEqual(set(re.findall(r"secrets\.([A-Z_]+)", json.dumps(job))), set(selected))
                     self.assertEqual(set(job["env"]), {"HOMELAB_DEPLOYMENT_WORKFLOW"})
-                    deployment = job["steps"][-1]
-                    self.assertEqual(deployment["name"], "Deployment")
+                    self.assertEqual(list(workflow["jobs"]), ["deploy"])
                     for index, step in enumerate(job["steps"]):
                         references = set(re.findall(r"secrets\.([A-Z_]+)", json.dumps(step)))
-                        self.assertEqual(references, set(common) if index == 7 else set(applications.get(guest, {})) if index == 8 else set())
-                    for variable, (owner, name) in bindings.items():
-                        secret_expression = "secrets." + name if owner == guest else "''"
-                        expected = "${{ '" + guest + "' == '" + owner + "' && " + secret_expression + " || '' }}"
-                        self.assertEqual(deployment["env"][variable], expected)
-                        observed = re.fullmatch(r"\$\{\{ '([a-z0-9-]+)' == '([a-z-]+)' && (?:secrets\.([A-Z_]+)|'') \|\| '' \}\}", deployment["env"][variable])
-                        self.assertIsNotNone(observed)
-                        for smtp_present in (True, False):
-                            supplied = {key: available[key] for key in selected if smtp_present or key != "FOUNDATION_AUTHENTIK_SMTP_PASSWORD"}
-                            inherited = {key: supplied.get(key, "") for key in generic}
-                            old_value = inherited[name] if guest == owner else ""
-                            new_value = supplied.get(observed[3], "") if observed[1] == observed[2] and observed[3] else ""
-                            self.assertEqual(new_value, old_value)
+                        role = (index - 6) % 3
+                        expected = set() if index < 6 or role == 0 else set(common) if role == 1 else set(applications.get(guest, {}))
+                        self.assertEqual(references, expected)
+                    for deployment in job["steps"][8::3]:
+                        for variable, (owner, name) in bindings.items():
+                            secret_expression = "secrets." + name if owner == guest else "''"
+                            expected = "${{ '" + guest + "' == '" + owner + "' && " + secret_expression + " || '' }}"
+                            self.assertEqual(deployment["env"][variable], expected)
+                            observed = re.fullmatch(r"\$\{\{ '([a-z0-9-]+)' == '([a-z-]+)' && (?:secrets\.([A-Z_]+)|'') \|\| '' \}\}", deployment["env"][variable])
+                            self.assertIsNotNone(observed)
+                            for smtp_present in (True, False):
+                                supplied = {key: available[key] for key in selected if smtp_present or key != "FOUNDATION_AUTHENTIK_SMTP_PASSWORD"}
+                                inherited = {key: supplied.get(key, "") for key in generic}
+                                old_value = inherited[name] if guest == owner else ""
+                                new_value = supplied.get(observed[3], "") if observed[1] == observed[2] and observed[3] else ""
+                                self.assertEqual(new_value, old_value)
 
     def test_actual_selection_preflight_validates_before_any_guest_can_be_skipped(self):
         deploy = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
