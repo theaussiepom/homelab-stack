@@ -80,14 +80,6 @@
           "proto": "tcp"
         },
         {
-          "comment": "Traefik backend only",
-          "destination": "${addresses.identity_backend}/32",
-          "direction": "in",
-          "port": "9000",
-          "proto": "tcp",
-          "source": "${addresses.ingress_backend}/32"
-        },
-        {
           "comment": "Traefik monitoring UI",
           "direction": "in",
           "source": "${addresses.ingress_management}/32",
@@ -123,7 +115,7 @@
         "docker-compose=2.26.1-4",
         "curl=8.14.1-2+deb13u7"
       ],
-      "exclusive_writer_confirmed": true,
+      "exclusive_writer_confirmed": false,
       "stack_config": "${inputs}/stack.json",
       "health_checks": [
         {

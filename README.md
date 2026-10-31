@@ -151,3 +151,10 @@ See the framework's `docs/zabbix-blueprint.md` for bootstrap/trust prerequisites
 first-install behavior, local Docker privilege scope and verification limits.
 The optional workflow is skipped when the root property is absent; it does not
 make any existing guest depend on the monitoring server.
+
+The optional monitoring profile keeps exclusive-writer admission unconfirmed in
+public defaults. Its private site must confirm its fresh guest slot. The framework
+also derives the exact monitoring-to-PostgreSQL TCP5432 rules on both guests and
+the InfluxDB metrics connection; these are not duplicated in the profile. With
+root Zabbix selected, disabling only its server while other guests run is refused.
+Existing disabled leaf selections and the ordinary guest dependency graph remain.

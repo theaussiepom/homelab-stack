@@ -64,7 +64,7 @@ class MonitoringFeatureTests(unittest.TestCase):
         self.assertNotIn('db-tools',{m['guest'] for m in members})
         with self.assertRaises(ValueError):self.packets(disabled=['postgresql'])
         self.assertEqual(len(self.packets(False,['monitoring'])),11)
-        self.assertFalse(self.packets(True,['monitoring'])['monitoring']['enabled'])
+        with self.assertRaisesRegex(ValueError, 'Keep Zabbix enabled'):self.packets(True,['monitoring'])
 
     def test_generated_selection_reads_presence_and_never_runs_an_absent_feature(self):
         import yaml
@@ -93,3 +93,25 @@ class MonitoringFeatureTests(unittest.TestCase):
             'hostssl zabbix zabbix 198.18.31.36/32 scram-sha-256',
             'hostnossl zabbix zabbix 198.18.31.36/32 reject'])
         self.assertTrue(hba.endswith(self.packets(False)['postgresql']['files']['pg_hba.conf']))
+
+    def test_storage_edges_are_derived_and_the_server_has_no_foreign_identity_rule(self):
+        packets=self.packets();cfgs={name:json.loads(p['files']['site.json']) for name,p in packets.items()}
+        import connections
+        edge=connections.Connection('monitoring','postgresql','198.18.31.36','198.18.31.23','tcp',5432)
+        self.assertTrue(connections.permits(cfgs['monitoring']['guest']['rules'],'out',edge))
+        self.assertTrue(connections.permits(cfgs['postgresql']['guest']['rules'],'in',edge))
+        self.assertFalse(any(r.get('port')=='9000' for r in cfgs['monitoring']['guest']['rules']))
+        self.assertFalse(cfgs['monitoring']['app']['exclusive_writer_confirmed'])
+
+    def test_generated_selector_refuses_active_agents_without_server_and_keeps_empty_inspection(self):
+        import yaml
+        deploy=yaml.safe_load((ROOT/'.github/workflows/deploy.yml').read_text())
+        step=next(s for s in deploy['jobs']['selection']['steps'] if s.get('id')=='selection')
+        all_guests=list(json.loads(step['env']['DEPENDENCIES']))
+        for disabled,ok in [(['monitoring'],False),(all_guests,True),(['db-tools'],True)]:
+            with self.subTest(disabled=disabled),tempfile.TemporaryDirectory() as td:
+                root=Path(td);overlay=self.overlay();overlay['zabbix']=None
+                (root/'site.json').write_text(json.dumps(overlay))
+                run=subprocess.run(['sh','-eu','-c',step['run']],cwd=root,
+                    env=dict(os.environ,DISABLED=json.dumps(disabled),DEPENDENCIES=step['env']['DEPENDENCIES'],GITHUB_OUTPUT=str(root/'outputs')),capture_output=True,text=True)
+                self.assertEqual(run.returncode==0,ok,run.stderr)
