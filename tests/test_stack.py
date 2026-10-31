@@ -96,9 +96,9 @@ class StackTests(unittest.TestCase):
             ]
             self.assertEqual(list(guest["jobs"]), ["deploy"])
             steps = guest["jobs"]["deploy"]["steps"]
-            self.assertEqual(len(steps), 6 + 3 * len(phases))
-            self.assertEqual([step["env"]["PHASE"] for step in steps[8::3]], phases)
-            self.assertEqual([step["env"]["GUEST"] for step in steps[8::3]], [name] * len(phases))
+            self.assertEqual(len(steps), 5 + 4 * len(phases))
+            self.assertEqual([step["env"]["PHASE"] for step in steps[8::4]], phases)
+            self.assertEqual([step["env"]["GUEST"] for step in steps[8::4]], [name] * len(phases))
             self.assertNotIn("uses", guest["jobs"]["deploy"])
             self.assertNotIn("needs", guest["jobs"]["deploy"])
         c.workflow_selection(ROOT / ".github/workflows/phase.yml", "guest-phase.yml")

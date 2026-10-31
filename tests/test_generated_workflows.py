@@ -96,7 +96,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
         framework = load(FRAMEWORK / ".github/workflows/guest-phase.yml")
         recipe = framework["jobs"]["run"]
         self.assertEqual({p.stem.removeprefix("guest-") for p in directory.glob("guest-*.yml")}, set(phases))
-        total_jobs = total_phases = total_phase_commands = 0
+        total_jobs = total_phases = total_phase_commands = total_readiness_checks = 0
         for guest, expected_phases in phases.items():
             with self.subTest(guest=guest):
                 workflow = load(directory / ("guest-" + guest + ".yml"))
@@ -112,7 +112,8 @@ class GeneratedWorkflowTests(unittest.TestCase):
                     self.assertEqual(job[key], recipe[key])
                 self.assertEqual(recipe["timeout-minutes"], "45")
                 self.assertEqual(int(job["timeout-minutes"]), 45 * len(expected_phases))
-                self.assertEqual(len(job["steps"]), 6 + 3 * len(expected_phases))
+                self.assertEqual(len(job["steps"]), 5 + 4 * len(expected_phases))
+                self.assertEqual(sum(step["name"] == "Check readiness" for step in job["steps"]), len(expected_phases))
                 self.assertEqual([step["id"] for step in job["steps"] if "id" in step], ["stack", "framework"])
                 for step in job["steps"]:
                     self.assertNotIn("if", step)
@@ -124,7 +125,10 @@ class GeneratedWorkflowTests(unittest.TestCase):
                     for key in set(before) - {"name"}:
                         self.assertEqual(after[key], before[key])
                 for index, phase in enumerate(expected_phases):
-                    triple = job["steps"][6 + 3 * index:9 + 3 * index]
+                    readiness = job["steps"][0 if index == 0 else 5 + 4 * index]
+                    self.assertEqual(readiness, job["steps"][0])
+                    total_readiness_checks += 1
+                    triple = job["steps"][6 + 4 * index:9 + 4 * index]
                     display = labels.get(phase, "Deploy service")
                     self.assertEqual([step["name"] for step in triple], ["Check inputs", "Load credentials", display])
                     for before, after in zip(recipe["steps"][6:], triple):
@@ -139,7 +143,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                         self.assertEqual(triple[1]["env"][secret], "${{ secrets." + secret + " }}")
                     total_phases += 1
                 total_jobs += 1
-        self.assertEqual((total_jobs, total_phases, total_phase_commands), (11, 36, 108))
+        self.assertEqual((total_jobs, total_phases, total_phase_commands, total_readiness_checks), (11, 36, 108, 36))
 
     def test_named_secrets_remain_guest_scoped_inside_native_job_steps(self):
         common = {"APPLICATION_SSH_KEY": "true", "PROXMOX_APP_TOKEN": "true"}
@@ -207,10 +211,10 @@ class GeneratedWorkflowTests(unittest.TestCase):
                     self.assertEqual(list(workflow["jobs"]), ["deploy"])
                     for index, step in enumerate(job["steps"]):
                         references = set(re.findall(r"secrets\.([A-Z_]+)", json.dumps(step)))
-                        role = (index - 6) % 3
-                        expected = set() if index < 6 or role == 0 else set(common) if role == 1 else set(applications.get(guest, {}))
+                        role = (index - 6) % 4
+                        expected = set() if index < 6 or role in (0, 3) else set(common) if role == 1 else set(applications.get(guest, {}))
                         self.assertEqual(references, expected)
-                    for deployment in job["steps"][8::3]:
+                    for deployment in job["steps"][8::4]:
                         for variable, (owner, name) in bindings.items():
                             secret_expression = "secrets." + name if owner == guest else "''"
                             expected = "${{ '" + guest + "' == '" + owner + "' && " + secret_expression + " || '' }}"

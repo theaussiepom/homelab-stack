@@ -125,6 +125,13 @@ jobs:
         CLOUDFLARE_DNS_TOKEN: ${{ 'influxdb' == 'ingress' && '' || '' }}
       run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
       timeout-minutes: 45
+    - name: Check readiness
+      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
+
+        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
+
+        '
+      timeout-minutes: 45
     - name: Check inputs
       env:
         GUEST: influxdb
@@ -151,6 +158,13 @@ jobs:
         PGADMIN_OAUTH_SECRET: ${{ 'influxdb' == 'db-tools' && '' || '' }}
         CLOUDFLARE_DNS_TOKEN: ${{ 'influxdb' == 'ingress' && '' || '' }}
       run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Check readiness
+      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
+
+        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
+
+        '
       timeout-minutes: 45
     - name: Check inputs
       env:

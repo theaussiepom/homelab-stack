@@ -43,10 +43,11 @@ python3 ../homelab/blueprints/workflows.py --stack . --check
 
 This manages all thirteen composition workflows: `deploy.yml`, the eleven permanent
 `guest-*.yml` files and `phase.yml`. Each guest workflow contains one Deploy job.
-Six common setup steps run once; each logical infrastructure, preparation and
-application phase then runs its existing check-inputs, load-credentials and
-phase-deployment command in order. The eleven guest jobs contain all 36 logical
-phases and 108 unchanged phase command bodies. Short labels describe the actions:
+Five settings, service and tool setup steps run once. Each logical infrastructure,
+preparation and application phase first checks bootstrap readiness, then runs its
+existing check-inputs, load-credentials and phase-deployment command in order.
+The eleven guest jobs contain 36 early readiness checks, all 36 logical phases
+and 108 unchanged phase command bodies. Short labels describe the actions:
 Update container, Prepare service and Deploy service, with application names for
 DNS and Automation.
 

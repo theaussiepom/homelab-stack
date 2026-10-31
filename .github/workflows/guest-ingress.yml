@@ -127,6 +127,13 @@ jobs:
         CLOUDFLARE_DNS_TOKEN: ${{ 'ingress' == 'ingress' && secrets.FOUNDATION_CLOUDFLARE_DNS_TOKEN || '' }}
       run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
       timeout-minutes: 45
+    - name: Check readiness
+      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
+
+        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
+
+        '
+      timeout-minutes: 45
     - name: Check inputs
       env:
         GUEST: ingress
@@ -153,6 +160,13 @@ jobs:
         PGADMIN_OAUTH_SECRET: ${{ 'ingress' == 'db-tools' && '' || '' }}
         CLOUDFLARE_DNS_TOKEN: ${{ 'ingress' == 'ingress' && secrets.FOUNDATION_CLOUDFLARE_DNS_TOKEN || '' }}
       run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Check readiness
+      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
+
+        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
+
+        '
       timeout-minutes: 45
     - name: Check inputs
       env:

@@ -34,9 +34,10 @@ Each guest has one reusable workflow with one **Deploy** job. Its infrastructure
 preparation and application phases run as ordered steps, labelled **Update container**,
 **Prepare service** and **Deploy service**. DNS and Automation use short application
 labels such as **Deploy resolver**, **Deploy DNS**, **Deploy MQTT**, **Deploy Home
-Assistant** and **Deploy Node-RED**. Each phase first checks inputs and loads its
-existing credentials. Six common setup steps run once per guest. Each step has a
-45-minute cap; the guest job budget adds the former 45-minute phase allowances.
+Assistant** and **Deploy Node-RED**. Each phase first checks bootstrap readiness,
+then checks inputs and loads its existing credentials. Five settings, service and
+tool setup steps run once per guest. Each step has a 45-minute cap; the guest job
+budget adds the former 45-minute phase allowances.
 Preparation installs a Linux baseline and, for container workloads, Docker/Compose
 once. PostgreSQL, MariaDB and InfluxDB are native Debian guests. Authentik is one
 application phase covering its three containers. These are Debian LXC workflows;
