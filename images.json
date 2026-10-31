@@ -58,5 +58,15 @@
     "repository": "koenkk/zigbee2mqtt",
     "tag": null,
     "digest": "sha256:fef0de769dcd04c27b3a6d277b61046eb96284bdd4198dcb1687c3a01b3020f3"
+  },
+  "zabbix_server": {
+    "repository": "zabbix/zabbix-server-pgsql",
+    "tag": "ubuntu-7.0.32",
+    "digest": "sha256:bc0505eff209ab5ca9cfb6c7363f061b03b1a31ed529102274413febae54f002"
+  },
+  "zabbix_web": {
+    "repository": "zabbix/zabbix-web-nginx-pgsql",
+    "tag": "ubuntu-7.0.32",
+    "digest": "sha256:562b70986134a6083ba503ed5189afeda98b9b69c1960a5f0fb2faa13dfd5151"
   }
 }

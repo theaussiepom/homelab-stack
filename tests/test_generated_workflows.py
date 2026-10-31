@@ -87,6 +87,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
             "bitwarden": ["infrastructure", "preparation", "bitwarden"],
             "pegaprox": ["infrastructure", "preparation", "pegaprox"],
             "zigbee2mqtt": ["infrastructure", "preparation", "zigbee2mqtt"],
+            "monitoring": ["infrastructure", "preparation", "zabbix"],
         }
         labels = {"infrastructure": "Update container", "preparation": "Prepare service",
                   "unbound": "Deploy resolver", "pihole": "Deploy DNS", "mqtt": "Deploy MQTT",
@@ -143,7 +144,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                         self.assertEqual(triple[1]["env"][secret], "${{ secrets." + secret + " }}")
                     total_phases += 1
                 total_jobs += 1
-        self.assertEqual((total_jobs, total_phases, total_phase_commands, total_readiness_checks), (11, 36, 108, 36))
+        self.assertEqual((total_jobs, total_phases, total_phase_commands, total_readiness_checks), (12, 39, 117, 39))
 
     def test_named_secrets_remain_guest_scoped_inside_native_job_steps(self):
         common = {"APPLICATION_SSH_KEY": "true", "PROXMOX_APP_TOKEN": "true"}
@@ -234,7 +235,8 @@ class GeneratedWorkflowTests(unittest.TestCase):
         self.assertIn("private == true", selection["if"])
         self.assertEqual(selection["runs-on"], "ubuntu-24.04")
         self.assertNotIn("secrets", selection)
-        step = selection["steps"][0]
+        step = next(s for s in selection["steps"] if s.get("id") == "selection")
+        self.assertEqual(selection["steps"][0]["uses"], "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1")
         dependencies = json.loads(step["env"]["DEPENDENCIES"])
         declared = json.loads((ROOT / "stack.json").read_text())["guests"]
         self.assertEqual(
@@ -244,6 +246,10 @@ class GeneratedWorkflowTests(unittest.TestCase):
             self.assertEqual(
                 deploy["jobs"][name]["needs"], ["selection", *row["depends_on"]]
             )
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        selection_root = Path(directory.name)
+        (selection_root / 'site.json').write_text((ROOT / 'site.example.json').read_text())
         for disabled, accepted in [
             ("", True),
             ("[]", True),
@@ -265,7 +271,9 @@ class GeneratedWorkflowTests(unittest.TestCase):
                         os.environ,
                         DISABLED=disabled,
                         DEPENDENCIES=step["env"]["DEPENDENCIES"],
+                        GITHUB_OUTPUT=os.devnull,
                     ),
+                    cwd=selection_root,
                     capture_output=True,
                     text=True,
                     timeout=10,

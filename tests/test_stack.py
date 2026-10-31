@@ -64,7 +64,7 @@ class StackTests(unittest.TestCase):
         )
 
     def test_all_guest_packets_compile_deterministically_without_restore(self):
-        for name in c.CATALOGUE:
+        for name in c.compile_stack(ROOT, self.overlay, []):
             a = self.guest(name, [])
             self.assertEqual(a, self.guest(name, []))
             cfg = json.loads(a["files"]["site.json"])
