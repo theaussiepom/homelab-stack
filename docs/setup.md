@@ -52,9 +52,11 @@ DNS and Automation.
 
 Configured runner/environment selection, Bash defaults, guest dependencies,
 private-main/disabled conditions and per-guest declared secrets are preserved.
-Credentials remain scoped to their existing steps. A guest now shares one runner
-workspace and a single 45-minute job limit across its phases. Default step failure
-behavior prevents later commands from running; there is no retry or dispatcher.
+Credentials remain scoped to their existing steps. A guest shares one runner
+workspace. Its job budget preserves 45 minutes per logical phase: 135 minutes for
+three phases, 180 for DNS and 225 for Automation. Each step has an explicit
+45-minute cap. Default step failure behavior prevents later commands from running;
+there is no retry or dispatcher.
 
 Generation preserves the single deliberate framework selection in `phase.yml`
 while checking its declarations and forwarding contract. This file remains an

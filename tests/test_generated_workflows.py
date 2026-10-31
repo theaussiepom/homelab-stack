@@ -108,16 +108,18 @@ class GeneratedWorkflowTests(unittest.TestCase):
                 self.assertEqual(set(job), {"name", "if", "environment", "runs-on", "timeout-minutes", "env", "steps"})
                 self.assertEqual(job["name"], "Deploy")
                 self.assertEqual(job["if"], "github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), '" + guest + "')")
-                for key in ("environment", "runs-on", "timeout-minutes", "env"):
+                for key in ("environment", "runs-on", "env"):
                     self.assertEqual(job[key], recipe[key])
-                self.assertEqual(job["timeout-minutes"], "45")  # Whole-guest cap.
+                self.assertEqual(recipe["timeout-minutes"], "45")
+                self.assertEqual(int(job["timeout-minutes"]), 45 * len(expected_phases))
                 self.assertEqual(len(job["steps"]), 6 + 3 * len(expected_phases))
                 self.assertEqual([step["id"] for step in job["steps"] if "id" in step], ["stack", "framework"])
                 for step in job["steps"]:
                     self.assertNotIn("if", step)
                     self.assertNotIn("continue-on-error", step)
+                    self.assertEqual(step["timeout-minutes"], "45")
                 for before, after, name in zip(recipe["steps"][:6], job["steps"][:6], setup_names):
-                    self.assertEqual(set(after), set(before) | {"name"})
+                    self.assertEqual(set(after), set(before) | {"name", "timeout-minutes"})
                     self.assertEqual(after["name"], name)
                     for key in set(before) - {"name"}:
                         self.assertEqual(after[key], before[key])
@@ -126,7 +128,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                     display = labels.get(phase, "Deploy service")
                     self.assertEqual([step["name"] for step in triple], ["Check inputs", "Load credentials", display])
                     for before, after in zip(recipe["steps"][6:], triple):
-                        self.assertEqual(set(after), set(before))
+                        self.assertEqual(set(after), set(before) | {"timeout-minutes"})
                         self.assertEqual(after["run"], before["run"])
                         self.assertEqual(set(after["env"]), set(before["env"]))
                         self.assertEqual(after["env"]["GUEST"], guest)

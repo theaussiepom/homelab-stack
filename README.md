@@ -35,8 +35,8 @@ preparation and application phases run as ordered steps, labelled **Update conta
 **Prepare service** and **Deploy service**. DNS and Automation use short application
 labels such as **Deploy resolver**, **Deploy DNS**, **Deploy MQTT**, **Deploy Home
 Assistant** and **Deploy Node-RED**. Each phase first checks inputs and loads its
-existing credentials. Six common setup steps run once per guest. The 45-minute
-job limit covers the whole guest.
+existing credentials. Six common setup steps run once per guest. Each step has a
+45-minute cap; the guest job budget adds the former 45-minute phase allowances.
 Preparation installs a Linux baseline and, for container workloads, Docker/Compose
 once. PostgreSQL, MariaDB and InfluxDB are native Debian guests. Authentik is one
 application phase covering its three containers. These are Debian LXC workflows;
@@ -116,9 +116,9 @@ The selected framework's `blueprints/workflows.py` generates `deploy.yml` and al
 phase recipe. Each guest has one deployment job containing all its logical phases
 in order. The existing phase commands, packet names, guest dependency edges,
 runner/environment selection and credential step scopes are preserved. Phases
-share one runner/workspace and one 45-minute job cap per guest; default step
-failure behavior stops later phases. Source checks establish the configured job
-count and command/security contract. Actual run names, rendering and service
+share one runner/workspace per guest, with a combined phase budget and bounded
+steps; default step failure behavior stops later phases. Source checks establish
+the configured job count and command/security contract. Actual run names, rendering and service
 acceptance remain separate native checks. Edit the
 declarative inputs and regenerate; the checked-in generated files are not edited
 by hand. CI rejects stale generated files. The literal framework selection in

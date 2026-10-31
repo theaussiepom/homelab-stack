@@ -29,7 +29,7 @@ jobs:
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'dns')
     environment: ${{ inputs.environment_name }}
     runs-on: ${{ fromJSON(inputs.runner_labels) }}
-    timeout-minutes: 45
+    timeout-minutes: 180
     env:
       HOMELAB_DEPLOYMENT_WORKFLOW: ${{ github.workflow_ref }}
     steps:
@@ -39,11 +39,13 @@ jobs:
         test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
 
         '
+      timeout-minutes: 45
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
         fetch-depth: 0
         persist-credentials: false
       name: Get settings
+      timeout-minutes: 45
     - name: Choose services
       id: stack
       run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
@@ -61,6 +63,7 @@ jobs:
         PYCODE
 
         '
+      timeout-minutes: 45
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
         repository: ${{ steps.stack.outputs.repository }}
@@ -68,6 +71,7 @@ jobs:
         path: stack-source
         persist-credentials: false
       name: Get services
+      timeout-minutes: 45
     - name: Choose tools
       id: framework
       run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
@@ -85,6 +89,7 @@ jobs:
         PYCODE
 
         '
+      timeout-minutes: 45
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
         repository: ${{ steps.framework.outputs.repository }}
@@ -92,12 +97,14 @@ jobs:
         path: framework-source
         persist-credentials: false
       name: Get tools
+      timeout-minutes: 45
     - name: Check inputs
       env:
         GUEST: dns
         PHASE: infrastructure
         DISABLED: ${{ inputs.disabled }}
       run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
+      timeout-minutes: 45
     - name: Load credentials
       env:
         GUEST: dns
@@ -105,6 +112,7 @@ jobs:
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
       run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
     - name: Update container
       env:
         GUEST: dns
@@ -116,12 +124,14 @@ jobs:
         PGADMIN_OAUTH_SECRET: ${{ 'dns' == 'db-tools' && '' || '' }}
         CLOUDFLARE_DNS_TOKEN: ${{ 'dns' == 'ingress' && '' || '' }}
       run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
     - name: Check inputs
       env:
         GUEST: dns
         PHASE: preparation
         DISABLED: ${{ inputs.disabled }}
       run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
+      timeout-minutes: 45
     - name: Load credentials
       env:
         GUEST: dns
@@ -129,6 +139,7 @@ jobs:
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
       run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
     - name: Prepare service
       env:
         GUEST: dns
@@ -140,12 +151,14 @@ jobs:
         PGADMIN_OAUTH_SECRET: ${{ 'dns' == 'db-tools' && '' || '' }}
         CLOUDFLARE_DNS_TOKEN: ${{ 'dns' == 'ingress' && '' || '' }}
       run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
     - name: Check inputs
       env:
         GUEST: dns
         PHASE: unbound
         DISABLED: ${{ inputs.disabled }}
       run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
+      timeout-minutes: 45
     - name: Load credentials
       env:
         GUEST: dns
@@ -153,6 +166,7 @@ jobs:
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
       run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
     - name: Deploy resolver
       env:
         GUEST: dns
@@ -164,12 +178,14 @@ jobs:
         PGADMIN_OAUTH_SECRET: ${{ 'dns' == 'db-tools' && '' || '' }}
         CLOUDFLARE_DNS_TOKEN: ${{ 'dns' == 'ingress' && '' || '' }}
       run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
     - name: Check inputs
       env:
         GUEST: dns
         PHASE: pihole
         DISABLED: ${{ inputs.disabled }}
       run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
+      timeout-minutes: 45
     - name: Load credentials
       env:
         GUEST: dns
@@ -177,6 +193,7 @@ jobs:
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
       run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
     - name: Deploy DNS
       env:
         GUEST: dns
@@ -188,3 +205,4 @@ jobs:
         PGADMIN_OAUTH_SECRET: ${{ 'dns' == 'db-tools' && '' || '' }}
         CLOUDFLARE_DNS_TOKEN: ${{ 'dns' == 'ingress' && '' || '' }}
       run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45

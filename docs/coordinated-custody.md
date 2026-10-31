@@ -18,7 +18,7 @@ This selection is provenance, not a readiness or exclusive-writer acceptance.
 
 ## Private proof inputs
 
-The selected [framework contract](https://github.com/theaussiepom/homelab/blob/527340e492fb5f31bbc79b17a02b6a86ecadf9e7/docs/coordinated-custody.md)
+The selected [framework contract](https://github.com/theaussiepom/homelab/blob/f2f61ec1a4db22f127c8389a58ea0a06ae206b0e/docs/coordinated-custody.md)
 defines the closed `homelab-coordinated-custody-v1` selection. Supply it under
 `guests.<member>.config.coordinated_custody`, and set that member's
 `config.paths.coordinated_custody_inputs` to `${inputs}`. The compiler binds this
