@@ -30,7 +30,7 @@ flowchart TD
   Ingress --> Vault
 ```
 
-Each guest is one reusable-workflow group containing separate **Infra -> Prepare -> application**
+Each guest has one reusable workflow containing separate **Infra -> Prepare -> application**
 jobs. Single-application guests label that final job **Deployment**; DNS and Automation
 keep each application name. Every job labels its final execution step **Deployment**.
 Preparation installs a Linux baseline and, for container workloads, Docker/Compose
@@ -69,7 +69,7 @@ only Pi-hole when the actual records change.
 | [common.json](common.json) | Shared runner paths and PVE connection shape |
 | [images.json](images.json) | Image selection authority |
 | [guests](guests) | Executable profiles and public vendor keys/config templates |
-| [deploy workflow](.github/workflows/deploy.yml) | Generated guest groups and real dependency edges |
+| [deploy workflow](.github/workflows/deploy.yml) | Generated guest workflow calls and real dependency edges |
 | [phase selection](.github/workflows/phase.yml) | The single framework revision selection; not called by guest jobs |
 | [site.example.json](site.example.json) | Empty private overlay shape |
 
@@ -111,8 +111,10 @@ The selected framework's `blueprints/workflows.py` generates `deploy.yml` and al
 `guest-*.yml` workflows from the catalogue, stack dependencies and its authoritative
 phase job recipe. Each guest contains its actual jobs directly, preserving the
 existing phase IDs, dependency edges, runner/environment controls, command bodies
-and credential step scopes. The generator removes the per-phase wrapper groups
-from the Actions map; jobs remain separate jobs. Edit those
+and credential step scopes. The generator removes the nested per-phase workflow
+calls and shortens job paths; jobs remain separate jobs. This source layout has
+not achieved one native GitHub Actions graph container per guest. Static workflow
+equivalence verifies execution preservation, not visual grouping. Edit those
 declarative inputs and regenerate; the checked-in generated files are not edited
 by hand. CI rejects stale generated files. The literal framework selection in
 `phase.yml`, source CI and private-site exclusions remain explicit controls.

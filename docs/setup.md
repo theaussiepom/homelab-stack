@@ -52,8 +52,12 @@ The final execution step in every job is Deployment.
 Generation preserves the single deliberate framework selection in `phase.yml`
 while checking its declarations and forwarding contract. This file remains an
 uncalled selection anchor for source/CI/runtime pin readers; guest jobs do not call
-it or create per-phase nested workflow groups. Actual Actions-map rendering and
-all-guest deployment success are verified separately in the private CD run. Three separate CI workflows validate the stack, review PR dependencies
+it or introduce per-phase nested workflow calls. This shortens job paths but has
+not achieved the requested native per-guest graph containers. Source equivalence
+checks establish execution preservation only. Native grouping of the sequential
+guest jobs remains unverified; all-guest deployment success is a separate CD gate.
+
+Three separate CI workflows validate the stack, review PR dependencies
 and scan Python security; the generator leaves these workflows unchanged.
 The private site's optional disabled list and adopted stack pin remain explicit. There are
 no compatibility formats or transition flags. Obsolete managed paths must be
