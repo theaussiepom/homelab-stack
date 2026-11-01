@@ -154,7 +154,13 @@ controls. A private monitoring override may supply the framework's closed
 `monitoring.saml` public HTTPS origin and existing IdP signing certificate. That
 configures strict native frontend trust through normal CD and does not add a
 Traefik authentication middleware; provider and user mappings still require
-verified SAML setup in the applications. The `pegaprox` route selects only `security-headers`; ingress also
+verified SAML setup in the applications.
+
+The optional `monitoring.saml.default_login: saml` selects the SAML entry screen;
+`/index.php?form=default` keeps local administrator recovery. This is a managed
+Zabbix view setting and adds no Traefik middleware or credential changes.
+
+The `pegaprox` route selects only `security-headers`; ingress also
 admits `http_backend`, `frontend` and `policy_50` clients, which can reach PegaProx
 through that route. Its backend port accepts only the exact ingress management
 endpoint; browser clients use the Traefik route. Any
