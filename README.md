@@ -158,3 +158,7 @@ also derives the exact monitoring-to-PostgreSQL TCP5432 rules on both guests and
 the InfluxDB metrics connection; these are not duplicated in the profile. With
 root Zabbix selected, disabling only its server while other guests run is refused.
 Existing disabled leaf selections and the ordinary guest dependency graph remain.
+
+[WiNet](docs/winet.md) shares the existing radio guest with Zigbee2MQTT. Its
+published upstream image is selected by digest; private inverter/MQTT options
+remain controller inputs outside this repository.

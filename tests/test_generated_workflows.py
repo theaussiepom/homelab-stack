@@ -46,6 +46,9 @@ class GeneratedWorkflowTests(unittest.TestCase):
                 shutil.copyfile(ROOT / "stack.json", root / "stack.json")
                 for source in (ROOT / ".github/workflows").glob("*.yml"):
                     shutil.copyfile(source, workflows / source.name)
+                profile = root / "guests/zigbee2mqtt/profile.json"
+                profile.parent.mkdir(parents=True)
+                shutil.copyfile(ROOT / "guests/zigbee2mqtt/profile.json", profile)
                 # Generation owns phase structure, preserving its deliberate pin.
                 phase = (workflows / "phase.yml").read_bytes()
                 ci_names = ("validate-stack.yml", "review-pr-dependencies.yml", "scan-python-security.yml")
@@ -86,12 +89,12 @@ class GeneratedWorkflowTests(unittest.TestCase):
             "automation": ["infrastructure", "preparation", "mqtt", "homeassistant", "node_red"],
             "bitwarden": ["infrastructure", "preparation", "bitwarden"],
             "pegaprox": ["infrastructure", "preparation", "pegaprox"],
-            "zigbee2mqtt": ["infrastructure", "preparation", "zigbee2mqtt"],
+            "zigbee2mqtt": ["infrastructure", "preparation", "zigbee2mqtt", "winet"],
             "monitoring": ["infrastructure", "preparation", "zabbix"],
         }
         labels = {"infrastructure": "Update container", "preparation": "Prepare service",
                   "unbound": "Deploy resolver", "pihole": "Deploy DNS", "mqtt": "Deploy MQTT",
-                  "homeassistant": "Deploy Home Assistant", "node_red": "Deploy Node-RED"}
+                  "homeassistant": "Deploy Home Assistant", "node_red": "Deploy Node-RED", "zigbee2mqtt": "Deploy Zigbee2MQTT", "winet": "Deploy WiNet"}
         setup_names = ["Check readiness", "Get settings", "Choose services", "Get services", "Choose tools", "Get tools"]
         directory = ROOT / ".github/workflows"
         framework = load(FRAMEWORK / ".github/workflows/guest-phase.yml")
@@ -144,7 +147,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                         self.assertEqual(triple[1]["env"][secret], "${{ secrets." + secret + " }}")
                     total_phases += 1
                 total_jobs += 1
-        self.assertEqual((total_jobs, total_phases, total_phase_commands, total_readiness_checks), (12, 39, 117, 39))
+        self.assertEqual((total_jobs, total_phases, total_phase_commands, total_readiness_checks), (12, 40, 120, 40))
 
     def test_named_secrets_remain_guest_scoped_inside_native_job_steps(self):
         common = {"APPLICATION_SSH_KEY": "true", "PROXMOX_APP_TOKEN": "true"}

@@ -103,7 +103,12 @@
     "domains.monitoring": "zabbix.example.invalid",
     "mac.monitoring.0": "02:00:0b:00:00:01",
     "mac.monitoring.1": "02:00:0b:01:00:01",
-    "mac.monitoring.2": "02:00:0b:02:00:01"
+    "mac.monitoring.2": "02:00:0b:02:00:01",
+    "addresses.zigbee_iot": "198.19.107.246",
+    "addresses.winet_inverter": "198.19.107.23",
+    "mac.zigbee.2": "02:00:0a:02:00:01",
+    "paths.winet_options": "/var/lib/homelab-inputs/winet-options.json",
+    "winet.mqtt_prefix": "homeassistant"
   },
   "guests": {
     "dns": {

@@ -68,5 +68,10 @@
     "repository": "zabbix/zabbix-web-nginx-pgsql",
     "tag": "ubuntu-7.0.32",
     "digest": "sha256:562b70986134a6083ba503ed5189afeda98b9b69c1960a5f0fb2faa13dfd5151"
+  },
+  "winet": {
+    "repository": "ghcr.io/theaussiepom/winet-extractor",
+    "tag": null,
+    "digest": "sha256:82c6b886967995f0a3cfe6fb5e20eeef70d10aa525d5bd824064eb272e1ce51a"
   }
 }

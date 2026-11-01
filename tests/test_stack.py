@@ -93,6 +93,8 @@ class StackTests(unittest.TestCase):
                 "infrastructure",
                 "preparation",
                 *c.CATALOGUE[name]["applications"],
+                *(application for application in c.CATALOGUE[name].get("optional_applications", {})
+                  if application in c.read(ROOT / "guests" / name / "profile.json")["config"]["app"]["service_health_checks"]),
             ]
             self.assertEqual(list(guest["jobs"]), ["deploy"])
             steps = guest["jobs"]["deploy"]["steps"]

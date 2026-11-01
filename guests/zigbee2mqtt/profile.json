@@ -4,7 +4,7 @@
       "vmid": 209,
       "hostname": "radio",
       "cpu": 2,
-      "memory_mib": 768,
+      "memory_mib": 1024,
       "root_gib": 8,
       "storage_id": "local-zfs",
       "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
@@ -33,6 +33,14 @@
           "vlan": null,
           "mac": "${mac.zigbee.1}",
           "ipv4": "${addresses.zigbee_backend}/24",
+          "ipv6": "manual"
+        },
+        {
+          "role": "iot",
+          "bridge": "vmbr0",
+          "vlan": 107,
+          "mac": "${mac.zigbee.2}",
+          "ipv4": "${addresses.zigbee_iot}/24",
           "ipv6": "manual"
         }
       ],
@@ -116,6 +124,14 @@
           "source": "${addresses.ingress_backend}/32",
           "destination": "${addresses.zigbee_backend}/32",
           "comment": "Declared HTTP route backend"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "443",
+          "source": "${addresses.zigbee_iot}/32",
+          "destination": "${addresses.winet_inverter}/32",
+          "comment": "WiNet encrypted inverter telemetry only"
         }
       ],
       "serial_device": {
@@ -126,7 +142,7 @@
       "kind": "zigbee2mqtt",
       "vmid": 209,
       "hostname": "radio",
-      "memory_mib": 768,
+      "memory_mib": 1024,
       "address": "${addresses.zigbee_management}",
       "mac": "${mac.zigbee.0}",
       "packages": [
@@ -142,6 +158,10 @@
         "zigbee2mqtt": {
           "service": "automation.mqtt",
           "address": "backend"
+        },
+        "winet": {
+          "service": "automation.mqtt",
+          "address": "backend"
         }
       },
       "health_checks": [
@@ -155,6 +175,17 @@
             "/opt/homelab-app/zigbee-settings.json"
           ],
           "expect": "\"healthy\": true"
+        },
+        {
+          "name": "WiNet broker and inverter availability",
+          "argv": [
+            "docker",
+            "inspect",
+            "--format",
+            "{{.State.Health.Status}}",
+            "homelab-zigbee2mqtt-winet-1"
+          ],
+          "expect": "healthy"
         }
       ],
       "service_health_checks": {
@@ -169,6 +200,19 @@
               "/opt/homelab-app/zigbee-settings.json"
             ],
             "expect": "\"healthy\": true"
+          }
+        ],
+        "winet": [
+          {
+            "name": "WiNet broker and inverter availability",
+            "argv": [
+              "docker",
+              "inspect",
+              "--format",
+              "{{.State.Health.Status}}",
+              "homelab-zigbee2mqtt-winet-1"
+            ],
+            "expect": "healthy"
           }
         ]
       },
@@ -187,7 +231,7 @@
   "stack": {
     "kind": "zigbee2mqtt",
     "data_root": "/srv/homelab/data",
-    "guest_memory_mib": 768,
+    "guest_memory_mib": 1024,
     "timezone": "Australia/Brisbane",
     "zigbee": {
       "adapter": "ember",
@@ -203,7 +247,19 @@
         "cpus": 2,
         "pids_limit": 128,
         "image_ref": "zigbee2mqtt"
+      },
+      "winet": {
+        "memory_mib": 256,
+        "cpus": 1,
+        "pids_limit": 128,
+        "image_ref": "winet"
       }
+    },
+    "winet": {
+      "configuration_file": "${paths.winet_options}",
+      "inverter_address": "${addresses.winet_inverter}",
+      "mqtt_server": "",
+      "mqtt_prefix": "${winet.mqtt_prefix}"
     }
   }
 }
