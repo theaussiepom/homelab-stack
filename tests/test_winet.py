@@ -42,6 +42,14 @@ class WinetStackTests(unittest.TestCase):
         self.assertFalse(cfg["app"]["exclusive_writer_confirmed"])
         self.assertEqual(len(workflows.models(ROOT)["guest-zigbee2mqtt.yml"]["jobs"]), 1)
 
+    def test_health_assertion_cannot_accept_unhealthy_as_healthy(self):
+        cfg = json.loads(self.packet()["files"]["site.json"])
+        check = cfg["app"]["service_health_checks"]["winet"][0]
+        self.assertEqual(check["argv"][3], "{{json .State.Health.Status}}")
+        for status, accepted in (("healthy", True), ("unhealthy", False), ("starting", False)):
+            with self.subTest(status=status):
+                self.assertEqual(check["expect"] in json.dumps(status), accepted)
+
     def test_iot_interface_has_no_gateway_or_inbound_grant(self):
         cfg = json.loads(self.packet()["files"]["site.json"])
         iot = cfg["guest"]["interfaces"][2]
@@ -52,6 +60,26 @@ class WinetStackTests(unittest.TestCase):
         self.assertEqual({k:rule[k] for k in ("source", "destination", "proto", "port", "direction")},
                          {"source": "198.19.107.246/32", "destination": "198.19.107.23/32",
                           "proto": "tcp", "port": "443", "direction": "out"})
+        self.assertEqual(rule["interface"], "net2")
+
+    def test_package_egress_cannot_bypass_the_iot_endpoint_even_with_spoofed_source(self):
+        import connections
+        cfg = json.loads(self.packet()["files"]["site.json"])
+        rules = cfg["guest"]["rules"]
+        for source, destination, interface, port, expected in (
+            ("198.19.107.246", "198.19.107.23", "net2", 443, True),
+            ("198.19.107.246", "198.19.107.24", "net2", 443, False),
+            ("198.19.107.246", "198.19.107.23", "net2", 80, False),
+            ("198.19.107.246", "198.19.107.23", "net2", 8082, False),
+            ("198.18.25.22", "198.19.107.24", "net2", 443, False),
+            ("198.18.25.22", "203.0.113.10", "net0", 443, True),
+            ("198.18.25.22", "203.0.113.10", "net2", 443, False),
+            ("198.19.107.246", "203.0.113.10", "net0", 443, False),
+            ("198.18.30.22", "198.18.30.21", "net1", 1883, True),
+        ):
+            flow = connections.Connection("zigbee2mqtt", None, source, destination, "tcp", port)
+            with self.subTest(source=source, destination=destination, interface=interface, port=port):
+                self.assertEqual(connections.permits(rules, "out", flow, interface), expected)
 
     def test_private_overlay_cannot_schedule_an_unconfigured_optional_phase(self):
         import tempfile

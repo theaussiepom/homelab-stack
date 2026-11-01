@@ -22,11 +22,25 @@ hashed with deployment inputs, rendered privately and mounted read-only at
 `/data/options.json`. The renderer rejects extra inverters, custom certificate
 fields, plaintext inverter transport and endpoint drift.
 
-The added VLAN 107 interface has no default gateway or new inbound rule. Its new
-rule selects the inverter over HTTPS/WSS port 443; MQTT uses the existing backend
-interface and the broker's declared endpoint. Public addresses are examples; the
-site supplies the actual retained addresses and MAC. Upstream encrypted transport
-does not provide the former custom certificate verification.
+The added VLAN 107 interface has no default gateway or new inbound rule. PVE
+`net2` limits HTTPS egress to the selected inverter's TCP443 telemetry. Package/image HTTP
+and HTTPS egress is bound to management `net0` and its selected source address;
+it cannot provide an alternate allowance on the IoT interface, even when a
+process selects the management source IP. MQTT uses the existing backend interface
+and declared broker. Public addresses are examples; the site supplies retained
+addresses and MACs.
+
+The pinned upstream `getProperties.ts` HTTPS request and `winetHandler.ts` WSS
+client both set `rejectUnauthorized: false`. `ssl: true` encrypts those initial
+connections but does not authenticate the inverter certificate. A device able to
+intercept traffic on the IoT link could obtain the configured inverter credentials.
+The upstream WS fallback uses TCP8082, which this IoT firewall does not permit.
+The operator explicitly selected the unmodified upstream image and deferred the
+former custom certificate work for this integration; its private adoption record
+retains that decision. This policy does not change Proxmox, UDM, browser TLS or a
+host trust store. Do not describe it as verified inverter TLS. Strict inverter
+certificate authentication remains deferred, rather than silently inherited from
+the earlier custom image.
 
 The container health check reads the broker's retained publisher and inverter
 availability. After deployment, independently confirm fresh sensor messages and

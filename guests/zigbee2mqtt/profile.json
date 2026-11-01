@@ -92,7 +92,9 @@
           "proto": "tcp",
           "port": "80,443",
           "destination": "0.0.0.0/0",
-          "comment": "Signed Debian packages and immutable image retrieval"
+          "comment": "Signed Debian packages and immutable image retrieval",
+          "interface": "net0",
+          "source": "${addresses.zigbee_management}/32"
         },
         {
           "direction": "out",
@@ -131,7 +133,8 @@
           "port": "443",
           "source": "${addresses.zigbee_iot}/32",
           "destination": "${addresses.winet_inverter}/32",
-          "comment": "WiNet encrypted inverter telemetry only"
+          "comment": "WiNet encrypted inverter telemetry only",
+          "interface": "net2"
         }
       ],
       "serial_device": {
@@ -182,10 +185,10 @@
             "docker",
             "inspect",
             "--format",
-            "{{.State.Health.Status}}",
+            "{{json .State.Health.Status}}",
             "homelab-zigbee2mqtt-winet-1"
           ],
-          "expect": "healthy"
+          "expect": "\"healthy\""
         }
       ],
       "service_health_checks": {
@@ -209,10 +212,10 @@
               "docker",
               "inspect",
               "--format",
-              "{{.State.Health.Status}}",
+              "{{json .State.Health.Status}}",
               "homelab-zigbee2mqtt-winet-1"
             ],
-            "expect": "healthy"
+            "expect": "\"healthy\""
           }
         ]
       },
