@@ -182,13 +182,11 @@
         {
           "name": "WiNet broker and inverter availability",
           "argv": [
-            "docker",
-            "inspect",
-            "--format",
-            "{{json .State.Health.Status}}",
-            "homelab-zigbee2mqtt-winet-1"
+            "python3",
+            "-c",
+            "import json,subprocess,sys; d=json.loads(subprocess.check_output(['docker','inspect','--type=container','homelab-zigbee2mqtt-winet-1'],timeout=5)); healthy=len(d)==1 and d[0]['State']['Running'] and d[0]['State'].get('Health',{}).get('Status')=='healthy'; print(json.dumps({'healthy':healthy})); sys.exit(0 if healthy else 1)"
           ],
-          "expect": "\"healthy\""
+          "expect": "\"healthy\": true"
         }
       ],
       "service_health_checks": {
@@ -209,13 +207,11 @@
           {
             "name": "WiNet broker and inverter availability",
             "argv": [
-              "docker",
-              "inspect",
-              "--format",
-              "{{json .State.Health.Status}}",
-              "homelab-zigbee2mqtt-winet-1"
+              "python3",
+              "-c",
+              "import json,subprocess,sys; d=json.loads(subprocess.check_output(['docker','inspect','--type=container','homelab-zigbee2mqtt-winet-1'],timeout=5)); healthy=len(d)==1 and d[0]['State']['Running'] and d[0]['State'].get('Health',{}).get('Status')=='healthy'; print(json.dumps({'healthy':healthy})); sys.exit(0 if healthy else 1)"
             ],
-            "expect": "\"healthy\""
+            "expect": "\"healthy\": true"
           }
         ]
       },

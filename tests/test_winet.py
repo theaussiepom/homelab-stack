@@ -45,10 +45,48 @@ class WinetStackTests(unittest.TestCase):
     def test_health_assertion_cannot_accept_unhealthy_as_healthy(self):
         cfg = json.loads(self.packet()["files"]["site.json"])
         check = cfg["app"]["service_health_checks"]["winet"][0]
-        self.assertEqual(check["argv"][3], "{{json .State.Health.Status}}")
-        for status, accepted in (("healthy", True), ("unhealthy", False), ("starting", False)):
-            with self.subTest(status=status):
-                self.assertEqual(check["expect"] in json.dumps(status), accepted)
+        self.assertEqual(check["argv"][:2], ["python3", "-c"])
+        self.assertNotIn("{{", check["argv"][2])
+        self.assertEqual(check["expect"], '"healthy": true')
+
+    def test_actual_ansible_extra_vars_run_the_health_check_without_templating(self):
+        import subprocess
+        import tempfile
+        import yaml
+        check = json.loads(self.packet()["files"]["site.json"])["app"]["service_health_checks"]["winet"][0]
+        task = next(t for t in yaml.safe_load((FRAMEWORK / "proxmox/applications/ansible/reconcile.yml").read_text())[0]["tasks"]
+                    if t["name"] == "Check this service after reconciliation")
+        ansible = Path(sys.executable).with_name("ansible-playbook")
+        self.assertTrue(ansible.is_file(), "Install the selected framework's pinned test requirements")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / "bin"
+            binary.mkdir()
+            called, inspection = root / "called", root / "inspection.json"
+            fake = binary / "docker"
+            fake.write_text("#!" + sys.executable + "\nimport json,sys\nfrom pathlib import Path\n"
+                            + "assert sys.argv[1:]==['inspect','--type=container','homelab-zigbee2mqtt-winet-1']\n"
+                            + "Path(" + repr(str(called)) + ").write_text('called')\n"
+                            + "print(Path(" + repr(str(inspection)) + ").read_text())\n")
+            fake.chmod(0o700)
+            play = root / "play.json"
+            play.write_text(json.dumps([{"hosts": "localhost", "connection": "local", "gather_facts": False,
+                                         "environment": {"PATH": str(binary) + os.pathsep + os.environ["PATH"]},
+                                         "tasks": [task]}]))
+            extra = root / "extra.json"
+            extra.write_text(json.dumps({"app": {"health_checks": [check]}}))
+            for state, expected in (({"Running": True, "Health": {"Status": "healthy"}}, 0),
+                                    ({"Running": True, "Health": {"Status": "unhealthy"}}, 2),
+                                    ({"Running": False, "Health": {"Status": "healthy"}}, 2),
+                                    ({"Running": True}, 2)):
+                inspection.write_text(json.dumps([{"State": state}]))
+                called.unlink(missing_ok=True)
+                result = subprocess.run([str(ansible), "-i", "localhost,", "--extra-vars", "@" + str(extra), str(play)],
+                                        capture_output=True, text=True, timeout=30,
+                                        env=dict(os.environ, ANSIBLE_LOCAL_TEMP=str(root / "ansible")))
+                with self.subTest(state=state):
+                    self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+                    self.assertTrue(called.is_file(), "Health must reach Docker rather than fail in Jinja")
 
     def test_iot_interface_has_no_gateway_or_inbound_grant(self):
         cfg = json.loads(self.packet()["files"]["site.json"])
