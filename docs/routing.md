@@ -57,6 +57,11 @@ enumeration of middleware types. Names are validated and references must exist.
 The framework owns the default security headers. Custom plugin middleware also
 needs its plugin installed and qualified separately.
 
+Music Assistant also selects `music-clients`, an ordinary `ipAllowList` middleware.
+Its public Home/VPN ranges are examples. Private adoption replaces the finite
+source ranges with the approved LAN/VPN and exact tablet hosts; it does not grant
+the whole IoT subnet or introduce a second router or authentication middleware.
+
 TLS `transports` live beside middleware definitions. A transport may select
 `server_name`, `ca_file`, or both. Its public CA file is a controller input, copied
 read-only into ingress and referenced by its generated ServersTransport. TLS

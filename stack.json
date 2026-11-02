@@ -416,7 +416,8 @@
         "endpoint": "music.music_assistant.web"
       },
       "middlewares": [
-        "security-headers"
+        "security-headers",
+        "music-clients"
       ]
     }
   }

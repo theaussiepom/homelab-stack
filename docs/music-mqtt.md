@@ -30,6 +30,15 @@ player callbacks and playback remain native acceptance after authorised rollout.
 Public rules declare the existing Home discovery and scoped ingress/HA paths;
 they do not prove physical multicast or deployed firewall enforcement.
 
+The browser route additionally selects the native `music-clients` IP allowlist.
+Public defaults allow the example Home LAN and VPN only. The private site replaces
+its complete `ipAllowList.sourceRange` with the approved finite LAN/VPN ranges and
+individual tablet `/32` entries. This does not admit an entire IoT subnet or
+arbitrary routed/Internet clients. It uses the existing middleware contract,
+without a plugin, second bypass router or new rule/priority grammar. The filter
+does not add an Authentik login; application identity and authentication remain
+with the retained Music Assistant data.
+
 ## MQTT
 
 The single broker publication moves from `automation.mqtt` to `mqtt.mqtt`, keeping

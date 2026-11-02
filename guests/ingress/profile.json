@@ -417,6 +417,14 @@
               "${networks.admin_vpn}/28"
             ]
           }
+        },
+        "music-clients": {
+          "ipAllowList": {
+            "sourceRange": [
+              "${networks.admin_vpn}/28",
+              "${networks.home}/24"
+            ]
+          }
         }
       },
       "transports": {

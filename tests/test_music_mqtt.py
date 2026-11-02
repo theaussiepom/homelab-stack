@@ -1,5 +1,6 @@
 """The additional guest boundaries keep one broker and preserve radio identities."""
 import copy
+import ipaddress
 import json
 import os
 from pathlib import Path
@@ -14,6 +15,7 @@ sys.path.insert(0, str(FRAMEWORK/'blueprints'))
 sys.path.insert(0, str(FRAMEWORK/'proxmox/applications'))
 import compile as compiler
 import connections
+import discovery
 import render
 import workflows
 
@@ -86,8 +88,41 @@ class MusicMQTTTests(unittest.TestCase):
         self.assertFalse({'privileged','devices','cap_add','security_opt','user','entrypoint'}&service.keys())
         self.assertEqual(cfg['app']['endpoints']['music_assistant']['web'],'http://198.19.100.241:8095')
         self.assertEqual(cfg['routes']['music']['host'],'music.example.invalid')
-        self.assertEqual(cfg['routes']['music']['middlewares'],['security-headers'])
+        self.assertEqual(cfg['routes']['music']['middlewares'],['security-headers','music-clients'])
         self.assertNotIn('new_target',cfg['app'])
+
+    def test_music_route_uses_only_selected_lan_vpn_and_exact_tablet_clients(self):
+        packets=self.packets();cfg=json.loads(packets['music']['files']['site.json'])
+        ingress=json.loads(packets['ingress']['files']['stack.json'])
+        policy=ingress['routing']['middlewares']['music-clients']
+        self.assertEqual(policy,{'ipAllowList':{'sourceRange':['198.18.10.0/28','198.19.100.0/24']}})
+        self.assertEqual(discovery.labels(cfg)['traefik.http.routers.music.middlewares'],
+                         'security-headers@file,music-clients@file')
+        overlay=compiler.read(ROOT/'site.example.json')
+        ranges=['198.18.10.0/28','198.18.11.0/28','198.19.100.0/24',
+                '198.19.101.0/24','198.19.102.0/24','198.19.150.0/24',
+                '198.19.107.15/32','198.19.107.27/32','198.19.107.28/32']
+        overlay['guests']['ingress']={'stack':{'routing':{'middlewares':{
+            'music-clients':{'ipAllowList':{'sourceRange':ranges}}}}}}
+        packets=self.packets(overlay)
+        ingress=json.loads(packets['ingress']['files']['stack.json'])
+        actual=ingress['routing']['middlewares']['music-clients']['ipAllowList']['sourceRange']
+        self.assertEqual(actual,ranges)
+        networks=[ipaddress.ip_network(value)for value in actual]
+        for address,permitted in [('198.18.10.14',True),('198.18.11.15',True),
+                                  ('198.19.100.30',True),('198.19.101.30',True),
+                                  ('198.19.102.30',True),('198.19.150.30',True),
+                                  ('198.19.107.15',True),('198.19.107.27',True),
+                                  ('198.19.107.28',True),('198.18.10.16',False),
+                                  ('198.18.11.16',False),('198.19.107.14',False),
+                                  ('198.19.107.26',False),('198.19.107.29',False),
+                                  ('198.18.25.11',False),('198.18.40.99',False),('8.8.8.8',False)]:
+            with self.subTest(address=address):
+                self.assertEqual(any(ipaddress.ip_address(address)in network for network in networks),permitted)
+        labels=discovery.labels(json.loads(packets['music']['files']['site.json']))
+        self.assertEqual(labels['traefik.http.routers.music.priority'],'10')
+        self.assertEqual(labels['traefik.http.routers.music.rule'],'Host(`music.example.invalid`)')
+        self.assertFalse(any('tablets' in key or 'bypass' in key for key in labels))
 
     def test_only_new_broker_owns_dns_and_all_declared_consumers_follow_its_address(self):
         overlay=compiler.read(ROOT/'site.example.json')
