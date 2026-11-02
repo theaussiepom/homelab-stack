@@ -243,7 +243,8 @@ class RuntimeContractTests(unittest.TestCase):
         )
         for name, phase in [
             ("pegaprox", "pegaprox"),
-            ("automation", "mqtt"),
+            ("mqtt", "mqtt"),
+            ("music", "music_assistant"),
             ("automation", "homeassistant"),
             ("automation", "node_red"),
             ("dns", "unbound"),

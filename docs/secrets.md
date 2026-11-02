@@ -36,3 +36,14 @@ routing migration belong to separate prepared SSH work. Zigbee configuration and
 radio identity must be preserved. Central IP/domain substitutions and narrow runtime
 Secret delivery are the explicit exceptions, within their reviewed contracts.
 Do not remove HA sensors or generate broad application configuration rewrites.
+
+The MQTT guest selects `paths.mqtt_probe`, a controller-private mode0600 JSON file
+containing one existing `username` and `password`. It is a read-only probe account
+binding, not account creation or rotation. The framework hashes it as an input and
+copies it privately for authenticated CONNECT plus anonymous-refusal verification.
+The source file and retained broker password file must never enter Git.
+
+Music Assistant uses the previously selected upstream `:latest` image. Preserve
+its original data/provider credentials and the original pre-upgrade data copy
+before any application schema upgrade; record the resolved image at deployment.
+The ordinary deployment neither retrieves old data nor resets providers/accounts.

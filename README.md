@@ -21,11 +21,15 @@ flowchart TD
   PG --> Admin[pgAdmin]
   Auth --> Admin
   Ingress --> Admin
-  Ingress --> Auto[Automation: MQTT then Home Assistant then Node-RED]
+  DNS --> Broker[MQTT]
+  Ingress --> Auto[Home Automation: Home Assistant then Node-RED]
+  Broker --> Auto
   Auth --> Auto
   Maria --> Auto
   Influx --> Auto
-  Auto --> Radio[Zigbee2MQTT: Radio 209]
+  Broker --> Radio[Radios: Zigbee2MQTT then WiNet]
+  Auto --> Music[Music Assistant]
+  Ingress --> Music
   Maria --> Vault[Bitwarden]
   Ingress --> Vault
 ```
@@ -33,17 +37,21 @@ flowchart TD
 Each guest has one reusable workflow with one **Deploy** job. Its infrastructure,
 preparation and application phases run as ordered steps, labelled **Update container**,
 **Prepare service** and **Deploy service**. DNS and Automation use short application
-labels such as **Deploy resolver**, **Deploy DNS**, **Deploy MQTT**, **Deploy Home
+labels such as **Deploy resolver**, **Deploy DNS**, **Deploy Home
 Assistant** and **Deploy Node-RED**. Each phase first checks bootstrap readiness,
 then checks inputs and loads its existing credentials. Five settings, service and
 tool setup steps run once per guest. Each step has a 45-minute cap; the guest job
 budget adds the former 45-minute phase allowances.
 Preparation installs a Linux baseline and, for container workloads, Docker/Compose
-once. PostgreSQL, MariaDB and InfluxDB are native Debian guests. Authentik is one
+once. A selected root `zabbix:` adds one explicit **Zabbix agent** step after each
+guest's applications, rather than repeating agent setup inside application steps.
+PostgreSQL, MariaDB and InfluxDB are native Debian guests. Authentik is one
 application phase covering its three containers. These are Debian LXC workflows;
 VM application support has not been qualified.
 
-Zigbee2MQTT is an active Debian LXC with one declared coordinator, Docker in shared
+**Radios** is the human-facing name of guest209, with hostname `radios`; its
+logical Zigbee2MQTT service, image, data paths and coordinator remain unchanged.
+It is an active Debian LXC with one declared coordinator, Docker in shared
 Preparation, and one Zigbee2MQTT application entity. Its profile enables guest
 startup and boot startup; its container inherits `restart: always`. Infrastructure
 uses the framework's registered host capability for the exact device. BPG owns
@@ -58,15 +66,16 @@ The separately prepared data includes the existing configuration, device databas
 and coordinator backup. Deployment preserves the network identity and never opens
 the radio from a configuration checker or rewrites Zigbee settings.
 
-Automation's `app.published_services.mqtt` is the broker definition. It declares
-the hostname, port, frontend/backend addresses and which address DNS publishes.
-Radio references `automation.mqtt` at its backend address through
-`app.service_connections`. The compiler derives its container hostname alias,
-the Pi-hole record and the matching DNS verification from that definition. An
-address or hostname change therefore updates all of them together. Firewall
-validation checks both ends of the MQTT connection. Pi-hole reconciliation updates
-only the selected hostnames, preserves unrelated aliases and records, and restarts
-only Pi-hole when the actual records change.
+The dedicated MQTT guest's `app.published_services.mqtt` is the single broker
+owner. It declares `broker.mqtt`, port1883, backend/client addresses and which
+address DNS publishes. Home Assistant, Node-RED, Zigbee2MQTT and WiNet reference
+`mqtt.mqtt` through `app.service_connections`. The compiler derives container
+hostname aliases, the Pi-hole record and matching DNS verification. Both ends of
+each declared connection must have an explicit firewall allowance. The source
+still preserves Automation's NIC order and old private data; it does not move or
+delete broker data, remove an old container, or rewrite client configuration.
+The private site must commission the new broker and retire the old writer in a
+coordinated cutover before adopting this composition. See [Music and MQTT](docs/music-mqtt.md).
 
 | File | Purpose |
 | --- | --- |
@@ -86,10 +95,10 @@ guest participates by default. The optional `disabled` input defaults to `[]`;
 only named exclusions are skipped. Invalid prerequisites fail validation instead
 of silently disabling a guest. The public example is an offline input fixture.
 
-The composition covers eleven prepared guests, including Zigbee2MQTT. Other fleet
-applications, optional image updates and recovery projects are outside this redesign.
-Monitoring source components remain in the framework; this stack
-does not deploy an additional monitoring guest.
+The composition covers thirteen base guests, including Radios, Music Assistant
+and the dedicated MQTT broker. A root `zabbix:` additionally selects the existing
+monitoring guest. Other fleet applications, optional image updates and recovery
+projects remain outside this composition.
 
 Guest definitions combine a framework blueprint with a profile under `guests/`,
 the dependency entry in `stack.json` and private-site overrides. For example,
@@ -134,7 +143,7 @@ examples, TLS trust, middleware definitions and explicit firewall requirements.
 ## Root Zabbix feature
 
 An empty root `zabbix:` property in the private blueprint (JSON: `"zabbix": null`)
-adds the **Zabbix** guest. Without that property, the existing eleven guests and
+adds the **Zabbix** guest. Without that property, the existing thirteen base guests and
 their packets remain unchanged. A boolean or custom object is rejected.
 
 The monitoring profile proposes VMID216, Debian LXC, 2 CPUs/2 GiB RAM and 12 GiB
@@ -162,3 +171,8 @@ Existing disabled leaf selections and the ordinary guest dependency graph remain
 [WiNet](docs/winet.md) shares the existing radio guest with Zigbee2MQTT. Its
 published upstream image is selected by digest; private inverter/MQTT options
 remain controller inputs outside this repository.
+
+Music Assistant and the separate MQTT role are source proposals until their
+actual state, trust, exclusive writer and network prerequisites are accepted in
+the private site. Public example addresses, VLAN41 and VMIDs207/217 are examples
+and candidate allocations, not evidence that a live network or guest exists.

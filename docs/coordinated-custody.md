@@ -52,17 +52,18 @@ they do not qualify a NAS mount, retained state or real commissioning record.
 
 ## Configured provenance and enabled guests
 
-All eleven guests remain configured and `disabled: []` enables all of them. The
+All thirteen base guests remain configured and `disabled: []` enables all of
+them; root `zabbix:` adds the monitoring guest. The
 existing guest dependency graph decides which exclusions are valid. Custody does
 not enable an excluded guest or turn the historical group into an atomic job.
 
 | Disabled guests | Existing selection result |
 | --- | --- |
-| None | All eleven enabled |
+| None | All thirteen base guests enabled |
 | db-tools | Valid leaf exclusion; PostgreSQL and Identity remain enabled |
 | Identity alone, or Identity with db-tools | Invalid: Automation still needs Identity |
-| Identity with Automation, leaving db-tools or Zigbee2MQTT active | Invalid: an active consumer lacks its prerequisite |
-| Identity, db-tools, Automation and Zigbee2MQTT | Valid; the other seven guests retain their normal execution |
+| Identity with Automation, leaving db-tools or Music active | Invalid: an active consumer lacks its prerequisite |
+| Identity, db-tools, Automation and Music | Valid; Radios retains its independent MQTT dependency and all other guests retain their normal execution |
 | PegaProx or Bitwarden alone | Valid unrelated leaf exclusion |
 | DNS with consumers active | Invalid prerequisite exclusion |
 

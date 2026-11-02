@@ -58,7 +58,7 @@ class ZigbeeServiceTests(unittest.TestCase):
         graph = workflows.models(ROOT)
         self.assertEqual(
             graph["deploy.yml"]["jobs"]["zigbee2mqtt"]["needs"],
-            ["selection", "automation"],
+            ["selection", "mqtt"],
         )
         self.assertEqual(
             list(graph["guest-zigbee2mqtt.yml"]["jobs"]),
@@ -66,17 +66,17 @@ class ZigbeeServiceTests(unittest.TestCase):
         )
         steps = graph["guest-zigbee2mqtt.yml"]["jobs"]["deploy"]["steps"]
         self.assertEqual([step["env"]["PHASE"] for step in steps[8::4]],
-                         ["infrastructure", "preparation", "zigbee2mqtt", "winet"])
+                         ["infrastructure", "preparation", "zigbee2mqtt", "winet", "zabbix-agent"])
 
     def test_broker_definition_owns_dns_check_and_the_backend_radio_alias(self):
         overlay = compiler.read(ROOT / "site.example.json")
         overlay["values"].update(
             {
-                "addresses.automation_frontend": "198.18.40.121",
-                "addresses.automation_backend": "198.18.30.121",
+                "addresses.mqtt_frontend": "198.18.41.121",
+                "addresses.mqtt_backend": "198.18.30.121",
             }
         )
-        overlay["guests"]["automation"] = {
+        overlay["guests"]["mqtt"] = {
             "config": {
                 "app": {
                     "published_services": {"mqtt": {"hostname": "bus.example.invalid"}}
@@ -86,7 +86,7 @@ class ZigbeeServiceTests(unittest.TestCase):
         packets = self.packets(overlay)
         dns = self.stack(packets["dns"])
         expected = {
-            "bus.example.invalid": "198.18.40.121",
+            "bus.example.invalid": "198.18.41.121",
             **{
                 host: "198.18.40.33"
                 for host in (
@@ -94,6 +94,7 @@ class ZigbeeServiceTests(unittest.TestCase):
                     "host.service-9.example.invalid",
                     "influx.service-9.example.invalid",
                     "matter.service-7.example.invalid",
+                    "music.example.invalid",
                     "nas.service-7.example.invalid",
                     "nas.service-9.example.invalid",
                     "pihole1.service-7.example.invalid",
@@ -122,7 +123,7 @@ class ZigbeeServiceTests(unittest.TestCase):
                 for check in checks
                 if check["name"] == "DNS service record bus.example.invalid"
             )["argv"][-2:],
-            ["bus.example.invalid", "198.18.40.121"],
+            ["bus.example.invalid", "198.18.41.121"],
         )
         radio = self.stack(packets["zigbee2mqtt"])
         self.assertEqual(
@@ -143,7 +144,7 @@ class ZigbeeServiceTests(unittest.TestCase):
             render.compose(dns)
 
     def test_both_sides_of_the_mqtt_connection_require_explicit_firewall_rules(self):
-        for guest, direction in (("zigbee2mqtt", "out"), ("automation", "in")):
+        for guest, direction in (("zigbee2mqtt", "out"), ("mqtt", "in")):
             overlay = compiler.read(ROOT / "site.example.json")
             profile = compiler.read(ROOT / "guests" / guest / "profile.json")
             overlay["guests"][guest] = {

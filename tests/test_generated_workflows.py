@@ -86,13 +86,16 @@ class GeneratedWorkflowTests(unittest.TestCase):
             "influxdb": ["infrastructure", "preparation", "influxdb"],
             "identity": ["infrastructure", "preparation", "authentik"],
             "db-tools": ["infrastructure", "preparation", "pgadmin"],
-            "automation": ["infrastructure", "preparation", "mqtt", "homeassistant", "node_red"],
+            "automation": ["infrastructure", "preparation", "homeassistant", "node_red"],
             "bitwarden": ["infrastructure", "preparation", "bitwarden"],
             "pegaprox": ["infrastructure", "preparation", "pegaprox"],
             "zigbee2mqtt": ["infrastructure", "preparation", "zigbee2mqtt", "winet"],
             "monitoring": ["infrastructure", "preparation", "zabbix"],
+            "music": ["infrastructure", "preparation", "music_assistant"],
+            "mqtt": ["infrastructure", "preparation", "mqtt"],
         }
-        labels = {"infrastructure": "Update container", "preparation": "Prepare service",
+        phases = {guest: [*items, "zabbix-agent"] for guest, items in phases.items()}
+        labels = {"zabbix-agent": "Zabbix agent", "infrastructure": "Update container", "preparation": "Prepare service",
                   "unbound": "Deploy resolver", "pihole": "Deploy DNS", "mqtt": "Deploy MQTT",
                   "homeassistant": "Deploy Home Assistant", "node_red": "Deploy Node-RED", "zigbee2mqtt": "Deploy Zigbee2MQTT", "winet": "Deploy WiNet"}
         setup_names = ["Check readiness", "Get settings", "Choose services", "Get services", "Choose tools", "Get tools"]
@@ -134,6 +137,8 @@ class GeneratedWorkflowTests(unittest.TestCase):
                     total_readiness_checks += 1
                     triple = job["steps"][6 + 4 * index:9 + 4 * index]
                     display = labels.get(phase, "Deploy service")
+                    if phase not in {"infrastructure", "preparation", "zabbix-agent"} and len(expected_phases) == 4:
+                        display = "Deploy service"
                     self.assertEqual([step["name"] for step in triple], ["Check inputs", "Load credentials", display])
                     for before, after in zip(recipe["steps"][6:], triple):
                         self.assertEqual(set(after), set(before) | {"timeout-minutes"})
@@ -147,7 +152,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                         self.assertEqual(triple[1]["env"][secret], "${{ secrets." + secret + " }}")
                     total_phases += 1
                 total_jobs += 1
-        self.assertEqual((total_jobs, total_phases, total_phase_commands, total_readiness_checks), (12, 40, 120, 40))
+        self.assertEqual((total_jobs, total_phases, total_phase_commands, total_readiness_checks), (14, 59, 177, 59))
 
     def test_named_secrets_remain_guest_scoped_inside_native_job_steps(self):
         common = {"APPLICATION_SSH_KEY": "true", "PROXMOX_APP_TOKEN": "true"}

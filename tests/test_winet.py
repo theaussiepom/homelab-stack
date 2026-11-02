@@ -35,7 +35,7 @@ class WinetStackTests(unittest.TestCase):
         cfg = json.loads(packet["files"]["site.json"])
         stack = json.loads(packet["files"]["stack.json"])
         self.assertEqual(cfg["guest"]["vmid"], 209)
-        self.assertEqual(cfg["guest"]["hostname"], "radio")
+        self.assertEqual(cfg["guest"]["hostname"], "radios")
         self.assertEqual(cfg["guest"]["memory_mib"], 1024)
         self.assertEqual(guest_contract.phases(cfg), ["preparation", "zigbee2mqtt", "winet"])
         self.assertEqual(stack["services"]["winet"]["image"],
@@ -123,7 +123,7 @@ class WinetStackTests(unittest.TestCase):
             ("198.18.25.22", "203.0.113.10", "net0", 443, True),
             ("198.18.25.22", "203.0.113.10", "net2", 443, False),
             ("198.19.107.246", "203.0.113.10", "net0", 443, False),
-            ("198.18.30.22", "198.18.30.21", "net1", 1883, True),
+            ("198.18.30.22", "198.18.30.37", "net1", 1883, True),
         ):
             flow = connections.Connection("zigbee2mqtt", None, source, destination, "tcp", port)
             with self.subTest(source=source, destination=destination, interface=interface, port=port):

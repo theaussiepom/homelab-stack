@@ -120,14 +120,6 @@
           "destination": "${addresses.automation_backend}/32"
         },
         {
-          "direction": "in",
-          "proto": "tcp",
-          "port": "1883,8000",
-          "source": "${networks.home}/24",
-          "comment": "Existing authenticated MQTT clients",
-          "destination": "${addresses.automation_frontend}/32"
-        },
-        {
           "direction": "out",
           "proto": "tcp",
           "port": null,
@@ -140,14 +132,6 @@
           "port": null,
           "destination": "${networks.home}/24",
           "comment": "Existing Home and IoT device integrations"
-        },
-        {
-          "direction": "in",
-          "proto": "tcp",
-          "port": "1883,8000",
-          "source": "${networks.iot}/24",
-          "comment": "Existing authenticated MQTT clients",
-          "destination": "${addresses.automation_frontend}/32"
         },
         {
           "direction": "out",
@@ -189,13 +173,6 @@
         {
           "direction": "out",
           "proto": "tcp",
-          "port": "1883",
-          "destination": "${addresses.automation_frontend}/32",
-          "comment": "This guest retained MQTT endpoint"
-        },
-        {
-          "direction": "out",
-          "proto": "tcp",
           "port": "443",
           "destination": "${addresses.ingress_frontend}/32",
           "comment": "Native OIDC and existing internal HTTPS"
@@ -217,12 +194,12 @@
           "comment": "influxdb approved client automation"
         },
         {
-          "direction": "in",
+          "direction": "out",
           "proto": "tcp",
           "port": "1883",
-          "source": "${addresses.zigbee_backend}/32",
-          "destination": "${addresses.automation_backend}/32",
-          "comment": "Zigbee MQTT client"
+          "comment": "Dedicated retained MQTT broker",
+          "source": "${addresses.automation_backend}/32",
+          "destination": "${addresses.mqtt_backend}/32"
         }
       ]
     },
@@ -243,15 +220,6 @@
       "exclusive_writer_confirmed": false,
       "health_checks": [
         {
-          "name": "MQTT credentials accepted and anonymous refused",
-          "argv": [
-            "python3",
-            "/opt/homelab-app/automation-health.py",
-            "mqtt"
-          ],
-          "expect": "\"read_only_probe\": \"passed\""
-        },
-        {
           "name": "HA web responds and unauthenticated API refused",
           "argv": [
             "python3",
@@ -271,17 +239,6 @@
         }
       ],
       "service_health_checks": {
-        "mqtt": [
-          {
-            "name": "MQTT credentials accepted and anonymous refused",
-            "argv": [
-              "python3",
-              "/opt/homelab-app/automation-health.py",
-              "mqtt"
-            ],
-            "expect": "\"read_only_probe\": \"passed\""
-          }
-        ],
         "homeassistant": [
           {
             "name": "HA web responds and unauthenticated API refused",
@@ -311,24 +268,22 @@
         "gateway": "${gateways.frontend}",
         "mac": "${mac.automation.2}"
       },
-      "published_services": {
-        "mqtt": {
-          "hostname": "broker.mqtt",
-          "addresses": {
-            "frontend": "${addresses.automation_frontend}",
-            "backend": "${addresses.automation_backend}"
-          },
-          "dns_address": "frontend",
-          "protocol": "tcp",
-          "port": 1883
-        }
-      },
       "endpoints": {
         "homeassistant": {
           "web": "http://${addresses.automation_backend}:8123"
         },
         "node_red": {
           "web": "http://${addresses.automation_backend}:1880"
+        }
+      },
+      "service_connections": {
+        "homeassistant": {
+          "service": "mqtt.mqtt",
+          "address": "backend"
+        },
+        "node_red": {
+          "service": "mqtt.mqtt",
+          "address": "backend"
         }
       }
     }
@@ -360,7 +315,8 @@
         ],
         "command": null,
         "extra_hosts": {
-          "mariadb.db_hass": "${addresses.mariadb_backend}"
+          "mariadb.db_hass": "${addresses.mariadb_backend}",
+          "broker.mqtt": "${addresses.mqtt_backend}"
         },
         "cap_add": [
           "NET_ADMIN"
@@ -411,15 +367,10 @@
             "read_only": true
           }
         ],
-        "image_ref": "node_red"
-      },
-      "mqtt": {
-        "memory_mib": 256,
-        "cpus": 1,
-        "pids_limit": 128,
-        "environment": {},
-        "extra_mounts": [],
-        "image_ref": "mqtt"
+        "image_ref": "node_red",
+        "extra_hosts": {
+          "broker.mqtt": "${addresses.mqtt_backend}"
+        }
       }
     }
   }

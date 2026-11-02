@@ -171,40 +171,6 @@ jobs:
     - name: Check inputs
       env:
         GUEST: automation
-        PHASE: mqtt
-        DISABLED: ${{ inputs.disabled }}
-      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
-      timeout-minutes: 45
-    - name: Load credentials
-      env:
-        GUEST: automation
-        PHASE: mqtt
-        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
-        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
-      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-      timeout-minutes: 45
-    - name: Deploy MQTT
-      env:
-        GUEST: automation
-        PHASE: mqtt
-        NODE_RED_API_TOKEN: ${{ 'automation' == 'automation' && secrets.AUTOMATION_NODE_RED_API_TOKEN || '' }}
-        AUTHENTIK_SECRET_KEY: ${{ 'automation' == 'identity' && '' || '' }}
-        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
-        AUTHENTIK_SMTP_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
-        PGADMIN_OAUTH_SECRET: ${{ 'automation' == 'db-tools' && '' || '' }}
-        CLOUDFLARE_DNS_TOKEN: ${{ 'automation' == 'ingress' && '' || '' }}
-      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-      timeout-minutes: 45
-    - name: Check readiness
-      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
-
-        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
-
-        '
-      timeout-minutes: 45
-    - name: Check inputs
-      env:
-        GUEST: automation
         PHASE: homeassistant
         DISABLED: ${{ inputs.disabled }}
       run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
@@ -255,6 +221,40 @@ jobs:
       env:
         GUEST: automation
         PHASE: node_red
+        NODE_RED_API_TOKEN: ${{ 'automation' == 'automation' && secrets.AUTOMATION_NODE_RED_API_TOKEN || '' }}
+        AUTHENTIK_SECRET_KEY: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        AUTHENTIK_SMTP_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}
+        PGADMIN_OAUTH_SECRET: ${{ 'automation' == 'db-tools' && '' || '' }}
+        CLOUDFLARE_DNS_TOKEN: ${{ 'automation' == 'ingress' && '' || '' }}
+      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Check readiness
+      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
+
+        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
+
+        '
+      timeout-minutes: 45
+    - name: Check inputs
+      env:
+        GUEST: automation
+        PHASE: zabbix-agent
+        DISABLED: ${{ inputs.disabled }}
+      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
+      timeout-minutes: 45
+    - name: Load credentials
+      env:
+        GUEST: automation
+        PHASE: zabbix-agent
+        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      timeout-minutes: 45
+    - name: Zabbix agent
+      env:
+        GUEST: automation
+        PHASE: zabbix-agent
         NODE_RED_API_TOKEN: ${{ 'automation' == 'automation' && secrets.AUTOMATION_NODE_RED_API_TOKEN || '' }}
         AUTHENTIK_SECRET_KEY: ${{ 'automation' == 'identity' && '' || '' }}
         AUTHENTIK_POSTGRES_PASSWORD: ${{ 'automation' == 'identity' && '' || '' }}

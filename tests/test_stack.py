@@ -60,6 +60,8 @@ class StackTests(unittest.TestCase):
                 "bitwarden",
                 "pegaprox",
                 "zigbee2mqtt",
+                "music",
+                "mqtt",
             },
         )
 
@@ -96,6 +98,7 @@ class StackTests(unittest.TestCase):
                 *(application for application in c.CATALOGUE[name].get("optional_applications", {})
                   if application in c.read(ROOT / "guests" / name / "profile.json")["config"]["app"]["service_health_checks"]),
             ]
+            phases.append("zabbix-agent")
             self.assertEqual(list(guest["jobs"]), ["deploy"])
             steps = guest["jobs"]["deploy"]["steps"]
             self.assertEqual(len(steps), 5 + 4 * len(phases))

@@ -73,5 +73,10 @@
     "repository": "ghcr.io/theaussiepom/winet-extractor",
     "tag": null,
     "digest": "sha256:82c6b886967995f0a3cfe6fb5e20eeef70d10aa525d5bd824064eb272e1ce51a"
+  },
+  "music_assistant": {
+    "repository": "ghcr.io/music-assistant/server",
+    "tag": "latest",
+    "digest": null
   }
 }

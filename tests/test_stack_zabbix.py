@@ -25,7 +25,7 @@ class MonitoringFeatureTests(unittest.TestCase):
 
     def test_root_presence_creates_exactly_one_dedicated_guest(self):
         off=self.packets(False);on=self.packets()
-        self.assertEqual(len(off),11)
+        self.assertEqual(len(off),13)
         self.assertEqual(set(on)-set(off),{'monitoring'})
         cfg=json.loads(on['monitoring']['files']['site.json'])
         self.assertEqual(cfg['guest']['hostname'],'zabbix')
@@ -80,7 +80,7 @@ class MonitoringFeatureTests(unittest.TestCase):
         members=json.loads(packets['monitoring']['files']['site.json'])['app']['monitoring']['members']
         self.assertNotIn('db-tools',{m['guest'] for m in members})
         with self.assertRaises(ValueError):self.packets(disabled=['postgresql'])
-        self.assertEqual(len(self.packets(False,['monitoring'])),11)
+        self.assertEqual(len(self.packets(False,['monitoring'])),13)
         with self.assertRaisesRegex(ValueError, 'Keep Zabbix enabled'):self.packets(True,['monitoring'])
 
     def test_generated_selection_reads_presence_and_never_runs_an_absent_feature(self):

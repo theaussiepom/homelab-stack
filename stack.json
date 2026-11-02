@@ -108,7 +108,24 @@
     "addresses.winet_inverter": "198.19.107.23",
     "mac.zigbee.2": "02:00:0a:02:00:01",
     "paths.winet_options": "/var/lib/homelab-inputs/winet-options.json",
-    "winet.mqtt_prefix": "homeassistant"
+    "winet.mqtt_prefix": "homeassistant",
+    "addresses.music_management": "198.18.25.31",
+    "addresses.music_backend": "198.18.30.31",
+    "addresses.music_home": "198.19.100.241",
+    "gateways.home": "198.19.100.1",
+    "domains.music": "music.example.invalid",
+    "mac.music.0": "02:00:0c:00:00:01",
+    "mac.music.1": "02:00:0c:01:00:01",
+    "mac.music.2": "02:00:0c:02:00:01",
+    "addresses.mqtt_management": "198.18.25.37",
+    "addresses.mqtt_backend": "198.18.30.37",
+    "addresses.mqtt_frontend": "198.18.41.21",
+    "networks.mqtt": "198.18.41.0",
+    "gateways.mqtt": "198.18.41.1",
+    "mac.mqtt.0": "02:00:0d:00:00:01",
+    "mac.mqtt.1": "02:00:0d:01:00:01",
+    "mac.mqtt.2": "02:00:0d:02:00:01",
+    "paths.mqtt_probe": "/var/lib/homelab-inputs/mqtt-probe.json"
   },
   "guests": {
     "dns": {
@@ -190,7 +207,8 @@
         "ingress",
         "identity",
         "mariadb",
-        "influxdb"
+        "influxdb",
+        "mqtt"
       ],
       "prerequisites": [
         "state-and-trust-reviewed",
@@ -228,7 +246,7 @@
     },
     "zigbee2mqtt": {
       "depends_on": [
-        "automation"
+        "mqtt"
       ],
       "prerequisites": [
         "state-and-trust-reviewed",
@@ -244,6 +262,32 @@
         "ingress"
       ],
       "prerequisites": []
+    },
+    "music": {
+      "depends_on": [
+        "dns",
+        "ingress",
+        "automation"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared",
+        "old-writers-retired",
+        "player-network-prepared"
+      ]
+    },
+    "mqtt": {
+      "depends_on": [
+        "dns"
+      ],
+      "prerequisites": [
+        "state-and-trust-reviewed",
+        "data-prepared",
+        "configuration-prepared",
+        "old-writers-retired",
+        "client-endpoints-prepared"
+      ]
     }
   },
   "routes": {
@@ -364,6 +408,15 @@
       "middlewares": [
         "security-headers",
         "management-clients"
+      ]
+    },
+    "music": {
+      "host": "${domains.music}",
+      "target": {
+        "endpoint": "music.music_assistant.web"
+      },
+      "middlewares": [
+        "security-headers"
       ]
     }
   }

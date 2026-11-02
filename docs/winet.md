@@ -1,7 +1,9 @@
-# WiNet on the radio guest
+# WiNet on Radios
 
-Guest 209 runs Zigbee2MQTT and WiNet in one guest deployment job. Preparation runs
-once, followed by separate Zigbee2MQTT and WiNet steps. WiNet has no serial device,
+Radios guest209 runs Zigbee2MQTT and WiNet in one guest deployment job. Preparation runs
+once, followed by separate Zigbee2MQTT and WiNet steps, then one selected Zabbix
+agent step. Radios depends on the MQTT guest, so the broker can serve telemetry
+without waiting for Home Automation to finish. WiNet has no serial device,
 browser endpoint or persistent database. Zigbee's coordinator and data remain
 unchanged. The guest has 1 GiB RAM: 512 MiB for Zigbee2MQTT, 256 MiB for WiNet and
 256 MiB reserved for Debian.
@@ -23,7 +25,7 @@ hashed with deployment inputs, rendered privately and mounted read-only at
 fields, plaintext inverter transport and endpoint drift.
 
 The added VLAN 107 interface has no default gateway or new inbound rule. PVE
-`net2` limits HTTPS egress to the selected inverter's TCP443 telemetry. Package/image HTTP
+`net2` declares an HTTPS egress limit to the selected inverter's TCP443 telemetry. Package/image HTTP
 and HTTPS egress is bound to management `net0` and its selected source address;
 it cannot provide an alternate allowance on the IoT interface, even when a
 process selects the management source IP. MQTT uses the existing backend interface

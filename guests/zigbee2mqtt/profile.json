@@ -2,7 +2,7 @@
   "config": {
     "guest": {
       "vmid": 209,
-      "hostname": "radio",
+      "hostname": "radios",
       "cpu": 2,
       "memory_mib": 1024,
       "root_gib": 8,
@@ -100,8 +100,8 @@
           "direction": "out",
           "proto": "tcp",
           "port": "1883",
-          "destination": "${addresses.automation_backend}/32",
-          "comment": "Selected automation MQTT broker only"
+          "destination": "${addresses.mqtt_backend}/32",
+          "comment": "Dedicated retained MQTT broker only"
         },
         {
           "direction": "in",
@@ -144,7 +144,7 @@
     "app": {
       "kind": "zigbee2mqtt",
       "vmid": 209,
-      "hostname": "radio",
+      "hostname": "radios",
       "memory_mib": 1024,
       "address": "${addresses.zigbee_management}",
       "mac": "${mac.zigbee.0}",
@@ -159,11 +159,11 @@
       "exclusive_writer_confirmed": false,
       "service_connections": {
         "zigbee2mqtt": {
-          "service": "automation.mqtt",
+          "service": "mqtt.mqtt",
           "address": "backend"
         },
         "winet": {
-          "service": "automation.mqtt",
+          "service": "mqtt.mqtt",
           "address": "backend"
         }
       },

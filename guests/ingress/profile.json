@@ -295,6 +295,14 @@
           "source": "${addresses.ingress_management}/32",
           "destination": "${addresses.pironman_matter}/32",
           "comment": "Declared HTTP route backend"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "8095",
+          "comment": "Declared Music Assistant HTTP route backend",
+          "source": "${addresses.ingress_management}/32",
+          "destination": "${addresses.music_home}/32"
         }
       ]
     },

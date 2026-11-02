@@ -116,6 +116,22 @@
           "source": "${addresses.ingress_frontend}/32",
           "destination": "${addresses.dns}/32",
           "comment": "Declared HTTP route backend"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "53",
+          "comment": "Dedicated MQTT network DNS clients",
+          "source": "${networks.mqtt}/24",
+          "destination": "${addresses.dns}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "udp",
+          "port": "53",
+          "comment": "Dedicated MQTT network DNS clients",
+          "source": "${networks.mqtt}/24",
+          "destination": "${addresses.dns}/32"
         }
       ]
     },

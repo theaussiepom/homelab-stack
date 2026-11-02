@@ -64,10 +64,10 @@ class CustodySelectionTests(unittest.TestCase):
     def test_selected_proofs_are_literal_and_disabled_members_retain_complete_source(self):
         """Compile actual profiles with both synthetic groups and valid exclusions."""
         overlay = self.custody_overlay()
-        for disabled in ([], ["db-tools"], ["identity", "db-tools", "automation", "zigbee2mqtt"]):
+        for disabled in ([], ["db-tools"], ["identity", "db-tools", "automation", "zigbee2mqtt", "music"]):
             with self.subTest(disabled=disabled):
                 packets = c.compile_stack(ROOT, overlay, disabled)
-                self.assertEqual(len(packets), 11)
+                self.assertEqual(len(packets), 13)
                 for role in ("postgresql", "identity", "db-tools", "mariadb"):
                     packet = packets[role]
                     cfg = json.loads(packet["files"]["site.json"])
@@ -160,12 +160,12 @@ class CustodySelectionTests(unittest.TestCase):
         """Excluding a valid leaf must not force its job or remove its source."""
         configured = {
             "dns", "ingress", "postgresql", "mariadb", "influxdb", "identity",
-            "db-tools", "automation", "bitwarden", "pegaprox", "zigbee2mqtt",
+            "db-tools", "automation", "bitwarden", "pegaprox", "zigbee2mqtt", "music", "mqtt",
         }
         for disabled in (
             [],
             ["db-tools"],
-            ["identity", "db-tools", "automation", "zigbee2mqtt"],
+            ["identity", "db-tools", "automation", "zigbee2mqtt", "music"],
             ["pegaprox"],
             ["bitwarden"],
         ):
