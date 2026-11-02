@@ -272,7 +272,9 @@ class RuntimeContractTests(unittest.TestCase):
                         self.assertNotIn("IMAGE_INPUT=" + other, result.stdout)
 
     def test_each_required_startup_file_is_checked_before_runtime_changes(self):
-        source = yaml.safe_load((TASKS / "guest-ready.yml").read_text())[1:3]
+        tasks = yaml.safe_load((TASKS / "guest-ready.yml").read_text())
+        names = ["Inspect separately prepared application paths", "Require the prepared path type before runtime changes"]
+        source = [next(task for task in tasks if task["name"] == name) for name in names]
         for missing in ("ha-startup/mdns-route.sh", "node-red/config/settings.js"):
             with (
                 self.subTest(missing=missing),

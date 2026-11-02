@@ -209,6 +209,30 @@
             "import socket,urllib.request; urllib.request.build_opener(urllib.request.ProxyHandler({})).open('http://${addresses.music_home}:8095/info',timeout=5).close(); socket.create_connection(('${addresses.music_home}',8097),timeout=3).close(); print('core service only: passed')"
           ],
           "expect": "core service only: passed"
+        },
+        {
+          "name": "Music Assistant HTTPS route",
+          "argv": [
+            "curl",
+            "--retry",
+            "30",
+            "--retry-delay",
+            "2",
+            "--retry-all-errors",
+            "--retry-max-time",
+            "180",
+            "--fail",
+            "--silent",
+            "--show-error",
+            "--max-time",
+            "15",
+            "--interface",
+            "${addresses.music_home}",
+            "--resolve",
+            "${domains.music}:443:${addresses.ingress_frontend}",
+            "https://${domains.music}/info"
+          ],
+          "expect": "server_version"
         }
       ],
       "service_health_checks": {
@@ -228,6 +252,30 @@
               "import socket,urllib.request; urllib.request.build_opener(urllib.request.ProxyHandler({})).open('http://${addresses.music_home}:8095/info',timeout=5).close(); socket.create_connection(('${addresses.music_home}',8097),timeout=3).close(); print('core service only: passed')"
             ],
             "expect": "core service only: passed"
+          },
+          {
+            "name": "Music Assistant HTTPS route",
+            "argv": [
+              "curl",
+              "--retry",
+              "30",
+              "--retry-delay",
+              "2",
+              "--retry-all-errors",
+              "--retry-max-time",
+              "180",
+              "--fail",
+              "--silent",
+              "--show-error",
+              "--max-time",
+              "15",
+              "--interface",
+              "${addresses.music_home}",
+              "--resolve",
+              "${domains.music}:443:${addresses.ingress_frontend}",
+              "https://${domains.music}/info"
+            ],
+            "expect": "server_version"
           }
         ]
       },

@@ -24,8 +24,11 @@ host. No NAS library provider or share is invented. The existing finite reply
 routing helper preserves the selected Home source on routed replies.
 
 The pre-start helper verifies the prepared settings and retained database inputs;
-it does not rewrite them. The normal health command checks only `/info` on8095
-and the stream8097 listener. Actual enabled provider/library access, discovery,
+it does not rewrite them. Normal health first checks `/info` on8095 and the
+stream8097 listener, then checks the published HTTPS `/info` route through the
+selected ingress address. The route check requires a valid browser certificate
+and the `server_version` response field. It binds the already allowed Home
+interface as its client source, preserving the existing allowlist. Actual enabled provider/library access, discovery,
 player callbacks and playback remain native acceptance after authorised rollout.
 Public rules declare the existing Home discovery and scoped ingress/HA paths;
 they do not prove physical multicast or deployed firewall enforcement.

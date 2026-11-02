@@ -8,6 +8,8 @@ import sys
 import shutil
 import tempfile
 import unittest
+import yaml
+from jinja2 import Environment
 
 ROOT = Path(__file__).resolve().parents[1]
 FRAMEWORK = Path(os.environ.get('HOMELAB_FRAMEWORK', ROOT.parent/'homelab')).resolve()
@@ -90,6 +92,42 @@ class MusicMQTTTests(unittest.TestCase):
         self.assertEqual(cfg['routes']['music']['host'],'music.example.invalid')
         self.assertEqual(cfg['routes']['music']['middlewares'],['security-headers','music-clients'])
         self.assertNotIn('new_target',cfg['app'])
+
+    def test_music_requires_the_real_https_info_route_after_local_service_health(self):
+        overlay=compiler.read(ROOT/'site.example.json')
+        overlay['values'].update({'domains.music':'music-override.example.invalid',
+                                  'addresses.ingress_frontend':'198.18.40.133',
+                                  'addresses.music_home':'198.19.100.240'})
+        packets=self.packets(overlay)
+        cfg=json.loads(packets['music']['files']['site.json'])
+        checks=cfg['app']['service_health_checks']['music_assistant']
+        self.assertEqual(checks,cfg['app']['health_checks'])
+        self.assertEqual(len(checks),2)
+        self.assertEqual(checks[0]['expect'],'core service only: passed')
+        route=checks[1]
+        self.assertEqual(route['expect'],'server_version')
+        self.assertEqual(route['argv'][0],'curl')
+        self.assertEqual(route['argv'][-1],'https://music-override.example.invalid/info')
+        self.assertEqual(route['argv'][route['argv'].index('--resolve')+1],
+                         'music-override.example.invalid:443:198.18.40.133')
+        self.assertEqual(route['argv'][route['argv'].index('--interface')+1],'198.19.100.240')
+        self.assertIn('198.19.100.240/24',[nic['ipv4']for nic in cfg['guest']['interfaces']])
+        ingress=json.loads(packets['ingress']['files']['stack.json'])
+        self.assertEqual(ingress['routing']['middlewares']['music-clients'],
+                         {'ipAllowList':{'sourceRange':['198.18.10.0/28','198.19.100.0/24']}})
+        self.assertIn('--fail',route['argv'])
+        self.assertFalse({'--insecure','-k','--location','-L'}&set(route['argv']))
+        play=yaml.safe_load((FRAMEWORK/'proxmox/applications/ansible/reconcile.yml').read_text())[0]
+        health=next(task for task in play['tasks'] if task.get('loop')=='{{ app.health_checks }}')
+        failed=Environment().compile_expression(health['failed_when'])
+        for result,expected in [
+            ({'rc':0,'stdout':'{"server_version":"fixture-version"}'},False),
+            ({'rc':60,'stdout':'{"server_version":"fixture-version"}'},True),
+            ({'rc':22,'stdout':'missing router'},True),
+            ({'rc':0,'stdout':'<html>Other application</html>'},True),
+        ]:
+            with self.subTest(result=result):
+                self.assertEqual(failed(ordinary_health=result,item=route),expected)
 
     def test_music_route_uses_only_selected_lan_vpn_and_exact_tablet_clients(self):
         packets=self.packets();cfg=json.loads(packets['music']['files']['site.json'])

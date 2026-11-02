@@ -94,9 +94,9 @@ class StackTests(unittest.TestCase):
             phases = [
                 "infrastructure",
                 "preparation",
-                *c.CATALOGUE[name]["applications"],
-                *(application for application in c.CATALOGUE[name].get("optional_applications", {})
-                  if application in c.read(ROOT / "guests" / name / "profile.json")["config"]["app"]["service_health_checks"]),
+                *c.guest_contract.applications(
+                    c.read(ROOT / "guests" / name / "profile.json")["config"]
+                ),
             ]
             phases.append("zabbix-agent")
             self.assertEqual(list(guest["jobs"]), ["deploy"])

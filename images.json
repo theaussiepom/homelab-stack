@@ -78,5 +78,15 @@
     "repository": "ghcr.io/music-assistant/server",
     "tag": "latest",
     "digest": null
+  },
+  "cloudbeaver": {
+    "repository": "dbeaver/cloudbeaver",
+    "tag": "26.2.3",
+    "digest": "sha256:a537c60a7ca98d8d791c11c01172c1354e8dedfe222d04a54795ceeb32f12bbc"
+  },
+  "auth_gateway": {
+    "repository": "quay.io/oauth2-proxy/oauth2-proxy",
+    "tag": "v7.15.5",
+    "digest": "sha256:0d989b27d90d5e527fb2b045d864c4001c3104bdd763b3211b7e9ba2110380ea"
   }
 }

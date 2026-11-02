@@ -87,9 +87,12 @@ class ZigbeeServiceTests(unittest.TestCase):
         dns = self.stack(packets["dns"])
         expected = {
             "bus.example.invalid": "198.18.41.121",
+            "postgresql.database.example.invalid": "198.18.31.23",
+            "mariadb.database.example.invalid": "198.18.32.24",
             **{
                 host: "198.18.40.33"
                 for host in (
+                    "db.example.invalid",
                     "hass.service-9.example.invalid",
                     "host.service-9.example.invalid",
                     "influx.service-9.example.invalid",

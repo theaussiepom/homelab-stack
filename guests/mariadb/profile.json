@@ -87,6 +87,14 @@
           "port": "3306",
           "proto": "tcp",
           "source": "${addresses.bitwarden_mariadb}/32"
+        },
+        {
+          "comment": "mariadb approved client db-tools",
+          "destination": "${addresses.mariadb_backend}/32",
+          "direction": "in",
+          "port": "3306",
+          "proto": "tcp",
+          "source": "${addresses.db_tools_mariadb}/32"
         }
       ],
       "start_on_boot": true,
@@ -205,6 +213,17 @@
             "name": "Backend TCP listener"
           }
         ]
+      },
+      "published_services": {
+        "mariadb": {
+          "hostname": "${hostnames.mariadb_database}",
+          "addresses": {
+            "backend": "${addresses.mariadb_backend}"
+          },
+          "dns_address": "backend",
+          "protocol": "tcp",
+          "port": 3306
+        }
       }
     }
   },

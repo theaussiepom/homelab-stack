@@ -245,6 +245,17 @@
             "name": "Backend TCP listener"
           }
         ]
+      },
+      "published_services": {
+        "postgresql": {
+          "hostname": "${hostnames.postgresql_database}",
+          "addresses": {
+            "backend": "${addresses.postgresql_backend}"
+          },
+          "dns_address": "backend",
+          "protocol": "tcp",
+          "port": 5432
+        }
       }
     }
   },

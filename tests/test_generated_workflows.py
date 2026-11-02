@@ -85,7 +85,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
             "mariadb": ["infrastructure", "preparation", "mariadb"],
             "influxdb": ["infrastructure", "preparation", "influxdb"],
             "identity": ["infrastructure", "preparation", "authentik"],
-            "db-tools": ["infrastructure", "preparation", "pgadmin"],
+            "db-tools": ["infrastructure", "preparation", "cloudbeaver"],
             "automation": ["infrastructure", "preparation", "homeassistant", "node_red"],
             "bitwarden": ["infrastructure", "preparation", "bitwarden"],
             "pegaprox": ["infrastructure", "preparation", "pegaprox"],

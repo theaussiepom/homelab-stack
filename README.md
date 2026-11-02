@@ -89,6 +89,9 @@ coordinated cutover before adopting this composition. See [Music and MQTT](docs/
 
 Follow [setup and local tests](docs/setup.md), [secrets and prerequisites](docs/secrets.md),
 [public-source policy](docs/public-boundary.md) and [adoption](docs/adoption.md).
+The [database-tools composition](docs/database-tools.md) keeps its existing guest
+and adds CloudBeaver Community with an authenticated web gateway and metadata-only
+PostgreSQL and MariaDB connections.
 Public pushes and pull requests run source CI only. Deployment is called from the
 private site after deliberate pin adoption and reviewed merge. Every declared
 guest participates by default. The optional `disabled` input defaults to `[]`;

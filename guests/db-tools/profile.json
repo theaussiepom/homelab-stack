@@ -30,10 +30,17 @@
           "ipv6": "manual",
           "mac": "${mac.db-tools.2}",
           "vlan": null
+        },
+        {
+          "bridge": "vmbr32",
+          "ipv4": "${addresses.db_tools_mariadb}/24",
+          "ipv6": "manual",
+          "mac": "${mac.db-tools.3}",
+          "vlan": null
         }
       ],
       "keyctl": false,
-      "memory_mib": 768,
+      "memory_mib": 2048,
       "nesting": true,
       "root_gib": 4,
       "rules": [
@@ -94,6 +101,14 @@
           "port": "5432",
           "proto": "tcp",
           "source": "${addresses.pgadmin_postgresql}/32"
+        },
+        {
+          "comment": "mariadb approved client db-tools",
+          "destination": "${addresses.mariadb_backend}/32",
+          "direction": "out",
+          "port": "3306",
+          "proto": "tcp",
+          "source": "${addresses.db_tools_mariadb}/32"
         }
       ],
       "start_on_boot": true,
@@ -113,24 +128,15 @@
       "exclusive_writer_confirmed": false,
       "health_checks": [
         {
+          "name": "CloudBeaver and authentication gateway",
           "argv": [
-            "curl",
-            "--retry",
-            "30",
-            "--retry-delay",
-            "2",
-            "--retry-all-errors",
-            "--retry-max-time",
-            "180",
-            "--fail",
-            "--silent",
-            "--show-error",
-            "--max-time",
-            "15",
-            "http://${addresses.pgadmin_backend}/login"
+            "python3",
+            "/opt/homelab-app/cloudbeaver-runtime.py",
+            "health",
+            "--config",
+            "/opt/homelab-app/runtime/cloudbeaver-public.json"
           ],
-          "expect": "",
-          "name": "Preserved pgAdmin profile serves its login"
+          "expect": "\"cloudbeaver\": \"passed\""
         },
         {
           "argv": [
@@ -155,6 +161,7 @@
           "name": "Verified HTTPS identity discovery"
         },
         {
+          "name": "CloudBeaver HTTPS sign-in redirect",
           "argv": [
             "curl",
             "--retry",
@@ -170,17 +177,20 @@
             "--max-time",
             "15",
             "--resolve",
-            "${domains.pgadmin}:443:${addresses.ingress_frontend}",
-            "https://${domains.pgadmin}/login"
+            "${domains.db_tools}:443:${addresses.ingress_frontend}",
+            "--output",
+            "/dev/null",
+            "--write-out",
+            "%{http_code}",
+            "https://${domains.db_tools}/"
           ],
-          "expect": "",
-          "name": "Verified HTTPS pgAdmin route"
+          "expect": "302"
         }
       ],
       "hostname": "db-tools",
       "kind": "db-tools",
       "mac": "${mac.db-tools.0}",
-      "memory_mib": 768,
+      "memory_mib": 2048,
       "packages": [
         "docker.io=26.1.5+dfsg1-9+deb13u1",
         "docker-cli=26.1.5+dfsg1-9+deb13u1",
@@ -190,26 +200,17 @@
       "stack_config": "${inputs}/stack.json",
       "vmid": 202,
       "service_health_checks": {
-        "pgadmin": [
+        "cloudbeaver": [
           {
+            "name": "CloudBeaver and authentication gateway",
             "argv": [
-              "curl",
-              "--retry",
-              "30",
-              "--retry-delay",
-              "2",
-              "--retry-all-errors",
-              "--retry-max-time",
-              "180",
-              "--fail",
-              "--silent",
-              "--show-error",
-              "--max-time",
-              "15",
-              "http://${addresses.pgadmin_backend}/login"
+              "python3",
+              "/opt/homelab-app/cloudbeaver-runtime.py",
+              "health",
+              "--config",
+              "/opt/homelab-app/runtime/cloudbeaver-public.json"
             ],
-            "expect": "",
-            "name": "Preserved pgAdmin profile serves its login"
+            "expect": "\"cloudbeaver\": \"passed\""
           },
           {
             "argv": [
@@ -234,6 +235,7 @@
             "name": "Verified HTTPS identity discovery"
           },
           {
+            "name": "CloudBeaver HTTPS sign-in redirect",
             "argv": [
               "curl",
               "--retry",
@@ -249,17 +251,31 @@
               "--max-time",
               "15",
               "--resolve",
-              "${domains.pgadmin}:443:${addresses.ingress_frontend}",
-              "https://${domains.pgadmin}/login"
+              "${domains.db_tools}:443:${addresses.ingress_frontend}",
+              "--output",
+              "/dev/null",
+              "--write-out",
+              "%{http_code}",
+              "https://${domains.db_tools}/"
             ],
-            "expect": "",
-            "name": "Verified HTTPS pgAdmin route"
+            "expect": "302"
           }
         ]
       },
       "endpoints": {
-        "pgadmin": {
+        "cloudbeaver": {
           "web": "http://${addresses.pgadmin_backend}:80"
+        }
+      },
+      "variant": "cloudbeaver",
+      "service_connections": {
+        "cloudbeaver.postgresql": {
+          "service": "postgresql.postgresql",
+          "address": "backend"
+        },
+        "cloudbeaver.mariadb": {
+          "service": "mariadb.mariadb",
+          "address": "backend"
         }
       }
     }
@@ -271,29 +287,59 @@
   "stack": {
     "data_root": "/srv/homelab/data",
     "foundation": {
-      "identity_url": "https://${domains.identity}",
+      "version": 1,
+      "oidc_issuer": "https://${domains.identity}/application/o/pgadmin4/",
       "oauth_client_id": "${identity.pgadmin_client}",
       "oauth_name": "authentik",
-      "provider_slug": "pgadmin4",
+      "user_claim": "preferred_username",
       "secret_files": {
         "oauth_client_secret": "${inputs}/oauth-client-secret"
-      },
-      "version": 1
-    },
-    "guest_memory_mib": 768,
-    "kind": "db-tools",
-    "pgadmin_bind_address": "${addresses.pgadmin_backend}",
-    "services": {
-      "pgadmin": {
-        "cpus": 1,
-        "environment": {},
-        "extra_mounts": [],
-        "memory_mib": 512,
-        "pids_limit": 256,
-        "user": "5050",
-        "image_ref": "pgadmin"
       }
     },
-    "timezone": "Australia/Brisbane"
+    "guest_memory_mib": 2048,
+    "kind": "db-tools",
+    "services": {
+      "cloudbeaver": {
+        "memory_mib": 1536,
+        "cpus": 1,
+        "pids_limit": 512,
+        "environment": {},
+        "image_ref": "cloudbeaver"
+      },
+      "auth_gateway": {
+        "memory_mib": 128,
+        "cpus": 1,
+        "pids_limit": 128,
+        "environment": {},
+        "image_ref": "auth_gateway"
+      }
+    },
+    "timezone": "Australia/Brisbane",
+    "variant": "cloudbeaver",
+    "cloudbeaver": {
+      "bind_address": "${addresses.pgadmin_backend}",
+      "public_url": "https://${domains.db_tools}",
+      "server_name": "Database Tools",
+      "recovery_admin": "local-recovery",
+      "heap_mib": 1024,
+      "auth_headers": {
+        "user": "X-User",
+        "team": "X-Team"
+      },
+      "connections": {
+        "postgresql": {
+          "name": "PostgreSQL",
+          "driver": "postgresql",
+          "database": "postgres",
+          "sslmode": "prefer"
+        },
+        "mariadb": {
+          "name": "MariaDB",
+          "driver": "mariadb",
+          "database": ""
+        }
+      },
+      "retained_pgadmin_image": "dpage/pgadmin4@sha256:cefc4cc6b7d9d71a9e81e76fb9d7e14038ab5661b539a190eea1b63fa612589a"
+    }
   }
 }

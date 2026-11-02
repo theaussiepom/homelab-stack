@@ -8,6 +8,12 @@ bindings reuse existing GitHub Environment Secrets: `PROXMOX_APP_TOKEN`,
 runner compares existing private credential files and never rotates a mismatch.
 Environment secret availability and exact existing names require adoption review.
 
+The CloudBeaver database-tools variant keeps the existing
+`FOUNDATION_PGADMIN_OAUTH_SECRET` binding and private `oauth-client-secret` input.
+Its value must still match the selected OIDC client. Application recovery and
+gateway cookie material are derived privately with separate purposes; this adds
+no GitHub secret names and publishes no database password or client key.
+
 All reusable-workflow edges declare and forward existing names explicitly. Deploy
 and generic phase wrappers admit the two required common names and six optional
 application names. Each guest requires only its own application names alongside
