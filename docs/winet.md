@@ -30,6 +30,14 @@ process selects the management source IP. MQTT uses the existing backend interfa
 and declared broker. Public addresses are examples; the site supplies retained
 addresses and MACs.
 
+Before adding a tagged interface, deliberately authorize the existing deployment
+identity to use that exact Proxmox SDN VLAN path. The built-in `PVESDNUser` role
+includes `SDN.Audit` and `SDN.Use`; a non-propagating grant can target
+`/sdn/zones/localnetwork/<bridge>/<vlan>` without granting other VLANs. A firewall
+rule does not grant API permission to attach its network. Preserve every failed
+attempt and hold if this permission is missing; any fresh CD needs explicit
+review and adoption of the exact failure evidence, rather than an automatic retry.
+
 The pinned upstream `getProperties.ts` HTTPS request and `winetHandler.ts` WSS
 client both set `rejectUnauthorized: false`. `ssl: true` encrypts those initial
 connections but does not authenticate the inverter certificate. A device able to
