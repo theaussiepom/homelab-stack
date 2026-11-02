@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import unittest
@@ -148,8 +149,16 @@ class DatabaseToolsTests(unittest.TestCase):
         shared = discovery.shared(json.loads(packets["ingress"]["files"]["stack.json"])["routing"])
         self.assertEqual(shared["http"]["middlewares"]["db-canonical"], {
             "redirectRegex": {"regex": "^https://[^/]+/(.*)",
-                              "replacement": "https://databases.example.invalid/$1", "permanent": True}
+                              "replacement": "https://databases.example.invalid/", "permanent": False}
         })
+        redirect = shared["http"]["middlewares"]["db-canonical"]["redirectRegex"]
+        for suffix in ("/", "/browser/", "/oauth2/callback?code=old&state=old",
+                       "//external.example.invalid/path?next=https://external.example.invalid/",
+                       "/%2f%2fexternal.example.invalid/?return_to=https%3A%2F%2Fexternal.example.invalid"):
+            with self.subTest(suffix=suffix):
+                self.assertEqual(re.sub(redirect["regex"], redirect["replacement"],
+                                        "https://old-databases.example.invalid" + suffix),
+                                 "https://databases.example.invalid/")
         labels = discovery.labels(cfg)
         self.assertEqual(labels["traefik.http.routers.db-tools.middlewares"], "security-headers@file")
         self.assertEqual(labels["traefik.http.routers.pgadmin-compat.middlewares"], "security-headers@file,db-canonical@file")

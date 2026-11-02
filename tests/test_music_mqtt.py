@@ -129,6 +129,31 @@ class MusicMQTTTests(unittest.TestCase):
             with self.subTest(result=result):
                 self.assertEqual(failed(ordinary_health=result,item=route),expected)
 
+    def test_music_https_probe_has_only_the_exact_home_egress(self):
+        overlay=compiler.read(ROOT/'site.example.json')
+        overlay['values'].update({'addresses.ingress_frontend':'198.18.40.133',
+                                  'addresses.music_home':'198.19.100.240'})
+        packets=self.packets(overlay)
+        cfg=json.loads(packets['music']['files']['site.json'])
+        rules=cfg['guest']['rules']
+        expected={'direction':'out','proto':'tcp','port':'443',
+                  'source':'198.19.100.240/32','destination':'198.18.40.133/32',
+                  'interface':'net2','comment':'Music HTTPS route health from its allowed Home address'}
+        self.assertEqual([rule for rule in rules if rule.get('comment')==expected['comment']],[expected])
+        self.assertEqual(cfg['app']['frontend_routing']['address'],'198.19.100.240/24')
+        flow=connections.Connection('music','ingress','198.19.100.240','198.18.40.133','tcp',443)
+        self.assertTrue(connections.permits(rules,'out',flow,interface='net2'))
+        self.assertFalse(connections.permits(rules,'out',flow,interface='net0'))
+        ingress=json.loads(packets['ingress']['files']['site.json'])
+        self.assertTrue(connections.permits(ingress['guest']['rules'],'in',flow,
+                        interface=connections.network_endpoints.firewall_interface(ingress['guest'],flow.target_address)))
+        for changed in ({'source_address':'198.19.100.239'},
+                        {'target_address':'198.18.40.134'},
+                        {'port':80},{'protocol':'udp'}):
+            with self.subTest(changed=changed):
+                other=connections.Connection(**(flow.__dict__|changed))
+                self.assertFalse(connections.permits(rules,'out',other,interface='net2'))
+
     def test_music_route_uses_only_selected_lan_vpn_and_exact_tablet_clients(self):
         packets=self.packets();cfg=json.loads(packets['music']['files']['site.json'])
         ingress=json.loads(packets['ingress']['files']['stack.json'])

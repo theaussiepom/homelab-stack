@@ -18,9 +18,11 @@ flowchart TD
   DNS --> Pega[PegaProx]
   PG --> Auth[Authentik: server + worker + Redis]
   Ingress --> Auth
-  PG --> Admin[pgAdmin]
-  Auth --> Admin
-  Ingress --> Admin
+  PG --> Admin[CloudBeaver]
+  Maria --> Admin
+  Auth --> Gateway[Authentication gateway]
+  Ingress --> Gateway
+  Gateway --> Admin
   DNS --> Broker[MQTT]
   Ingress --> Auto[Home Automation: Home Assistant then Node-RED]
   Broker --> Auto

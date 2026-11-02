@@ -15,7 +15,10 @@ the configured reverse-proxy identity headers. Browser traffic uses the existing
 Traefik HTTPS route and automatic certificate resolver.
 
 Use the canonical database-tools hostname for normal access. The previous pgAdmin
-hostname remains an alias of the same route. Native acceptance includes an
+hostname has a separate compatibility route that temporarily redirects to the
+canonical CloudBeaver home page before sign-in. It drops old paths and query
+strings because pgAdmin bookmarks and OAuth callbacks do not belong to the new
+application. Native acceptance includes an
 unauthenticated redirect to the identity provider, rejection of forged identity
 headers and a successful authenticated browser session.
 

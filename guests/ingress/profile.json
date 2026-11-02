@@ -429,8 +429,8 @@
         "db-canonical": {
           "redirectRegex": {
             "regex": "^https://[^/]+/(.*)",
-            "replacement": "https://${domains.db_tools}/$1",
-            "permanent": true
+            "replacement": "https://${domains.db_tools}/",
+            "permanent": false
           }
         }
       },

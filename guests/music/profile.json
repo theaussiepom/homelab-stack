@@ -94,6 +94,15 @@
           "comment": "Packages, selected upstream image and provider HTTPS"
         },
         {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "443",
+          "source": "${addresses.music_home}/32",
+          "destination": "${addresses.ingress_frontend}/32",
+          "interface": "net2",
+          "comment": "Music HTTPS route health from its allowed Home address"
+        },
+        {
           "direction": "in",
           "proto": "tcp",
           "port": "8095",

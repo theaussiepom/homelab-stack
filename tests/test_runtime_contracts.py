@@ -274,7 +274,8 @@ class RuntimeContractTests(unittest.TestCase):
     def test_each_required_startup_file_is_checked_before_runtime_changes(self):
         tasks = yaml.safe_load((TASKS / "guest-ready.yml").read_text())
         names = ["Inspect separately prepared application paths", "Require the prepared path type before runtime changes"]
-        source = [next(task for task in tasks if task["name"] == name) for name in names]
+        source = [task for task in tasks if task.get("name") in names]
+        self.assertEqual([task["name"] for task in source], names)
         for missing in ("ha-startup/mdns-route.sh", "node-red/config/settings.js"):
             with (
                 self.subTest(missing=missing),
