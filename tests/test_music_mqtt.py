@@ -119,7 +119,7 @@ class MusicMQTTTests(unittest.TestCase):
         self.assertFalse({'--insecure','-k','--location','-L'}&set(route['argv']))
         play=yaml.safe_load((FRAMEWORK/'proxmox/applications/ansible/reconcile.yml').read_text())[0]
         health=next(task for task in play['tasks'] if task.get('loop')=='{{ app.health_checks }}')
-        failed=Environment().compile_expression(health['failed_when'])
+        failed=Environment(autoescape=True).compile_expression(health['failed_when'])
         for result,expected in [
             ({'rc':0,'stdout':'{"server_version":"fixture-version"}'},False),
             ({'rc':60,'stdout':'{"server_version":"fixture-version"}'},True),

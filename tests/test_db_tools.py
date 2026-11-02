@@ -92,7 +92,7 @@ class DatabaseToolsTests(unittest.TestCase):
         self.assertFalse({"--insecure", "-k", "--location", "-L"} & set(route["argv"]))
         play = yaml.safe_load((FRAMEWORK / "proxmox/applications/ansible/reconcile.yml").read_text())[0]
         task = next(row for row in play["tasks"] if row.get("loop") == "{{ app.health_checks }}")
-        failed = Environment().compile_expression(task["failed_when"])
+        failed = Environment(autoescape=True).compile_expression(task["failed_when"])
         for result, expected in (({"rc": 0, "stdout": "302"}, False),
                                  ({"rc": 60, "stdout": "302"}, True),
                                  ({"rc": 22, "stdout": "404"}, True),
