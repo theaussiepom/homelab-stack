@@ -20,6 +20,16 @@ class WinetStackTests(unittest.TestCase):
     def packet(self, overlay=None):
         return compiler.compile_stack(ROOT, overlay or compiler.read(ROOT / "site.example.json"), [])["zigbee2mqtt"]
 
+    def test_tagged_radio_interfaces_use_the_declared_physical_uplinks(self):
+        # Reference host inventory: management and service/IoT trunks are separate.
+        carried = {"vmbr0": {15, 25}, "vmbr1": {20, 30, 40, 100, 107}}
+        cfg = json.loads(self.packet()["files"]["site.json"])
+        for nic in cfg["guest"]["interfaces"]:
+            if nic.get("vlan") is not None:
+                self.assertIn(nic["vlan"], carried[nic["bridge"]])
+        self.assertEqual([n["bridge"] for n in cfg["guest"]["interfaces"]],
+                         ["vmbr0", "vmbr30", "vmbr1"])
+
     def test_one_guest_two_services_with_exact_public_image_and_private_configuration(self):
         packet = self.packet()
         cfg = json.loads(packet["files"]["site.json"])
@@ -91,7 +101,7 @@ class WinetStackTests(unittest.TestCase):
     def test_iot_interface_has_no_gateway_or_inbound_grant(self):
         cfg = json.loads(self.packet()["files"]["site.json"])
         iot = cfg["guest"]["interfaces"][2]
-        self.assertEqual(iot, {"role": "iot", "bridge": "vmbr0", "vlan": 107,
+        self.assertEqual(iot, {"role": "iot", "bridge": "vmbr1", "vlan": 107,
                                "mac": "02:00:0a:02:00:01", "ipv4": "198.19.107.246/24", "ipv6": "manual"})
         self.assertEqual(sum(bool(n.get("gateway")) for n in cfg["guest"]["interfaces"]), 1)
         rule = next(r for r in cfg["guest"]["rules"] if r["comment"] == "WiNet encrypted inverter telemetry only")

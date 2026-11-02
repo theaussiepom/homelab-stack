@@ -38,11 +38,18 @@ rule does not grant API permission to attach its network. Preserve every failed
 attempt and hold if this permission is missing; any fresh CD needs explicit
 review and adoption of the exact failure evidence, rather than an automatic retry.
 
+The reference host carries VLAN107 on `vmbr1` through its service/IoT uplink;
+`vmbr0` is the management uplink and carries only VLANs15/25. Match the physical
+bridge VLAN membership before adoption. A guest firewall declaration also needs
+active cluster firewall enforcement to take effect. Ordinary guest CD does not
+enable that cluster-wide control, and configured rules alone are not evidence
+that traffic is filtered.
+
 The pinned upstream `getProperties.ts` HTTPS request and `winetHandler.ts` WSS
 client both set `rejectUnauthorized: false`. `ssl: true` encrypts those initial
 connections but does not authenticate the inverter certificate. A device able to
 intercept traffic on the IoT link could obtain the configured inverter credentials.
-The upstream WS fallback uses TCP8082, which this IoT firewall does not permit.
+The upstream WS fallback uses TCP8082, which the declared IoT policy does not permit.
 The operator explicitly selected the unmodified upstream image and deferred the
 former custom certificate work for this integration; its private adoption record
 retains that decision. This policy does not change Proxmox, UDM, browser TLS or a

@@ -37,7 +37,7 @@
         },
         {
           "role": "iot",
-          "bridge": "vmbr0",
+          "bridge": "vmbr1",
           "vlan": 107,
           "mac": "${mac.zigbee.2}",
           "ipv4": "${addresses.zigbee_iot}/24",
