@@ -139,28 +139,6 @@
           "expect": "\"cloudbeaver\": \"passed\""
         },
         {
-          "argv": [
-            "curl",
-            "--retry",
-            "30",
-            "--retry-delay",
-            "2",
-            "--retry-all-errors",
-            "--retry-max-time",
-            "180",
-            "--fail",
-            "--silent",
-            "--show-error",
-            "--max-time",
-            "15",
-            "--resolve",
-            "${domains.identity}:443:${addresses.ingress_frontend}",
-            "https://${domains.identity}/application/o/pgadmin4/.well-known/openid-configuration"
-          ],
-          "expect": "authorization_endpoint",
-          "name": "Verified HTTPS identity discovery"
-        },
-        {
           "name": "CloudBeaver HTTPS sign-in redirect",
           "argv": [
             "curl",
@@ -211,28 +189,6 @@
               "/opt/homelab-app/runtime/cloudbeaver-public.json"
             ],
             "expect": "\"cloudbeaver\": \"passed\""
-          },
-          {
-            "argv": [
-              "curl",
-              "--retry",
-              "30",
-              "--retry-delay",
-              "2",
-              "--retry-all-errors",
-              "--retry-max-time",
-              "180",
-              "--fail",
-              "--silent",
-              "--show-error",
-              "--max-time",
-              "15",
-              "--resolve",
-              "${domains.identity}:443:${addresses.ingress_frontend}",
-              "https://${domains.identity}/application/o/pgadmin4/.well-known/openid-configuration"
-            ],
-            "expect": "authorization_endpoint",
-            "name": "Verified HTTPS identity discovery"
           },
           {
             "name": "CloudBeaver HTTPS sign-in redirect",
@@ -294,6 +250,15 @@
       "user_claim": "preferred_username",
       "secret_files": {
         "oauth_client_secret": "${inputs}/oauth-client-secret"
+      },
+      "oidc_endpoints": {
+        "authorization_url": "${identity.db_tools_authorization_url}",
+        "token_url": "${identity.db_tools_token_url}",
+        "userinfo_url": "${identity.db_tools_userinfo_url}",
+        "jwks_url": "${identity.db_tools_jwks_url}",
+        "signing_algorithms": [
+          "RS256"
+        ]
       }
     },
     "guest_memory_mib": 2048,

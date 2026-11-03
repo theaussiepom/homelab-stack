@@ -64,7 +64,7 @@ class CustodySelectionTests(unittest.TestCase):
     def test_selected_proofs_are_literal_and_disabled_members_retain_complete_source(self):
         """Compile actual profiles with both synthetic groups and valid exclusions."""
         overlay = self.custody_overlay()
-        for disabled in ([], ["db-tools"], ["identity", "db-tools"], ["identity", "db-tools", "automation"], ["identity", "db-tools", "automation", "zigbee2mqtt", "music"]):
+        for disabled in ([], ["db-tools"], ["identity"], ["identity", "db-tools"], ["identity", "db-tools", "automation"], ["identity", "db-tools", "automation", "zigbee2mqtt", "music"]):
             with self.subTest(disabled=disabled):
                 packets = c.compile_stack(ROOT, overlay, disabled)
                 self.assertEqual(len(packets), 13)
@@ -165,6 +165,7 @@ class CustodySelectionTests(unittest.TestCase):
         for disabled in (
             [],
             ["db-tools"],
+            ["identity"],
             ["identity", "db-tools"],
             ["identity", "db-tools", "automation"],
             ["identity", "db-tools", "automation", "zigbee2mqtt", "music"],
@@ -186,8 +187,9 @@ class CustodySelectionTests(unittest.TestCase):
     def test_exclusions_cannot_leave_actual_consumers_without_prerequisites(self):
         """Group membership must not create a bypass of the existing guest DAG."""
         for disabled in (
-            ["identity"],
-            ["identity", "automation"],
+            ["postgresql"],
+            ["mariadb"],
+            ["ingress"],
             ["dns"],
         ):
             with self.subTest(disabled=disabled), self.assertRaisesRegex(

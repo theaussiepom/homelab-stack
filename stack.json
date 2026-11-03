@@ -68,8 +68,7 @@
       "depends_on": [
         "postgresql",
         "mariadb",
-        "ingress",
-        "identity"
+        "ingress"
       ],
       "prerequisites": [
         "state-and-trust-reviewed",
@@ -405,6 +404,10 @@
     "hostnames.postgresql": "string",
     "hostnames.postgresql_database": "string",
     "hostnames.zigbee2mqtt": "string",
+    "identity.db_tools_authorization_url": "string",
+    "identity.db_tools_jwks_url": "string",
+    "identity.db_tools_token_url": "string",
+    "identity.db_tools_userinfo_url": "string",
     "identity.discovery_token": "string",
     "identity.node_red_client": "string",
     "identity.pgadmin_client": "string",

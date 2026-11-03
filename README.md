@@ -20,8 +20,7 @@ flowchart TD
   Ingress --> Auth
   PG --> Admin[CloudBeaver]
   Maria --> Admin
-  Auth --> Gateway[Authentication gateway]
-  Ingress --> Gateway
+  Ingress --> Gateway[Authentication gateway]
   Gateway --> Admin
   DNS --> Broker[MQTT]
   Broker --> Auto[Home Automation: Home Assistant then Node-RED]

@@ -63,7 +63,8 @@ class SiteBindingTests(unittest.TestCase):
         baseline = c.read(ROOT/'site.example.json')
         for key, invalid in [('vmids.music', True), ('vlans.home', '100'),
                              ('networks.music_clients', '198.18.0.0/24'),
-                             ('ssh.public_keys', []), ('hostnames.music', 207)]:
+                             ('ssh.public_keys', []), ('hostnames.music', 207),
+                             ('identity.db_tools_jwks_url', None)]:
             for omit in (True,False):
                 changed = copy.deepcopy(baseline)
                 if omit:

@@ -63,7 +63,11 @@ The private site supplies genuine prerequisites and reviewed input bindings.
 Public compilation, synthetic tests and a successful source review establish the
 source contract; target deployment and browser/database acceptance are recorded
 separately. `db-tools` remains an independently disableable leaf. When selected,
-it depends on both database guests, ingress and identity.
+it depends on both database guests and ingress. Identity availability is required
+for interactive sign-in, not for deploying the guest. The profile supplies explicit
+consumer-bound authorization, token, userinfo and JWKS URLs with RS256, avoiding
+startup discovery. Issuer, audience, signature/JWKS, nonce, PKCE and verified-email
+checks remain enforced; no account or authentication policy is changed.
 
 The profile increases guest memory to 2048 MiB and retains its one CPU, 4 GiB root
 and 2 GiB data volume. CloudBeaver's 1536 MiB container limit includes a 1024 MiB
@@ -86,6 +90,8 @@ timer. Curl can finish an already started request after its retry timer expires,
 so the final transfer/backoff can extend that window slightly. It must still
 validate the certificate and receive 302 without following redirects. The
 existing 45 minute application-step cap remains; this is bounded tolerance, not
-a guarantee that every initial installation fits that budget. Identity discovery,
-Music health and other guest checks retain their existing limits. Source tests
+a guarantee that every initial installation fits that budget. CloudBeaver retains
+its local closed-setup/gateway readiness and the canonical HTTPS redirect check; it
+does not wait for a live identity-discovery request. Music health and other guest
+checks retain their existing limits. Source tests
 remain separate from certificate and application acceptance after deployment.

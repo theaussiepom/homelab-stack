@@ -60,7 +60,7 @@ not enable an excluded guest or turn the historical group into an atomic job.
 | --- | --- |
 | None | All thirteen base guests enabled |
 | db-tools | Valid leaf exclusion; PostgreSQL and Identity remain enabled |
-| Identity alone, or Identity with Automation while db-tools stays active | Invalid: db-tools still requires Identity |
+| Identity alone, or Identity with Automation while db-tools stays active | Valid; db-tools still requires PostgreSQL, MariaDB and ingress |
 | Identity with db-tools | Valid; Automation and Music have independent prerequisites |
 | Identity, db-tools and Automation | Valid; Music still requires DNS and Traefik |
 | PegaProx or Bitwarden alone | Valid unrelated leaf exclusion |

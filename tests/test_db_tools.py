@@ -1,6 +1,7 @@
 """Exercise database-tool network paths without contacting a guest or database."""
 
 import importlib.util
+import copy
 import json
 import os
 import re
@@ -18,6 +19,7 @@ spec.loader.exec_module(c)
 sys.path.insert(0, str(FRAMEWORK / "proxmox/applications"))
 import render
 import discovery
+import cloudbeaver
 
 
 class DatabaseToolsTests(unittest.TestCase):
@@ -122,7 +124,8 @@ class DatabaseToolsTests(unittest.TestCase):
         self.assertFalse({"--insecure", "-k", "--location", "-L"} & set(argv))
         self.assertIn("--fail", argv)
         self.assertEqual(checks[-1]["expect"], "302")
-        for unchanged in [checks[1], json.loads(packets["music"]["files"]["site.json"])["app"]["health_checks"][-1]]:
+        self.assertEqual(len(checks), 2)
+        for unchanged in [json.loads(packets["music"]["files"]["site.json"])["app"]["health_checks"][-1]]:
             original = unchanged["argv"]
             self.assertEqual(original[original.index("--retry") + 1], "30")
             self.assertEqual(original[original.index("--retry-max-time") + 1], "180")
@@ -265,12 +268,68 @@ class DatabaseToolsTests(unittest.TestCase):
             with self.subTest(field=field), self.assertRaisesRegex(ValueError, "network identity"):
                 self.configurations(overlay)
 
+    def test_explicit_endpoints_avoid_startup_discovery_and_preserve_authentication_controls(self):
+        for example in ('site.example.json', 'examples/site.second.json'):
+            overlay = c.read(ROOT / example)
+            packet = c.compile_stack(ROOT, overlay, [])['db-tools']
+            stack = json.loads(packet['files']['stack.json'])
+            cfg = json.loads(packet['files']['site.json'])
+            selected = stack['foundation']
+            endpoints = selected['oidc_endpoints']
+            for field in ('authorization', 'token', 'userinfo', 'jwks'):
+                self.assertEqual(endpoints[field + '_url'], overlay['values']['identity.db_tools_' + field + '_url'])
+            self.assertEqual(endpoints['signing_algorithms'], ['RS256'])
+            # Compare only the intended explicit-metadata delta to the unchanged
+            # discovery branch, with clearly invented in-memory key material.
+            secret = b'synthetic fixture material ' * 2
+            before = copy.deepcopy(selected)
+            before.pop('oidc_endpoints')
+            old_alpha, old_options = cloudbeaver.gateway(stack['cloudbeaver'], before, secret)
+            alpha, options = cloudbeaver.gateway(stack['cloudbeaver'], selected, secret)
+            provider = alpha['providers'][0]
+            self.assertEqual(provider['oidcConfig']['skipDiscovery'], True)
+            self.assertEqual(provider['oidcConfig']['issuerURL'], selected['oidc_issuer'])
+            self.assertEqual(provider['oidcConfig']['jwksURL'], endpoints['jwks_url'])
+            self.assertEqual(provider['oidcConfig']['enabledSigningAlgs'], ['RS256'])
+            self.assertIs(provider['oidcConfig']['insecureSkipNonce'], False)
+            self.assertEqual(provider['code_challenge_method'], 'S256')
+            self.assertEqual(provider['scope'], 'openid email profile')
+            for configured, field in [('loginURL','authorization'), ('redeemURL','token'), ('profileURL','userinfo')]:
+                self.assertEqual(provider.pop(configured), endpoints[field + '_url'])
+            for key in ('skipDiscovery','jwksURL','enabledSigningAlgs'):
+                provider['oidcConfig'].pop(key)
+            self.assertEqual(alpha, old_alpha)
+            self.assertEqual(options, old_options)
+            checks = cfg['app']['health_checks']
+            self.assertEqual(checks, cfg['app']['service_health_checks']['cloudbeaver'])
+            self.assertEqual(len(checks), 2)
+            self.assertIn('cloudbeaver-runtime.py', checks[0]['argv'][1])
+            self.assertEqual(checks[-1]['expect'], '302')
+            self.assertNotIn('.well-known/openid-configuration', json.dumps(checks))
+            self.assertNotIn(overlay['values']['domains.identity'], json.dumps(checks))
+
+    def test_identity_can_be_disabled_for_first_install_and_updates_without_changing_cloud_packets(self):
+        overlay = c.read(ROOT / 'site.example.json')
+        baseline = c.compile_stack(ROOT, overlay, [])
+        for disabled in (['identity'], ['identity','automation']):
+            with self.subTest(disabled=disabled):
+                selected = c.compile_stack(ROOT, overlay, disabled)
+                self.assertFalse(selected['identity']['enabled'])
+                self.assertTrue(selected['db-tools']['enabled'])
+                self.assertEqual(selected['db-tools']['files'], baseline['db-tools']['files'])
+                self.assertTrue(selected['postgresql']['enabled'])
+                self.assertTrue(selected['mariadb']['enabled'])
+                self.assertTrue(selected['ingress']['enabled'])
+        for prerequisite in ('postgresql','mariadb','ingress'):
+            with self.subTest(prerequisite=prerequisite), self.assertRaisesRegex(ValueError, 'prerequisite'):
+                c.compile_stack(ROOT, overlay, [prerequisite])
+
     def test_tools_remain_an_independent_leaf_with_both_database_dependencies(self):
         manifest = c.manifest(ROOT)
-        self.assertEqual(manifest["guests"]["db-tools"]["depends_on"], ["postgresql", "mariadb", "ingress", "identity"])
+        self.assertEqual(manifest["guests"]["db-tools"]["depends_on"], ["postgresql", "mariadb", "ingress"])
         workflow = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
         self.assertEqual(workflow["jobs"]["db-tools"]["name"], "CloudBeaver")
-        self.assertEqual(workflow["jobs"]["db-tools"]["needs"], ["selection", "postgresql", "mariadb", "ingress", "identity"])
+        self.assertEqual(workflow["jobs"]["db-tools"]["needs"], ["selection", "postgresql", "mariadb", "ingress"])
         packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), ["db-tools"])
         self.assertFalse(packets["db-tools"]["enabled"])
         self.assertTrue(packets["mariadb"]["enabled"])

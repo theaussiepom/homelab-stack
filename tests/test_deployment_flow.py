@@ -14,7 +14,7 @@ spec.loader.exec_module(c)
 EXPECTED = {
     'dns': [], 'ingress': ['dns'], 'postgresql': ['dns'], 'mariadb': ['dns'],
     'influxdb': ['dns'], 'identity': ['postgresql','ingress'],
-    'db-tools': ['postgresql','mariadb','ingress','identity'],
+    'db-tools': ['postgresql','mariadb','ingress'],
     'automation': ['mariadb','influxdb','mqtt'], 'bitwarden': ['ingress','mariadb'],
     'pegaprox': ['dns'], 'zigbee2mqtt': ['mqtt'], 'monitoring': ['postgresql','ingress'],
     'music': ['dns','ingress'], 'mqtt': ['dns'],
@@ -40,9 +40,12 @@ class DeploymentFlowTests(unittest.TestCase):
         self.assertIn('music',ready)
         self.assertNotIn('db-tools',ready)
         sorter.done('postgresql')
-        self.assertIn('identity',sorter.get_ready())
+        ready=set(sorter.get_ready())
+        self.assertIn('identity',ready)
+        self.assertIn('db-tools',ready)
+        # CloudBeaver and Authentik can now start in the same first-install wave.
+        sorter.done('db-tools')
         sorter.done('identity')
-        self.assertIn('db-tools',sorter.get_ready())
 
     def test_automation_selection_without_identity_ingress_keeps_runtime_unchanged(self):
         overlay=c.read(ROOT/'site.example.json')
@@ -58,12 +61,13 @@ class DeploymentFlowTests(unittest.TestCase):
             with self.subTest(prerequisite=prerequisite),self.assertRaisesRegex(ValueError,'prerequisite'):
                 c.compile_stack(ROOT,overlay,sorted(set(disabled)|{prerequisite}))
 
-    def test_cloud_still_requires_identity_and_both_database_guests(self):
+    def test_cloud_keeps_database_and_ingress_dependencies_without_identity(self):
         overlay=c.read(ROOT/'site.example.json')
         for prerequisite in EXPECTED['db-tools']:
             with self.subTest(prerequisite=prerequisite),self.assertRaisesRegex(ValueError,'prerequisite'):
                 c.compile_stack(ROOT,overlay,[prerequisite])
-        selected=c.compile_stack(ROOT,overlay,['identity','db-tools'])
+        selected=c.compile_stack(ROOT,overlay,['identity'])
+        self.assertTrue(selected['db-tools']['enabled'])
         self.assertTrue(selected['automation']['enabled'])
         self.assertTrue(selected['music']['enabled'])
 
