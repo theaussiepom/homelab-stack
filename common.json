@@ -1,19 +1,17 @@
 {
   "site": {
-    "node": "example-pve",
+    "node": "${site.node}",
     "api_endpoint": "https://${addresses.pve}:8006/"
   },
   "paths": {
-    "api_token": "/var/lib/homelab-inputs/pve-token",
-    "backup_directory": "/srv/homelab-backups/applications",
-    "backup_mount": "/srv/homelab-backups",
-    "backup_source": "nas.example.invalid:/backups/homelab",
-    "ca_file": "/usr/local/share/ca-certificates/homelab-pve.crt",
-    "known_hosts": "/var/lib/homelab-inputs/known_hosts",
-    "private_key": "/home/homelab-runner/.ssh/applications",
-    "state_root": "/var/lib/homelab-applications"
+    "api_token": "${paths.api_token}",
+    "backup_directory": "${paths.backup_directory}",
+    "backup_mount": "${paths.backup_mount}",
+    "backup_source": "${paths.backup_source}",
+    "ca_file": "${paths.ca_file}",
+    "known_hosts": "${paths.known_hosts}",
+    "private_key": "${paths.private_key}",
+    "state_root": "${paths.state_root}"
   },
-  "ssh_public_keys": [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-  ]
+  "ssh_public_keys": "${ssh.public_keys}"
 }

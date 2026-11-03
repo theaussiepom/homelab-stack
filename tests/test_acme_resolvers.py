@@ -29,7 +29,7 @@ class AcmeResolverTests(unittest.TestCase):
         packet = self.packet()
         cfg = json.loads(packet["files"]["site.json"])
         stack = json.loads(packet["files"]["stack.json"])
-        values = compiler.manifest(ROOT)["values"]
+        values = compiler.read(ROOT / "site.example.json")["values"]
         self.assertEqual(stack["foundation"]["acme_dns_resolvers"], ["1.1.1.1:53", "1.0.0.1:53"])
         self.assertEqual(cfg["guest"]["dns_servers"], [values["addresses.dns"], values["addresses.fallback_dns"]])
         rules = cfg["guest"]["rules"]
@@ -43,7 +43,7 @@ class AcmeResolverTests(unittest.TestCase):
     def test_static_tls_render_changes_only_acme_resolvers(self):
         stack = json.loads(self.packet()["files"]["stack.json"])
         previous = copy.deepcopy(stack)
-        previous["foundation"]["acme_dns_resolvers"] = [compiler.manifest(ROOT)["values"]["addresses.dns"] + ":53"]
+        previous["foundation"]["acme_dns_resolvers"] = [compiler.read(ROOT / "site.example.json")["values"]["addresses.dns"] + ":53"]
         with patch.object(foundation, "read_private", return_value="invented-source-fixture"):
             current_files = {r["path"]: r for r in foundation.files(stack)}
             previous_files = {r["path"]: r for r in foundation.files(previous)}

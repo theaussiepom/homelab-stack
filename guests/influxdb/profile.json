@@ -7,22 +7,22 @@
         "${addresses.dns}",
         "${addresses.fallback_dns}"
       ],
-      "hostname": "influxdb",
+      "hostname": "${hostnames.influxdb}",
       "interfaces": [
         {
-          "bridge": "vmbr0",
+          "bridge": "${bridges.management}",
           "gateway": "${gateways.management}",
-          "ipv4": "${addresses.influxdb_management}/24",
+          "ipv4": "${addresses.influxdb_management}/${prefixes.management}",
           "ipv6": "manual",
           "mac": "${mac.influxdb.0}",
-          "vlan": 25
+          "vlan": "${vlans.management}"
         },
         {
-          "bridge": "vmbr33",
-          "ipv4": "${addresses.influxdb_backend}/24",
+          "bridge": "${bridges.influxdb}",
+          "ipv4": "${addresses.influxdb_backend}/${prefixes.influxdb}",
           "ipv6": "manual",
           "mac": "${mac.influxdb.1}",
-          "vlan": null
+          "vlan": "${vlans.influxdb}"
         }
       ],
       "keyctl": false,
@@ -91,9 +91,9 @@
       ],
       "start_on_boot": true,
       "started": true,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
-      "vmid": 204,
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
+      "vmid": "${vmids.influxdb}",
       "volumes": {
         "database": {
           "path": "/var/lib/influxdb",
@@ -150,7 +150,7 @@
           "name": "Backend TCP listener"
         }
       ],
-      "hostname": "influxdb",
+      "hostname": "${hostnames.influxdb}",
       "kind": "influxdb",
       "mac": "${mac.influxdb.0}",
       "memory_mib": 2048,
@@ -166,7 +166,7 @@
           "source": "Types: deb\nURIs: https://repos.influxdata.com/debian\nSuites: stable\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/influxdata.asc\n"
         }
       ],
-      "vmid": 204,
+      "vmid": "${vmids.influxdb}",
       "exclusive_writer_confirmed": false,
       "service_health_checks": {
         "influxdb": [

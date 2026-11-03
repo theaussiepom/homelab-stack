@@ -175,3 +175,18 @@ changes before rollout.
 This is stack schema `homelab-stack-v2` and site schema `homelab-site-v3`. Old
 per-app discovery routes and the application-specific browser-route contract are
 removed. There is no compatibility translation.
+
+## Optional proxy dashboard
+
+The base composition keeps the Traefik dashboard disabled. To expose it, merge
+`recipes/proxy-dashboard.json` into the consuming site's overlay and supply
+`domains.proxy`. The recipe requires the site's existing `authentik-forward`
+middleware, using the fixed Authentik outpost endpoint. It does not create an
+identity provider or credentials.
+
+The route uses normal HTTPS and authentication before the dashboard root
+redirect. Traefik's internal `api@internal` service is reached through the same
+protected router, without publishing an administrative port or enabling
+`api.insecure`. The recipe adds no client-network restriction. Other routes keep
+their independently selected policies. The consumer verifies DNS, certificates,
+redirects and sign-in after deployment.

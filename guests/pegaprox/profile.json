@@ -1,13 +1,13 @@
 {
   "config": {
     "guest": {
-      "vmid": 214,
-      "hostname": "pegaprox",
+      "vmid": "${vmids.pegaprox}",
+      "hostname": "${hostnames.pegaprox}",
       "cpu": 2,
       "memory_mib": 2048,
       "root_gib": 8,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
       "started": true,
       "start_on_boot": true,
       "boot_order": 60,
@@ -19,10 +19,10 @@
       ],
       "interfaces": [
         {
-          "bridge": "vmbr0",
-          "vlan": 25,
+          "bridge": "${bridges.management}",
+          "vlan": "${vlans.management}",
           "mac": "${mac.pegaprox.0}",
-          "ipv4": "${addresses.pegaprox_management}/24",
+          "ipv4": "${addresses.pegaprox_management}/${prefixes.management}",
           "gateway": "${gateways.management}",
           "ipv6": "manual"
         }
@@ -83,8 +83,8 @@
     },
     "app": {
       "kind": "pegaprox",
-      "vmid": 214,
-      "hostname": "pegaprox",
+      "vmid": "${vmids.pegaprox}",
+      "hostname": "${hostnames.pegaprox}",
       "memory_mib": 2048,
       "address": "${addresses.pegaprox_management}",
       "mac": "${mac.pegaprox.0}",

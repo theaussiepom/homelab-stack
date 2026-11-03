@@ -18,8 +18,8 @@ This selection is provenance, not a readiness or exclusive-writer acceptance.
 
 ## Private proof inputs
 
-The selected [framework contract](https://github.com/theaussiepom/homelab/blob/765e2b83f84a595674165f4d0728d52bed313e81/docs/coordinated-custody.md)
-defines the closed `homelab-coordinated-custody-v1` selection. Supply it under
+Read `docs/coordinated-custody.md` in the exact selected framework revision; the
+workflow reference is the version authority. That contract defines the closed `homelab-coordinated-custody-v1` selection. Supply it under
 `guests.<member>.config.coordinated_custody`, and set that member's
 `config.paths.coordinated_custody_inputs` to `${inputs}`. The compiler binds this
 to the exact guest packet directory; all members still carry the same selection.
@@ -42,12 +42,11 @@ are never interpolated: even literal `${inputs}` and central-value tokens stay
 unchanged. Ordinary runtime configuration retains its existing substitution.
 Do not reconstruct or normalize retained JSON to make a digest match.
 
-Public values default to inert `{}` text and public profiles select no group.
-Those defaults neither represent retained evidence nor grant admission. The private
-site must override them with the exact retained catalogue and each group's
+The synthetic examples supply inert `{}` proof text; reusable profiles select no
+group. These examples neither represent retained evidence nor grant admission.
+The consumer must replace them with the exact retained catalogue and each group's
 acceptance proof, supply every member/record/anchor binding required by the closed
-schema, and retain all prerequisite gates. The public overlay example remains
-empty. Tests construct invented selections solely to check source compilation;
+schema, and retain all prerequisite gates. The synthetic overlay has no accepted prerequisites. Tests construct invented selections solely to check source compilation;
 they do not qualify a NAS mount, retained state or real commissioning record.
 
 ## Configured provenance and enabled guests
@@ -61,9 +60,9 @@ not enable an excluded guest or turn the historical group into an atomic job.
 | --- | --- |
 | None | All thirteen base guests enabled |
 | db-tools | Valid leaf exclusion; PostgreSQL and Identity remain enabled |
-| Identity alone, or Identity with db-tools | Invalid: Automation still needs Identity |
-| Identity with Automation, leaving db-tools or Music active | Invalid: an active consumer lacks its prerequisite |
-| Identity, db-tools, Automation and Music | Valid; Radios retains its independent MQTT dependency and all other guests retain their normal execution |
+| Identity alone, or Identity with Automation while db-tools stays active | Invalid: db-tools still requires Identity |
+| Identity with db-tools | Valid; Automation and Music have independent prerequisites |
+| Identity, db-tools and Automation | Valid; Music still requires DNS and Traefik |
 | PegaProx or Bitwarden alone | Valid unrelated leaf exclusion |
 | DNS with consumers active | Invalid prerequisite exclusion |
 

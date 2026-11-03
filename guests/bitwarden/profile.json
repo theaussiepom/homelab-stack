@@ -1,13 +1,13 @@
 {
   "config": {
     "guest": {
-      "vmid": 215,
-      "hostname": "bitwarden",
+      "vmid": "${vmids.bitwarden}",
+      "hostname": "${hostnames.bitwarden}",
       "cpu": 1,
       "memory_mib": 2048,
       "root_gib": 8,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
       "started": true,
       "start_on_boot": true,
       "boot_order": 40,
@@ -19,25 +19,25 @@
       ],
       "interfaces": [
         {
-          "bridge": "vmbr0",
-          "vlan": 25,
+          "bridge": "${bridges.management}",
+          "vlan": "${vlans.management}",
           "mac": "${mac.bitwarden.0}",
-          "ipv4": "${addresses.bitwarden_management}/24",
+          "ipv4": "${addresses.bitwarden_management}/${prefixes.management}",
           "ipv6": "manual",
           "gateway": "${gateways.management}"
         },
         {
-          "bridge": "vmbr30",
-          "vlan": null,
+          "bridge": "${bridges.http_backend}",
+          "vlan": "${vlans.http_backend}",
           "mac": "${mac.bitwarden.1}",
-          "ipv4": "${addresses.bitwarden_backend}/24",
+          "ipv4": "${addresses.bitwarden_backend}/${prefixes.http_backend}",
           "ipv6": "manual"
         },
         {
-          "bridge": "vmbr32",
-          "vlan": null,
+          "bridge": "${bridges.mariadb}",
+          "vlan": "${vlans.mariadb}",
           "mac": "${mac.bitwarden.2}",
-          "ipv4": "${addresses.bitwarden_mariadb}/24",
+          "ipv4": "${addresses.bitwarden_mariadb}/${prefixes.mariadb}",
           "ipv6": "manual"
         }
       ],
@@ -117,8 +117,8 @@
     },
     "app": {
       "kind": "bitwarden",
-      "vmid": 215,
-      "hostname": "bitwarden",
+      "vmid": "${vmids.bitwarden}",
+      "hostname": "${hostnames.bitwarden}",
       "memory_mib": 2048,
       "address": "${addresses.bitwarden_management}",
       "mac": "${mac.bitwarden.0}",
@@ -181,7 +181,7 @@
   "stack": {
     "kind": "bitwarden",
     "guest_memory_mib": 2048,
-    "timezone": "Australia/Brisbane",
+    "timezone": "${timezones.applications}",
     "bitwarden": {
       "schema": "homelab-bitwarden-runtime-v1",
       "bind_address": "${addresses.bitwarden_backend}",

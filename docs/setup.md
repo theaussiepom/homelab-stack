@@ -5,22 +5,20 @@ execution additionally needs the already admitted Linux runner with OpenTofu,
 Ansible, trusted PVE CA, SSH known-hosts, shared persistent state and NAS recovery
 mount. Do not run the phase runner on your laptop to test source changes.
 
-DNS guest 6101 keeps DHCP allocation: `ipv4` is `dhcp`, `gateway` is null, and
-`ipv4_endpoint` records the independently qualified assigned address and prefix.
-The public `${addresses.dns}/24` endpoint is a synthetic fixture. The private site
-must supply its qualified endpoint; this metadata does not request a static lease
-or change DHCP. It keeps SSH, backend bindings and identity checks concrete.
-Static NICs keep their existing `ipv4` CIDR without `ipv4_endpoint`.
+The DNS profile uses DHCP with a separately qualified `ipv4_endpoint`. Its address
+and prefix are explicit consumer bindings; they do not create a static lease or
+change DHCP. Static NICs use their bound address/prefix without `ipv4_endpoint`.
 
 1. Clone the stack and selected framework into sibling folders. Read the one
    framework SHA from `.github/workflows/phase.yml`, then check out that SHA in
    `../homelab`. A fork can change the workflow owner and revision deliberately.
 2. Create a private site from `site.example.json`. Keep its actual `site.json`
-   private and all credential values outside Git. Supply central values and only
-   the overrides that differ. Lists replace whole lists.
-3. Review all guest NICs, volumes, UID/GID and application requirements. The public
-   network addresses are benchmark examples. The database backend bridges vmbr31,
-   vmbr32 and vmbr33 have no uplink, host IP, gateway or UniFi VLAN by design.
+   private and all credential values outside Git. Explicitly supply every
+   `required_site_bindings` value; reusable profiles provide no allocation
+   fallback. Keep only other overrides that differ. Lists replace whole lists.
+3. Review all guest NICs, volumes, UID/GID and application requirements. The separate synthetic
+   sites exercise different allocations. Consumers bind each logical backend
+   network to an appropriate bridge, VLAN and prefix.
    Firewall declarations do not prove host enforcement is enabled.
 4. Run source checks. These commands never use target credentials:
 
@@ -28,8 +26,10 @@ Static NICs keep their existing `ipv4` CIDR without `ipv4_endpoint`.
 python3 -m venv .venv
 . .venv/bin/activate
 python3 -m pip install -r ../homelab/requirements.lock.txt
+python3 ../homelab/tools/check_boundaries.py --mode stack --root .
 python3 ../homelab/blueprints/workflows.py --stack . --check
 python3 ../homelab/blueprints/compile.py --stack . --site site.example.json --check
+python3 ../homelab/blueprints/compile.py --stack . --site examples/site.second.json --check
 HOMELAB_FRAMEWORK=../homelab python3 -m unittest discover -s tests
 ```
 
@@ -41,15 +41,18 @@ python3 ../homelab/blueprints/workflows.py --stack .
 python3 ../homelab/blueprints/workflows.py --stack . --check
 ```
 
-This manages all sixteen composition workflows: `deploy.yml`, the fourteen permanent
-`guest-*.yml` files and `phase.yml`. Each guest workflow contains one Deploy job.
-Five settings, service and tool setup steps run once. Each logical infrastructure,
-preparation and application phase first checks bootstrap readiness, then runs its
-existing check-inputs, load-credentials and phase-deployment command in order.
-The fourteen generated guest jobs contain 59 early readiness checks and 59 logical phases
-and 177 phase command bodies. Short labels describe the actions:
-Update container, Prepare service and Deploy service, with application names for
-DNS, Home Automation and Radios; **Zabbix agent** names the selected agent phase.
+This manages all sixteen composition workflows: `deploy.yml`, the fourteen
+permanent `guest-*.yml` files and `phase.yml`. Each guest workflow contains one job
+named for that guest. Its visible steps are Setup, Infrastructure, Prepare, each
+application and Zabbix agent when selected. HA/Node-RED and Zigbee2MQTT/WiNet stay
+separate ordered application steps.
+
+The selected framework's shared Setup action selects immutable settings, services
+and tools once per guest. Its phase action repeats the existing readiness,
+input-check, credential-binding and deployment commands for every phase. Commands
+and separate credential environments remain authoritative in the framework. The
+fourteen generated jobs preserve all 59 phase-local readiness checks and logical
+phases. Consolidation changes presentation, not the validation or failure boundary.
 
 Configured runner/environment selection, Bash defaults, guest dependencies,
 private-main/disabled conditions and per-guest declared secrets are preserved.

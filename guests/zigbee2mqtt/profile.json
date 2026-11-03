@@ -1,13 +1,13 @@
 {
   "config": {
     "guest": {
-      "vmid": 209,
-      "hostname": "radios",
+      "vmid": "${vmids.zigbee2mqtt}",
+      "hostname": "${hostnames.zigbee2mqtt}",
       "cpu": 2,
       "memory_mib": 1024,
       "root_gib": 8,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
       "started": true,
       "start_on_boot": true,
       "boot_order": 70,
@@ -20,27 +20,27 @@
       "interfaces": [
         {
           "role": "management",
-          "bridge": "vmbr0",
-          "vlan": 25,
+          "bridge": "${bridges.management}",
+          "vlan": "${vlans.management}",
           "mac": "${mac.zigbee.0}",
-          "ipv4": "${addresses.zigbee_management}/24",
+          "ipv4": "${addresses.zigbee_management}/${prefixes.management}",
           "ipv6": "manual",
           "gateway": "${gateways.management}"
         },
         {
           "role": "backend",
-          "bridge": "vmbr30",
-          "vlan": null,
+          "bridge": "${bridges.http_backend}",
+          "vlan": "${vlans.http_backend}",
           "mac": "${mac.zigbee.1}",
-          "ipv4": "${addresses.zigbee_backend}/24",
+          "ipv4": "${addresses.zigbee_backend}/${prefixes.http_backend}",
           "ipv6": "manual"
         },
         {
           "role": "iot",
-          "bridge": "vmbr1",
-          "vlan": 107,
+          "bridge": "${bridges.iot}",
+          "vlan": "${vlans.iot}",
           "mac": "${mac.zigbee.2}",
-          "ipv4": "${addresses.zigbee_iot}/24",
+          "ipv4": "${addresses.zigbee_iot}/${prefixes.iot}",
           "ipv6": "manual"
         }
       ],
@@ -143,8 +143,8 @@
     },
     "app": {
       "kind": "zigbee2mqtt",
-      "vmid": 209,
-      "hostname": "radios",
+      "vmid": "${vmids.zigbee2mqtt}",
+      "hostname": "${hostnames.zigbee2mqtt}",
       "memory_mib": 1024,
       "address": "${addresses.zigbee_management}",
       "mac": "${mac.zigbee.0}",
@@ -231,7 +231,7 @@
     "kind": "zigbee2mqtt",
     "data_root": "/srv/homelab/data",
     "guest_memory_mib": 1024,
-    "timezone": "Australia/Brisbane",
+    "timezone": "${timezones.applications}",
     "zigbee": {
       "adapter": "ember",
       "bind_address": "${addresses.zigbee_backend}",

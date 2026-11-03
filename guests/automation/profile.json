@@ -1,13 +1,13 @@
 {
   "config": {
     "guest": {
-      "vmid": 200,
-      "hostname": "automation",
+      "vmid": "${vmids.automation}",
+      "hostname": "${hostnames.automation}",
       "cpu": 4,
       "memory_mib": 4096,
       "root_gib": 16,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
       "started": true,
       "start_on_boot": true,
       "boot_order": 60,
@@ -19,46 +19,46 @@
       ],
       "interfaces": [
         {
-          "bridge": "vmbr0",
-          "vlan": 25,
+          "bridge": "${bridges.management}",
+          "vlan": "${vlans.management}",
           "mac": "${mac.automation.0}",
-          "ipv4": "${addresses.automation_management}/24",
+          "ipv4": "${addresses.automation_management}/${prefixes.management}",
           "ipv6": "manual",
           "gateway": "${gateways.management}"
         },
         {
-          "bridge": "vmbr30",
-          "vlan": null,
+          "bridge": "${bridges.http_backend}",
+          "vlan": "${vlans.http_backend}",
           "mac": "${mac.automation.1}",
-          "ipv4": "${addresses.automation_backend}/24",
+          "ipv4": "${addresses.automation_backend}/${prefixes.http_backend}",
           "ipv6": "manual"
         },
         {
-          "bridge": "vmbr1",
-          "vlan": 40,
+          "bridge": "${bridges.frontend}",
+          "vlan": "${vlans.frontend}",
           "mac": "${mac.automation.2}",
-          "ipv4": "${addresses.automation_frontend}/24",
+          "ipv4": "${addresses.automation_frontend}/${prefixes.frontend}",
           "ipv6": "manual"
         },
         {
-          "bridge": "vmbr1",
-          "vlan": 100,
+          "bridge": "${bridges.home}",
+          "vlan": "${vlans.home}",
           "mac": "${mac.automation.3}",
-          "ipv4": "${addresses.automation_home}/24",
+          "ipv4": "${addresses.automation_home}/${prefixes.home}",
           "ipv6": "manual"
         },
         {
-          "bridge": "vmbr32",
-          "vlan": null,
+          "bridge": "${bridges.mariadb}",
+          "vlan": "${vlans.mariadb}",
           "mac": "${mac.automation.4}",
-          "ipv4": "${addresses.automation_mariadb}/24",
+          "ipv4": "${addresses.automation_mariadb}/${prefixes.mariadb}",
           "ipv6": "manual"
         },
         {
-          "bridge": "vmbr33",
-          "vlan": null,
+          "bridge": "${bridges.influxdb}",
+          "vlan": "${vlans.influxdb}",
           "mac": "${mac.automation.5}",
-          "ipv4": "${addresses.automation_influxdb}/24",
+          "ipv4": "${addresses.automation_influxdb}/${prefixes.influxdb}",
           "ipv6": "manual"
         }
       ],
@@ -123,35 +123,35 @@
           "direction": "out",
           "proto": "tcp",
           "port": null,
-          "destination": "${networks.home}/24",
+          "destination": "${networks.home}/${prefixes.home}",
           "comment": "Existing Home and IoT device integrations"
         },
         {
           "direction": "out",
           "proto": "udp",
           "port": null,
-          "destination": "${networks.home}/24",
+          "destination": "${networks.home}/${prefixes.home}",
           "comment": "Existing Home and IoT device integrations"
         },
         {
           "direction": "out",
           "proto": "tcp",
           "port": null,
-          "destination": "${networks.iot}/24",
+          "destination": "${networks.iot}/${prefixes.iot}",
           "comment": "Existing Home and IoT device integrations"
         },
         {
           "direction": "out",
           "proto": "udp",
           "port": null,
-          "destination": "${networks.iot}/24",
+          "destination": "${networks.iot}/${prefixes.iot}",
           "comment": "Existing Home and IoT device integrations"
         },
         {
           "direction": "in",
           "proto": "tcp",
           "port": "8123,21060:21070",
-          "source": "${networks.home}/24",
+          "source": "${networks.home}/${prefixes.home}",
           "comment": "HA own login and existing eleven HomeKit bridges",
           "destination": "${addresses.automation_home}/32"
         },
@@ -159,7 +159,7 @@
           "direction": "in",
           "proto": "udp",
           "port": "5353",
-          "source": "${networks.home}/24",
+          "source": "${networks.home}/${prefixes.home}",
           "comment": "Existing Home multicast discovery",
           "destination": "224.0.0.251/32"
         },
@@ -205,8 +205,8 @@
     },
     "app": {
       "kind": "automation",
-      "vmid": 200,
-      "hostname": "automation",
+      "vmid": "${vmids.automation}",
+      "hostname": "${hostnames.automation}",
       "memory_mib": 4096,
       "address": "${addresses.automation_management}",
       "mac": "${mac.automation.0}",
@@ -264,7 +264,7 @@
       },
       "node_red_authentication": "authentik-oidc",
       "frontend_routing": {
-        "address": "${addresses.automation_frontend}/24",
+        "address": "${addresses.automation_frontend}/${prefixes.frontend}",
         "gateway": "${gateways.frontend}",
         "mac": "${mac.automation.2}"
       },
@@ -293,7 +293,7 @@
     "kind": "automation",
     "data_root": "/srv/homelab/data",
     "guest_memory_mib": 4096,
-    "timezone": "Australia/Brisbane",
+    "timezone": "${timezones.applications}",
     "node_red_oidc": {
       "identity_url": "https://${domains.identity}",
       "node_red_url": "https://${domains.node_red_alias}",

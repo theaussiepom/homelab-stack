@@ -1,14 +1,15 @@
 # Public source policy
 
-This public repository contains an executable, sanitized version of Ben's selected guest composition. Public
-source uses benchmark networks (198.18.0.0/15), example.invalid names, synthetic
-MACs and a placeholder SSH public key. Central values describe topology once.
-These example identities are not approved deployment identities.
+This public repository contains reusable guest composition and logical network
+relationships. Concrete allocations and local policy are required consumer
+bindings; reusable profiles provide no site defaults. Separate runnable examples
+use benchmark networks (198.18.0.0/15), example.invalid names, synthetic MACs and a
+placeholder SSH public key. These examples are rejected by production admission.
 
 Only declarative infrastructure shape, package selections, bounded health checks,
 resource limits, reusable app settings and public vendor keys may be ported from
-private preparation. Review each field before publishing. Replace site addresses,
-domains, PVE node, runner storage endpoints and MACs with central example values.
+private preparation. Review each field before publishing. Move site addresses, domains, node, storage endpoints and MACs to declared
+consumer bindings. Put synthetic values only in the separate examples.
 Do not copy credential values, restore receipts, backup hashes, capture paths,
 observations, application data, HA or Node-RED configuration, Zigbee state, radio
 backups or exported custom images. A path to an external secret file may be

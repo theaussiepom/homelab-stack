@@ -1,0 +1,24 @@
+{
+  "guests": {
+    "ingress": {
+      "stack": {
+        "foundation": {
+          "dashboard": true
+        }
+      }
+    }
+  },
+  "routes": {
+    "proxy": {
+      "host": "${domains.proxy}",
+      "target": {
+        "internal": "dashboard"
+      },
+      "middlewares": [
+        "security-headers",
+        "authentik-forward"
+      ],
+      "authentik_forward_auth": "authentik-forward"
+    }
+  }
+}

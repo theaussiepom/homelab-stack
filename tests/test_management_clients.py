@@ -25,14 +25,19 @@ class ManagementClientTests(unittest.TestCase):
             with self.subTest(vpn_base=vpn_base):
                 overlay = compiler.read(ROOT / "site.example.json")
                 overlay["values"]["networks.admin_vpn"] = vpn_base
+                # Access policy is now an explicit whole-list consumer binding;
+                # changing a network scalar must not silently rewrite that policy.
+                values = overlay["values"]
+                expected = [values["networks.policy_15"] + "/" + str(values["prefixes.policy_15"]),
+                            values["networks.management"] + "/" + str(values["prefixes.management"]),
+                            vpn_base + "/" + str(values["prefixes.admin_vpn"])]
+                overlay["values"]["networks.management_clients"] = expected
                 packet = compiler.compile_stack(ROOT, overlay, [])["ingress"]
                 stack = json.loads(packet["files"]["stack.json"])
                 cfg = json.loads(packet["files"]["site.json"])
                 frontend = stack["foundation"]["bind_address"]
                 shared = discovery.shared(stack["routing"])
                 policy = shared["http"]["middlewares"]["management-clients"]
-                values = compiler.manifest(ROOT)["values"]
-                expected = [values["networks.policy_15"] + "/24", values["networks.management"] + "/24", vpn_base + "/28"]
                 self.assertEqual(policy, {"ipAllowList": {"sourceRange": expected}})
                 networks = [ipaddress.IPv4Network(value) for value in policy["ipAllowList"]["sourceRange"]]
                 vpn = ipaddress.IPv4Network(vpn_base + "/28")
@@ -63,7 +68,7 @@ class ManagementClientTests(unittest.TestCase):
                 self.assertEqual(router["middlewares"], ["security-headers@file", "management-clients@file"])
                 self.assertEqual(router["entryPoints"], ["websecure"])
                 self.assertEqual(router["tls"], {"certResolver": "letsencrypt"})
-        self.assertEqual(shared["http"]["serversTransports"]["udm"], {"serverName": compiler.manifest(ROOT)["values"]["domains.udm_backend"]})
+        self.assertEqual(shared["http"]["serversTransports"]["udm"], {"serverName": compiler.read(ROOT / "site.example.json")["values"]["domains.udm_backend"]})
         self.assertEqual(shared["http"]["serversTransports"]["proxmox"], {"rootCAs": [discovery.ca_path("proxmox")]})
         self.assertNotIn("serversTransport", shared["http"]["services"]["nas"]["loadBalancer"])
         self.assertEqual(shared["http"]["middlewares"]["security-headers"], {"headers": {"contentTypeNosniff": True}})

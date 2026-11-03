@@ -7,29 +7,29 @@
         "${addresses.dns}",
         "${addresses.fallback_dns}"
       ],
-      "hostname": "zabbix",
+      "hostname": "${hostnames.monitoring}",
       "interfaces": [
         {
-          "bridge": "vmbr0",
+          "bridge": "${bridges.management}",
           "gateway": "${gateways.management}",
-          "ipv4": "${addresses.monitoring_management}/24",
+          "ipv4": "${addresses.monitoring_management}/${prefixes.management}",
           "ipv6": "manual",
           "mac": "${mac.monitoring.0}",
-          "vlan": 25
+          "vlan": "${vlans.management}"
         },
         {
-          "bridge": "vmbr31",
-          "ipv4": "${addresses.monitoring_postgresql}/24",
+          "bridge": "${bridges.postgresql}",
+          "ipv4": "${addresses.monitoring_postgresql}/${prefixes.postgresql}",
           "ipv6": "manual",
           "mac": "${mac.monitoring.1}",
-          "vlan": null
+          "vlan": "${vlans.postgresql}"
         },
         {
-          "bridge": "vmbr33",
-          "ipv4": "${addresses.monitoring_influxdb}/24",
+          "bridge": "${bridges.influxdb}",
+          "ipv4": "${addresses.monitoring_influxdb}/${prefixes.influxdb}",
           "ipv6": "manual",
           "mac": "${mac.monitoring.2}",
-          "vlan": null
+          "vlan": "${vlans.influxdb}"
         }
       ],
       "keyctl": false,
@@ -97,15 +97,15 @@
       ],
       "start_on_boot": true,
       "started": true,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
-      "vmid": 216,
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
+      "vmid": "${vmids.monitoring}",
       "volumes": {}
     },
     "app": {
       "kind": "monitoring",
-      "vmid": 216,
-      "hostname": "zabbix",
+      "vmid": "${vmids.monitoring}",
+      "hostname": "${hostnames.monitoring}",
       "address": "${addresses.monitoring_management}",
       "mac": "${mac.monitoring.0}",
       "memory_mib": 2048,
@@ -160,7 +160,7 @@
   "stack": {
     "kind": "monitoring",
     "guest_memory_mib": 2048,
-    "timezone": "Australia/Brisbane",
+    "timezone": "${timezones.applications}",
     "monitoring": {
       "version": "7.0.32",
       "bind_address": "${addresses.monitoring_management}",

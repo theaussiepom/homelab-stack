@@ -1,13 +1,13 @@
 {
   "config": {
     "guest": {
-      "vmid": 217,
-      "hostname": "mqtt",
+      "vmid": "${vmids.mqtt}",
+      "hostname": "${hostnames.mqtt}",
       "cpu": 1,
       "memory_mib": 1024,
       "root_gib": 8,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
       "started": true,
       "start_on_boot": true,
       "boot_order": 50,
@@ -19,25 +19,25 @@
       ],
       "interfaces": [
         {
-          "bridge": "vmbr0",
-          "vlan": 25,
+          "bridge": "${bridges.management}",
+          "vlan": "${vlans.management}",
           "mac": "${mac.mqtt.0}",
-          "ipv4": "${addresses.mqtt_management}/24",
+          "ipv4": "${addresses.mqtt_management}/${prefixes.management}",
           "ipv6": "manual",
           "gateway": "${gateways.management}"
         },
         {
-          "bridge": "vmbr30",
-          "vlan": null,
+          "bridge": "${bridges.http_backend}",
+          "vlan": "${vlans.http_backend}",
           "mac": "${mac.mqtt.1}",
-          "ipv4": "${addresses.mqtt_backend}/24",
+          "ipv4": "${addresses.mqtt_backend}/${prefixes.http_backend}",
           "ipv6": "manual"
         },
         {
-          "bridge": "vmbr1",
-          "vlan": 41,
+          "bridge": "${bridges.mqtt}",
+          "vlan": "${vlans.mqtt}",
           "mac": "${mac.mqtt.2}",
-          "ipv4": "${addresses.mqtt_frontend}/24",
+          "ipv4": "${addresses.mqtt_frontend}/${prefixes.mqtt}",
           "ipv6": "manual"
         }
       ],
@@ -116,7 +116,7 @@
           "proto": "tcp",
           "port": "1883,8000",
           "comment": "Retained authenticated MQTT client",
-          "source": "${networks.home}/24",
+          "source": "${networks.home}/${prefixes.home}",
           "destination": "${addresses.mqtt_frontend}/32",
           "interface": "net2"
         },
@@ -125,7 +125,7 @@
           "proto": "tcp",
           "port": "1883,8000",
           "comment": "Retained authenticated MQTT client",
-          "source": "${networks.iot}/24",
+          "source": "${networks.iot}/${prefixes.iot}",
           "destination": "${addresses.mqtt_frontend}/32",
           "interface": "net2"
         },
@@ -151,8 +151,8 @@
     },
     "app": {
       "kind": "mqtt",
-      "vmid": 217,
-      "hostname": "mqtt",
+      "vmid": "${vmids.mqtt}",
+      "hostname": "${hostnames.mqtt}",
       "memory_mib": 1024,
       "address": "${addresses.mqtt_management}",
       "mac": "${mac.mqtt.0}",
@@ -165,13 +165,13 @@
       "stack_config": "${inputs}/stack.json",
       "exclusive_writer_confirmed": false,
       "frontend_routing": {
-        "address": "${addresses.mqtt_frontend}/24",
+        "address": "${addresses.mqtt_frontend}/${prefixes.mqtt}",
         "gateway": "${gateways.mqtt}",
         "mac": "${mac.mqtt.2}"
       },
       "published_services": {
         "mqtt": {
-          "hostname": "broker.mqtt",
+          "hostname": "${hostnames.mqtt_broker}",
           "addresses": {
             "frontend": "${addresses.mqtt_frontend}",
             "backend": "${addresses.mqtt_backend}"
@@ -212,7 +212,7 @@
     "kind": "mqtt",
     "data_root": "/srv/homelab/data",
     "guest_memory_mib": 1024,
-    "timezone": "Australia/Brisbane",
+    "timezone": "${timezones.applications}",
     "mqtt": {
       "credential_file": "${paths.mqtt_probe}"
     },

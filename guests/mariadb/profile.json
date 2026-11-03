@@ -7,22 +7,22 @@
         "${addresses.dns}",
         "${addresses.fallback_dns}"
       ],
-      "hostname": "mariadb",
+      "hostname": "${hostnames.mariadb}",
       "interfaces": [
         {
-          "bridge": "vmbr0",
+          "bridge": "${bridges.management}",
           "gateway": "${gateways.management}",
-          "ipv4": "${addresses.mariadb_management}/24",
+          "ipv4": "${addresses.mariadb_management}/${prefixes.management}",
           "ipv6": "manual",
           "mac": "${mac.mariadb.0}",
-          "vlan": 25
+          "vlan": "${vlans.management}"
         },
         {
-          "bridge": "vmbr32",
-          "ipv4": "${addresses.mariadb_backend}/24",
+          "bridge": "${bridges.mariadb}",
+          "ipv4": "${addresses.mariadb_backend}/${prefixes.mariadb}",
           "ipv6": "manual",
           "mac": "${mac.mariadb.1}",
-          "vlan": null
+          "vlan": "${vlans.mariadb}"
         }
       ],
       "keyctl": false,
@@ -99,9 +99,9 @@
       ],
       "start_on_boot": true,
       "started": true,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
-      "vmid": 206,
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
+      "vmid": "${vmids.mariadb}",
       "volumes": {
         "database": {
           "path": "/var/lib/mysql",
@@ -161,7 +161,7 @@
           "name": "Backend TCP listener"
         }
       ],
-      "hostname": "mariadb",
+      "hostname": "${hostnames.mariadb}",
       "kind": "mariadb",
       "mac": "${mac.mariadb.0}",
       "memory_mib": 1024,
@@ -177,7 +177,7 @@
           "source": "Types: deb\nURIs: https://dlm.mariadb.com/repo/mariadb-server/12.3.3/repo/debian\nSuites: trixie\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/mariadb.asc\n"
         }
       ],
-      "vmid": 206,
+      "vmid": "${vmids.mariadb}",
       "exclusive_writer_confirmed": false,
       "service_health_checks": {
         "mariadb": [

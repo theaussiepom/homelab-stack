@@ -74,6 +74,8 @@ class CiWorkflowTests(unittest.TestCase):
         commands = "\n".join(step.get("run", "") for step in source["steps"])
         self.assertIn("blueprints/workflows.py --stack . --check", commands)
         self.assertIn("blueprints/compile.py --stack . --site site.example.json --check", commands)
+        self.assertIn("tools/check_boundaries.py --mode stack --root .", commands)
+        self.assertIn("blueprints/compile.py --stack . --site examples/site.second.json --check", commands)
         self.assertIn("--suite stack --stack . --fail-under 100", commands)
         self.assertIn('--output "$RUNNER_TEMP/stack-coverage"', commands)
         self.assertIn('.github/scripts/check_history.py --framework framework-source --scanner "$RUNNER_TEMP/homelab-source-tools/gitleaks"', commands)

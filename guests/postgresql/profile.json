@@ -7,22 +7,22 @@
         "${addresses.dns}",
         "${addresses.fallback_dns}"
       ],
-      "hostname": "postgresql",
+      "hostname": "${hostnames.postgresql}",
       "interfaces": [
         {
-          "bridge": "vmbr0",
+          "bridge": "${bridges.management}",
           "gateway": "${gateways.management}",
-          "ipv4": "${addresses.postgresql_management}/24",
+          "ipv4": "${addresses.postgresql_management}/${prefixes.management}",
           "ipv6": "manual",
           "mac": "${mac.postgresql.0}",
-          "vlan": 25
+          "vlan": "${vlans.management}"
         },
         {
-          "bridge": "vmbr31",
-          "ipv4": "${addresses.postgresql_backend}/24",
+          "bridge": "${bridges.postgresql}",
+          "ipv4": "${addresses.postgresql_backend}/${prefixes.postgresql}",
           "ipv6": "manual",
           "mac": "${mac.postgresql.1}",
-          "vlan": null
+          "vlan": "${vlans.postgresql}"
         }
       ],
       "keyctl": false,
@@ -91,9 +91,9 @@
       ],
       "start_on_boot": true,
       "started": true,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
-      "vmid": 208,
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
+      "vmid": "${vmids.postgresql}",
       "volumes": {
         "database": {
           "path": "/var/lib/postgresql",
@@ -175,7 +175,7 @@
           "name": "Backend TCP listener"
         }
       ],
-      "hostname": "postgresql",
+      "hostname": "${hostnames.postgresql}",
       "kind": "postgresql",
       "mac": "${mac.postgresql.0}",
       "memory_mib": 2048,
@@ -192,7 +192,7 @@
           "source": "Types: deb\nURIs: https://apt-archive.postgresql.org/pub/repos/apt\nSuites: trixie-pgdg-archive\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/postgresql.asc\n"
         }
       ],
-      "vmid": 208,
+      "vmid": "${vmids.postgresql}",
       "exclusive_writer_confirmed": false,
       "service_health_checks": {
         "postgresql": [

@@ -1,13 +1,13 @@
 {
   "config": {
     "guest": {
-      "vmid": 207,
-      "hostname": "music",
+      "vmid": "${vmids.music}",
+      "hostname": "${hostnames.music}",
       "cpu": 2,
       "memory_mib": 2048,
       "root_gib": 8,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
       "started": true,
       "start_on_boot": true,
       "boot_order": 65,
@@ -19,25 +19,25 @@
       ],
       "interfaces": [
         {
-          "bridge": "vmbr0",
-          "vlan": 25,
+          "bridge": "${bridges.management}",
+          "vlan": "${vlans.management}",
           "mac": "${mac.music.0}",
-          "ipv4": "${addresses.music_management}/24",
+          "ipv4": "${addresses.music_management}/${prefixes.management}",
           "ipv6": "manual",
           "gateway": "${gateways.management}"
         },
         {
-          "bridge": "vmbr30",
-          "vlan": null,
+          "bridge": "${bridges.http_backend}",
+          "vlan": "${vlans.http_backend}",
           "mac": "${mac.music.1}",
-          "ipv4": "${addresses.music_backend}/24",
+          "ipv4": "${addresses.music_backend}/${prefixes.http_backend}",
           "ipv6": "manual"
         },
         {
-          "bridge": "vmbr1",
-          "vlan": 100,
+          "bridge": "${bridges.home}",
+          "vlan": "${vlans.home}",
           "mac": "${mac.music.2}",
-          "ipv4": "${addresses.music_home}/24",
+          "ipv4": "${addresses.music_home}/${prefixes.home}",
           "ipv6": "manual"
         }
       ],
@@ -123,7 +123,7 @@
           "proto": "tcp",
           "port": "8097,8927",
           "comment": "Existing player stream and Sendspin callbacks",
-          "source": "${networks.home}/24",
+          "source": "${networks.home}/${prefixes.home}",
           "destination": "${addresses.music_home}/32"
         },
         {
@@ -131,7 +131,7 @@
           "proto": "udp",
           "port": "5353",
           "comment": "Existing player multicast discovery",
-          "source": "${networks.home}/24",
+          "source": "${networks.home}/${prefixes.home}",
           "destination": "224.0.0.251/32",
           "interface": "net2"
         },
@@ -149,7 +149,7 @@
           "proto": "udp",
           "port": "1900",
           "comment": "Existing player multicast discovery",
-          "source": "${networks.home}/24",
+          "source": "${networks.home}/${prefixes.home}",
           "destination": "239.255.255.250/32",
           "interface": "net2"
         },
@@ -168,7 +168,7 @@
           "port": null,
           "comment": "Existing player/provider callbacks",
           "source": "${addresses.music_home}/32",
-          "destination": "${networks.home}/24",
+          "destination": "${networks.home}/${prefixes.home}",
           "interface": "net2"
         },
         {
@@ -177,15 +177,15 @@
           "port": null,
           "comment": "Existing player/provider callbacks",
           "source": "${addresses.music_home}/32",
-          "destination": "${networks.home}/24",
+          "destination": "${networks.home}/${prefixes.home}",
           "interface": "net2"
         }
       ]
     },
     "app": {
       "kind": "music",
-      "vmid": 207,
-      "hostname": "music",
+      "vmid": "${vmids.music}",
+      "hostname": "${hostnames.music}",
       "memory_mib": 2048,
       "address": "${addresses.music_management}",
       "mac": "${mac.music.0}",
@@ -198,7 +198,7 @@
       "stack_config": "${inputs}/stack.json",
       "exclusive_writer_confirmed": false,
       "frontend_routing": {
-        "address": "${addresses.music_home}/24",
+        "address": "${addresses.music_home}/${prefixes.home}",
         "gateway": "${gateways.home}",
         "mac": "${mac.music.2}"
       },
@@ -300,7 +300,7 @@
     "kind": "music",
     "data_root": "/srv/homelab/data",
     "guest_memory_mib": 2048,
-    "timezone": "Australia/Brisbane",
+    "timezone": "${timezones.applications}",
     "music_bind_address": "${addresses.music_home}",
     "services": {
       "music_assistant": {

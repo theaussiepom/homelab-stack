@@ -18,7 +18,7 @@ spec.loader.exec_module(c)
 
 class ConnectionTests(unittest.TestCase):
     def test_shared_link_address_and_mac_collisions_refuse_before_admission(self):
-        values = c.manifest(ROOT)["values"]
+        values = c.read(ROOT / "site.example.json")["values"]
         for collision in ("address", "mac"):
             overlay = c.read(ROOT / "site.example.json")
             if collision == "address":
@@ -70,7 +70,7 @@ class ConnectionTests(unittest.TestCase):
 
     def test_dns_accepts_the_management_and_frontend_client_networks(self):
         cfg = self.configurations()
-        values = c.manifest(ROOT)["values"]
+        values = c.read(ROOT / "site.example.json")["values"]
         rules = cfg["dns"]["guest"]["rules"]
         for network in ("networks.management", "networks.frontend"):
             for proto in ("tcp", "udp"):

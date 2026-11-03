@@ -63,7 +63,7 @@ class UdmTransportTests(unittest.TestCase):
         for changed in (False, True):
             with self.subTest(central_values_changed=changed):
                 stack = self.stack(changed)
-                expected = "controller.changed.example.invalid" if changed else compiler.manifest(ROOT)["values"]["domains.udm_backend"]
+                expected = "controller.changed.example.invalid" if changed else compiler.read(ROOT / "site.example.json")["values"]["domains.udm_backend"]
                 shared = discovery.shared(stack["routing"])
                 self.assertEqual(shared["http"]["serversTransports"]["udm"], {"serverName": expected})
                 self.assertNotIn("insecureSkipVerify", json.dumps(shared))

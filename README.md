@@ -1,13 +1,13 @@
 # HomeLab stack
 
 A copyable implementation of a small Proxmox homelab. This repository composes the
-reusable **homelab** framework into guests and applications. A private
-**homelab-site** repository adopts a reviewed stack version and supplies actual
-settings and deployment controls.
+reusable **homelab** framework into guests and applications. A consuming repository adopts a reviewed stack version and supplies concrete
+site bindings and deployment controls.
 
 The source is executable: profiles compile to the framework's guarded ordinary
 packet; reusable workflows run infrastructure, preparation, and the real app jobs.
-The addresses and MACs here are sanitized examples. This repository publishes source; the private site owns reviewed deployment.
+Reusable profiles contain no allocation defaults; the separate runnable examples
+use synthetic identities. The consumer owns reviewed deployment.
 
 ```mermaid
 flowchart TD
@@ -24,9 +24,7 @@ flowchart TD
   Ingress --> Gateway
   Gateway --> Admin
   DNS --> Broker[MQTT]
-  Ingress --> Auto[Home Automation: Home Assistant then Node-RED]
-  Broker --> Auto
-  Auth --> Auto
+  Broker --> Auto[Home Automation: Home Assistant then Node-RED]
   Maria --> Auto
   Influx --> Auto
   Broker --> Radio[Radios: Zigbee2MQTT then WiNet]
@@ -36,14 +34,13 @@ flowchart TD
   Ingress --> Vault
 ```
 
-Each guest has one reusable workflow with one **Deploy** job. Its infrastructure,
-preparation and application phases run as ordered steps, labelled **Update container**,
-**Prepare service** and **Deploy service**. DNS and Automation use short application
-labels such as **Deploy resolver**, **Deploy DNS**, **Deploy Home
-Assistant** and **Deploy Node-RED**. Each phase first checks bootstrap readiness,
-then checks inputs and loads its existing credentials. Five settings, service and
-tool setup steps run once per guest. Each step has a 45-minute cap; the guest job
-budget adds the former 45-minute phase allowances.
+Each guest has one reusable workflow with one guest-named job. Its visible steps
+are **Setup**, **Infrastructure**, **Prepare**, each application and **Zabbix agent**
+when selected. Home Automation has **Home Assistant** and **Node-RED**; Radios has
+**Zigbee2MQTT** and **WiNet**. Shared framework actions keep phase-local validation,
+credential scopes, locks, health checks and failure-stop behavior. The existing
+45-minute phase caps and combined guest budget remain. GitHub may show its own
+setup and cleanup entries.
 Preparation installs a Linux baseline and, for container workloads, Docker/Compose
 once. A selected root `zabbix:` adds one explicit **Zabbix agent** step after each
 guest's applications, rather than repeating agent setup inside application steps.
@@ -51,8 +48,9 @@ PostgreSQL, MariaDB and InfluxDB are native Debian guests. Authentik is one
 application phase covering its three containers. These are Debian LXC workflows;
 VM application support has not been qualified.
 
-**Radios** is the human-facing name of guest209, with hostname `radios`; its
-logical Zigbee2MQTT service, image, data paths and coordinator remain unchanged.
+**Radios** combines the logical Zigbee2MQTT and WiNet services. Its concrete guest
+identity and hostname come from the consumer; image, data and coordinator
+contracts stay with the profile.
 It is an active Debian LXC with one declared coordinator, Docker in shared
 Preparation, and one Zigbee2MQTT application entity. Its profile enables guest
 startup and boot startup; its container inherits `restart: always`. Infrastructure
@@ -69,25 +67,24 @@ and coordinator backup. Deployment preserves the network identity and never open
 the radio from a configuration checker or rewrites Zigbee settings.
 
 The dedicated MQTT guest's `app.published_services.mqtt` is the single broker
-owner. It declares `broker.mqtt`, port1883, backend/client addresses and which
+owner. It declares a consumer-bound internal hostname, port1883, backend/client addresses and which
 address DNS publishes. Home Assistant, Node-RED, Zigbee2MQTT and WiNet reference
 `mqtt.mqtt` through `app.service_connections`. The compiler derives container
 hostname aliases, the Pi-hole record and matching DNS verification. Both ends of
 each declared connection must have an explicit firewall allowance. The source
-still preserves Automation's NIC order and old private data; it does not move or
-delete broker data, remove an old container, or rewrite client configuration.
-The private site must commission the new broker and retire the old writer in a
-coordinated cutover before adopting this composition. See [Music and MQTT](docs/music-mqtt.md).
+preserves retained data and declared interfaces; it does not move broker data,
+remove a conflicting owner, or rewrite client configuration. The consumer must
+qualify prepared state and exclusive ownership before adoption. See [Music and MQTT](docs/music-mqtt.md).
 
 | File | Purpose |
 | --- | --- |
-| [stack.json](stack.json) | Guest dependencies, prerequisite names and central example values |
+| [stack.json](stack.json) | Guest dependencies, prerequisites and required typed bindings |
 | [common.json](common.json) | Shared runner paths and PVE connection shape |
 | [images.json](images.json) | Image selection authority |
 | [guests](guests) | Executable profiles and public vendor keys/config templates |
 | [deploy workflow](.github/workflows/deploy.yml) | Generated guest workflow calls and real dependency edges |
 | [phase selection](.github/workflows/phase.yml) | The single framework revision selection; not called by guest jobs |
-| [site.example.json](site.example.json) | Empty private overlay shape |
+| [site.example.json](site.example.json) | Explicit synthetic consumer fixture |
 
 Follow [setup and local tests](docs/setup.md), [secrets and prerequisites](docs/secrets.md),
 [public-source policy](docs/public-boundary.md) and [adoption](docs/adoption.md).
@@ -107,12 +104,12 @@ projects remain outside this composition.
 
 Guest definitions combine a framework blueprint with a profile under `guests/`,
 the dependency entry in `stack.json` and private-site overrides. For example,
-[MariaDB's profile](guests/mariadb/profile.json) selects VMID 206, one CPU,
+[MariaDB's profile](guests/mariadb/profile.json) requests one CPU,
 1024 MiB RAM, a 4 GiB root disk and 16 GiB at `/var/lib/mysql`. Its blueprint
 selects Linux preparation and the MariaDB application phase; the stack makes it
 depend on DNS. The profile also supplies pinned packages, repository/configuration
-files, interfaces, firewall rules and health checks. Actual addresses and keys
-are supplied by the private site. No Actions jobs are written inside a profile.
+files, interfaces, firewall rules and health checks. Concrete guest/network/storage identities and keys
+are supplied by the consumer through declared typed bindings. No Actions jobs are written inside a profile.
 
 CI has three separate workflows, each with its own purpose and progress:
 
@@ -151,8 +148,8 @@ An empty root `zabbix:` property in the private blueprint (JSON: `"zabbix": null
 adds the **Zabbix** guest. Without that property, the existing thirteen base guests and
 their packets remain unchanged. A boolean or custom object is rejected.
 
-The monitoring profile proposes VMID216, Debian LXC, 2 CPUs/2 GiB RAM and 12 GiB
-root storage. It uses the management, PostgreSQL and InfluxDB networks and depends
+The monitoring profile requests Debian LXC, 2 CPUs/2 GiB RAM and 12 GiB
+root storage; its guest identity and network/storage allocations are consumer bindings. It uses the management, PostgreSQL and InfluxDB networks and depends
 on PostgreSQL and Traefik. The compiler creates the browser route, DNS and exact
 monitoring firewall edges; existing guest dependency ordering remains intact.
 The example domain is `zabbix.example.invalid`; real values belong in the site.
@@ -177,7 +174,15 @@ Existing disabled leaf selections and the ordinary guest dependency graph remain
 published upstream image is selected by digest; private inverter/MQTT options
 remain controller inputs outside this repository.
 
-Music Assistant and the separate MQTT role are source proposals until their
-actual state, trust, exclusive writer and network prerequisites are accepted in
-the private site. Public example addresses, VLAN41 and VMIDs207/217 are examples
-and candidate allocations, not evidence that a live network or guest exists.
+Music Assistant and MQTT require genuine state, trust, writer and network
+acceptance from the consumer. The separate synthetic examples are source-test
+fixtures and do not establish that a live guest or network exists.
+
+## Explicit site bindings
+
+Reusable definitions contain logical relationships and resource requirements,
+with concrete values declared by `required_site_bindings`. The consumer supplies
+those values explicitly; production admission rejects missing bindings and known
+synthetic address/domain identities. `site.example.json` is a synthetic input,
+not a default configuration or production authority. Shared logical-network
+bridge, VLAN and prefix bindings keep repeated assignments consistent.

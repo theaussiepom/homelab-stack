@@ -1,13 +1,13 @@
 {
   "config": {
     "guest": {
-      "vmid": 6101,
-      "hostname": "dns",
+      "vmid": "${vmids.dns}",
+      "hostname": "${hostnames.dns}",
       "cpu": 2,
       "memory_mib": 4096,
       "root_gib": 8,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
       "started": true,
       "start_on_boot": true,
       "boot_order": 10,
@@ -19,11 +19,11 @@
       ],
       "interfaces": [
         {
-          "bridge": "vmbr1",
-          "vlan": 40,
+          "bridge": "${bridges.frontend}",
+          "vlan": "${vlans.frontend}",
           "mac": "${mac.dns.0}",
           "ipv4": "dhcp",
-          "ipv4_endpoint": "${addresses.dns}/24",
+          "ipv4_endpoint": "${addresses.dns}/${prefixes.frontend}",
           "gateway": null,
           "ipv6": "manual"
         }
@@ -46,14 +46,14 @@
           "direction": "in",
           "proto": "udp",
           "port": "53",
-          "source": "${networks.home}/24",
+          "source": "${networks.home}/${prefixes.home}",
           "comment": "Selected DNS clients"
         },
         {
           "direction": "in",
           "proto": "tcp",
           "port": "53",
-          "source": "${networks.home}/24",
+          "source": "${networks.home}/${prefixes.home}",
           "comment": "Selected DNS clients"
         },
         {
@@ -81,7 +81,7 @@
           "direction": "in",
           "proto": "tcp",
           "port": "53",
-          "source": "${networks.management}/24",
+          "source": "${networks.management}/${prefixes.management}",
           "destination": "${addresses.dns}/32",
           "comment": "Selected stack DNS clients"
         },
@@ -89,7 +89,7 @@
           "direction": "in",
           "proto": "udp",
           "port": "53",
-          "source": "${networks.management}/24",
+          "source": "${networks.management}/${prefixes.management}",
           "destination": "${addresses.dns}/32",
           "comment": "Selected stack DNS clients"
         },
@@ -97,7 +97,7 @@
           "direction": "in",
           "proto": "tcp",
           "port": "53",
-          "source": "${networks.frontend}/24",
+          "source": "${networks.frontend}/${prefixes.frontend}",
           "destination": "${addresses.dns}/32",
           "comment": "Selected stack DNS clients"
         },
@@ -105,7 +105,7 @@
           "direction": "in",
           "proto": "udp",
           "port": "53",
-          "source": "${networks.frontend}/24",
+          "source": "${networks.frontend}/${prefixes.frontend}",
           "destination": "${addresses.dns}/32",
           "comment": "Selected stack DNS clients"
         },
@@ -122,7 +122,7 @@
           "proto": "tcp",
           "port": "53",
           "comment": "Dedicated MQTT network DNS clients",
-          "source": "${networks.mqtt}/24",
+          "source": "${networks.mqtt}/${prefixes.mqtt}",
           "destination": "${addresses.dns}/32"
         },
         {
@@ -130,7 +130,7 @@
           "proto": "udp",
           "port": "53",
           "comment": "Dedicated MQTT network DNS clients",
-          "source": "${networks.mqtt}/24",
+          "source": "${networks.mqtt}/${prefixes.mqtt}",
           "destination": "${addresses.dns}/32"
         }
       ]
@@ -144,8 +144,8 @@
       ],
       "exclusive_writer_confirmed": false,
       "kind": "dns",
-      "vmid": 6101,
-      "hostname": "dns",
+      "vmid": "${vmids.dns}",
+      "hostname": "${hostnames.dns}",
       "memory_mib": 4096,
       "address": "${addresses.dns}",
       "mac": "${mac.dns.0}",
@@ -230,7 +230,7 @@
     "kind": "dns",
     "data_root": "/srv/homelab/data",
     "guest_memory_mib": 4096,
-    "timezone": "Etc/UTC",
+    "timezone": "${timezones.dns}",
     "services": {
       "pihole": {
         "memory_mib": 256,

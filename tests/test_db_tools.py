@@ -128,8 +128,8 @@ class DatabaseToolsTests(unittest.TestCase):
             self.assertEqual(original[original.index("--retry-max-time") + 1], "180")
         workflow = yaml.safe_load((ROOT / ".github/workflows/guest-db-tools.yml").read_text())
         steps = [step for job in workflow["jobs"].values() for step in job["steps"]
-                 if step.get("env", {}).get("PHASE") == "cloudbeaver"
-                 and "proxmox/applications/deploy.py" in step.get("run", "")]
+                 if step.get("with", {}).get("phase") == "cloudbeaver"
+                 and "/.github/actions/guest-phase@" in step.get("uses", "")]
         self.assertEqual(len(steps), 1)
         self.assertEqual(steps[0]["timeout-minutes"], 45)
         self.assertLess(option("--retry-max-time") + option("--retry-delay") + option("--max-time"),
@@ -257,8 +257,8 @@ class DatabaseToolsTests(unittest.TestCase):
 
     def test_mariadb_client_identity_collision_refuses_compilation(self):
         for field, value in (
-            ("addresses.db_tools_mariadb", c.manifest(ROOT)["values"]["addresses.mariadb_backend"]),
-            ("mac.db-tools.3", c.manifest(ROOT)["values"]["mac.mariadb.1"]),
+            ("addresses.db_tools_mariadb", c.read(ROOT / "site.example.json")["values"]["addresses.mariadb_backend"]),
+            ("mac.db-tools.3", c.read(ROOT / "site.example.json")["values"]["mac.mariadb.1"]),
         ):
             overlay = c.read(ROOT / "site.example.json")
             overlay["values"][field] = value

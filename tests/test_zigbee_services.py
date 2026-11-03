@@ -65,7 +65,7 @@ class ZigbeeServiceTests(unittest.TestCase):
             ["deploy"],
         )
         steps = graph["guest-zigbee2mqtt.yml"]["jobs"]["deploy"]["steps"]
-        self.assertEqual([step["env"]["PHASE"] for step in steps[8::4]],
+        self.assertEqual([step["with"]["phase"] for step in steps[1:]],
                          ["infrastructure", "preparation", "zigbee2mqtt", "winet", "zabbix-agent"])
 
     def test_broker_definition_owns_dns_check_and_the_backend_radio_alias(self):

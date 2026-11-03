@@ -38,7 +38,7 @@ class PegaProxRouteTests(unittest.TestCase):
                     "domains.secondary": "changed.example.invalid",
                 })
             with self.subTest(central_values_changed=changed):
-                values = dict(c.manifest(ROOT)["values"], **overlay["values"])
+                values = dict(c.read(ROOT / "site.example.json")["values"], **overlay["values"])
                 packets = c.compile_stack(ROOT, overlay, [])
                 packet = packets["pegaprox"]
                 cfg = json.loads(packet["files"]["site.json"])
@@ -114,7 +114,7 @@ class PegaProxRouteTests(unittest.TestCase):
             pegaprox.validate_deployment(changed, stack)
         client = next(row for row in cfg["guest"]["rules"] if row.get("direction") == "in" and row.get("port") == "5000")
         ingress_subnet = stack["trusted_proxy"].rsplit(".", 1)[0] + ".0/24"
-        home_subnet = c.manifest(ROOT)["values"]["networks.home"] + "/24"
+        home_subnet = c.read(ROOT / "site.example.json")["values"]["networks.home"] + "/24"
         for source in (ingress_subnet, home_subnet, stack["bind_address"] + "/32"):
             for extra in (False, True):
                 with self.subTest(client_source=source, extra_client=extra):
@@ -134,7 +134,7 @@ class PegaProxRouteTests(unittest.TestCase):
             if changed:
                 overlay["values"].update({"addresses.nas": "198.18.25.102", "domains.secondary": "secondary.changed.example.invalid", "domains.primary": "primary.changed.example.invalid"})
             with self.subTest(central_values_changed=changed):
-                values = dict(c.manifest(ROOT)["values"], **overlay["values"])
+                values = dict(c.read(ROOT / "site.example.json")["values"], **overlay["values"])
                 packets = c.compile_stack(ROOT, overlay, [])
                 ingress = json.loads(packets["ingress"]["files"]["stack.json"])
                 cfg = json.loads(packets["ingress"]["files"]["site.json"])
@@ -153,7 +153,7 @@ class PegaProxRouteTests(unittest.TestCase):
                 self.assertEqual(len(rules), 1)
                 self.assertEqual((rules[0]["source"], rules[0]["port"], rules[0]["proto"]), (values["addresses.ingress_management"] + "/32", "31763", "tcp"))
         overlay = c.read(ROOT / "site.example.json")
-        profile = c.read(ROOT / "guests/ingress/profile.json")
+        profile = c.substitute(c.read(ROOT / "guests/ingress/profile.json"), overlay["values"], c.binding_declarations(c.manifest(ROOT)))
         overlay["guests"]["ingress"] = {"config": {"guest": {"rules": [r for r in profile["config"]["guest"]["rules"] if r.get("port") != "31763"]}}}
         with self.assertRaises(ValueError):
             c.compile_stack(ROOT, overlay, [])
@@ -163,7 +163,7 @@ class PegaProxRouteTests(unittest.TestCase):
         packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])
         ingress = json.loads(packets["ingress"]["files"]["stack.json"])
         self.assertEqual(set(ingress["routing"]["transports"]), {"udm", "proxmox"})
-        self.assertEqual(ingress["routing"]["transports"]["udm"], {"server_name": c.manifest(ROOT)["values"]["domains.udm_backend"]})
+        self.assertEqual(ingress["routing"]["transports"]["udm"], {"server_name": c.read(ROOT / "site.example.json")["values"]["domains.udm_backend"]})
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             staged = copy.deepcopy(ingress)

@@ -25,7 +25,7 @@ defaults:
     shell: bash
 jobs:
   deploy:
-    name: Deploy
+    name: DNS
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), 'dns')
     environment: ${{ inputs.environment_name }}
     runs-on: ${{ fromJSON(inputs.runner_labels) }}
@@ -33,231 +33,51 @@ jobs:
     env:
       HOMELAB_DEPLOYMENT_WORKFLOW: ${{ github.workflow_ref }}
     steps:
-    - name: Check readiness
-      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
-
-        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
-
-        '
+    - name: Setup
+      uses: theaussiepom/homelab/.github/actions/guest-setup@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
       timeout-minutes: 45
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - name: Infrastructure
+      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      timeout-minutes: 45
       with:
-        fetch-depth: 0
-        persist-credentials: false
-      name: Get settings
+        guest: dns
+        phase: infrastructure
+        disabled: ${{ inputs.disabled }}
+        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+    - name: Prepare
+      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
       timeout-minutes: 45
-    - name: Choose services
-      id: stack
-      run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
-
-        import pathlib, re
-
-        text = pathlib.Path(''.github/workflows/deploy.yml'').read_text()
-
-        pins = re.findall(r''^\s*uses: ([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/\.github/workflows/deploy\.yml@([0-9a-f]{40})\s*$'', text, re.M)
-
-        if len(pins) != 1: raise SystemExit(''Select one immutable stack workflow'')
-
-        print(''repository=''+pins[0][0]); print(''revision=''+pins[0][1])
-
-        PYCODE
-
-        '
-      timeout-minutes: 45
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
-        repository: ${{ steps.stack.outputs.repository }}
-        ref: ${{ steps.stack.outputs.revision }}
-        path: stack-source
-        persist-credentials: false
-      name: Get services
+        guest: dns
+        phase: preparation
+        disabled: ${{ inputs.disabled }}
+        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+    - name: Unbound
+      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
       timeout-minutes: 45
-    - name: Choose tools
-      id: framework
-      run: 'python3 - <<''PYCODE'' >> "$GITHUB_OUTPUT"
-
-        import pathlib, re
-
-        text = pathlib.Path(''stack-source/.github/workflows/phase.yml'').read_text()
-
-        pins = re.findall(r''^\s*uses: ([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/\.github/workflows/guest-phase\.yml@([0-9a-f]{40})\s*$'', text, re.M)
-
-        if len(pins) != 1: raise SystemExit(''Select one immutable framework workflow'')
-
-        print(''repository=''+pins[0][0]); print(''revision=''+pins[0][1])
-
-        PYCODE
-
-        '
-      timeout-minutes: 45
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       with:
-        repository: ${{ steps.framework.outputs.repository }}
-        ref: ${{ steps.framework.outputs.revision }}
-        path: framework-source
-        persist-credentials: false
-      name: Get tools
-      timeout-minutes: 45
-    - name: Check inputs
-      env:
-        GUEST: dns
-        PHASE: infrastructure
-        DISABLED: ${{ inputs.disabled }}
-      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
-      timeout-minutes: 45
-    - name: Load credentials
-      env:
-        GUEST: dns
-        PHASE: infrastructure
-        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+        guest: dns
+        phase: unbound
+        disabled: ${{ inputs.disabled }}
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
-      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-      timeout-minutes: 45
-    - name: Update container
-      env:
-        GUEST: dns
-        PHASE: infrastructure
-        NODE_RED_API_TOKEN: ${{ 'dns' == 'automation' && '' || '' }}
-        AUTHENTIK_SECRET_KEY: ${{ 'dns' == 'identity' && '' || '' }}
-        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'dns' == 'identity' && '' || '' }}
-        AUTHENTIK_SMTP_PASSWORD: ${{ 'dns' == 'identity' && '' || '' }}
-        PGADMIN_OAUTH_SECRET: ${{ 'dns' == 'db-tools' && '' || '' }}
-        CLOUDFLARE_DNS_TOKEN: ${{ 'dns' == 'ingress' && '' || '' }}
-      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-      timeout-minutes: 45
-    - name: Check readiness
-      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
-
-        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
-
-        '
-      timeout-minutes: 45
-    - name: Check inputs
-      env:
-        GUEST: dns
-        PHASE: preparation
-        DISABLED: ${{ inputs.disabled }}
-      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
-      timeout-minutes: 45
-    - name: Load credentials
-      env:
-        GUEST: dns
-        PHASE: preparation
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+    - name: Pi-hole
+      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      timeout-minutes: 45
+      with:
+        guest: dns
+        phase: pihole
+        disabled: ${{ inputs.disabled }}
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
-      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-      timeout-minutes: 45
-    - name: Prepare service
-      env:
-        GUEST: dns
-        PHASE: preparation
-        NODE_RED_API_TOKEN: ${{ 'dns' == 'automation' && '' || '' }}
-        AUTHENTIK_SECRET_KEY: ${{ 'dns' == 'identity' && '' || '' }}
-        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'dns' == 'identity' && '' || '' }}
-        AUTHENTIK_SMTP_PASSWORD: ${{ 'dns' == 'identity' && '' || '' }}
-        PGADMIN_OAUTH_SECRET: ${{ 'dns' == 'db-tools' && '' || '' }}
-        CLOUDFLARE_DNS_TOKEN: ${{ 'dns' == 'ingress' && '' || '' }}
-      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-      timeout-minutes: 45
-    - name: Check readiness
-      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
-
-        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
-
-        '
-      timeout-minutes: 45
-    - name: Check inputs
-      env:
-        GUEST: dns
-        PHASE: unbound
-        DISABLED: ${{ inputs.disabled }}
-      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
-      timeout-minutes: 45
-    - name: Load credentials
-      env:
-        GUEST: dns
-        PHASE: unbound
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
-        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
-      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-      timeout-minutes: 45
-    - name: Deploy resolver
-      env:
-        GUEST: dns
-        PHASE: unbound
-        NODE_RED_API_TOKEN: ${{ 'dns' == 'automation' && '' || '' }}
-        AUTHENTIK_SECRET_KEY: ${{ 'dns' == 'identity' && '' || '' }}
-        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'dns' == 'identity' && '' || '' }}
-        AUTHENTIK_SMTP_PASSWORD: ${{ 'dns' == 'identity' && '' || '' }}
-        PGADMIN_OAUTH_SECRET: ${{ 'dns' == 'db-tools' && '' || '' }}
-        CLOUDFLARE_DNS_TOKEN: ${{ 'dns' == 'ingress' && '' || '' }}
-      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-      timeout-minutes: 45
-    - name: Check readiness
-      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
-
-        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
-
-        '
-      timeout-minutes: 45
-    - name: Check inputs
-      env:
-        GUEST: dns
-        PHASE: pihole
-        DISABLED: ${{ inputs.disabled }}
-      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
-      timeout-minutes: 45
-    - name: Load credentials
-      env:
-        GUEST: dns
-        PHASE: pihole
-        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
-        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
-      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-      timeout-minutes: 45
-    - name: Deploy DNS
-      env:
-        GUEST: dns
-        PHASE: pihole
-        NODE_RED_API_TOKEN: ${{ 'dns' == 'automation' && '' || '' }}
-        AUTHENTIK_SECRET_KEY: ${{ 'dns' == 'identity' && '' || '' }}
-        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'dns' == 'identity' && '' || '' }}
-        AUTHENTIK_SMTP_PASSWORD: ${{ 'dns' == 'identity' && '' || '' }}
-        PGADMIN_OAUTH_SECRET: ${{ 'dns' == 'db-tools' && '' || '' }}
-        CLOUDFLARE_DNS_TOKEN: ${{ 'dns' == 'ingress' && '' || '' }}
-      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-      timeout-minutes: 45
-    - name: Check readiness
-      run: 'test ! -e /var/lib/homelab-bootstrap/CONFIGURING
-
-        test ! -e /var/lib/homelab-bootstrap/BOOTSTRAP-CD-HOLD.json
-
-        '
-      timeout-minutes: 45
-    - name: Check inputs
-      env:
-        GUEST: dns
-        PHASE: zabbix-agent
-        DISABLED: ${{ inputs.disabled }}
-      run: "umask 077\npython3 framework-source/blueprints/compile.py --stack stack-source --site site.json \\\n  --guest \"$GUEST\" --disabled \"$DISABLED\" --admit \\\n  --output \"$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json\"\n"
-      timeout-minutes: 45
-    - name: Load credentials
-      env:
-        GUEST: dns
-        PHASE: zabbix-agent
-        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
-        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
-      run: python3 framework-source/blueprints/credentials.py --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
-      timeout-minutes: 45
     - name: Zabbix agent
-      env:
-        GUEST: dns
-        PHASE: zabbix-agent
-        NODE_RED_API_TOKEN: ${{ 'dns' == 'automation' && '' || '' }}
-        AUTHENTIK_SECRET_KEY: ${{ 'dns' == 'identity' && '' || '' }}
-        AUTHENTIK_POSTGRES_PASSWORD: ${{ 'dns' == 'identity' && '' || '' }}
-        AUTHENTIK_SMTP_PASSWORD: ${{ 'dns' == 'identity' && '' || '' }}
-        PGADMIN_OAUTH_SECRET: ${{ 'dns' == 'db-tools' && '' || '' }}
-        CLOUDFLARE_DNS_TOKEN: ${{ 'dns' == 'ingress' && '' || '' }}
-      run: python3 framework-source/proxmox/applications/deploy.py --phase "$PHASE" --packet "$RUNNER_TEMP/guest-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GUEST}-${PHASE}.json"
+      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
       timeout-minutes: 45
+      with:
+        guest: dns
+        phase: zabbix-agent
+        disabled: ${{ inputs.disabled }}
+        APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
+        PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}

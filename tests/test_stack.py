@@ -101,9 +101,10 @@ class StackTests(unittest.TestCase):
             phases.append("zabbix-agent")
             self.assertEqual(list(guest["jobs"]), ["deploy"])
             steps = guest["jobs"]["deploy"]["steps"]
-            self.assertEqual(len(steps), 5 + 4 * len(phases))
-            self.assertEqual([step["env"]["PHASE"] for step in steps[8::4]], phases)
-            self.assertEqual([step["env"]["GUEST"] for step in steps[8::4]], [name] * len(phases))
+            self.assertEqual(len(steps), 1 + len(phases))
+            self.assertEqual(steps[0]["name"], "Setup")
+            self.assertEqual([step["with"]["phase"] for step in steps[1:]], phases)
+            self.assertEqual([step["with"]["guest"] for step in steps[1:]], [name] * len(phases))
             self.assertNotIn("uses", guest["jobs"]["deploy"])
             self.assertNotIn("needs", guest["jobs"]["deploy"])
         c.workflow_selection(ROOT / ".github/workflows/phase.yml", "guest-phase.yml")
@@ -115,8 +116,15 @@ class StackTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.guest(name, [], admit=True)
         manifest = c.manifest(ROOT)
-        with self.assertRaisesRegex(ValueError, "disabled"):
-            self.guest("dns", list(c.CATALOGUE), admit=True)
+        # Use hypothetical non-example semantic inputs to reach the all-disabled
+        # admission guard; the separate binding tests cover example rejection.
+        example = self.overlay
+        self.overlay = json.loads(json.dumps(example).replace("198.18.", "10.240.").replace("198.19.", "10.241.").replace("example.invalid", "fixture.internal"))
+        try:
+            with self.assertRaisesRegex(ValueError, "disabled"):
+                self.guest("dns", list(c.CATALOGUE), admit=True)
+        finally:
+            self.overlay = example
         self.overlay["accepted"] = {
             name: row["prerequisites"] for name, row in manifest["guests"].items()
         }
@@ -133,8 +141,8 @@ class StackTests(unittest.TestCase):
         cfg = json.loads(a["files"]["site.json"])
         self.assertEqual(cfg["site"]["api_endpoint"], "https://198.18.25.99:8006/")
         self.assertTrue(a["enabled"])
-        with self.assertRaises(ValueError):
-            self.guest("automation", ["automation"])
+        self.assertFalse(self.guest("automation", ["automation"])["enabled"])
+        self.assertTrue(self.guest("music", ["automation"])["enabled"])
 
     def test_commissioned_database_bridges_and_no_shared_backend_revival(self):
         for name, bridge in [
@@ -192,7 +200,7 @@ class StackTests(unittest.TestCase):
         cfg = json.loads(self.guest("automation", [])["files"]["stack.json"])
         self.assertEqual(
             cfg["services"]["homeassistant"]["extra_hosts"]["mariadb.db_hass"],
-            c.manifest(ROOT)["values"]["addresses.mariadb_backend"],
+            c.read(ROOT / "site.example.json")["values"]["addresses.mariadb_backend"],
         )
 
     def test_migration_fields_and_vm_overrides_refuse(self):

@@ -1,13 +1,13 @@
 {
   "config": {
     "guest": {
-      "vmid": 212,
-      "hostname": "traefik",
+      "vmid": "${vmids.ingress}",
+      "hostname": "${hostnames.ingress}",
       "cpu": 1,
       "memory_mib": 768,
       "root_gib": 4,
-      "storage_id": "local-zfs",
-      "template_file_id": "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst",
+      "storage_id": "${storage.guest}",
+      "template_file_id": "${templates.debian_lxc}",
       "started": true,
       "start_on_boot": true,
       "boot_order": 30,
@@ -19,32 +19,32 @@
       ],
       "interfaces": [
         {
-          "bridge": "vmbr0",
-          "vlan": 25,
+          "bridge": "${bridges.management}",
+          "vlan": "${vlans.management}",
           "mac": "${mac.ingress.0}",
-          "ipv4": "${addresses.ingress_management}/24",
+          "ipv4": "${addresses.ingress_management}/${prefixes.management}",
           "ipv6": "manual",
           "gateway": "${gateways.management}"
         },
         {
-          "bridge": "vmbr30",
-          "vlan": null,
+          "bridge": "${bridges.http_backend}",
+          "vlan": "${vlans.http_backend}",
           "mac": "${mac.ingress.1}",
-          "ipv4": "${addresses.ingress_backend}/24",
+          "ipv4": "${addresses.ingress_backend}/${prefixes.http_backend}",
           "ipv6": "manual"
         },
         {
-          "bridge": "vmbr1",
-          "vlan": 40,
+          "bridge": "${bridges.frontend}",
+          "vlan": "${vlans.frontend}",
           "mac": "${mac.ingress.2}",
-          "ipv4": "${addresses.ingress_frontend}/24",
+          "ipv4": "${addresses.ingress_frontend}/${prefixes.frontend}",
           "ipv6": "manual"
         },
         {
-          "bridge": "vmbr33",
-          "vlan": null,
+          "bridge": "${bridges.influxdb}",
+          "vlan": "${vlans.influxdb}",
           "mac": "${mac.ingress.3}",
-          "ipv4": "${addresses.ingress_influxdb}/24",
+          "ipv4": "${addresses.ingress_influxdb}/${prefixes.influxdb}",
           "ipv6": "manual"
         }
       ],
@@ -130,7 +130,7 @@
           "proto": "tcp",
           "port": "80,443",
           "comment": "Selected internal HTTPS clients",
-          "source": "${networks.home}/24",
+          "source": "${networks.home}/${prefixes.home}",
           "destination": "${addresses.ingress_frontend}/32"
         },
         {
@@ -138,7 +138,7 @@
           "proto": "tcp",
           "port": "80,443",
           "comment": "Selected internal HTTPS clients",
-          "source": "${networks.policy_15}/24",
+          "source": "${networks.policy_15}/${prefixes.policy_15}",
           "destination": "${addresses.ingress_frontend}/32"
         },
         {
@@ -146,7 +146,7 @@
           "proto": "tcp",
           "port": "80,443",
           "comment": "Selected internal HTTPS clients",
-          "source": "${networks.management}/24",
+          "source": "${networks.management}/${prefixes.management}",
           "destination": "${addresses.ingress_frontend}/32"
         },
         {
@@ -154,7 +154,7 @@
           "proto": "tcp",
           "port": "80,443",
           "comment": "Qualified admin VPN HTTPS clients",
-          "source": "${networks.admin_vpn}/28",
+          "source": "${networks.admin_vpn}/${prefixes.admin_vpn}",
           "destination": "${addresses.ingress_frontend}/32"
         },
         {
@@ -162,7 +162,7 @@
           "proto": "tcp",
           "port": "80,443",
           "comment": "Selected internal HTTPS clients",
-          "source": "${networks.http_backend}/24",
+          "source": "${networks.http_backend}/${prefixes.http_backend}",
           "destination": "${addresses.ingress_frontend}/32"
         },
         {
@@ -170,7 +170,7 @@
           "proto": "tcp",
           "port": "80,443",
           "comment": "Selected internal HTTPS clients",
-          "source": "${networks.frontend}/24",
+          "source": "${networks.frontend}/${prefixes.frontend}",
           "destination": "${addresses.ingress_frontend}/32"
         },
         {
@@ -178,7 +178,7 @@
           "proto": "tcp",
           "port": "80,443",
           "comment": "Selected internal HTTPS clients",
-          "source": "${networks.policy_50}/24",
+          "source": "${networks.policy_50}/${prefixes.policy_50}",
           "destination": "${addresses.ingress_frontend}/32"
         },
         {
@@ -259,7 +259,7 @@
         {
           "direction": "out",
           "proto": "tcp",
-          "port": "31763",
+          "port": "${ports.nas_web}",
           "source": "${addresses.ingress_management}/32",
           "destination": "${addresses.nas}/32",
           "comment": "Declared HTTP route backend"
@@ -308,8 +308,8 @@
     },
     "app": {
       "kind": "ingress",
-      "vmid": 212,
-      "hostname": "traefik",
+      "vmid": "${vmids.ingress}",
+      "hostname": "${hostnames.ingress}",
       "memory_mib": 768,
       "address": "${addresses.ingress_management}",
       "mac": "${mac.ingress.0}",
@@ -345,7 +345,7 @@
         }
       ],
       "frontend_routing": {
-        "address": "${addresses.ingress_frontend}/24",
+        "address": "${addresses.ingress_frontend}/${prefixes.frontend}",
         "gateway": "${gateways.frontend}",
         "mac": "${mac.ingress.2}"
       },
@@ -380,7 +380,7 @@
     "kind": "ingress",
     "data_root": "/srv/homelab/data",
     "guest_memory_mib": 768,
-    "timezone": "Australia/Brisbane",
+    "timezone": "${timezones.applications}",
     "services": {
       "traefik": {
         "memory_mib": 512,
@@ -412,19 +412,12 @@
       "middlewares": {
         "management-clients": {
           "ipAllowList": {
-            "sourceRange": [
-              "${networks.policy_15}/24",
-              "${networks.management}/24",
-              "${networks.admin_vpn}/28"
-            ]
+            "sourceRange": "${networks.management_clients}"
           }
         },
         "music-clients": {
           "ipAllowList": {
-            "sourceRange": [
-              "${networks.admin_vpn}/28",
-              "${networks.home}/24"
-            ]
+            "sourceRange": "${networks.music_clients}"
           }
         },
         "db-canonical": {

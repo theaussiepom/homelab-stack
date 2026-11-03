@@ -36,9 +36,10 @@ the PostgreSQL bridge and TCP 3306 on the MariaDB bridge. The compiler derives t
 connection destinations and verifies both sides of the corresponding firewall
 rules. The database listeners have no web routers.
 
-Guest 202 retains its management, web-backend and PostgreSQL interfaces in their
+The database-tools guest declares management, web-backend and PostgreSQL interfaces in their
 existing order. A fourth interface reaches the existing MariaDB bridge. Its
 address and MAC come from `addresses.db_tools_mariadb` and `mac.db-tools.3`.
+Bridge, VLAN and prefix values are shared logical-network bindings supplied by the consumer.
 The generic internal service names come from `hostnames.postgresql_database` and
 `hostnames.mariadb_database`; private adoption can retain existing canonical names.
 

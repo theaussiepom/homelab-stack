@@ -1,8 +1,6 @@
-# Adopt after current Automation work
+# Consumer adoption
 
-This is a local source implementation, not a native rollout. Finish the existing
-HA/Automation owner's deployment first. These worktrees do not supersede that work
-or qualify stopped Proxmox guests.
+Source qualification and actual deployment acceptance are separate.
 
 Before publishing, review the public-source policy and scan the complete public
 history. Then separately authorize publication, run hosted CI and qualify the
@@ -12,12 +10,10 @@ workflow access and secret inheritance there; local YAML checks cannot prove the
 Before private adoption, compare the finished live desired state with these profiles.
 Carry current actual settings privately, including the existing Node-RED OIDC
 client ID in `values["identity.node_red_client"]` (or its explicit stack override).
-The public default is a synthetic fixture, not a replacement provider identity.
-Do not revive old shared PostgreSQL
-backend assignments. Compare VMIDs, NIC MACs, addresses, disks, storage/template
-identities, UID/GID/modes, CA/SSH trust, backend state and all holds. DNS needs an
-explicit existing-state adoption because its complete commissioned infrastructure
-input was not in the private source seed. Its public profile is a proposal.
+The separate public examples are synthetic fixtures, not replacement provider
+identities. Compare VMIDs, NIC MACs, addresses, disks, storage/template identities,
+UID/GID/modes, CA/SSH trust, backend state and every hold. Existing guests require
+genuine state, data and configuration adoption before their prerequisites are accepted.
 
 The declared NAS/PegaProx HTTP backends retain automatic browser-facing Traefik
 HTTPS. Existing deployments must adopt matching stack/site route inputs: select

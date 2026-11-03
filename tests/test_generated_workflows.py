@@ -94,87 +94,81 @@ class GeneratedWorkflowTests(unittest.TestCase):
             "music": ["infrastructure", "preparation", "music_assistant"],
             "mqtt": ["infrastructure", "preparation", "mqtt"],
         }
-        phases = {guest: [*items, "zabbix-agent"] for guest, items in phases.items()}
-        labels = {"zabbix-agent": "Zabbix agent", "infrastructure": "Update container", "preparation": "Prepare service",
-                  "unbound": "Deploy resolver", "pihole": "Deploy DNS", "mqtt": "Deploy MQTT",
-                  "homeassistant": "Deploy Home Assistant", "node_red": "Deploy Node-RED", "zigbee2mqtt": "Deploy Zigbee2MQTT", "winet": "Deploy WiNet"}
-        setup_names = ["Check readiness", "Get settings", "Choose services", "Get services", "Choose tools", "Get tools"]
+        labels = {"infrastructure": "Infrastructure", "preparation": "Prepare",
+                  "unbound": "Unbound", "pihole": "Pi-hole", "traefik": "Traefik",
+                  "postgresql": "PostgreSQL", "mariadb": "MariaDB", "influxdb": "InfluxDB",
+                  "authentik": "Authentik", "cloudbeaver": "CloudBeaver", "homeassistant": "Home Assistant",
+                  "node_red": "Node-RED", "bitwarden": "Bitwarden", "pegaprox": "PegaProx",
+                  "zigbee2mqtt": "Zigbee2MQTT", "winet": "WiNet", "zabbix": "Zabbix",
+                  "music_assistant": "Music Assistant", "mqtt": "MQTT", "zabbix-agent": "Zabbix agent"}
         directory = ROOT / ".github/workflows"
         framework = load(FRAMEWORK / ".github/workflows/guest-phase.yml")
         recipe = framework["jobs"]["run"]
+        pin = load(directory / "phase.yml")["jobs"]["run"]["uses"]
+        repository, revision = pin.split("/.github/workflows/guest-phase.yml@")
         self.assertEqual({p.stem.removeprefix("guest-") for p in directory.glob("guest-*.yml")}, set(phases))
-        total_jobs = total_phases = total_phase_commands = total_readiness_checks = 0
-        for guest, expected_phases in phases.items():
+        total_phases = 0
+        for guest, applications in phases.items():
+            expected_phases = [*applications, "zabbix-agent"]
             with self.subTest(guest=guest):
                 workflow = load(directory / ("guest-" + guest + ".yml"))
                 self.assertEqual(list(workflow["jobs"]), ["deploy"])
                 self.assertEqual(workflow["defaults"], framework["defaults"])
-                self.assertEqual(workflow["defaults"], {"run": {"shell": "bash"}})
                 self.assertEqual(workflow["on"]["workflow_call"]["inputs"]["disabled"]["default"], "[]")
                 job = workflow["jobs"]["deploy"]
+                self.assertEqual(job["name"], workflow["name"])
                 self.assertEqual(set(job), {"name", "if", "environment", "runs-on", "timeout-minutes", "env", "steps"})
-                self.assertEqual(job["name"], "Deploy")
                 self.assertEqual(job["if"], "github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(fromJSON(inputs.disabled || '[]'), '" + guest + "')")
                 for key in ("environment", "runs-on", "env"):
                     self.assertEqual(job[key], recipe[key])
                 self.assertEqual(recipe["timeout-minutes"], "45")
                 self.assertEqual(int(job["timeout-minutes"]), 45 * len(expected_phases))
-                self.assertEqual(len(job["steps"]), 5 + 4 * len(expected_phases))
-                self.assertEqual(sum(step["name"] == "Check readiness" for step in job["steps"]), len(expected_phases))
-                self.assertEqual([step["id"] for step in job["steps"] if "id" in step], ["stack", "framework"])
-                for step in job["steps"]:
-                    self.assertNotIn("if", step)
-                    self.assertNotIn("continue-on-error", step)
+                self.assertEqual(len(job["steps"]), 1 + len(expected_phases))
+                self.assertEqual(job["steps"][0], {"name": "Setup", "uses": repository + "/.github/actions/guest-setup@" + revision, "timeout-minutes": "45"})
+                for step, phase in zip(job["steps"][1:], expected_phases):
+                    self.assertEqual(set(step), {"name", "uses", "timeout-minutes", "with"})
+                    self.assertEqual(step["name"], labels[phase])
+                    self.assertEqual(step["uses"], repository + "/.github/actions/guest-phase@" + revision)
                     self.assertEqual(step["timeout-minutes"], "45")
-                for before, after, name in zip(recipe["steps"][:6], job["steps"][:6], setup_names):
-                    self.assertEqual(set(after), set(before) | {"name", "timeout-minutes"})
-                    self.assertEqual(after["name"], name)
-                    for key in set(before) - {"name"}:
-                        self.assertEqual(after[key], before[key])
-                for index, phase in enumerate(expected_phases):
-                    readiness = job["steps"][0 if index == 0 else 5 + 4 * index]
-                    self.assertEqual(readiness, job["steps"][0])
-                    total_readiness_checks += 1
-                    triple = job["steps"][6 + 4 * index:9 + 4 * index]
-                    display = labels.get(phase, "Deploy service")
-                    if phase not in {"infrastructure", "preparation", "zabbix-agent"} and len(expected_phases) == 4:
-                        display = "Deploy service"
-                    self.assertEqual([step["name"] for step in triple], ["Check inputs", "Load credentials", display])
-                    for before, after in zip(recipe["steps"][6:], triple):
-                        self.assertEqual(set(after), set(before) | {"timeout-minutes"})
-                        self.assertEqual(after["run"], before["run"])
-                        self.assertEqual(set(after["env"]), set(before["env"]))
-                        self.assertEqual(after["env"]["GUEST"], guest)
-                        self.assertEqual(after["env"]["PHASE"], phase)
-                        total_phase_commands += 1
-                    self.assertEqual(triple[0]["env"]["DISABLED"], "${{ inputs.disabled }}")
-                    for secret in ("APPLICATION_SSH_KEY", "PROXMOX_APP_TOKEN"):
-                        self.assertEqual(triple[1]["env"][secret], "${{ secrets." + secret + " }}")
-                    total_phases += 1
-                total_jobs += 1
-        self.assertEqual((total_jobs, total_phases, total_phase_commands, total_readiness_checks), (14, 59, 177, 59))
+                    self.assertEqual({key: step["with"][key] for key in ("guest", "phase", "disabled")},
+                                     {"guest": guest, "phase": phase, "disabled": "${{ inputs.disabled }}"})
+                    self.assertNotIn("continue-on-error", step)
+                    self.assertNotIn("if", step)
+                total_phases += len(expected_phases)
+        self.assertEqual(total_phases, 59)
+        # Consolidation is presentation only: run bytes and each separate environment
+        # remain the original guarded leaf. The guard/compiler never receives secrets.
+        setup = load(FRAMEWORK / ".github/actions/guest-setup/action.yml")["runs"]["steps"]
+        self.assertEqual(len(setup), 6)
+        for original, shared in zip(recipe["steps"][:6], setup):
+            for key in set(original) - {"name"}:
+                self.assertEqual(shared[key], original[key])
+            self.assertNotIn("env", shared)
+        phase_steps = load(FRAMEWORK / ".github/actions/guest-phase/action.yml")["runs"]["steps"]
+        self.assertEqual([s["name"] for s in phase_steps], ["Check readiness", "Check inputs", "Load credentials", "Deploy"])
+        for original, shared in zip([recipe["steps"][0], *recipe["steps"][6:]], phase_steps):
+            self.assertEqual(shared["run"], original["run"])
+            self.assertEqual(shared["shell"], "bash")
+            expected = {key: value.replace("secrets.", "inputs.") for key, value in original.get("env", {}).items()}
+            self.assertEqual(shared.get("env", {}), expected)
+        self.assertEqual(set(phase_steps[1]["env"]), {"GUEST", "PHASE", "DISABLED"})
+        self.assertNotIn("APPLICATION_SSH_KEY", phase_steps[1]["env"])
+        self.assertNotIn("PROXMOX_APP_TOKEN", phase_steps[3]["env"])
 
-    def test_named_secrets_remain_guest_scoped_inside_native_job_steps(self):
+    def test_named_secrets_remain_guest_scoped_inside_shared_phase_steps(self):
         common = {"APPLICATION_SSH_KEY": "true", "PROXMOX_APP_TOKEN": "true"}
         applications = {
             "automation": {"AUTOMATION_NODE_RED_API_TOKEN": "true"},
-            "identity": {
-                "FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD": "true",
-                "FOUNDATION_AUTHENTIK_SECRET_KEY": "true",
-                "FOUNDATION_AUTHENTIK_SMTP_PASSWORD": "false",
-            },
+            "identity": {"FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD": "true",
+                         "FOUNDATION_AUTHENTIK_SECRET_KEY": "true", "FOUNDATION_AUTHENTIK_SMTP_PASSWORD": "false"},
             "db-tools": {"FOUNDATION_PGADMIN_OAUTH_SECRET": "true"},
             "ingress": {"FOUNDATION_CLOUDFLARE_DNS_TOKEN": "true"},
         }
         generic = {**common, **{name: "false" for row in applications.values() for name in row}}
-        available = {name: "invented-" + name for name in generic}
-
         def load(path):
             return yaml.load(path.read_text(), Loader=yaml.BaseLoader)
-
         def declarations(document):
             return {name: row["required"] for name, row in document["on"]["workflow_call"]["secrets"].items()}
-
         directory = ROOT / ".github/workflows"
         deploy = load(directory / "deploy.yml")
         phase = load(directory / "phase.yml")
@@ -183,59 +177,45 @@ class GeneratedWorkflowTests(unittest.TestCase):
             self.assertEqual(declarations(document), generic)
             self.assertEqual(document["permissions"], {"contents": "read"})
         self.assertNotIn("secrets", deploy["jobs"]["selection"])
-        # The uncalled anchor keeps the same explicit immutable selection contract.
-        self.assertEqual(set(phase["jobs"]["run"]["secrets"]), set(generic))
-        for name, expression in phase["jobs"]["run"]["secrets"].items():
-            self.assertEqual(expression, "${{ secrets." + name + " }}")
-        recipe = framework["jobs"]["run"]
-        reconcile = recipe["steps"][-1]
-        owners = {name: guest for guest, row in applications.items() for name in row}
-        bindings = {}
-        for variable, expression in reconcile["env"].items():
-            if "secrets." not in expression:
-                continue
-            match = re.fullmatch(r"\$\{\{ inputs\.guest == '([a-z-]+)' && secrets\.([A-Z_]+) \|\| '' \}\}", expression)
-            self.assertIsNotNone(match, expression)
-            owner, name = match.groups()
-            self.assertEqual(owner, owners[name])
-            bindings[variable] = (owner, name)
-        self.assertEqual(sorted(name for _, name in bindings.values()), sorted(owners))
+        self.assertEqual(phase["jobs"]["run"]["secrets"], {name: "${{ secrets." + name + " }}" for name in generic})
+        shared = load(FRAMEWORK / ".github/actions/guest-phase/action.yml")
+        self.assertEqual({name: shared["inputs"][name]["required"] for name in generic}, generic)
+        self.assertNotIn("secrets.", json.dumps(shared))
+        owner_by_secret = {name: guest for guest, row in applications.items() for name in row}
+        credential_step, deployment_step = shared["runs"]["steps"][2:]
+        self.assertEqual(set(credential_step["env"]), {"GUEST", "PHASE", *common})
+        for name in common:
+            self.assertEqual(credential_step["env"][name], "${{ inputs." + name + " }}")
+        application_expressions = {key: value for key, value in deployment_step["env"].items() if key not in {"GUEST", "PHASE"}}
+        for value in application_expressions.values():
+            match = re.fullmatch(r"\$\{\{ inputs\.guest == '([a-z-]+)' && inputs\.([A-Z_]+) \|\| '' \}\}", value)
+            self.assertIsNotNone(match, value)
+            self.assertEqual(owner_by_secret[match[2]], match[1])
         declared = json.loads((ROOT / "stack.json").read_text())["guests"]
         for guest in declared:
-            with self.subTest(guest=guest):
-                selected = {**common, **applications.get(guest, {})}
-                workflow = load(directory / ("guest-" + guest + ".yml"))
-                self.assertEqual(declarations(workflow), selected)
-                self.assertEqual(workflow["permissions"], {"contents": "read"})
-                caller = deploy["jobs"][guest]
-                self.assertEqual(caller["uses"], "./.github/workflows/guest-" + guest + ".yml")
-                self.assertEqual(set(caller["secrets"]), set(selected))
-                for name, expression in caller["secrets"].items():
-                    self.assertEqual(expression, "${{ secrets." + name + " }}")
-                for job in workflow["jobs"].values():
-                    self.assertNotIn("uses", job)
-                    self.assertNotIn("secrets", job)
-                    self.assertEqual(set(re.findall(r"secrets\.([A-Z_]+)", json.dumps(job))), set(selected))
-                    self.assertEqual(set(job["env"]), {"HOMELAB_DEPLOYMENT_WORKFLOW"})
-                    self.assertEqual(list(workflow["jobs"]), ["deploy"])
-                    for index, step in enumerate(job["steps"]):
-                        references = set(re.findall(r"secrets\.([A-Z_]+)", json.dumps(step)))
-                        role = (index - 6) % 4
-                        expected = set() if index < 6 or role in (0, 3) else set(common) if role == 1 else set(applications.get(guest, {}))
-                        self.assertEqual(references, expected)
-                    for deployment in job["steps"][8::4]:
-                        for variable, (owner, name) in bindings.items():
-                            secret_expression = "secrets." + name if owner == guest else "''"
-                            expected = "${{ '" + guest + "' == '" + owner + "' && " + secret_expression + " || '' }}"
-                            self.assertEqual(deployment["env"][variable], expected)
-                            observed = re.fullmatch(r"\$\{\{ '([a-z0-9-]+)' == '([a-z-]+)' && (?:secrets\.([A-Z_]+)|'') \|\| '' \}\}", deployment["env"][variable])
-                            self.assertIsNotNone(observed)
-                            for smtp_present in (True, False):
-                                supplied = {key: available[key] for key in selected if smtp_present or key != "FOUNDATION_AUTHENTIK_SMTP_PASSWORD"}
-                                inherited = {key: supplied.get(key, "") for key in generic}
-                                old_value = inherited[name] if guest == owner else ""
-                                new_value = supplied.get(observed[3], "") if observed[1] == observed[2] and observed[3] else ""
-                                self.assertEqual(new_value, old_value)
+            selected = {**common, **applications.get(guest, {})}
+            workflow = load(directory / ("guest-" + guest + ".yml"))
+            self.assertEqual(declarations(workflow), selected)
+            caller = deploy["jobs"][guest]
+            self.assertEqual(caller["secrets"], {name: "${{ secrets." + name + " }}" for name in selected})
+            job = workflow["jobs"]["deploy"]
+            self.assertNotIn("secrets", job)
+            self.assertEqual(set(job["env"]), {"HOMELAB_DEPLOYMENT_WORKFLOW"})
+            self.assertNotIn("secrets.", json.dumps(job["steps"][0]))
+            for step in job["steps"][1:]:
+                self.assertNotIn("env", step)
+                self.assertEqual(set(step["with"]), {"guest", "phase", "disabled", *selected})
+                self.assertEqual(set(re.findall(r"secrets\.([A-Z_]+)", json.dumps(step))), set(selected))
+                for name in selected:
+                    self.assertEqual(step["with"][name], "${{ secrets." + name + " }}")
+                # An absent optional SMTP input stays empty, and unowned inputs never
+                # become available to the guard/compiler or another guest's deploy.
+                for smtp_present in (True, False):
+                    supplied = {name: "invented-" + name for name in selected if smtp_present or name != "FOUNDATION_AUTHENTIK_SMTP_PASSWORD"}
+                    for value in application_expressions.values():
+                        match = re.fullmatch(r"\$\{\{ inputs\.guest == '([a-z-]+)' && inputs\.([A-Z_]+) \|\| '' \}\}", value)
+                        actual = supplied.get(match[2], "") if guest == match[1] else ""
+                        self.assertEqual(actual, supplied.get(match[2], "") if owner_by_secret[match[2]] == guest else "")
 
     def test_actual_selection_preflight_validates_before_any_guest_can_be_skipped(self):
         deploy = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
@@ -267,6 +247,11 @@ class GeneratedWorkflowTests(unittest.TestCase):
             ('["dns"]', False),
             ('["ingress"]', False),
             ('["identity"]', False),
+            ('["identity","db-tools"]', True),
+            ('["ingress","identity","db-tools","bitwarden","monitoring","music"]', True),
+            ('["mariadb"]', False),
+            ('["influxdb"]', False),
+            ('["mqtt"]', False),
             ('["not-a-guest"]', False),
             ('["zigbee2mqtt", "zigbee2mqtt"]', False),
             ('[1]', False),

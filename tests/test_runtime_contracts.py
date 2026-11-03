@@ -85,7 +85,11 @@ class CompositionIdentityTests(unittest.TestCase):
             overlay["guests"][name] = {
                 "config": {"guest": {"vmid": 880}, "app": {"vmid": 880}}
             }
+        # Allocation collisions are a compile-time contract. Admission additionally
+        # refuses this intentionally synthetic site before any runtime packet.
         with self.assertRaisesRegex(ValueError, "identity"):
+            c.compile_stack(ROOT, overlay, admit=False)
+        with self.assertRaisesRegex(ValueError, "known synthetic site binding"):
             c.compile_stack(ROOT, overlay, admit=True)
 
 

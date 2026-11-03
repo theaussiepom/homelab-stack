@@ -3,9 +3,8 @@
 The stack now gives Music Assistant and MQTT their own guest jobs. These source
 profiles do not establish native readiness. The private site supplies actual
 addresses, network identities, trusted keys and genuine prerequisite acceptance.
-The public examples propose guest207 for Music and guest217 for MQTT. VLAN41 is a
-candidate dedicated MQTT client network; it must be collision-checked and routed
-through the existing network owner before private adoption.
+The separate public examples assign synthetic guest and network identities.
+The consumer qualifies the dedicated MQTT client network before admission.
 
 ## Music Assistant
 
@@ -19,8 +18,7 @@ bootstraps accounts.
 The application uses host networking in its unprivileged Docker-capable guest.
 Its selected Home interface supplies the bind/publish address; management and
 backend identities remain separate. No SYS_ADMIN, DAC_READ_SEARCH, unconfined
-AppArmor or filesystem-provider mount privilege is inherited from the old Docker
-host. No NAS library provider or share is invented. The existing finite reply
+AppArmor or additional filesystem-provider mounts are granted by this profile. The existing finite reply
 routing helper preserves the selected Home source on routed replies.
 
 The pre-start helper verifies the prepared settings and retained database inputs;
@@ -34,9 +32,8 @@ Public rules declare the existing Home discovery and scoped ingress/HA paths;
 they do not prove physical multicast or deployed firewall enforcement.
 
 The browser route additionally selects the native `music-clients` IP allowlist.
-Public defaults allow the example Home LAN and VPN only. The private site replaces
-its complete `ipAllowList.sourceRange` with the approved finite LAN/VPN ranges and
-individual tablet `/32` entries. This does not admit an entire IoT subnet or
+The consumer supplies the complete `networks.music_clients` range list as local
+policy; reusable definitions do not choose the client networks. This does not admit an entire IoT subnet or
 arbitrary routed/Internet clients. It uses the existing middleware contract,
 without a plugin, second bypass router or new rule/priority grammar. The filter
 does not add an Authentik login; application identity and authentication remain
@@ -44,8 +41,8 @@ with the retained Music Assistant data.
 
 ## MQTT
 
-The single broker publication moves from `automation.mqtt` to `mqtt.mqtt`, keeping
-`broker.mqtt` as its canonical hostname. Backend clients use the broker's declared
+The single broker publication moves from `automation.mqtt` to `mqtt.mqtt`, using
+the consumer-bound canonical broker hostname. Backend clients use the broker's declared
 backend address; external clients use its dedicated client VLAN address. DNS,
 container aliases and required connection metadata derive from this owner.
 Home Automation retains HA and Node-RED only. Radios has a real broker dependency
@@ -57,14 +54,10 @@ separately, preserving ownership and existing credentials. A source-bound privat
 probe JSON carries one existing account for authenticated CONNECT and anonymous
 refusal; no account is created or rotated. The broker receives no HTTP frontend.
 
-Cutover must stop and retire only the old managed broker writer, copy a coherent
-retained broker generation, update every actual client/DNS binding and admit the
-new role before CD. The framework refuses a retained old MQTT container under a
-broker-free Automation profile; it never deletes the container or its data
-implicitly. Two active brokers with independent retained/session state are not a
-migration strategy. Automation's existing NIC order and addresses are preserved
-in this stream; stale hardcoded clients must be explicitly found and corrected,
-not hidden behind a new proxy, NAT rule or duplicate broker.
+Consumers adopting retained broker state must provide reviewed identity, input
+and writer evidence. The framework refuses an unexpected retained broker under a
+broker-free Automation profile; it does not implicitly delete a container or data.
+The source defines desired services and safeguards, not a site migration executor.
 
 The declared client allowances preserve existing Home/IoT MQTT clients and exact
 Pi peers while the backend admits only the selected Automation and Radios peers.
