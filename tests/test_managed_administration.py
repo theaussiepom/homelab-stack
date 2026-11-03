@@ -151,6 +151,10 @@ class ManagedAdministrationTests(unittest.TestCase):
                     'read_only': True, 'bind': {'create_host_path': False},
                 }])
                 self.assertEqual(server['healthcheck']['test'][-3:], [declared['version'], declared['sha256'], declared['image_filename']])
+                self.assertEqual(server['healthcheck']['test'][-4], '--postgresql')
+                maria_only = copy.deepcopy(stack)
+                maria_only['cloudbeaver']['managed_connections'].pop('postgresql-admin')
+                self.assertNotIn('--postgresql', render.compose(maria_only)['services']['cloudbeaver']['healthcheck']['test'])
                 self.assertEqual(server['image'], 'dbeaver/cloudbeaver:26.2.3@sha256:a537c60a7ca98d8d791c11c01172c1354e8dedfe222d04a54795ceeb32f12bbc')
 
     def test_managed_mariadb_refuses_missing_or_unbounded_jdbc_declarations(self):
@@ -182,6 +186,9 @@ class ManagedAdministrationTests(unittest.TestCase):
             self.assertIsNone(cloudbeaver.jdbc(stack['cloudbeaver']))
             server = render.compose(stack)['services']['cloudbeaver']
             self.assertFalse(any(row['target'].startswith('/opt/cloudbeaver/drivers/') for row in server['volumes']))
+            self.assertEqual('--postgresql' in server['healthcheck']['test'], bool(managed))
+            if managed:
+                self.assertEqual(server['healthcheck']['test'][-1], '--postgresql')
 
     def test_admin_owners_and_postgresql_hba_follow_existing_interfaces(self):
         for path in ('site.example.json', 'examples/site.second.json'):

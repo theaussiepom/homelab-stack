@@ -84,6 +84,16 @@ separate from the original metadata-only PostgreSQL
 `sslmode: prefer` entry. Source qualification does not establish a successful
 target SQL login, grants or browser session.
 
+The managed PostgreSQL connection requires TLS, SCRAM-SHA-256 authentication and
+TLS channel binding (`sslmode: require`, `requireAuth: scram-sha-256` and
+`channelBinding: require`). Managed MariaDB uses `sslMode: verify-full` with
+PARSEC's password-bound verification of the automatically generated server
+certificate. This zero-configuration mode does not introduce a CA or manual
+certificate lifecycle. Readiness checks the selected packaged PostgreSQL 42.7
+driver has patch 13 or later and refuses conflicting driver overrides or caches.
+Dedicated accounts require an already commissioned, running, TLS-enabled
+database; this capability does not commission or recover a database server.
+
 The CloudBeaver profile declares one official MariaDB Connector/J artifact in
 `cloudbeaver.mariadb_jdbc`: its version, SHA-256 and the selected image's loader
 filename. Ordinary application deployment downloads the checksum-verified vendor
@@ -93,7 +103,7 @@ filename can retain the image's older basename. This does not replace the image
 or add a second driver to its classpath. The selected 3.5.11 correction prevents
 the Properties-based connection password from appearing in the JDBC metadata
 URL. It is required for managed MariaDB connections; metadata-only and
-PostgreSQL-only compositions retain their existing driver behavior. Local
+PostgreSQL-only compositions add no MariaDB override. Local
 driver qualification does not establish the target application's loaded driver
 or a successful browser connection; runtime health verifies the selected artifact
 and the managed database connection separately.

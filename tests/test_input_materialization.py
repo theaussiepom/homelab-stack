@@ -14,6 +14,7 @@ FRAMEWORK = Path(os.environ.get("HOMELAB_FRAMEWORK", ROOT.parent / "homelab")).r
 APPS = FRAMEWORK / "proxmox/applications"
 sys.path.insert(0, str(APPS))
 import deployment_inputs as inputs
+import database_admin
 from secret_contract import BINDINGS
 
 
@@ -74,6 +75,16 @@ class InputMaterializationTests(unittest.TestCase):
                         record = path.parent / Path(connection["credential_file"]).name
                         self.assertEqual(record.stat().st_mode & 0o777, 0o600)
                         self.assertEqual(json.loads(record.read_text())["owner"], connection["owner"])
+                    document = json.loads(database_admin.document(value["cloudbeaver"]))
+                    self.assertEqual(
+                        document["connections"]["postgresql-admin"]["configuration"]["properties"],
+                        {"sslmode": "require", "channelBinding": "require", "requireAuth": "scram-sha-256"},
+                    )
+                    self.assertEqual(
+                        document["connections"]["mariadb-admin"]["configuration"]["properties"],
+                        {"sslMode": "verify-full"},
+                    )
+                    self.assertEqual(value["cloudbeaver"]["connections"]["postgresql"]["sslmode"], "prefer")
                 before = {p.name: p.read_bytes() for p in path.parent.iterdir()}
                 inputs.prepare(source, root / "inputs", environment)
                 self.assertEqual(

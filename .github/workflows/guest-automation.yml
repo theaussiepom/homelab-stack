@@ -36,10 +36,10 @@ jobs:
       HOMELAB_DEPLOYMENT_WORKFLOW: ${{ github.workflow_ref }}
     steps:
     - name: Setup
-      uses: theaussiepom/homelab/.github/actions/guest-setup@d1b9c8120802e8143270bd00384494a837fd3ea6
+      uses: theaussiepom/homelab/.github/actions/guest-setup@05b250f1010550721554d139fbecd915071fdd8b
       timeout-minutes: 45
     - name: Infrastructure
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d1b9c8120802e8143270bd00384494a837fd3ea6
+      uses: theaussiepom/homelab/.github/actions/guest-phase@05b250f1010550721554d139fbecd915071fdd8b
       timeout-minutes: 45
       with:
         guest: automation
@@ -49,7 +49,7 @@ jobs:
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         AUTOMATION_NODE_RED_API_TOKEN: ${{ secrets.AUTOMATION_NODE_RED_API_TOKEN }}
     - name: Prepare
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d1b9c8120802e8143270bd00384494a837fd3ea6
+      uses: theaussiepom/homelab/.github/actions/guest-phase@05b250f1010550721554d139fbecd915071fdd8b
       timeout-minutes: 45
       with:
         guest: automation
@@ -59,7 +59,7 @@ jobs:
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         AUTOMATION_NODE_RED_API_TOKEN: ${{ secrets.AUTOMATION_NODE_RED_API_TOKEN }}
     - name: Home Assistant
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d1b9c8120802e8143270bd00384494a837fd3ea6
+      uses: theaussiepom/homelab/.github/actions/guest-phase@05b250f1010550721554d139fbecd915071fdd8b
       timeout-minutes: 45
       with:
         guest: automation
@@ -69,7 +69,7 @@ jobs:
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         AUTOMATION_NODE_RED_API_TOKEN: ${{ secrets.AUTOMATION_NODE_RED_API_TOKEN }}
     - name: Node-RED
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d1b9c8120802e8143270bd00384494a837fd3ea6
+      uses: theaussiepom/homelab/.github/actions/guest-phase@05b250f1010550721554d139fbecd915071fdd8b
       timeout-minutes: 45
       with:
         guest: automation
@@ -79,7 +79,7 @@ jobs:
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         AUTOMATION_NODE_RED_API_TOKEN: ${{ secrets.AUTOMATION_NODE_RED_API_TOKEN }}
     - name: Zabbix agent
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d1b9c8120802e8143270bd00384494a837fd3ea6
+      uses: theaussiepom/homelab/.github/actions/guest-phase@05b250f1010550721554d139fbecd915071fdd8b
       timeout-minutes: 45
       with:
         guest: automation
