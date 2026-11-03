@@ -60,6 +60,23 @@ class MusicMQTTTests(unittest.TestCase):
         self.assertTrue(no_automation['zigbee2mqtt']['enabled'])
         self.assertEqual(workflows.models(ROOT)['deploy.yml']['jobs']['zigbee2mqtt']['needs'],['selection','mqtt'])
 
+    def test_music_can_deploy_without_automation_but_still_requires_dns_and_ingress(self):
+        overlay=compiler.read(ROOT/'site.example.json')
+        baseline=self.packets(overlay)
+        without=compiler.compile_stack(ROOT,overlay,['automation'])
+        self.assertFalse(without['automation']['enabled'])
+        self.assertTrue(without['music']['enabled'])
+        self.assertEqual(without['music']['files'],baseline['music']['files'])
+        declared=compiler.manifest(ROOT)['guests']
+        self.assertEqual(declared['music']['depends_on'],['dns','ingress'])
+        deploy=workflows.models(ROOT)['deploy.yml']
+        self.assertEqual(deploy['jobs']['music']['needs'],['selection','dns','ingress'])
+        for required in ('dns','ingress'):
+            enabled={'music'} | ({'dns'} if required=='ingress' else set())
+            disabled=sorted(set(declared)-enabled)
+            with self.subTest(required=required),self.assertRaisesRegex(ValueError,'prerequisite'):
+                compiler.compile_stack(ROOT,overlay,disabled)
+
     def test_radios_label_preserves_the_radio_and_winet_runtime_identity(self):
         packet=self.packets()['zigbee2mqtt'];cfg=json.loads(packet['files']['site.json'])
         self.assertEqual(cfg['guest']['hostname'], 'radios')

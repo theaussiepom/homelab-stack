@@ -272,8 +272,7 @@
     "music": {
       "depends_on": [
         "dns",
-        "ingress",
-        "automation"
+        "ingress"
       ],
       "prerequisites": [
         "state-and-trust-reviewed",

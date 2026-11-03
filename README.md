@@ -30,7 +30,7 @@ flowchart TD
   Maria --> Auto
   Influx --> Auto
   Broker --> Radio[Radios: Zigbee2MQTT then WiNet]
-  Auto --> Music[Music Assistant]
+  DNS --> Music[Music Assistant]
   Ingress --> Music
   Maria --> Vault[Bitwarden]
   Ingress --> Vault
