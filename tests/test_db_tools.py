@@ -96,10 +96,44 @@ class DatabaseToolsTests(unittest.TestCase):
         failed = Environment(autoescape=True).compile_expression(task["failed_when"])
         for result, expected in (({"rc": 0, "stdout": "302"}, False),
                                  ({"rc": 60, "stdout": "302"}, True),
+                                 ({"rc": 28, "stdout": "302"}, True),
                                  ({"rc": 22, "stdout": "404"}, True),
+                                 ({"rc": 0, "stdout": "301"}, True),
                                  ({"rc": 0, "stdout": "200"}, True)):
             with self.subTest(result=result):
                 self.assertEqual(failed(ordinary_health=result, item=route), expected)
+
+    def test_canonical_https_retry_budget_retains_tls_and_the_step_cap(self):
+        overlay = c.read(ROOT / "site.example.json")
+        overlay["values"].update({"domains.db_tools": "databases.example.invalid",
+                                  "addresses.ingress_frontend": "198.18.40.133"})
+        packets = c.compile_stack(ROOT, overlay, [])
+        cfg = json.loads(packets["db-tools"]["files"]["site.json"])
+        checks = cfg["app"]["health_checks"]
+        self.assertEqual(checks, cfg["app"]["service_health_checks"]["cloudbeaver"])
+        argv = checks[-1]["argv"]
+        option = lambda name: int(argv[argv.index(name) + 1])
+        self.assertEqual((option("--retry"), option("--retry-delay"),
+                          option("--retry-max-time"), option("--max-time")),
+                         (1200, 2, 2250, 15))
+        self.assertGreaterEqual(option("--retry") * option("--retry-delay"), option("--retry-max-time"))
+        self.assertEqual(argv[-1], "https://databases.example.invalid/")
+        self.assertEqual(argv[argv.index("--resolve") + 1], "databases.example.invalid:443:198.18.40.133")
+        self.assertFalse({"--insecure", "-k", "--location", "-L"} & set(argv))
+        self.assertIn("--fail", argv)
+        self.assertEqual(checks[-1]["expect"], "302")
+        for unchanged in [checks[1], json.loads(packets["music"]["files"]["site.json"])["app"]["health_checks"][-1]]:
+            original = unchanged["argv"]
+            self.assertEqual(original[original.index("--retry") + 1], "30")
+            self.assertEqual(original[original.index("--retry-max-time") + 1], "180")
+        workflow = yaml.safe_load((ROOT / ".github/workflows/guest-db-tools.yml").read_text())
+        steps = [step for job in workflow["jobs"].values() for step in job["steps"]
+                 if step.get("env", {}).get("PHASE") == "cloudbeaver"
+                 and "proxmox/applications/deploy.py" in step.get("run", "")]
+        self.assertEqual(len(steps), 1)
+        self.assertEqual(steps[0]["timeout-minutes"], 45)
+        self.assertLess(option("--retry-max-time") + option("--retry-delay") + option("--max-time"),
+                        steps[0]["timeout-minutes"] * 60)
 
     def test_missing_database_firewall_or_wrong_driver_binding_refuses_compilation(self):
         for owner, direction in (("db-tools", "out"), ("mariadb", "in")):

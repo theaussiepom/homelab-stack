@@ -40,7 +40,7 @@ permissions:
   contents: read
 jobs:
   run:
-    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@68aa5814d7a438c4e2224f6c8dde8e8743aa2969
+    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@e1cc867261e5e58f664b8d2b5fa27e6c105ae776
     with:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}

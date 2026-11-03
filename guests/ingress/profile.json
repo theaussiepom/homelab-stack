@@ -405,7 +405,8 @@
       "acme_dns_resolvers": [
         "${addresses.acme_dns_primary}:53",
         "${addresses.acme_dns_secondary}:53"
-      ]
+      ],
+      "acme_dns_propagation_timeout_seconds": 2100
     },
     "routing": {
       "middlewares": {

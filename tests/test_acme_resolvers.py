@@ -16,6 +16,7 @@ compiler = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(compiler)
 sys.path.insert(0, str(FRAMEWORK / "proxmox/applications"))
 import foundation
+import render
 # The compiler adds its blueprint directory; keep this stack's test discovery first.
 sys.path.insert(0, str(ROOT / "tests"))
 
@@ -55,6 +56,39 @@ class AcmeResolverTests(unittest.TestCase):
         current_files.pop("traefik.yml")
         previous_files.pop("traefik.yml")
         self.assertEqual(current_files, previous_files)
+
+    def test_bounded_propagation_changes_only_the_selected_provider_timeout(self):
+        stack = json.loads(self.packet()["files"]["stack.json"])
+        self.assertEqual(stack["foundation"]["acme_dns_propagation_timeout_seconds"], 2100)
+        previous = copy.deepcopy(stack)
+        previous["foundation"].pop("acme_dns_propagation_timeout_seconds")
+        current_compose = render.compose(stack)
+        previous_compose = render.compose(previous)
+        environment = current_compose["services"]["traefik"]["environment"]
+        self.assertEqual(environment.pop("CLOUDFLARE_PROPAGATION_TIMEOUT"), "2100")
+        self.assertNotIn("CLOUDFLARE_PROPAGATION_TIMEOUT", previous_compose["services"]["traefik"]["environment"])
+        self.assertEqual(current_compose, previous_compose)
+        with patch.object(foundation, "read_private", return_value="invented-source-fixture"):
+            current_files = foundation.files(stack)
+            previous_files = foundation.files(previous)
+        self.assertEqual(current_files, previous_files)
+        static = json.loads(next(row["content"] for row in current_files if row["path"] == "traefik.yml"))
+        checks = static["certificatesResolvers"]["letsencrypt"]["acme"]["dnsChallenge"]
+        self.assertEqual(checks["propagation"], {"disableANSChecks": True, "requireAllRNS": True})
+        self.assertNotIn("disableChecks", checks["propagation"])
+
+    def test_propagation_budget_cannot_bypass_the_typed_foundation_guard(self):
+        for value in (0, 119, 2101, True, "2100", 2100.0):
+            overlay = compiler.read(ROOT / "site.example.json")
+            overlay["guests"]["ingress"] = {"stack": {"foundation": {
+                "acme_dns_propagation_timeout_seconds": value,
+            }}}
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                compiler.compile_stack(ROOT, overlay, [])
+        stack = json.loads(self.packet()["files"]["stack.json"])
+        stack["services"]["traefik"]["environment"] = {"CLOUDFLARE_PROPAGATION_TIMEOUT": "2100"}
+        with self.assertRaises(ValueError):
+            render.compose(stack)
 
 
 if __name__ == "__main__":

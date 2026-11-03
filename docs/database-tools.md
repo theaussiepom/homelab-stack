@@ -68,3 +68,23 @@ The profile increases guest memory to 2048 MiB and retains its one CPU, 4 GiB ro
 and 2 GiB data volume. CloudBeaver's 1536 MiB container limit includes a 1024 MiB
 maximum Java heap; the gateway has a 128 MiB limit. Private adoption qualifies
 actual free space and runtime behavior for the selected immutable images.
+
+## Bounded certificate readiness
+
+The ingress foundation selects `acme_dns_propagation_timeout_seconds: 2100` for
+the Cloudflare DNS challenge. The pinned provider accepts integer seconds. This
+allows a bounded period for a new hostname's cached negative DNS answers to
+expire; it does not establish that caching caused a particular earlier failure.
+Recursive propagation checks, normal browser TLS and the certificate store remain
+unchanged. See the pinned [provider timeout implementation](https://github.com/go-acme/lego/blob/v5.5.2/providers/dns/cloudflare/cloudflare.go#L67).
+
+Only the canonical CloudBeaver HTTPS check waits up to 2250 seconds for retries,
+with 1200 retries, a 2 second delay and a 15 second per-request limit. The count is
+large enough that immediate certificate failures do not exhaust it before the
+timer. Curl can finish an already started request after its retry timer expires,
+so the final transfer/backoff can extend that window slightly. It must still
+validate the certificate and receive 302 without following redirects. The
+existing 45 minute application-step cap remains; this is bounded tolerance, not
+a guarantee that every initial installation fits that budget. Identity discovery,
+Music health and other guest checks retain their existing limits. Source tests
+remain separate from certificate and application acceptance after deployment.
