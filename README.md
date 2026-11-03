@@ -67,7 +67,7 @@ and coordinator backup. Deployment preserves the network identity and never open
 the radio from a configuration checker or rewrites Zigbee settings.
 
 The dedicated MQTT guest's `app.published_services.mqtt` is the single broker
-owner. It declares a consumer-bound internal hostname, port1883, backend/client addresses and which
+owner. It declares a consumer-bound internal hostname, port 1883, backend/client addresses and which
 address DNS publishes. Home Assistant, Node-RED, Zigbee2MQTT and WiNet reference
 `mqtt.mqtt` through `app.service_connections`. The compiler derives container
 hostname aliases, the Pi-hole record and matching DNS verification. Both ends of

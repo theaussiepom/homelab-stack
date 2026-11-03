@@ -36,10 +36,10 @@ jobs:
       HOMELAB_DEPLOYMENT_WORKFLOW: ${{ github.workflow_ref }}
     steps:
     - name: Setup
-      uses: theaussiepom/homelab/.github/actions/guest-setup@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      uses: theaussiepom/homelab/.github/actions/guest-setup@a2ab0ec1dd2a74802cdfd6e08058478d2af71221
       timeout-minutes: 45
     - name: Infrastructure
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      uses: theaussiepom/homelab/.github/actions/guest-phase@a2ab0ec1dd2a74802cdfd6e08058478d2af71221
       timeout-minutes: 45
       with:
         guest: db-tools
@@ -49,7 +49,7 @@ jobs:
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         FOUNDATION_PGADMIN_OAUTH_SECRET: ${{ secrets.FOUNDATION_PGADMIN_OAUTH_SECRET }}
     - name: Prepare
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      uses: theaussiepom/homelab/.github/actions/guest-phase@a2ab0ec1dd2a74802cdfd6e08058478d2af71221
       timeout-minutes: 45
       with:
         guest: db-tools
@@ -59,7 +59,7 @@ jobs:
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         FOUNDATION_PGADMIN_OAUTH_SECRET: ${{ secrets.FOUNDATION_PGADMIN_OAUTH_SECRET }}
     - name: CloudBeaver
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      uses: theaussiepom/homelab/.github/actions/guest-phase@a2ab0ec1dd2a74802cdfd6e08058478d2af71221
       timeout-minutes: 45
       with:
         guest: db-tools
@@ -69,7 +69,7 @@ jobs:
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
         FOUNDATION_PGADMIN_OAUTH_SECRET: ${{ secrets.FOUNDATION_PGADMIN_OAUTH_SECRET }}
     - name: Zabbix agent
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      uses: theaussiepom/homelab/.github/actions/guest-phase@a2ab0ec1dd2a74802cdfd6e08058478d2af71221
       timeout-minutes: 45
       with:
         guest: db-tools

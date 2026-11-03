@@ -34,10 +34,10 @@ jobs:
       HOMELAB_DEPLOYMENT_WORKFLOW: ${{ github.workflow_ref }}
     steps:
     - name: Setup
-      uses: theaussiepom/homelab/.github/actions/guest-setup@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      uses: theaussiepom/homelab/.github/actions/guest-setup@a2ab0ec1dd2a74802cdfd6e08058478d2af71221
       timeout-minutes: 45
     - name: Infrastructure
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      uses: theaussiepom/homelab/.github/actions/guest-phase@a2ab0ec1dd2a74802cdfd6e08058478d2af71221
       timeout-minutes: 45
       with:
         guest: mariadb
@@ -46,7 +46,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: Prepare
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      uses: theaussiepom/homelab/.github/actions/guest-phase@a2ab0ec1dd2a74802cdfd6e08058478d2af71221
       timeout-minutes: 45
       with:
         guest: mariadb
@@ -55,7 +55,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: MariaDB
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      uses: theaussiepom/homelab/.github/actions/guest-phase@a2ab0ec1dd2a74802cdfd6e08058478d2af71221
       timeout-minutes: 45
       with:
         guest: mariadb
@@ -64,7 +64,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: Zabbix agent
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d119f66ac4bef4af8d55a0f3a4a84767fd2cc135
+      uses: theaussiepom/homelab/.github/actions/guest-phase@a2ab0ec1dd2a74802cdfd6e08058478d2af71221
       timeout-minutes: 45
       with:
         guest: mariadb
