@@ -49,6 +49,18 @@ binding, not account creation or rotation. The framework hashes it as an input a
 copies it privately for authenticated CONNECT plus anonymous-refusal verification.
 The source file and retained broker password file must never enter Git.
 
+MQTT Explorer and the two CloudBeaver administration accounts use separate
+consumer-bound `accounts.*` usernames and `credentials.*` IDs. The framework
+creates each managed password once in protected controller custody and copies
+the unchanged record into its declared immutable ordinary input. Existing
+passwords/accounts are preserved, and a collision or credential drift refuses.
+Explorer's saved profile and CloudBeaver's managed native datasource file
+contain plaintext passwords at rest and stay private; no encryption-at-rest
+guarantee is claimed. The existing CloudBeaver resource manager stays enabled;
+the original broker probe and application/root database credentials are not
+reused. See [MQTT Explorer](mqtt-explorer.md) and
+[database administration](database-tools.md#dedicated-administration-connections).
+
 Music Assistant uses the previously selected upstream `:latest` image. Preserve
 its original data/provider credentials and the original pre-upgrade data copy
 before any application schema upgrade; record the resolved image at deployment.

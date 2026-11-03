@@ -101,6 +101,15 @@
           "port": "5432",
           "proto": "tcp",
           "source": "${addresses.identity_postgresql}/32"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "9000",
+          "source": "${addresses.mqtt_backend}/32",
+          "destination": "${addresses.identity_backend}/32",
+          "interface": "net1",
+          "comment": "MQTT Explorer gateway to the existing Authentik outpost"
         }
       ],
       "start_on_boot": true,

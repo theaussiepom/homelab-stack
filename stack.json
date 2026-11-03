@@ -303,9 +303,21 @@
         "security-headers",
         "music-clients"
       ]
+    },
+    "mqtt-explorer": {
+      "host": "${domains.mqtt_explorer}",
+      "target": {
+        "endpoint": "mqtt.mqtt_explorer.web"
+      },
+      "middlewares": [
+        "security-headers"
+      ]
     }
   },
   "required_site_bindings": {
+    "accounts.mariadb_admin": "string",
+    "accounts.mqtt_explorer": "string",
+    "accounts.postgresql_admin": "string",
     "addresses.acme_dns_primary": "string",
     "addresses.acme_dns_secondary": "string",
     "addresses.automation_backend": "string",
@@ -367,6 +379,9 @@
     "bridges.mqtt": "string",
     "bridges.postgresql": "string",
     "contact.acme_email": "string",
+    "credentials.mariadb_admin": "string",
+    "credentials.mqtt_explorer": "string",
+    "credentials.postgresql_admin": "string",
     "custody.catalogue": "string",
     "custody.mariadb_acceptance": "string",
     "custody.postgresql_acceptance": "string",
@@ -376,6 +391,7 @@
     "domains.homeassistant": "string",
     "domains.identity": "string",
     "domains.monitoring": "string",
+    "domains.mqtt_explorer": "string",
     "domains.music": "string",
     "domains.node_red_alias": "string",
     "domains.node_red_primary": "string",
@@ -468,6 +484,7 @@
     "paths.backup_source": "string",
     "paths.ca_file": "string",
     "paths.known_hosts": "string",
+    "paths.mqtt_password_file": "string",
     "paths.mqtt_probe": "string",
     "paths.private_key": "string",
     "paths.state_root": "string",

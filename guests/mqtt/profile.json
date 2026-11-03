@@ -146,6 +146,24 @@
           "source": "${addresses.zigbeepi_apps}/32",
           "destination": "${addresses.mqtt_frontend}/32",
           "interface": "net2"
+        },
+        {
+          "direction": "in",
+          "proto": "tcp",
+          "port": "80",
+          "source": "${addresses.ingress_backend}/32",
+          "destination": "${addresses.mqtt_backend}/32",
+          "interface": "net1",
+          "comment": "Traefik to the authenticated MQTT Explorer gateway"
+        },
+        {
+          "direction": "out",
+          "proto": "tcp",
+          "port": "9000",
+          "source": "${addresses.mqtt_backend}/32",
+          "destination": "${addresses.identity_backend}/32",
+          "interface": "net1",
+          "comment": "MQTT Explorer gateway to the existing Authentik outpost"
         }
       ]
     },
@@ -190,6 +208,17 @@
             "mqtt-broker"
           ],
           "expect": "\"read_only_probe\": \"passed\""
+        },
+        {
+          "name": "MQTT Explorer private service and authentication gateway",
+          "argv": [
+            "python3",
+            "/opt/homelab-app/mqtt-explorer-runtime.py",
+            "health",
+            "--config",
+            "/opt/homelab-app/runtime/mqtt-explorer-public.json"
+          ],
+          "expect": "\"mqtt_explorer\": \"passed\""
         }
       ],
       "service_health_checks": {
@@ -203,7 +232,31 @@
             ],
             "expect": "\"read_only_probe\": \"passed\""
           }
+        ],
+        "mqtt_explorer": [
+          {
+            "name": "MQTT Explorer private service and authentication gateway",
+            "argv": [
+              "python3",
+              "/opt/homelab-app/mqtt-explorer-runtime.py",
+              "health",
+              "--config",
+              "/opt/homelab-app/runtime/mqtt-explorer-public.json"
+            ],
+            "expect": "\"mqtt_explorer\": \"passed\""
+          }
         ]
+      },
+      "endpoints": {
+        "mqtt_explorer": {
+          "web": "http://${addresses.mqtt_backend}:80"
+        }
+      },
+      "service_connections": {
+        "mqtt_explorer": {
+          "service": "mqtt.mqtt",
+          "address": "backend"
+        }
       }
     }
   },
@@ -224,6 +277,36 @@
         "environment": {},
         "extra_mounts": [],
         "image_ref": "mqtt"
+      },
+      "mqtt_explorer": {
+        "memory_mib": 256,
+        "cpus": 1,
+        "pids_limit": 128,
+        "environment": {},
+        "image_ref": "mqtt_explorer"
+      },
+      "explorer_gateway": {
+        "memory_mib": 128,
+        "cpus": 1,
+        "pids_limit": 128,
+        "environment": {},
+        "image_ref": "traefik"
+      }
+    },
+    "mqtt_explorer": {
+      "public_url": "https://${domains.mqtt_explorer}",
+      "bind_address": "${addresses.mqtt_backend}",
+      "authentik_outpost_url": "http://${addresses.identity_backend}:9000",
+      "data_path": "/srv/homelab/data/mqtt-explorer",
+      "broker_connection": {
+        "name": "MQTT broker",
+        "hostname": "${hostnames.mqtt_broker}",
+        "port": 1883,
+        "username": "${accounts.mqtt_explorer}",
+        "credential_id": "${credentials.mqtt_explorer}",
+        "credential_file": "${inputs}/managed-${credentials.mqtt_explorer}.json",
+        "password_file": "${paths.mqtt_password_file}",
+        "access": "read-write-all"
       }
     }
   }

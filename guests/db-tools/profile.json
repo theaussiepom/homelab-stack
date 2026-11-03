@@ -232,6 +232,14 @@
         "cloudbeaver.mariadb": {
           "service": "mariadb.mariadb",
           "address": "backend"
+        },
+        "cloudbeaver.postgresql-admin": {
+          "service": "postgresql.postgresql",
+          "address": "backend"
+        },
+        "cloudbeaver.mariadb-admin": {
+          "service": "mariadb.mariadb",
+          "address": "backend"
         }
       }
     }
@@ -304,7 +312,26 @@
           "database": ""
         }
       },
-      "retained_pgadmin_image": "dpage/pgadmin4@sha256:cefc4cc6b7d9d71a9e81e76fb9d7e14038ab5661b539a190eea1b63fa612589a"
+      "retained_pgadmin_image": "dpage/pgadmin4@sha256:cefc4cc6b7d9d71a9e81e76fb9d7e14038ab5661b539a190eea1b63fa612589a",
+      "mariadb_jdbc": {
+        "version": "3.5.11",
+        "sha256": "42604178b9e57ec08ee0035079961516f086e455d0141f0b22c6eff29fb2fff4",
+        "image_filename": "mariadb-java-client-3.5.10.jar"
+      },
+      "managed_connections": {
+        "postgresql-admin": {
+          "name": "PostgreSQL administration",
+          "driver": "postgresql",
+          "database": "postgres",
+          "account_id": "cloudbeaver-postgresql-admin"
+        },
+        "mariadb-admin": {
+          "name": "MariaDB administration",
+          "driver": "mariadb",
+          "database": "",
+          "account_id": "cloudbeaver-mariadb-admin"
+        }
+      }
     }
   }
 }

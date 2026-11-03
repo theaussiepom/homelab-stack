@@ -92,7 +92,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
             "zigbee2mqtt": ["infrastructure", "preparation", "zigbee2mqtt", "winet"],
             "monitoring": ["infrastructure", "preparation", "zabbix"],
             "music": ["infrastructure", "preparation", "music_assistant"],
-            "mqtt": ["infrastructure", "preparation", "mqtt"],
+            "mqtt": ["infrastructure", "preparation", "mqtt", "mqtt_explorer"],
         }
         labels = {"infrastructure": "Infrastructure", "preparation": "Prepare",
                   "unbound": "Unbound", "pihole": "Pi-hole", "traefik": "Traefik",
@@ -100,7 +100,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                   "authentik": "Authentik", "cloudbeaver": "CloudBeaver", "homeassistant": "Home Assistant",
                   "node_red": "Node-RED", "bitwarden": "Bitwarden", "pegaprox": "PegaProx",
                   "zigbee2mqtt": "Zigbee2MQTT", "winet": "WiNet", "zabbix": "Zabbix",
-                  "music_assistant": "Music Assistant", "mqtt": "MQTT", "zabbix-agent": "Zabbix agent"}
+                  "music_assistant": "Music Assistant", "mqtt": "MQTT", "mqtt_explorer": "MQTT Explorer", "zabbix-agent": "Zabbix agent"}
         directory = ROOT / ".github/workflows"
         framework = load(FRAMEWORK / ".github/workflows/guest-phase.yml")
         recipe = framework["jobs"]["run"]
@@ -135,7 +135,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                     self.assertNotIn("continue-on-error", step)
                     self.assertNotIn("if", step)
                 total_phases += len(expected_phases)
-        self.assertEqual(total_phases, 59)
+        self.assertEqual(total_phases, 60)
         # Consolidation is presentation only: run bytes and each separate environment
         # remain the original guarded leaf. The guard/compiler never receives secrets.
         setup = load(FRAMEWORK / ".github/actions/guest-setup/action.yml")["runs"]["steps"]

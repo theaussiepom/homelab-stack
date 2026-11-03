@@ -88,5 +88,10 @@
     "repository": "quay.io/oauth2-proxy/oauth2-proxy",
     "tag": "v7.15.5",
     "digest": "sha256:0d989b27d90d5e527fb2b045d864c4001c3104bdd763b3211b7e9ba2110380ea"
+  },
+  "mqtt_explorer": {
+    "repository": "ghcr.io/thomasnordquist/mqtt-explorer",
+    "tag": null,
+    "digest": "sha256:fa2ff4300d867f1f3e131af6b6ccff54bc9d2905815e28e3aa5de6de5240f0fc"
   }
 }

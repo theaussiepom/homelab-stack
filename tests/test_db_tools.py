@@ -67,6 +67,8 @@ class DatabaseToolsTests(unittest.TestCase):
         self.assertEqual(cfg["app"]["service_connections"], {
             "cloudbeaver.postgresql": {"service": "postgresql.postgresql", "address": "backend"},
             "cloudbeaver.mariadb": {"service": "mariadb.mariadb", "address": "backend"},
+            "cloudbeaver.postgresql-admin": {"service": "postgresql.postgresql", "address": "backend"},
+            "cloudbeaver.mariadb-admin": {"service": "mariadb.mariadb", "address": "backend"},
         })
         for engine, host, port, database in (
             ("postgresql", "198.18.31.123", 5432, "postgres"),

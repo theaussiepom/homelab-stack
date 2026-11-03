@@ -74,15 +74,9 @@ class ZigbeeServiceTests(unittest.TestCase):
             {
                 "addresses.mqtt_frontend": "198.18.41.121",
                 "addresses.mqtt_backend": "198.18.30.121",
+                "hostnames.mqtt_broker": "bus.example.invalid",
             }
         )
-        overlay["guests"]["mqtt"] = {
-            "config": {
-                "app": {
-                    "published_services": {"mqtt": {"hostname": "bus.example.invalid"}}
-                }
-            }
-        }
         packets = self.packets(overlay)
         dns = self.stack(packets["dns"])
         expected = {
@@ -98,6 +92,7 @@ class ZigbeeServiceTests(unittest.TestCase):
                     "influx.service-9.example.invalid",
                     "matter.service-7.example.invalid",
                     "music.example.invalid",
+                    "mqtt-ui-a.example.invalid",
                     "nas.service-7.example.invalid",
                     "nas.service-9.example.invalid",
                     "pihole1.service-7.example.invalid",

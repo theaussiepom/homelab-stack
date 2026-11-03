@@ -224,6 +224,16 @@
           "protocol": "tcp",
           "port": 3306
         }
+      },
+      "database_administrators": {
+        "cloudbeaver-mariadb-admin": {
+          "username": "${accounts.mariadb_admin}",
+          "source_guest": "db-tools",
+          "credential_id": "${credentials.mariadb_admin}",
+          "credential_file": "${inputs}/managed-${credentials.mariadb_admin}.json",
+          "access": "server-administration",
+          "transport": "tls"
+        }
       }
     }
   },

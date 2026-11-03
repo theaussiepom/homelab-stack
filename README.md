@@ -22,7 +22,7 @@ flowchart TD
   Maria --> Admin
   Ingress --> Gateway[Authentication gateway]
   Gateway --> Admin
-  DNS --> Broker[MQTT]
+  DNS --> Broker[MQTT: broker then Explorer]
   Broker --> Auto[Home Automation: Home Assistant then Node-RED]
   Maria --> Auto
   Influx --> Auto
@@ -74,6 +74,9 @@ each declared connection must have an explicit firewall allowance. The source
 preserves retained data and declared interfaces; it does not move broker data,
 remove a conflicting owner, or rewrite client configuration. The consumer must
 qualify prepared state and exclusive ownership before adoption. See [Music and MQTT](docs/music-mqtt.md).
+Its **MQTT Explorer** step adds a browser client behind the existing identity
+provider, using a separate dedicated account and saved profile. Broker operation
+and existing clients are retained; see [MQTT Explorer](docs/mqtt-explorer.md).
 
 | File | Purpose |
 | --- | --- |
@@ -88,8 +91,8 @@ qualify prepared state and exclusive ownership before adoption. See [Music and M
 Follow [setup and local tests](docs/setup.md), [secrets and prerequisites](docs/secrets.md),
 [public-source policy](docs/public-boundary.md) and [adoption](docs/adoption.md).
 The [database-tools composition](docs/database-tools.md) keeps its existing guest
-and adds CloudBeaver Community with an authenticated web gateway and metadata-only
-PostgreSQL and MariaDB connections.
+and adds CloudBeaver Community with an authenticated web gateway, original
+metadata entries and dedicated PostgreSQL/MariaDB administration connections.
 Public pushes and pull requests run source CI only. Deployment is called from the
 private site after deliberate pin adoption and reviewed merge. Every declared
 guest participates by default. The optional `disabled` input defaults to `[]`;

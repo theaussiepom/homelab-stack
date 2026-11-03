@@ -43,13 +43,60 @@ Bridge, VLAN and prefix values are shared logical-network bindings supplied by t
 The generic internal service names come from `hostnames.postgresql_database` and
 `hostnames.mariadb_database`; private adoption can retain existing canonical names.
 
-The initial connection entries contain server and database metadata. Users supply
-their existing database credentials when connecting. The composition does not
-create database users or change passwords, grants or application databases.
+The original connection entries contain server and database metadata. Users can
+still supply their existing database credentials for those entries. The separate
+`managed_connections` entries add dedicated administration accounts without
+changing those metadata entries or existing application/root accounts.
 The PostgreSQL entry explicitly preserves its selected `sslmode: prefer`; an
 internal DNS alias does not establish certificate validity. Retained client
 certificate/key references require separate private qualification before claiming
 that a new connection has the same transport and authentication behavior.
+
+## Dedicated administration connections
+
+Each native database profile declares a `config.app.database_administrators`
+entry with a logical account ID, consumer-bound username and credential ID,
+`source_guest: db-tools`, `access: server-administration` and `transport: tls`.
+The compiler derives addresses and account linkage from the existing named
+database publication and selected guest interfaces. The native database stack
+remains null; there is no new database container or deployment engine.
+
+The selected capability is unrestricted PostgreSQL SUPERUSER and MariaDB global
+ALL with GRANT, scoped to the selected database-tools source. PostgreSQL
+SUPERUSER includes server-file and program powers. These are dedicated
+administration credentials; application/root credentials are neither reused nor
+rotated. Foreign account collisions, credential drift and changed ownership
+refuse. Ordinary input preparation retains one create-once private credential
+record per declared account and binds its value into the immutable ordinary
+input; no new GitHub secret names are required.
+
+CloudBeaver's new `postgresql-admin` and `mariadb-admin` entries reference those
+logical account IDs through named service bindings. The framework writes a native datasource file under the existing closed
+workspace. That managed file contains the saved credentials in plaintext at
+rest and is private to the service; it is not an encrypted-at-rest guarantee.
+The existing resource manager remains enabled (its default is true). It does not invoke a recovery/admin bootstrap or expose saved
+database passwords in Git, logs or container environment. Authorized users behind
+the existing identity restriction share these administration connections. Their
+TLS and exact-source PostgreSQL HBA boundaries cover ordinary and physical
+replication connections, followed by local/IPv4/IPv6 rejection for other sources.
+This preserves the original HBA tail. The managed datasource transport is
+separate from the original metadata-only PostgreSQL
+`sslmode: prefer` entry. Source qualification does not establish a successful
+target SQL login, grants or browser session.
+
+The CloudBeaver profile declares one official MariaDB Connector/J artifact in
+`cloudbeaver.mariadb_jdbc`: its version, SHA-256 and the selected image's loader
+filename. Ordinary application deployment downloads the checksum-verified vendor
+artifact and mounts that single file read-only at the declared compatibility
+path. The source filename follows the selected driver version; the image loader
+filename can retain the image's older basename. This does not replace the image
+or add a second driver to its classpath. The selected 3.5.11 correction prevents
+the Properties-based connection password from appearing in the JDBC metadata
+URL. It is required for managed MariaDB connections; metadata-only and
+PostgreSQL-only compositions retain their existing driver behavior. Local
+driver qualification does not establish the target application's loaded driver
+or a successful browser connection; runtime health verifies the selected artifact
+and the managed database connection separately.
 
 ## Retained data and adoption
 

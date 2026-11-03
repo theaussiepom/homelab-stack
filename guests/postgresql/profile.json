@@ -256,6 +256,16 @@
           "protocol": "tcp",
           "port": 5432
         }
+      },
+      "database_administrators": {
+        "cloudbeaver-postgresql-admin": {
+          "username": "${accounts.postgresql_admin}",
+          "source_guest": "db-tools",
+          "credential_id": "${credentials.postgresql_admin}",
+          "credential_file": "${inputs}/managed-${credentials.postgresql_admin}.json",
+          "access": "server-administration",
+          "transport": "tls"
+        }
       }
     }
   },

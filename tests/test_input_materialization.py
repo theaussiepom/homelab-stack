@@ -37,6 +37,13 @@ class InputMaterializationTests(unittest.TestCase):
                 destination = root / "inputs" / kind / packet["identity"]
                 cfg["app"]["exclusive_writer_confirmed"] = True
                 cfg["app"]["stack_config"] = str(destination / "stack.json")
+                # Managed credentials use the same private custody contract in
+                # this fixture, never the compiled target's real state path.
+                state = root / "state"
+                state.mkdir(mode=0o700)
+                cfg["paths"]["state_root"] = str(state)
+                for connection in value.get("cloudbeaver", {}).get("managed_connections", {}).values():
+                    connection["credential_file"] = str(destination / Path(connection["credential_file"]).name)
                 value["foundation"]["secret_files"] = {
                     key: str(destination / b.filename)
                     for key, b in BINDINGS[kind].items()
@@ -62,6 +69,11 @@ class InputMaterializationTests(unittest.TestCase):
                     self.assertEqual(
                         (path.parent / binding.filename).stat().st_mode & 0o777, 0o600
                     )
+                if kind == "db-tools":
+                    for connection in value["cloudbeaver"]["managed_connections"].values():
+                        record = path.parent / Path(connection["credential_file"]).name
+                        self.assertEqual(record.stat().st_mode & 0o777, 0o600)
+                        self.assertEqual(json.loads(record.read_text())["owner"], connection["owner"])
                 before = {p.name: p.read_bytes() for p in path.parent.iterdir()}
                 inputs.prepare(source, root / "inputs", environment)
                 self.assertEqual(
