@@ -78,6 +78,44 @@ class ManagedAdministrationTests(unittest.TestCase):
             legacy['services'].pop(name)
         self.assertEqual(render.compose(stack)['services']['mqtt'], render.compose(legacy)['services']['mqtt'])
 
+    def test_explorer_broker_alias_follows_the_selected_endpoint_not_the_gui_listener(self):
+        for path in ('site.example.json', 'examples/site.second.json'):
+            with self.subTest(site=path):
+                site = c.read(ROOT / path)
+                packet = self.packets(path)['mqtt']
+                cfg = json.loads(packet['files']['site.json'])
+                stack = json.loads(packet['files']['stack.json'])
+                compose = render.compose(stack)
+                binding = cfg['app']['service_connections']['mqtt_explorer']
+                publication = cfg['app']['published_services'][binding['service'].split('.')[1]]
+                address = publication['addresses'][binding['address']]
+                hostname = stack['mqtt_explorer']['broker_connection']['hostname']
+                self.assertNotEqual(address, publication['addresses'][publication['dns_address']])
+                self.assertEqual(stack['mqtt_explorer']['broker_address'], address)
+                self.assertEqual(compose['services']['mqtt_explorer']['extra_hosts'], {hostname: address})
+                self.assertNotIn('extra_hosts', compose['services']['explorer_gateway'])
+
+                # Select another assigned address without moving the GUI listener,
+                # the broker, its public DNS record or its saved native profile.
+                alternative = site['values']['addresses.mqtt_management']
+                self.assertNotIn(alternative, (address, publication['addresses'][publication['dns_address']]))
+                changed = c.merge(site, {'guests': {'mqtt': {'config': {'app': {
+                    'published_services': {'mqtt': {'addresses': {'explorer-local': alternative}}},
+                    'service_connections': {'mqtt_explorer': {'address': 'explorer-local'}},
+                }}}}})
+                next_packet = c.compile_stack(ROOT, changed, [])['mqtt']
+                next_stack = json.loads(next_packet['files']['stack.json'])
+                next_compose = render.compose(next_stack)
+                self.assertNotEqual(alternative, next_stack['mqtt_explorer']['bind_address'])
+                self.assertEqual(next_stack['mqtt_explorer']['broker_address'], alternative)
+                expected = copy.deepcopy(compose)
+                expected['services']['mqtt_explorer']['extra_hosts'] = {hostname: alternative}
+                self.assertEqual(next_compose, expected)
+                slot = '/var/lib/homelab-inputs/ordinary/mqtt/'
+                before = json.dumps(stack['mqtt_explorer']['broker_connection']).replace(slot + packet['identity'], '${inputs}')
+                after = json.dumps(next_stack['mqtt_explorer']['broker_connection']).replace(slot + next_packet['identity'], '${inputs}')
+                self.assertEqual(json.loads(after), json.loads(before))
+
     def test_local_explorer_health_does_not_wait_for_identity_or_ingress(self):
         selected = self.packets(disabled=['identity', 'db-tools', 'ingress', 'bitwarden', 'music', 'monitoring'])
         mqtt = json.loads(selected['mqtt']['files']['site.json'])

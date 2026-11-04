@@ -34,10 +34,10 @@ jobs:
       HOMELAB_DEPLOYMENT_WORKFLOW: ${{ github.workflow_ref }}
     steps:
     - name: Setup
-      uses: theaussiepom/homelab/.github/actions/guest-setup@a630880d43af7959cf99a53e8dc6011d5ca4660f
+      uses: theaussiepom/homelab/.github/actions/guest-setup@450327018b48d15541d8d78846bae48706198b1d
       timeout-minutes: 45
     - name: Infrastructure
-      uses: theaussiepom/homelab/.github/actions/guest-phase@a630880d43af7959cf99a53e8dc6011d5ca4660f
+      uses: theaussiepom/homelab/.github/actions/guest-phase@450327018b48d15541d8d78846bae48706198b1d
       timeout-minutes: 45
       with:
         guest: postgresql
@@ -46,7 +46,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: Prepare
-      uses: theaussiepom/homelab/.github/actions/guest-phase@a630880d43af7959cf99a53e8dc6011d5ca4660f
+      uses: theaussiepom/homelab/.github/actions/guest-phase@450327018b48d15541d8d78846bae48706198b1d
       timeout-minutes: 45
       with:
         guest: postgresql
@@ -55,7 +55,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: PostgreSQL
-      uses: theaussiepom/homelab/.github/actions/guest-phase@a630880d43af7959cf99a53e8dc6011d5ca4660f
+      uses: theaussiepom/homelab/.github/actions/guest-phase@450327018b48d15541d8d78846bae48706198b1d
       timeout-minutes: 45
       with:
         guest: postgresql
@@ -64,7 +64,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: Zabbix agent
-      uses: theaussiepom/homelab/.github/actions/guest-phase@a630880d43af7959cf99a53e8dc6011d5ca4660f
+      uses: theaussiepom/homelab/.github/actions/guest-phase@450327018b48d15541d8d78846bae48706198b1d
       timeout-minutes: 45
       with:
         guest: postgresql
