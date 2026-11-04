@@ -20,11 +20,11 @@ import cloudbeaver
 
 
 class ManagedAdministrationTests(unittest.TestCase):
-    def packets(self, site='site.example.json', disabled=None):
+    def packets(self, site='site.example.yaml', disabled=None):
         return c.compile_stack(ROOT, c.read(ROOT / site), disabled or [])
 
     def test_explorer_has_only_the_authenticated_gateway_listener(self):
-        for path in ('site.example.json', 'examples/site.second.json'):
+        for path in ('site.example.yaml', 'examples/site.second.yaml'):
             with self.subTest(site=path):
                 site = c.read(ROOT / path)
                 packet = self.packets(path)['mqtt']
@@ -51,7 +51,7 @@ class ManagedAdministrationTests(unittest.TestCase):
                 self.assertEqual(cfg['routes']['mqtt-explorer']['middlewares'], ['security-headers'])
 
     def test_saved_broker_connection_is_distinct_from_the_existing_probe(self):
-        for path in ('site.example.json', 'examples/site.second.json'):
+        for path in ('site.example.yaml', 'examples/site.second.yaml'):
             site = c.read(ROOT / path)
             packet = self.packets(path)['mqtt']
             cfg = json.loads(packet['files']['site.json'])
@@ -79,7 +79,7 @@ class ManagedAdministrationTests(unittest.TestCase):
         self.assertEqual(render.compose(stack)['services']['mqtt'], render.compose(legacy)['services']['mqtt'])
 
     def test_explorer_broker_alias_follows_the_selected_endpoint_not_the_gui_listener(self):
-        for path in ('site.example.json', 'examples/site.second.json'):
+        for path in ('site.example.yaml', 'examples/site.second.yaml'):
             with self.subTest(site=path):
                 site = c.read(ROOT / path)
                 packet = self.packets(path)['mqtt']
@@ -130,7 +130,7 @@ class ManagedAdministrationTests(unittest.TestCase):
         self.assertFalse(any('https://' in argument or '9000' in argument for check in checks for argument in check['argv']))
 
     def test_dedicated_admin_connections_keep_original_metadata_and_consumer_identity(self):
-        for path in ('site.example.json', 'examples/site.second.json'):
+        for path in ('site.example.yaml', 'examples/site.second.yaml'):
             site = c.read(ROOT / path)
             packets = self.packets(path)
             cloud = json.loads(packets['db-tools']['files']['stack.json'])['cloudbeaver']
@@ -138,7 +138,7 @@ class ManagedAdministrationTests(unittest.TestCase):
             self.assertEqual(cloud['connections']['postgresql']['sslmode'], 'prefer')
             self.assertEqual(set(cloud['managed_connections']), {'postgresql-admin', 'mariadb-admin'})
             for engine in ('postgresql', 'mariadb'):
-                profile = c.read(ROOT / 'guests' / engine / 'profile.json')
+                profile = c.read(ROOT / 'guests' / engine / 'profile.yaml')
                 raw = profile['config']['app']['database_administrators']['cloudbeaver-' + engine + '-admin']
                 self.assertEqual(raw['source_guest'], 'db-tools')
                 self.assertEqual(raw['access'], 'server-administration')
@@ -158,7 +158,7 @@ class ManagedAdministrationTests(unittest.TestCase):
     def test_new_credential_and_hostname_bindings_are_explicit_and_site_specific(self):
         keys = {'domains.mqtt_explorer', 'accounts.mqtt_explorer', 'accounts.postgresql_admin', 'accounts.mariadb_admin', 'credentials.mqtt_explorer', 'credentials.postgresql_admin', 'credentials.mariadb_admin', 'paths.mqtt_password_file'}
         declarations = c.manifest(ROOT)['required_site_bindings']
-        a, b = [c.read(ROOT / path) for path in ('site.example.json', 'examples/site.second.json')]
+        a, b = [c.read(ROOT / path) for path in ('site.example.yaml', 'examples/site.second.yaml')]
         for key in keys:
             self.assertEqual(declarations[key], 'string')
             self.assertNotEqual(a['values'][key], b['values'][key])
@@ -168,13 +168,13 @@ class ManagedAdministrationTests(unittest.TestCase):
                 c.compile_stack(ROOT, missing, [])
 
     def test_managed_mariadb_uses_one_pinned_read_only_jdbc_artifact(self):
-        declared = c.read(ROOT / 'guests/db-tools/profile.json')['stack']['cloudbeaver']['mariadb_jdbc']
+        declared = c.read(ROOT / 'guests/db-tools/profile.yaml')['stack']['cloudbeaver']['mariadb_jdbc']
         self.assertEqual(declared, {
             'version': '3.5.11',
             'sha256': '42604178b9e57ec08ee0035079961516f086e455d0141f0b22c6eff29fb2fff4',
             'image_filename': 'mariadb-java-client-3.5.10.jar',
         })
-        for path in ('site.example.json', 'examples/site.second.json'):
+        for path in ('site.example.yaml', 'examples/site.second.yaml'):
             with self.subTest(site=path):
                 stack = json.loads(self.packets(path)['db-tools']['files']['stack.json'])
                 self.assertEqual(stack['cloudbeaver']['mariadb_jdbc'], declared)
@@ -229,7 +229,7 @@ class ManagedAdministrationTests(unittest.TestCase):
                 self.assertEqual(server['healthcheck']['test'][-1], '--postgresql')
 
     def test_admin_owners_and_postgresql_hba_follow_existing_interfaces(self):
-        for path in ('site.example.json', 'examples/site.second.json'):
+        for path in ('site.example.yaml', 'examples/site.second.yaml'):
             site = c.read(ROOT / path)
             packets = self.packets(path)
             cloud = json.loads(packets['db-tools']['files']['stack.json'])['cloudbeaver']
@@ -246,7 +246,7 @@ class ManagedAdministrationTests(unittest.TestCase):
                 self.assertEqual(Path(selected['credential_file']).name, Path(account['credential_file']).name)
                 self.assertEqual(selected['transport'], 'tls')
             hba = packets['postgresql']['files']['pg_hba.conf']
-            original = c.read(ROOT / 'guests/postgresql/profile.json')['files']['pg_hba.conf']
+            original = c.read(ROOT / 'guests/postgresql/profile.yaml')['files']['pg_hba.conf']
             for key, value in site['values'].items():
                 if isinstance(value, str):
                     original = original.replace('${' + key + '}', value)
@@ -257,7 +257,7 @@ class ManagedAdministrationTests(unittest.TestCase):
 
     def test_new_routes_require_the_exact_existing_backend_connection(self):
         for role, direction, port in [('mqtt', 'in', '80'), ('ingress', 'out', '80')]:
-            site = c.read(ROOT / 'site.example.json')
+            site = c.read(ROOT / 'site.example.yaml')
             packets = c.compile_stack(ROOT, site, [])
             cfg = json.loads(packets[role]['files']['site.json'])
             rules = cfg['guest']['rules']
@@ -280,7 +280,7 @@ class ManagedAdministrationTests(unittest.TestCase):
         self.assertTrue(packets['mariadb']['enabled'])
         self.assertTrue(packets['mqtt']['enabled'])
         self.assertEqual(len(packets), 13)
-        monitoring_site = c.read(ROOT / 'site.example.json')
+        monitoring_site = c.read(ROOT / 'site.example.yaml')
         monitoring_site['zabbix'] = None
         self.assertEqual(len(c.compile_stack(ROOT, monitoring_site, ['db-tools'])), 14)
 

@@ -39,8 +39,8 @@ TASKS = FRAMEWORK / "proxmox/applications/ansible/tasks"
 
 class CompositionIdentityTests(unittest.TestCase):
     def test_additional_private_data_binds_need_explicit_preparation(self):
-        overlay = c.read(ROOT / "site.example.json")
-        profile = c.read(ROOT / "guests/automation/profile.json")
+        overlay = c.read(ROOT / "site.example.yaml")
+        profile = c.read(ROOT / "guests/automation/profile.yaml")
         mounts = profile["stack"]["services"]["homeassistant"]["extra_mounts"]
         added = "/srv/homelab/data/additional-media"
         overlay["guests"]["automation"] = {
@@ -69,7 +69,7 @@ class CompositionIdentityTests(unittest.TestCase):
         self.assertIn({"path": added, "type": "directory"}, required)
 
     def test_colliding_guests_are_refused_before_any_packet_can_be_admitted(self):
-        overlay = c.read(ROOT / "site.example.json")
+        overlay = c.read(ROOT / "site.example.yaml")
         manifest = c.manifest(ROOT)
         blob = (
             struct.pack("!I", 11)
@@ -184,7 +184,7 @@ class RuntimeContractTests(unittest.TestCase):
         )
 
     def packet(self, name):
-        return c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])[name]
+        return c.compile_stack(ROOT, c.read(ROOT / "site.example.yaml"), [])[name]
 
     def phase_variables(self, root, name, phase, *, dhcp_endpoint=None):
         packet = self.packet(name)

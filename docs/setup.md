@@ -12,7 +12,7 @@ change DHCP. Static NICs use their bound address/prefix without `ipv4_endpoint`.
 1. Clone the stack and selected framework into sibling folders. Read the one
    framework SHA from `.github/workflows/phase.yml`, then check out that SHA in
    `../homelab`. A fork can change the workflow owner and revision deliberately.
-2. Create a private site from `site.example.json`. Keep its actual `site.json`
+2. Create a private `site.yaml` from `site.example.yaml`. Keep its actual configuration
    private and all credential values outside Git. Explicitly supply every
    `required_site_bindings` value; reusable profiles provide no allocation
    fallback. Keep only other overrides that differ. Lists replace whole lists.
@@ -28,10 +28,16 @@ python3 -m venv .venv
 python3 -m pip install -r ../homelab/requirements.lock.txt
 python3 ../homelab/tools/check_boundaries.py --mode stack --root .
 python3 ../homelab/blueprints/workflows.py --stack . --check
-python3 ../homelab/blueprints/compile.py --stack . --site site.example.json --check
-python3 ../homelab/blueprints/compile.py --stack . --site examples/site.second.json --check
+python3 ../homelab/blueprints/compile.py --stack . --site site.example.yaml --check
+python3 ../homelab/blueprints/compile.py --stack . --site examples/site.second.yaml --check
 HOMELAB_FRAMEWORK=../homelab python3 -m unittest discover -s tests
 ```
+
+Guest profiles and site inputs use YAML. Legacy JSON inputs remain supported;
+keep only one `.yaml`, `.yml` or `.json` file for each logical profile or site.
+Generated packet files named `site.json` and `stack.json`, credentials and
+operational receipts remain JSON. The source format does not change deployment
+behavior or authorize target access.
 
 When changing blueprint phases/display names or `stack.json` dependencies,
 regenerate the checked-in workflow graph before reviewing the source diff:

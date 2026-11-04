@@ -48,7 +48,7 @@ class DeploymentFlowTests(unittest.TestCase):
         sorter.done('identity')
 
     def test_automation_selection_without_identity_ingress_keeps_runtime_unchanged(self):
-        overlay=c.read(ROOT/'site.example.json')
+        overlay=c.read(ROOT/'site.example.yaml')
         baseline=c.compile_stack(ROOT,overlay,[])
         kept={'dns','mariadb','influxdb','mqtt','automation'}
         disabled=sorted(set(baseline)-kept)
@@ -62,7 +62,7 @@ class DeploymentFlowTests(unittest.TestCase):
                 c.compile_stack(ROOT,overlay,sorted(set(disabled)|{prerequisite}))
 
     def test_cloud_keeps_database_and_ingress_dependencies_without_identity(self):
-        overlay=c.read(ROOT/'site.example.json')
+        overlay=c.read(ROOT/'site.example.yaml')
         for prerequisite in EXPECTED['db-tools']:
             with self.subTest(prerequisite=prerequisite),self.assertRaisesRegex(ValueError,'prerequisite'):
                 c.compile_stack(ROOT,overlay,[prerequisite])

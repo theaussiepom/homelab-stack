@@ -20,7 +20,7 @@ spec.loader.exec_module(c)
 class CustodySelectionTests(unittest.TestCase):
     def custody_overlay(self):
         """Invent source bindings; these proofs deliberately claim no native acceptance."""
-        overlay = c.read(ROOT / "site.example.json")
+        overlay = c.read(ROOT / "site.example.yaml")
         packets = c.compile_stack(ROOT, overlay, [])
         catalogue = '{"fixture":"catalogue", "literal":"${inputs} ${domains.primary}"}\n'
         overlay["values"]["custody.catalogue"] = catalogue
@@ -173,7 +173,7 @@ class CustodySelectionTests(unittest.TestCase):
             ["bitwarden"],
         ):
             with self.subTest(disabled=disabled):
-                packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), disabled)
+                packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.yaml"), disabled)
                 self.assertEqual(set(packets), configured)
                 self.assertEqual(
                     {name for name, packet in packets.items() if packet["enabled"]},
@@ -195,7 +195,7 @@ class CustodySelectionTests(unittest.TestCase):
             with self.subTest(disabled=disabled), self.assertRaisesRegex(
                 ValueError, "Cannot disable a prerequisite"
             ):
-                c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), disabled)
+                c.compile_stack(ROOT, c.read(ROOT / "site.example.yaml"), disabled)
 
 
 if __name__ == "__main__":

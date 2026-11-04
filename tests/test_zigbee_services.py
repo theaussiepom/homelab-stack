@@ -18,7 +18,7 @@ import render
 class ZigbeeServiceTests(unittest.TestCase):
     def packets(self, overlay=None):
         return compiler.compile_stack(
-            ROOT, overlay or compiler.read(ROOT / "site.example.json"), []
+            ROOT, overlay or compiler.read(ROOT / "site.example.yaml"), []
         )
 
     def stack(self, packet):
@@ -69,7 +69,7 @@ class ZigbeeServiceTests(unittest.TestCase):
                          ["infrastructure", "preparation", "zigbee2mqtt", "winet", "zabbix-agent"])
 
     def test_broker_definition_owns_dns_check_and_the_backend_radio_alias(self):
-        overlay = compiler.read(ROOT / "site.example.json")
+        overlay = compiler.read(ROOT / "site.example.yaml")
         overlay["values"].update(
             {
                 "addresses.mqtt_frontend": "198.18.41.121",
@@ -143,8 +143,8 @@ class ZigbeeServiceTests(unittest.TestCase):
 
     def test_both_sides_of_the_mqtt_connection_require_explicit_firewall_rules(self):
         for guest, direction in (("zigbee2mqtt", "out"), ("mqtt", "in")):
-            overlay = compiler.read(ROOT / "site.example.json")
-            profile = compiler.read(ROOT / "guests" / guest / "profile.json")
+            overlay = compiler.read(ROOT / "site.example.yaml")
+            profile = compiler.read(ROOT / "guests" / guest / "profile.yaml")
             overlay["guests"][guest] = {
                 "config": {
                     "guest": {

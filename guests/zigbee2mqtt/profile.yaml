@@ -1,0 +1,200 @@
+config:
+  guest:
+    vmid: ${vmids.zigbee2mqtt}
+    hostname: ${hostnames.zigbee2mqtt}
+    cpu: 2
+    memory_mib: 1024
+    root_gib: 8
+    storage_id: ${storage.guest}
+    template_file_id: ${templates.debian_lxc}
+    started: true
+    start_on_boot: true
+    boot_order: 70
+    nesting: true
+    keyctl: false
+    dns_servers:
+      - ${addresses.dns}
+      - ${addresses.fallback_dns}
+    interfaces:
+      - role: management
+        bridge: ${bridges.management}
+        vlan: ${vlans.management}
+        mac: ${mac.zigbee.0}
+        ipv4: ${addresses.zigbee_management}/${prefixes.management}
+        ipv6: manual
+        gateway: ${gateways.management}
+      - role: backend
+        bridge: ${bridges.http_backend}
+        vlan: ${vlans.http_backend}
+        mac: ${mac.zigbee.1}
+        ipv4: ${addresses.zigbee_backend}/${prefixes.http_backend}
+        ipv6: manual
+      - role: iot
+        bridge: ${bridges.iot}
+        vlan: ${vlans.iot}
+        mac: ${mac.zigbee.2}
+        ipv4: ${addresses.zigbee_iot}/${prefixes.iot}
+        ipv6: manual
+    volumes:
+      data:
+        path: /srv/homelab
+        size_gib: 4
+    rules:
+      - direction: in
+        proto: tcp
+        port: '22'
+        source: ${addresses.runner}/32
+        comment: Deployment runner SSH only
+        destination: ${addresses.zigbee_management}/32
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination: ${addresses.dns}/32
+        comment: Selected internal DNS only
+      - direction: out
+        proto: udp
+        port: '53'
+        destination: ${addresses.dns}/32
+        comment: Selected internal DNS only
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination: ${addresses.fallback_dns}/32
+        comment: Selected internal DNS only
+      - direction: out
+        proto: udp
+        port: '53'
+        destination: ${addresses.fallback_dns}/32
+        comment: Selected internal DNS only
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination: 0.0.0.0/0
+        comment: Signed Debian packages and immutable image retrieval
+        interface: net0
+        source: ${addresses.zigbee_management}/32
+      - direction: out
+        proto: tcp
+        port: '1883'
+        destination: ${addresses.mqtt_backend}/32
+        comment: Dedicated retained MQTT broker only
+      - direction: in
+        proto: tcp
+        port: '8099'
+        source: ${addresses.automation_backend}/32
+        comment: Automation Zigbee API client
+        destination: ${addresses.zigbee_backend}/32
+      - direction: in
+        proto: tcp
+        port: '8099'
+        source: ${addresses.ingress_backend}/32
+        comment: Existing ingress backend
+        destination: ${addresses.zigbee_backend}/32
+      - direction: in
+        proto: tcp
+        port: '8099'
+        source: ${addresses.ingress_backend}/32
+        destination: ${addresses.zigbee_backend}/32
+        comment: Declared HTTP route backend
+      - direction: out
+        proto: tcp
+        port: '443'
+        source: ${addresses.zigbee_iot}/32
+        destination: ${addresses.winet_inverter}/32
+        comment: WiNet encrypted inverter telemetry only
+        interface: net2
+    serial_device:
+      path: ${devices.zigbee_coordinator}
+  app:
+    kind: zigbee2mqtt
+    vmid: ${vmids.zigbee2mqtt}
+    hostname: ${hostnames.zigbee2mqtt}
+    memory_mib: 1024
+    address: ${addresses.zigbee_management}
+    mac: ${mac.zigbee.0}
+    packages:
+      - docker.io=26.1.5+dfsg1-9+deb13u1
+      - docker-cli=26.1.5+dfsg1-9+deb13u1
+      - docker-compose=2.26.1-4
+      - curl=8.14.1-2+deb13u7
+      - python3-yaml=6.0.2-1+b2
+    stack_config: ${inputs}/stack.json
+    exclusive_writer_confirmed: false
+    service_connections:
+      zigbee2mqtt:
+        service: mqtt.mqtt
+        address: backend
+      winet:
+        service: mqtt.mqtt
+        address: backend
+    health_checks:
+      - name: Zigbee frontend and preserved network configuration
+        argv:
+          - python3
+          - /opt/homelab-app/zigbee2mqtt.py
+          - health
+          - --settings
+          - /opt/homelab-app/zigbee-settings.json
+        expect: '"healthy": true'
+      - name: WiNet broker and inverter availability
+        argv:
+          - python3
+          - -c
+          - import json,subprocess,sys; d=json.loads(subprocess.check_output(['docker','inspect','--type=container','homelab-zigbee2mqtt-winet-1'],timeout=5));
+            healthy=len(d)==1 and d[0]['State']['Running'] and d[0]['State'].get('Health',{}).get('Status')=='healthy';
+            print(json.dumps({'healthy':healthy})); sys.exit(0 if healthy else 1)
+        expect: '"healthy": true'
+    service_health_checks:
+      zigbee2mqtt:
+        - name: Zigbee frontend and preserved network configuration
+          argv:
+            - python3
+            - /opt/homelab-app/zigbee2mqtt.py
+            - health
+            - --settings
+            - /opt/homelab-app/zigbee-settings.json
+          expect: '"healthy": true'
+      winet:
+        - name: WiNet broker and inverter availability
+          argv:
+            - python3
+            - -c
+            - import json,subprocess,sys; d=json.loads(subprocess.check_output(['docker','inspect','--type=container','homelab-zigbee2mqtt-winet-1'],timeout=5));
+              healthy=len(d)==1 and d[0]['State']['Running'] and d[0]['State'].get('Health',{}).get('Status')=='healthy';
+              print(json.dumps({'healthy':healthy})); sys.exit(0 if healthy else 1)
+          expect: '"healthy": true'
+    endpoints:
+      zigbee2mqtt:
+        web: http://${addresses.zigbee_backend}:8099
+  paths:
+    host_device_key: /home/homelab-runner/.ssh/proxmox-host-device-209
+    host_known_hosts: /var/lib/homelab-inputs/pve-host-known_hosts
+files: {}
+stack:
+  kind: zigbee2mqtt
+  data_root: /srv/homelab/data
+  guest_memory_mib: 1024
+  timezone: ${timezones.applications}
+  zigbee:
+    adapter: ember
+    bind_address: ${addresses.zigbee_backend}
+    frontend_port: 8099
+    mqtt_base_topic: home
+    mqtt_server: ''
+    serial_device: ${devices.zigbee_coordinator}
+  services:
+    zigbee2mqtt:
+      memory_mib: 512
+      cpus: 2
+      pids_limit: 128
+      image_ref: zigbee2mqtt
+    winet:
+      memory_mib: 256
+      cpus: 1
+      pids_limit: 128
+      image_ref: winet
+  winet:
+    configuration_file: ${paths.winet_options}
+    inverter_address: ${addresses.winet_inverter}
+    mqtt_server: ''
+    mqtt_prefix: ${winet.mqtt_prefix}

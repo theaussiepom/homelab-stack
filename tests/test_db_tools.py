@@ -24,11 +24,11 @@ import cloudbeaver
 
 class DatabaseToolsTests(unittest.TestCase):
     def configurations(self, overlay=None, disabled=None):
-        packets = c.compile_stack(ROOT, overlay or c.read(ROOT / "site.example.json"), disabled or [])
+        packets = c.compile_stack(ROOT, overlay or c.read(ROOT / "site.example.yaml"), disabled or [])
         return {name: json.loads(packet["files"]["site.json"]) for name, packet in packets.items()}
 
     def test_cloudbeaver_publishes_only_the_authenticated_gateway(self):
-        packet = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])["db-tools"]
+        packet = c.compile_stack(ROOT, c.read(ROOT / "site.example.yaml"), [])["db-tools"]
         cfg = json.loads(packet["files"]["site.json"])
         stack = json.loads(packet["files"]["stack.json"])
         self.assertEqual(cfg["app"]["variant"], "cloudbeaver")
@@ -59,7 +59,7 @@ class DatabaseToolsTests(unittest.TestCase):
         self.assertEqual(gateway["image"], "quay.io/oauth2-proxy/oauth2-proxy:v7.15.5@sha256:0d989b27d90d5e527fb2b045d864c4001c3104bdd763b3211b7e9ba2110380ea")
 
     def test_connection_metadata_follows_both_selected_backends_without_database_credentials(self):
-        overlay = c.read(ROOT / "site.example.json")
+        overlay = c.read(ROOT / "site.example.yaml")
         overlay["values"].update({"addresses.mariadb_backend": "198.18.32.124", "addresses.postgresql_backend": "198.18.31.123"})
         packet = c.compile_stack(ROOT, overlay, [])["db-tools"]
         cfg = json.loads(packet["files"]["site.json"])
@@ -108,7 +108,7 @@ class DatabaseToolsTests(unittest.TestCase):
                 self.assertEqual(failed(ordinary_health=result, item=route), expected)
 
     def test_canonical_https_retry_budget_retains_tls_and_the_step_cap(self):
-        overlay = c.read(ROOT / "site.example.json")
+        overlay = c.read(ROOT / "site.example.yaml")
         overlay["values"].update({"domains.db_tools": "databases.example.invalid",
                                   "addresses.ingress_frontend": "198.18.40.133"})
         packets = c.compile_stack(ROOT, overlay, [])
@@ -142,15 +142,15 @@ class DatabaseToolsTests(unittest.TestCase):
 
     def test_missing_database_firewall_or_wrong_driver_binding_refuses_compilation(self):
         for owner, direction in (("db-tools", "out"), ("mariadb", "in")):
-            overlay = c.read(ROOT / "site.example.json")
-            profile = c.read(ROOT / "guests" / owner / "profile.json")
+            overlay = c.read(ROOT / "site.example.yaml")
+            profile = c.read(ROOT / "guests" / owner / "profile.yaml")
             rules = profile["config"]["guest"]["rules"]
             overlay["guests"][owner] = {"config": {"guest": {"rules": [
                 rule for rule in rules if not (rule["direction"] == direction and rule.get("port") == "3306")
             ]}}}
             with self.subTest(owner=owner), self.assertRaisesRegex(ValueError, "3306"):
                 self.configurations(overlay)
-        overlay = c.read(ROOT / "site.example.json")
+        overlay = c.read(ROOT / "site.example.yaml")
         overlay["guests"]["db-tools"] = {"config": {"app": {"service_connections": {
             "cloudbeaver.postgresql": {"service": "mariadb.mariadb", "address": "backend"},
         }}}}
@@ -166,13 +166,13 @@ class DatabaseToolsTests(unittest.TestCase):
             {"stack": {"cloudbeaver": {"connections": {"postgresql": {"sslmode": "verify-full"}}}}},
         ]
         for override in overrides:
-            overlay = c.read(ROOT / "site.example.json")
+            overlay = c.read(ROOT / "site.example.yaml")
             overlay["guests"]["db-tools"] = override
             with self.subTest(override=override), self.assertRaises(ValueError):
                 self.configurations(overlay)
 
     def test_legacy_web_hostname_redirects_before_login_without_redirecting_canonical(self):
-        overlay = c.read(ROOT / "site.example.json")
+        overlay = c.read(ROOT / "site.example.yaml")
         overlay["values"].update({
             "domains.db_tools": "databases.example.invalid",
             "domains.pgadmin": "old-databases.example.invalid",
@@ -205,7 +205,7 @@ class DatabaseToolsTests(unittest.TestCase):
         self.assertEqual(labels["traefik.http.routers.pgadmin-compat.rule"], "Host(`old-databases.example.invalid`)")
 
     def test_database_paths_use_separate_existing_bridges_and_exact_server_rules(self):
-        overlay = c.read(ROOT / "site.example.json")
+        overlay = c.read(ROOT / "site.example.yaml")
         overlay["values"].update({
             "addresses.db_tools_mariadb": "198.18.32.132",
             "addresses.mariadb_backend": "198.18.32.124",
@@ -238,7 +238,7 @@ class DatabaseToolsTests(unittest.TestCase):
                     self.assertFalse(c.connections.permits(cfg[target]["guest"]["rules"], "in", wrong))
 
     def test_database_publications_use_only_the_existing_server_backends(self):
-        overlay = c.read(ROOT / "site.example.json")
+        overlay = c.read(ROOT / "site.example.yaml")
         overlay["values"].update({
             "hostnames.postgresql_database": "postgres.test.example.invalid",
             "hostnames.mariadb_database": "mariadb.test.example.invalid",
@@ -262,16 +262,16 @@ class DatabaseToolsTests(unittest.TestCase):
 
     def test_mariadb_client_identity_collision_refuses_compilation(self):
         for field, value in (
-            ("addresses.db_tools_mariadb", c.read(ROOT / "site.example.json")["values"]["addresses.mariadb_backend"]),
-            ("mac.db-tools.3", c.read(ROOT / "site.example.json")["values"]["mac.mariadb.1"]),
+            ("addresses.db_tools_mariadb", c.read(ROOT / "site.example.yaml")["values"]["addresses.mariadb_backend"]),
+            ("mac.db-tools.3", c.read(ROOT / "site.example.yaml")["values"]["mac.mariadb.1"]),
         ):
-            overlay = c.read(ROOT / "site.example.json")
+            overlay = c.read(ROOT / "site.example.yaml")
             overlay["values"][field] = value
             with self.subTest(field=field), self.assertRaisesRegex(ValueError, "network identity"):
                 self.configurations(overlay)
 
     def test_explicit_endpoints_avoid_startup_discovery_and_preserve_authentication_controls(self):
-        for example in ('site.example.json', 'examples/site.second.json'):
+        for example in ('site.example.yaml', 'examples/site.second.yaml'):
             overlay = c.read(ROOT / example)
             packet = c.compile_stack(ROOT, overlay, [])['db-tools']
             stack = json.loads(packet['files']['stack.json'])
@@ -311,7 +311,7 @@ class DatabaseToolsTests(unittest.TestCase):
             self.assertNotIn(overlay['values']['domains.identity'], json.dumps(checks))
 
     def test_identity_can_be_disabled_for_first_install_and_updates_without_changing_cloud_packets(self):
-        overlay = c.read(ROOT / 'site.example.json')
+        overlay = c.read(ROOT / 'site.example.yaml')
         baseline = c.compile_stack(ROOT, overlay, [])
         for disabled in (['identity'], ['identity','automation']):
             with self.subTest(disabled=disabled):
@@ -332,14 +332,14 @@ class DatabaseToolsTests(unittest.TestCase):
         workflow = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
         self.assertEqual(workflow["jobs"]["db-tools"]["name"], "CloudBeaver")
         self.assertEqual(workflow["jobs"]["db-tools"]["needs"], ["selection", "postgresql", "mariadb", "ingress"])
-        packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), ["db-tools"])
+        packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.yaml"), ["db-tools"])
         self.assertFalse(packets["db-tools"]["enabled"])
         self.assertTrue(packets["mariadb"]["enabled"])
         self.assertTrue(packets["postgresql"]["enabled"])
         disabled = ["mariadb", "bitwarden", "automation", "music"]
         with self.assertRaisesRegex(ValueError, "prerequisite"):
-            c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), disabled)
-        packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [*disabled, "db-tools"])
+            c.compile_stack(ROOT, c.read(ROOT / "site.example.yaml"), disabled)
+        packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.yaml"), [*disabled, "db-tools"])
         self.assertFalse(packets["mariadb"]["enabled"])
         self.assertFalse(packets["db-tools"]["enabled"])
         self.assertTrue(packets["zigbee2mqtt"]["enabled"])

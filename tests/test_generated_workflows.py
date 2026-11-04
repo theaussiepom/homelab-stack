@@ -46,9 +46,9 @@ class GeneratedWorkflowTests(unittest.TestCase):
                 shutil.copyfile(ROOT / "stack.json", root / "stack.json")
                 for source in (ROOT / ".github/workflows").glob("*.yml"):
                     shutil.copyfile(source, workflows / source.name)
-                profile = root / "guests/zigbee2mqtt/profile.json"
+                profile = root / "guests/zigbee2mqtt/profile.yaml"
                 profile.parent.mkdir(parents=True)
-                shutil.copyfile(ROOT / "guests/zigbee2mqtt/profile.json", profile)
+                shutil.copyfile(ROOT / "guests/zigbee2mqtt/profile.yaml", profile)
                 # Generation owns phase structure, preserving its deliberate pin.
                 phase = (workflows / "phase.yml").read_bytes()
                 ci_names = ("validate-stack.yml", "review-pr-dependencies.yml", "scan-python-security.yml")
@@ -139,14 +139,17 @@ class GeneratedWorkflowTests(unittest.TestCase):
         # Consolidation is presentation only: run bytes and each separate environment
         # remain the original guarded leaf. The guard/compiler never receives secrets.
         setup = load(FRAMEWORK / ".github/actions/guest-setup/action.yml")["runs"]["steps"]
-        self.assertEqual(len(setup), 6)
-        for original, shared in zip(recipe["steps"][:6], setup):
+        self.assertEqual(len(setup), 7)
+        self.assertEqual([s['name'] for s in setup if s['name'] == 'Prepare config'], ['Prepare config'])
+        self.assertIn('framework-source/requirements.lock.txt', setup[-1]['run'])
+        self.assertIn('--require-hashes --no-deps', setup[-1]['run'])
+        for original, shared in zip(recipe["steps"][:7], setup):
             for key in set(original) - {"name"}:
                 self.assertEqual(shared[key], original[key])
             self.assertNotIn("env", shared)
         phase_steps = load(FRAMEWORK / ".github/actions/guest-phase/action.yml")["runs"]["steps"]
         self.assertEqual([s["name"] for s in phase_steps], ["Check readiness", "Check inputs", "Load credentials", "Deploy"])
-        for original, shared in zip([recipe["steps"][0], *recipe["steps"][6:]], phase_steps):
+        for original, shared in zip([recipe["steps"][0], *recipe["steps"][7:]], phase_steps):
             self.assertEqual(shared["run"], original["run"])
             self.assertEqual(shared["shell"], "bash")
             expected = {key: value.replace("secrets.", "inputs.") for key, value in original.get("env", {}).items()}
@@ -224,6 +227,12 @@ class GeneratedWorkflowTests(unittest.TestCase):
         self.assertEqual(selection["runs-on"], "ubuntu-24.04")
         self.assertNotIn("secrets", selection)
         step = next(s for s in selection["steps"] if s.get("id") == "selection")
+        preparation = [s for s in selection['steps'] if s.get('name') == 'Prepare config']
+        self.assertEqual(len(preparation), 1)
+        self.assertLess(selection['steps'].index(preparation[0]), selection['steps'].index(step))
+        self.assertNotIn('secrets.', json.dumps(preparation[0]))
+        self.assertIn('framework-source/requirements.lock.txt', preparation[0]['run'])
+        self.assertIn('--require-hashes --no-deps', preparation[0]['run'])
         self.assertEqual(selection["steps"][0]["uses"], "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1")
         dependencies = json.loads(step["env"]["DEPENDENCIES"])
         declared = json.loads((ROOT / "stack.json").read_text())["guests"]
@@ -237,7 +246,10 @@ class GeneratedWorkflowTests(unittest.TestCase):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         selection_root = Path(directory.name)
-        (selection_root / 'site.json').write_text((ROOT / 'site.example.json').read_text())
+        (selection_root / 'site.yaml').write_text((ROOT / 'site.example.yaml').read_text())
+        parser = selection_root / 'framework-source/blueprints/authored_config.py'
+        parser.parent.mkdir(parents=True)
+        shutil.copyfile(FRAMEWORK / 'blueprints/authored_config.py', parser)
         for disabled, accepted in [
             ("", True),
             ("[]", True),
@@ -268,6 +280,10 @@ class GeneratedWorkflowTests(unittest.TestCase):
                         DISABLED=disabled,
                         DEPENDENCIES=step["env"]["DEPENDENCIES"],
                         GITHUB_OUTPUT=os.devnull,
+                        # CI's preceding Prepare config step supplies this exact
+                        # interpreter role; this test environment already uses
+                        # the selected framework's hash-pinned requirements.
+                        HOMELAB_CONFIG_PYTHON=sys.executable,
                     ),
                     cwd=selection_root,
                     capture_output=True,

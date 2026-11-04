@@ -24,7 +24,7 @@ import workflows
 
 class MusicMQTTTests(unittest.TestCase):
     def packets(self, overlay=None):
-        return compiler.compile_stack(ROOT, overlay or compiler.read(ROOT/'site.example.json'), [])
+        return compiler.compile_stack(ROOT, overlay or compiler.read(ROOT/'site.example.yaml'), [])
 
     def cfgs(self):
         return {name: json.loads(packet['files']['site.json']) for name,packet in self.packets().items()}
@@ -52,16 +52,16 @@ class MusicMQTTTests(unittest.TestCase):
             self.assertFalse(cfg[guest]['app']['exclusive_writer_confirmed'])
             self.assertNotIn('capture',cfg[guest]['app'])
         with self.assertRaisesRegex(ValueError,'prerequisite'):
-            compiler.compile_stack(ROOT,compiler.read(ROOT/'site.example.json'),['mqtt'])
-        excluded=compiler.compile_stack(ROOT,compiler.read(ROOT/'site.example.json'),['music'])
+            compiler.compile_stack(ROOT,compiler.read(ROOT/'site.example.yaml'),['mqtt'])
+        excluded=compiler.compile_stack(ROOT,compiler.read(ROOT/'site.example.yaml'),['music'])
         self.assertFalse(excluded['music']['enabled'])
         self.assertTrue(excluded['mqtt']['enabled'])
-        no_automation=compiler.compile_stack(ROOT,compiler.read(ROOT/'site.example.json'),['automation','music'])
+        no_automation=compiler.compile_stack(ROOT,compiler.read(ROOT/'site.example.yaml'),['automation','music'])
         self.assertTrue(no_automation['zigbee2mqtt']['enabled'])
         self.assertEqual(workflows.models(ROOT)['deploy.yml']['jobs']['zigbee2mqtt']['needs'],['selection','mqtt'])
 
     def test_music_can_deploy_without_automation_but_still_requires_dns_and_ingress(self):
-        overlay=compiler.read(ROOT/'site.example.json')
+        overlay=compiler.read(ROOT/'site.example.yaml')
         baseline=self.packets(overlay)
         without=compiler.compile_stack(ROOT,overlay,['automation'])
         self.assertFalse(without['automation']['enabled'])
@@ -111,7 +111,7 @@ class MusicMQTTTests(unittest.TestCase):
         self.assertNotIn('new_target',cfg['app'])
 
     def test_music_requires_the_real_https_info_route_after_local_service_health(self):
-        overlay=compiler.read(ROOT/'site.example.json')
+        overlay=compiler.read(ROOT/'site.example.yaml')
         overlay['values'].update({'domains.music':'music-override.example.invalid',
                                   'addresses.ingress_frontend':'198.18.40.133',
                                   'addresses.music_home':'198.19.100.240'})
@@ -147,7 +147,7 @@ class MusicMQTTTests(unittest.TestCase):
                 self.assertEqual(failed(ordinary_health=result,item=route),expected)
 
     def test_music_https_probe_has_only_the_exact_home_egress(self):
-        overlay=compiler.read(ROOT/'site.example.json')
+        overlay=compiler.read(ROOT/'site.example.yaml')
         overlay['values'].update({'addresses.ingress_frontend':'198.18.40.133',
                                   'addresses.music_home':'198.19.100.240'})
         packets=self.packets(overlay)
@@ -178,7 +178,7 @@ class MusicMQTTTests(unittest.TestCase):
         self.assertEqual(policy,{'ipAllowList':{'sourceRange':['198.18.10.0/28','198.19.100.0/24']}})
         self.assertEqual(discovery.labels(cfg)['traefik.http.routers.music.middlewares'],
                          'security-headers@file,music-clients@file')
-        overlay=compiler.read(ROOT/'site.example.json')
+        overlay=compiler.read(ROOT/'site.example.yaml')
         ranges=['198.18.10.0/28','198.18.11.0/28','198.19.100.0/24',
                 '198.19.101.0/24','198.19.102.0/24','198.19.150.0/24',
                 '198.19.107.15/32','198.19.107.27/32','198.19.107.28/32']
@@ -205,7 +205,7 @@ class MusicMQTTTests(unittest.TestCase):
         self.assertFalse(any('tablets' in key or 'bypass' in key for key in labels))
 
     def test_only_new_broker_owns_dns_and_all_declared_consumers_follow_its_address(self):
-        overlay=compiler.read(ROOT/'site.example.json')
+        overlay=compiler.read(ROOT/'site.example.yaml')
         overlay['values'].update({'addresses.mqtt_backend':'198.18.30.137',
                                   'addresses.mqtt_frontend':'198.18.41.121'})
         packets=self.packets(overlay)
@@ -251,12 +251,12 @@ class MusicMQTTTests(unittest.TestCase):
                              for r in cfg['automation']['guest']['rules']))
 
     def test_duplicate_broker_or_missing_music_proxy_rule_refuses_before_admission(self):
-        overlay=compiler.read(ROOT/'site.example.json')
-        mqtt=compiler.read(ROOT/'guests/mqtt/profile.json')
+        overlay=compiler.read(ROOT/'site.example.yaml')
+        mqtt=compiler.read(ROOT/'guests/mqtt/profile.yaml')
         with tempfile.TemporaryDirectory() as directory:
             fixture=Path(directory)/'stack'
             shutil.copytree(ROOT,fixture,ignore=shutil.ignore_patterns('.git','__pycache__','.work'))
-            path=fixture/'guests/automation/profile.json';shared=compiler.read(path)
+            path=fixture/'guests/automation/profile.yaml';shared=compiler.read(path)
             shared['config']['app']['service_health_checks']['mqtt']=mqtt['config']['app']['service_health_checks']['mqtt']
             shared['config']['app']['published_services']={'mqtt':dict(mqtt['config']['app']['published_services']['mqtt'],
                 addresses={'frontend':'${addresses.automation_frontend}','backend':'${addresses.automation_backend}'})}
@@ -265,8 +265,8 @@ class MusicMQTTTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'unique hostname'):
                 compiler.compile_stack(fixture,overlay,[])
         for name,direction in [('music','in'),('ingress','out')]:
-            overlay=compiler.read(ROOT/'site.example.json')
-            rules=compiler.read(ROOT/'guests'/name/'profile.json')['config']['guest']['rules']
+            overlay=compiler.read(ROOT/'site.example.yaml')
+            rules=compiler.read(ROOT/'guests'/name/'profile.yaml')['config']['guest']['rules']
             overlay['guests'][name]={'config':{'guest':{'rules':[
                 r for r in rules if not(r['direction']==direction and r.get('port')=='8095'
                     and (r.get('source')=='${addresses.ingress_management}/32'if direction=='in'else True))]}}}

@@ -34,10 +34,10 @@ jobs:
       HOMELAB_DEPLOYMENT_WORKFLOW: ${{ github.workflow_ref }}
     steps:
     - name: Setup
-      uses: theaussiepom/homelab/.github/actions/guest-setup@450327018b48d15541d8d78846bae48706198b1d
+      uses: theaussiepom/homelab/.github/actions/guest-setup@f28725b1e8334a0baba26dfc2fa623cb3a63cdf5
       timeout-minutes: 45
     - name: Infrastructure
-      uses: theaussiepom/homelab/.github/actions/guest-phase@450327018b48d15541d8d78846bae48706198b1d
+      uses: theaussiepom/homelab/.github/actions/guest-phase@f28725b1e8334a0baba26dfc2fa623cb3a63cdf5
       timeout-minutes: 45
       with:
         guest: mqtt
@@ -46,7 +46,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: Prepare
-      uses: theaussiepom/homelab/.github/actions/guest-phase@450327018b48d15541d8d78846bae48706198b1d
+      uses: theaussiepom/homelab/.github/actions/guest-phase@f28725b1e8334a0baba26dfc2fa623cb3a63cdf5
       timeout-minutes: 45
       with:
         guest: mqtt
@@ -55,7 +55,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: MQTT
-      uses: theaussiepom/homelab/.github/actions/guest-phase@450327018b48d15541d8d78846bae48706198b1d
+      uses: theaussiepom/homelab/.github/actions/guest-phase@f28725b1e8334a0baba26dfc2fa623cb3a63cdf5
       timeout-minutes: 45
       with:
         guest: mqtt
@@ -64,7 +64,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: MQTT Explorer
-      uses: theaussiepom/homelab/.github/actions/guest-phase@450327018b48d15541d8d78846bae48706198b1d
+      uses: theaussiepom/homelab/.github/actions/guest-phase@f28725b1e8334a0baba26dfc2fa623cb3a63cdf5
       timeout-minutes: 45
       with:
         guest: mqtt
@@ -73,7 +73,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: Zabbix agent
-      uses: theaussiepom/homelab/.github/actions/guest-phase@450327018b48d15541d8d78846bae48706198b1d
+      uses: theaussiepom/homelab/.github/actions/guest-phase@f28725b1e8334a0baba26dfc2fa623cb3a63cdf5
       timeout-minutes: 45
       with:
         guest: mqtt

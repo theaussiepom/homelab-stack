@@ -38,7 +38,7 @@ class CompilerCLITests(unittest.TestCase):
                 "--stack",
                 str(ROOT),
                 "--site",
-                str(ROOT / "site.example.json"),
+                str(ROOT / "site.example.yaml"),
                 *args,
             ],
             capture_output=True,

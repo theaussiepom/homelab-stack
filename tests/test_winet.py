@@ -18,7 +18,7 @@ import workflows
 
 class WinetStackTests(unittest.TestCase):
     def packet(self, overlay=None):
-        return compiler.compile_stack(ROOT, overlay or compiler.read(ROOT / "site.example.json"), [])["zigbee2mqtt"]
+        return compiler.compile_stack(ROOT, overlay or compiler.read(ROOT / "site.example.yaml"), [])["zigbee2mqtt"]
 
     def test_tagged_radio_interfaces_use_the_declared_physical_uplinks(self):
         # Reference host inventory: management and service/IoT trunks are separate.
@@ -135,11 +135,11 @@ class WinetStackTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / "stack"
             shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns(".git", "__pycache__"))
-            profile = root / "guests/zigbee2mqtt/profile.json"
-            value = json.loads(profile.read_text())
+            profile = root / "guests/zigbee2mqtt/profile.yaml"
+            value = compiler.read(profile)
             value["config"]["app"]["service_health_checks"].pop("winet")
             profile.write_text(json.dumps(value))
-            overlay = compiler.read(root / "site.example.json")
+            overlay = compiler.read(root / "site.example.yaml")
             overlay["guests"]["zigbee2mqtt"] = {"config": {"app": {"service_health_checks": {"winet": [{}]}}}}
             with self.assertRaisesRegex(ValueError, "shared profile"):
                 compiler.compile_stack(root, overlay, [])

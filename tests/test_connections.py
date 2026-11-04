@@ -18,9 +18,9 @@ spec.loader.exec_module(c)
 
 class ConnectionTests(unittest.TestCase):
     def test_shared_link_address_and_mac_collisions_refuse_before_admission(self):
-        values = c.read(ROOT / "site.example.json")["values"]
+        values = c.read(ROOT / "site.example.yaml")["values"]
         for collision in ("address", "mac"):
-            overlay = c.read(ROOT / "site.example.json")
+            overlay = c.read(ROOT / "site.example.yaml")
             if collision == "address":
                 overlay["values"]["addresses.mariadb_management"] = values[
                     "addresses.postgresql_management"
@@ -35,7 +35,7 @@ class ConnectionTests(unittest.TestCase):
 
     def configurations(self, overlay=None):
         packets = c.compile_stack(
-            ROOT, overlay or c.read(ROOT / "site.example.json"), []
+            ROOT, overlay or c.read(ROOT / "site.example.yaml"), []
         )
         return {
             name: json.loads(packet["files"]["site.json"])
@@ -70,7 +70,7 @@ class ConnectionTests(unittest.TestCase):
 
     def test_dns_accepts_the_management_and_frontend_client_networks(self):
         cfg = self.configurations()
-        values = c.read(ROOT / "site.example.json")["values"]
+        values = c.read(ROOT / "site.example.yaml")["values"]
         rules = cfg["dns"]["guest"]["rules"]
         for network in ("networks.management", "networks.frontend"):
             for proto in ("tcp", "udp"):
@@ -89,8 +89,8 @@ class ConnectionTests(unittest.TestCase):
 
     def test_removing_either_proxy_allowance_is_refused_during_compilation(self):
         for name, direction in (("ingress", "out"), ("automation", "in")):
-            overlay = c.read(ROOT / "site.example.json")
-            rules = c.read(ROOT / "guests" / name / "profile.json")["config"]["guest"][
+            overlay = c.read(ROOT / "site.example.yaml")
+            rules = c.read(ROOT / "guests" / name / "profile.yaml")["config"]["guest"][
                 "rules"
             ]
             overlay["guests"][name] = {
@@ -116,8 +116,8 @@ class ConnectionTests(unittest.TestCase):
                 self.configurations(overlay)
 
     def test_dns_protocol_and_changed_service_ports_are_validated(self):
-        overlay = c.read(ROOT / "site.example.json")
-        rules = c.read(ROOT / "guests/dns/profile.json")["config"]["guest"]["rules"]
+        overlay = c.read(ROOT / "site.example.yaml")
+        rules = c.read(ROOT / "guests/dns/profile.yaml")["config"]["guest"]["rules"]
         overlay["guests"]["dns"] = {
             "config": {
                 "guest": {
@@ -131,7 +131,7 @@ class ConnectionTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(ValueError, "udp/53"):
             self.configurations(overlay)
-        overlay = c.read(ROOT / "site.example.json")
+        overlay = c.read(ROOT / "site.example.yaml")
         overlay["guests"]["automation"] = {
             "config": {
                 "app": {
@@ -147,7 +147,7 @@ class ConnectionTests(unittest.TestCase):
             self.configurations(overlay)
 
     def test_central_endpoint_overrides_keep_routes_and_policies_consistent(self):
-        overlay = c.read(ROOT / "site.example.json")
+        overlay = c.read(ROOT / "site.example.yaml")
         overlay["values"]["addresses.bitwarden_backend"] = "198.18.30.39"
         cfg = self.configurations(overlay)
         self.assertEqual(

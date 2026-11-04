@@ -21,7 +21,7 @@ class SiteBindingTests(unittest.TestCase):
         manifest = c.manifest(ROOT)
         self.assertEqual(manifest['values'], {})
         declarations = manifest['required_site_bindings']
-        for path in (ROOT/'site.example.json', ROOT/'examples/site.second.json'):
+        for path in (ROOT/'site.example.yaml', ROOT/'examples/site.second.yaml'):
             site = c.read(path)
             self.assertEqual(set(site['values']), set(declarations))
             for key, kind in declarations.items():
@@ -30,7 +30,7 @@ class SiteBindingTests(unittest.TestCase):
 
     def test_two_distinct_sites_drive_identity_network_storage_and_runtime_bindings(self):
         sites = [c.merge(c.read(ROOT/path), {'zabbix': None})
-                 for path in ('site.example.json', 'examples/site.second.json')]
+                 for path in ('site.example.yaml', 'examples/site.second.yaml')]
         packets = [c.compile_stack(ROOT, site, []) for site in sites]
         self.assertTrue(all(len(selected) == 14 for selected in packets))
         self.assertEqual(set(packets[0]), set(packets[1]))
@@ -60,7 +60,7 @@ class SiteBindingTests(unittest.TestCase):
                              site['values']['networks.music_clients'])
 
     def test_missing_or_wrong_type_binding_refuses_in_the_actual_composition(self):
-        baseline = c.read(ROOT/'site.example.json')
+        baseline = c.read(ROOT/'site.example.yaml')
         for key, invalid in [('vmids.music', True), ('vlans.home', '100'),
                              ('networks.music_clients', '198.18.0.0/24'),
                              ('ssh.public_keys', []), ('hostnames.music', 207),
@@ -75,7 +75,7 @@ class SiteBindingTests(unittest.TestCase):
                     c.compile_stack(ROOT, changed, [])
 
     def test_synthetic_consumers_compile_but_cannot_be_admitted_for_deployment(self):
-        for path in ('site.example.json','examples/site.second.json'):
+        for path in ('site.example.yaml','examples/site.second.yaml'):
             site = c.read(ROOT/path)
             self.assertTrue(c.compile_stack(ROOT,site,[]))
             with self.subTest(path=path),self.assertRaisesRegex(ValueError,'known synthetic site binding'):

@@ -21,7 +21,7 @@ class DNSDHCPTests(unittest.TestCase):
     def compile_dns(self, overlay=None):
         """Compile only public source fixtures; no admission or target contact."""
         packets = compiler.compile_stack(
-            ROOT, overlay or compiler.read(ROOT / "site.example.json"), []
+            ROOT, overlay or compiler.read(ROOT / "site.example.yaml"), []
         )
         packet = packets["dns"]
         return json.loads(packet["files"]["site.json"]), json.loads(packet["files"]["stack.json"])
@@ -46,9 +46,9 @@ class DNSDHCPTests(unittest.TestCase):
 
     def test_reviewed_endpoint_overrides_keep_allocation_and_bindings_distinct(self):
         """A qualified synthetic address/prefix override never requests static allocation."""
-        overlay = compiler.read(ROOT / "site.example.json")
+        overlay = compiler.read(ROOT / "site.example.yaml")
         overlay["values"]["addresses.dns"] = "198.18.40.102"
-        nic = copy.deepcopy(compiler.read(ROOT / "guests/dns/profile.json")["config"]["guest"]["interfaces"][0])
+        nic = copy.deepcopy(compiler.read(ROOT / "guests/dns/profile.yaml")["config"]["guest"]["interfaces"][0])
         nic["ipv4_endpoint"] = "${addresses.dns}/23"
         overlay["guests"]["dns"] = {"config": {"guest": {"interfaces": [nic]}}}
         cfg, stack = self.compile_dns(overlay)
@@ -62,7 +62,7 @@ class DNSDHCPTests(unittest.TestCase):
 
     def test_missing_or_conflicting_dhcp_endpoint_is_a_visible_failure(self):
         """Missing metadata, a foreign endpoint and an explicit gateway fail closed."""
-        base = compiler.read(ROOT / "guests/dns/profile.json")["config"]["guest"]["interfaces"][0]
+        base = compiler.read(ROOT / "guests/dns/profile.yaml")["config"]["guest"]["interfaces"][0]
         for mutation in ("missing", "invalid", "foreign", "gateway", "static_metadata"):
             with self.subTest(mutation=mutation):
                 nic = copy.deepcopy(base)
@@ -76,14 +76,14 @@ class DNSDHCPTests(unittest.TestCase):
                     nic["gateway"] = "${gateways.frontend}"
                 else:
                     nic["ipv4"] = "${addresses.dns}/24"
-                overlay = compiler.read(ROOT / "site.example.json")
+                overlay = compiler.read(ROOT / "site.example.yaml")
                 overlay["guests"]["dns"] = {"config": {"guest": {"interfaces": [nic]}}}
                 with self.assertRaises(ValueError):
                     self.compile_dns(overlay)
 
     def test_other_guests_keep_static_interfaces_without_dhcp_metadata(self):
         """The source refinement changes only the commissioned DHCP guest."""
-        packets = compiler.compile_stack(ROOT, compiler.read(ROOT / "site.example.json"), [])
+        packets = compiler.compile_stack(ROOT, compiler.read(ROOT / "site.example.yaml"), [])
         for name, packet in packets.items():
             if name == "dns":
                 continue

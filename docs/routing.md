@@ -50,7 +50,7 @@ the app: Node-RED retains native Authentik OIDC.
 
 `middlewares` is an ordered list of names. Its default is `["security-headers"]`;
 an explicit empty list selects no middleware. Definitions live centrally in
-`guests/ingress/profile.json` under `stack.routing.middlewares`, with private
+`guests/ingress/profile.yaml` under `stack.routing.middlewares`, with private
 changes under `guests.ingress.stack.routing.middlewares`. Each name contains one
 native Traefik middleware object, including types added later; there is no Python
 enumeration of middleware types. Names are validated and references must exist.

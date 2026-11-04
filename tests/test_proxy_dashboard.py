@@ -19,7 +19,7 @@ import foundation
 
 class ProxyDashboardTests(unittest.TestCase):
     def configured(self):
-        site = c.read(ROOT/'site.example.json')
+        site = c.read(ROOT/'site.example.yaml')
         site['values']['domains.proxy'] = 'proxy.example.invalid'
         site['guests']['ingress'] = {'stack':{'routing':{'middlewares':{
             'authentik-forward':{'forwardAuth':{
@@ -28,7 +28,7 @@ class ProxyDashboardTests(unittest.TestCase):
         return c.merge(site,c.read(ROOT/'recipes/proxy-dashboard.json'))
 
     def test_recipe_is_explicit_optin_and_preserves_unrelated_routes_and_runtime(self):
-        base = c.compile_stack(ROOT,c.read(ROOT/'site.example.json'),[])
+        base = c.compile_stack(ROOT,c.read(ROOT/'site.example.yaml'),[])
         self.assertNotIn('proxy',json.loads(base['ingress']['files']['stack.json'])['routing']['routes'])
         self.assertNotIn('dashboard',json.loads(base['ingress']['files']['stack.json'])['foundation'])
         selected = c.compile_stack(ROOT,self.configured(),[])

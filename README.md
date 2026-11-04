@@ -86,7 +86,7 @@ and existing clients are retained; see [MQTT Explorer](docs/mqtt-explorer.md).
 | [guests](guests) | Executable profiles and public vendor keys/config templates |
 | [deploy workflow](.github/workflows/deploy.yml) | Generated guest workflow calls and real dependency edges |
 | [phase selection](.github/workflows/phase.yml) | The single framework revision selection; not called by guest jobs |
-| [site.example.json](site.example.json) | Explicit synthetic consumer fixture |
+| [site.example.yaml](site.example.yaml) | Explicit synthetic consumer fixture |
 
 Follow [setup and local tests](docs/setup.md), [secrets and prerequisites](docs/secrets.md),
 [public-source policy](docs/public-boundary.md) and [adoption](docs/adoption.md).
@@ -106,7 +106,7 @@ projects remain outside this composition.
 
 Guest definitions combine a framework blueprint with a profile under `guests/`,
 the dependency entry in `stack.json` and private-site overrides. For example,
-[MariaDB's profile](guests/mariadb/profile.json) requests one CPU,
+[MariaDB's profile](guests/mariadb/profile.yaml) requests one CPU,
 1024 MiB RAM, a 4 GiB root disk and 16 GiB at `/var/lib/mysql`. Its blueprint
 selects Linux preparation and the MariaDB application phase; the stack makes it
 depend on DNS. The profile also supplies pinned packages, repository/configuration
@@ -185,6 +185,6 @@ fixtures and do not establish that a live guest or network exists.
 Reusable definitions contain logical relationships and resource requirements,
 with concrete values declared by `required_site_bindings`. The consumer supplies
 those values explicitly; production admission rejects missing bindings and known
-synthetic address/domain identities. `site.example.json` is a synthetic input,
+synthetic address/domain identities. `site.example.yaml` is a synthetic input,
 not a default configuration or production authority. Shared logical-network
 bridge, VLAN and prefix bindings keep repeated assignments consistent.

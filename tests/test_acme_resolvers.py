@@ -23,13 +23,13 @@ sys.path.insert(0, str(ROOT / "tests"))
 
 class AcmeResolverTests(unittest.TestCase):
     def packet(self):
-        return compiler.compile_stack(ROOT, compiler.read(ROOT / "site.example.json"), [])["ingress"]
+        return compiler.compile_stack(ROOT, compiler.read(ROOT / "site.example.yaml"), [])["ingress"]
 
     def test_acme_public_resolvers_have_only_exact_tcp_udp_dns_egress(self):
         packet = self.packet()
         cfg = json.loads(packet["files"]["site.json"])
         stack = json.loads(packet["files"]["stack.json"])
-        values = compiler.read(ROOT / "site.example.json")["values"]
+        values = compiler.read(ROOT / "site.example.yaml")["values"]
         self.assertEqual(stack["foundation"]["acme_dns_resolvers"], ["1.1.1.1:53", "1.0.0.1:53"])
         self.assertEqual(cfg["guest"]["dns_servers"], [values["addresses.dns"], values["addresses.fallback_dns"]])
         rules = cfg["guest"]["rules"]
@@ -43,7 +43,7 @@ class AcmeResolverTests(unittest.TestCase):
     def test_static_tls_render_changes_only_acme_resolvers(self):
         stack = json.loads(self.packet()["files"]["stack.json"])
         previous = copy.deepcopy(stack)
-        previous["foundation"]["acme_dns_resolvers"] = [compiler.read(ROOT / "site.example.json")["values"]["addresses.dns"] + ":53"]
+        previous["foundation"]["acme_dns_resolvers"] = [compiler.read(ROOT / "site.example.yaml")["values"]["addresses.dns"] + ":53"]
         with patch.object(foundation, "read_private", return_value="invented-source-fixture"):
             current_files = {r["path"]: r for r in foundation.files(stack)}
             previous_files = {r["path"]: r for r in foundation.files(previous)}
@@ -79,7 +79,7 @@ class AcmeResolverTests(unittest.TestCase):
 
     def test_propagation_budget_cannot_bypass_the_typed_foundation_guard(self):
         for value in (0, 119, 2101, True, "2100", 2100.0):
-            overlay = compiler.read(ROOT / "site.example.json")
+            overlay = compiler.read(ROOT / "site.example.yaml")
             overlay["guests"]["ingress"] = {"stack": {"foundation": {
                 "acme_dns_propagation_timeout_seconds": value,
             }}}

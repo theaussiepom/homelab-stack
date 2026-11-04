@@ -47,8 +47,8 @@ jobs:
         run: python3 framework-source/.github/scripts/install_gitleaks.py "$RUNNER_TEMP/homelab-source-tools"
       - name: Compile all guest profiles
         run: |
-          python3 framework-source/blueprints/compile.py --stack . --site site.example.json --check
-          python3 framework-source/blueprints/compile.py --stack . --site examples/site.second.json --check
+          python3 framework-source/blueprints/compile.py --stack . --site site.example.yaml --check
+          python3 framework-source/blueprints/compile.py --stack . --site examples/site.second.yaml --check
       - name: Run stack tests and enforce coverage
         env:
           HOMELAB_FRAMEWORK: framework-source

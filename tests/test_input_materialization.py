@@ -30,7 +30,7 @@ class InputMaterializationTests(unittest.TestCase):
             with self.subTest(kind=kind), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
                 packet = compiler.compile_stack(
-                    stack, compiler.read(stack / "site.example.json"), []
+                    stack, compiler.read(stack / "site.example.yaml"), []
                 )[kind]
                 self.assertTrue(packet["enabled"])
                 cfg = json.loads(packet["files"]["site.json"])
@@ -101,7 +101,7 @@ class InputMaterializationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             packet = compiler.compile_stack(
-                stack, compiler.read(stack / "site.example.json"), []
+                stack, compiler.read(stack / "site.example.yaml"), []
             )["automation"]
             self.assertTrue(packet["enabled"])
             cfg = json.loads(packet["files"]["site.json"])

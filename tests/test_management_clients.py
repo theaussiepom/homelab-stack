@@ -23,7 +23,7 @@ class ManagementClientTests(unittest.TestCase):
     def test_private_vpn_binding_preserves_existing_ranges_and_rejects_adjacent_subnets(self):
         for vpn_base in ("198.18.10.0", "198.19.9.0"):
             with self.subTest(vpn_base=vpn_base):
-                overlay = compiler.read(ROOT / "site.example.json")
+                overlay = compiler.read(ROOT / "site.example.yaml")
                 overlay["values"]["networks.admin_vpn"] = vpn_base
                 # Access policy is now an explicit whole-list consumer binding;
                 # changing a network scalar must not silently rewrite that policy.
@@ -57,7 +57,7 @@ class ManagementClientTests(unittest.TestCase):
                     self.assertTrue(any(network.network_address + 1 in permitted for permitted in networks))
 
     def test_management_routes_keep_middleware_order_and_verified_backend_policies(self):
-        packet = compiler.compile_stack(ROOT, compiler.read(ROOT / "site.example.json"), [])["ingress"]
+        packet = compiler.compile_stack(ROOT, compiler.read(ROOT / "site.example.yaml"), [])["ingress"]
         stack = json.loads(packet["files"]["stack.json"])
         shared = discovery.shared(stack["routing"])
         selected = {name for name, route in stack["routing"]["routes"].items() if "management-clients" in route.get("middlewares", [])}
@@ -68,7 +68,7 @@ class ManagementClientTests(unittest.TestCase):
                 self.assertEqual(router["middlewares"], ["security-headers@file", "management-clients@file"])
                 self.assertEqual(router["entryPoints"], ["websecure"])
                 self.assertEqual(router["tls"], {"certResolver": "letsencrypt"})
-        self.assertEqual(shared["http"]["serversTransports"]["udm"], {"serverName": compiler.read(ROOT / "site.example.json")["values"]["domains.udm_backend"]})
+        self.assertEqual(shared["http"]["serversTransports"]["udm"], {"serverName": compiler.read(ROOT / "site.example.yaml")["values"]["domains.udm_backend"]})
         self.assertEqual(shared["http"]["serversTransports"]["proxmox"], {"rootCAs": [discovery.ca_path("proxmox")]})
         self.assertNotIn("serversTransport", shared["http"]["services"]["nas"]["loadBalancer"])
         self.assertEqual(shared["http"]["middlewares"]["security-headers"], {"headers": {"contentTypeNosniff": True}})

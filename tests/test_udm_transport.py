@@ -23,7 +23,7 @@ import render
 
 class UdmTransportTests(unittest.TestCase):
     def stack(self, changed=False):
-        overlay = compiler.read(ROOT / "site.example.json")
+        overlay = compiler.read(ROOT / "site.example.yaml")
         if changed:
             overlay["values"].update({
                 "domains.udm_backend": "controller.changed.example.invalid",
@@ -54,7 +54,7 @@ class UdmTransportTests(unittest.TestCase):
         return stack
 
     def test_profile_keeps_explicit_udm_name_and_other_ca_inputs(self):
-        profile = compiler.read(ROOT / "guests/ingress/profile.json")
+        profile = compiler.read(ROOT / "guests/ingress/profile.yaml")
         transports = profile["stack"]["routing"]["transports"]
         self.assertEqual(transports["udm"], {"server_name": "${domains.udm_backend}"})
         self.assertEqual({name for name, row in transports.items() if "ca_file" in row}, {"proxmox"})
@@ -63,7 +63,7 @@ class UdmTransportTests(unittest.TestCase):
         for changed in (False, True):
             with self.subTest(central_values_changed=changed):
                 stack = self.stack(changed)
-                expected = "controller.changed.example.invalid" if changed else compiler.read(ROOT / "site.example.json")["values"]["domains.udm_backend"]
+                expected = "controller.changed.example.invalid" if changed else compiler.read(ROOT / "site.example.yaml")["values"]["domains.udm_backend"]
                 shared = discovery.shared(stack["routing"])
                 self.assertEqual(shared["http"]["serversTransports"]["udm"], {"serverName": expected})
                 self.assertNotIn("insecureSkipVerify", json.dumps(shared))

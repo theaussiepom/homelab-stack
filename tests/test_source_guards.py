@@ -133,11 +133,16 @@ class PublicPolicyTests(unittest.TestCase):
         entries = json.loads((ROOT / ".githooks/reviewed-findings.json").read_text())
         self.assertEqual(
             {entry["path"] for entry in entries},
-            {f"guests/{name}/profile.json" for name in ("postgresql", "mariadb", "influxdb")},
+            {f"guests/{name}/profile.yaml" for name in ("postgresql", "mariadb", "influxdb")},
         )
         for entry in entries:
             raw = (ROOT / entry["path"]).read_bytes()
-            profile = json.loads(raw)
+            parser_spec = importlib.util.spec_from_file_location(
+                "stack_policy_authored_config", FRAMEWORK / "blueprints/authored_config.py"
+            )
+            authored_config = importlib.util.module_from_spec(parser_spec)
+            parser_spec.loader.exec_module(authored_config)
+            profile = authored_config.read(ROOT / entry["path"])
             key = profile["files"]["vendor.asc"]
             repository = profile["config"]["app"]["repositories"][0]
             with self.subTest(path=entry["path"]):
@@ -148,9 +153,9 @@ class PublicPolicyTests(unittest.TestCase):
                 self.assertIn(repository["key_sha256"], raw.decode().splitlines()[entry["line"] - 1])
 
     def test_private_file_ignore_rules_preserve_example_exceptions(self):
-        private = [".env", ".env.local", ".env.production", "site.json", "archive.p12",
+        private = [".env", ".env.local", ".env.production", "site.json", "site.yaml", "site.yml", "archive.p12",
                    "certificate.pfx", "runtime.db", "state.sqlite3", ".coverage", ".coverage.fixture"]
-        examples = [".env.example", ".env.sample", ".env.template", "site.example.json"]
+        examples = [".env.example", ".env.sample", ".env.template", "site.example.json", "site.example.yaml", "site.example.yml"]
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             subprocess.run(["git", "init", "-q", str(root)], check=True)

@@ -32,7 +32,7 @@ def workflow(path):
 
 class StackTests(unittest.TestCase):
     def setUp(self):
-        self.overlay = c.read(ROOT / "site.example.json")
+        self.overlay = c.read(ROOT / "site.example.yaml")
 
     def guest(self, name, disabled=None, **options):
         return c.compile_stack(ROOT, self.overlay, disabled, **options)[name]
@@ -95,7 +95,7 @@ class StackTests(unittest.TestCase):
                 "infrastructure",
                 "preparation",
                 *c.guest_contract.applications(
-                    c.read(ROOT / "guests" / name / "profile.json")["config"]
+                    c.read(ROOT / "guests" / name / "profile.yaml")["config"]
                 ),
             ]
             phases.append("zabbix-agent")
@@ -200,7 +200,7 @@ class StackTests(unittest.TestCase):
         cfg = json.loads(self.guest("automation", [])["files"]["stack.json"])
         self.assertEqual(
             cfg["services"]["homeassistant"]["extra_hosts"]["mariadb.db_hass"],
-            c.read(ROOT / "site.example.json")["values"]["addresses.mariadb_backend"],
+            c.read(ROOT / "site.example.yaml")["values"]["addresses.mariadb_backend"],
         )
 
     def test_migration_fields_and_vm_overrides_refuse(self):
@@ -236,7 +236,7 @@ class StackTests(unittest.TestCase):
         packet = self.guest("automation", [])
         stack = json.loads(packet["files"]["stack.json"])
         self.assertEqual(stack["node_red_oidc"]["client_id"], "selected-client-fixture")
-        default = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])
+        default = c.compile_stack(ROOT, c.read(ROOT / "site.example.yaml"), [])
         self.assertEqual(
             json.loads(default["automation"]["files"]["stack.json"])["node_red_oidc"]["client_id"],
             "example-node-red-client",

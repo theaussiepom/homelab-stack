@@ -30,7 +30,7 @@ class PegaProxRouteTests(unittest.TestCase):
     def test_endpoint_proxy_binding_and_actual_health_requests_agree(self):
         """Execute the real read-only health code with invented closed-setup replies."""
         for changed in (False, True):
-            overlay = c.read(ROOT / "site.example.json")
+            overlay = c.read(ROOT / "site.example.yaml")
             if changed:
                 overlay["values"].update({
                     "addresses.pegaprox_management": "198.18.25.134",
@@ -38,7 +38,7 @@ class PegaProxRouteTests(unittest.TestCase):
                     "domains.secondary": "changed.example.invalid",
                 })
             with self.subTest(central_values_changed=changed):
-                values = dict(c.read(ROOT / "site.example.json")["values"], **overlay["values"])
+                values = dict(c.read(ROOT / "site.example.yaml")["values"], **overlay["values"])
                 packets = c.compile_stack(ROOT, overlay, [])
                 packet = packets["pegaprox"]
                 cfg = json.loads(packet["files"]["site.json"])
@@ -89,7 +89,7 @@ class PegaProxRouteTests(unittest.TestCase):
 
     def test_guest_boot_policy_preserves_startup_independently_of_container_restart(self):
         """The compiled LXC must boot with its host as well as restart its service."""
-        packet = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])["pegaprox"]
+        packet = c.compile_stack(ROOT, c.read(ROOT / "site.example.yaml"), [])["pegaprox"]
         cfg = json.loads(packet["files"]["site.json"])
         stack = json.loads(packet["files"]["stack.json"])
         self.assertEqual(cfg["guest"]["vmid"], 214)
@@ -100,7 +100,7 @@ class PegaProxRouteTests(unittest.TestCase):
 
     def test_trusted_proxy_must_stay_a_single_admitted_ingress_endpoint(self):
         """A runtime proxy field cannot replace the guest's finite client policy."""
-        packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])
+        packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.yaml"), [])
         cfg = json.loads(packets["pegaprox"]["files"]["site.json"])
         stack = json.loads(packets["pegaprox"]["files"]["stack.json"])
         for bad in ("0.0.0.0/0", "198.18.25.0/24", "198.51.100.1/32", stack["bind_address"] + "/32", [stack["trusted_proxy"]]):
@@ -114,7 +114,7 @@ class PegaProxRouteTests(unittest.TestCase):
             pegaprox.validate_deployment(changed, stack)
         client = next(row for row in cfg["guest"]["rules"] if row.get("direction") == "in" and row.get("port") == "5000")
         ingress_subnet = stack["trusted_proxy"].rsplit(".", 1)[0] + ".0/24"
-        home_subnet = c.read(ROOT / "site.example.json")["values"]["networks.home"] + "/24"
+        home_subnet = c.read(ROOT / "site.example.yaml")["values"]["networks.home"] + "/24"
         for source in (ingress_subnet, home_subnet, stack["bind_address"] + "/32"):
             for extra in (False, True):
                 with self.subTest(client_source=source, extra_client=extra):
@@ -130,11 +130,11 @@ class PegaProxRouteTests(unittest.TestCase):
     def test_nas_http_route_keeps_frontend_tls_aliases_and_narrow_egress(self):
         """Compile the qualified port while preserving browser routing and policy."""
         for changed in (False, True):
-            overlay = c.read(ROOT / "site.example.json")
+            overlay = c.read(ROOT / "site.example.yaml")
             if changed:
                 overlay["values"].update({"addresses.nas": "198.18.25.102", "domains.secondary": "secondary.changed.example.invalid", "domains.primary": "primary.changed.example.invalid"})
             with self.subTest(central_values_changed=changed):
-                values = dict(c.read(ROOT / "site.example.json")["values"], **overlay["values"])
+                values = dict(c.read(ROOT / "site.example.yaml")["values"], **overlay["values"])
                 packets = c.compile_stack(ROOT, overlay, [])
                 ingress = json.loads(packets["ingress"]["files"]["stack.json"])
                 cfg = json.loads(packets["ingress"]["files"]["site.json"])
@@ -152,18 +152,18 @@ class PegaProxRouteTests(unittest.TestCase):
                 rules = [r for r in cfg["guest"]["rules"] if r.get("direction") == "out" and r.get("destination") == values["addresses.nas"] + "/32"]
                 self.assertEqual(len(rules), 1)
                 self.assertEqual((rules[0]["source"], rules[0]["port"], rules[0]["proto"]), (values["addresses.ingress_management"] + "/32", "31763", "tcp"))
-        overlay = c.read(ROOT / "site.example.json")
-        profile = c.substitute(c.read(ROOT / "guests/ingress/profile.json"), overlay["values"], c.binding_declarations(c.manifest(ROOT)))
+        overlay = c.read(ROOT / "site.example.yaml")
+        profile = c.substitute(c.read(ROOT / "guests/ingress/profile.yaml"), overlay["values"], c.binding_declarations(c.manifest(ROOT)))
         overlay["guests"]["ingress"] = {"config": {"guest": {"rules": [r for r in profile["config"]["guest"]["rules"] if r.get("port") != "31763"]}}}
         with self.assertRaises(ValueError):
             c.compile_stack(ROOT, overlay, [])
 
     def test_no_backend_ca_lifecycle_is_staged_and_pve_trust_acme_are_preserved(self):
         """Render invented inputs; no real certificate, process or login is touched."""
-        packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.json"), [])
+        packets = c.compile_stack(ROOT, c.read(ROOT / "site.example.yaml"), [])
         ingress = json.loads(packets["ingress"]["files"]["stack.json"])
         self.assertEqual(set(ingress["routing"]["transports"]), {"udm", "proxmox"})
-        self.assertEqual(ingress["routing"]["transports"]["udm"], {"server_name": c.read(ROOT / "site.example.json")["values"]["domains.udm_backend"]})
+        self.assertEqual(ingress["routing"]["transports"]["udm"], {"server_name": c.read(ROOT / "site.example.yaml")["values"]["domains.udm_backend"]})
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             staged = copy.deepcopy(ingress)

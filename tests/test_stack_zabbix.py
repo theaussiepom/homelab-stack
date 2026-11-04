@@ -4,7 +4,9 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -15,8 +17,14 @@ compiler = importlib.util.module_from_spec(spec);spec.loader.exec_module(compile
 
 
 class MonitoringFeatureTests(unittest.TestCase):
+    def prepared_selector_environment(self, root):
+        parser = root/'framework-source/blueprints/authored_config.py'
+        parser.parent.mkdir(parents=True)
+        shutil.copyfile(FRAMEWORK/'blueprints/authored_config.py', parser)
+        return dict(os.environ, HOMELAB_CONFIG_PYTHON=sys.executable)
+
     def overlay(self):
-        return compiler.read(ROOT/'site.example.json')
+        return compiler.read(ROOT/'site.example.yaml')
 
     def packets(self, marker=True, disabled=None):
         overlay = self.overlay()
@@ -97,7 +105,7 @@ class MonitoringFeatureTests(unittest.TestCase):
                 (root/'site.json').write_text(json.dumps(overlay))
                 out=root/'outputs'
                 run=subprocess.run(['sh','-eu','-c',step['run']],cwd=root,
-                    env=dict(os.environ,DISABLED='[]',DEPENDENCIES=step['env']['DEPENDENCIES'],GITHUB_OUTPUT=str(out)),capture_output=True,text=True)
+                    env=dict(self.prepared_selector_environment(root),DISABLED='[]',DEPENDENCIES=step['env']['DEPENDENCIES'],GITHUB_OUTPUT=str(out)),capture_output=True,text=True)
                 self.assertEqual(run.returncode,0,run.stderr)
                 self.assertEqual(out.read_text(),'zabbix='+str(active).lower()+'\n')
 
@@ -132,5 +140,5 @@ class MonitoringFeatureTests(unittest.TestCase):
                 root=Path(td);overlay=self.overlay();overlay['zabbix']=None
                 (root/'site.json').write_text(json.dumps(overlay))
                 run=subprocess.run(['sh','-eu','-c',step['run']],cwd=root,
-                    env=dict(os.environ,DISABLED=json.dumps(disabled),DEPENDENCIES=step['env']['DEPENDENCIES'],GITHUB_OUTPUT=str(root/'outputs')),capture_output=True,text=True)
+                    env=dict(self.prepared_selector_environment(root),DISABLED=json.dumps(disabled),DEPENDENCIES=step['env']['DEPENDENCIES'],GITHUB_OUTPUT=str(root/'outputs')),capture_output=True,text=True)
                 self.assertEqual(run.returncode==0,ok,run.stderr)
