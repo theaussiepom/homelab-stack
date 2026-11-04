@@ -47,6 +47,13 @@ class ComponentCompositionTests(unittest.TestCase):
         self.assertNotIn('user', service)
         self.assertNotIn('network_mode', service)
 
+    def test_unbound_loopback_binding_succeeds_and_physical_nic_binding_refuses(self):
+        source = authored_config.read(ROOT / 'site.example.yaml')
+        app = self.plan(source).resolved['apps']['recursive_dns']
+        self.assertEqual(app['listeners']['dns_tcp']['publication_address'], '127.0.0.1')
+        source['apps']['recursive_dns']['interfaces']['service'] = {'interface': 'primary'}
+        with self.assertRaises(ValueError): self.plan(source)
+
     def test_repeated_profile_has_distinct_runtime_and_publication_with_cosmetic_labels(self):
         source = authored_config.read(ROOT / 'site.example.yaml')
         source['apps']['backup'] = copy.deepcopy(source['apps']['recursive_dns'])

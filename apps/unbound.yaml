@@ -7,7 +7,6 @@ interfaces:
     required: true
     accepts:
     - guest-loopback
-    - guest-interface
   private:
     required: true
     accepts:

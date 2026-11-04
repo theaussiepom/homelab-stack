@@ -128,6 +128,7 @@ class ProfileDefinitionTests(unittest.TestCase):
 
     def test_unbound_owns_only_itself_with_optional_fresh_config_and_two_protocols(self):
         value = self.profile('unbound')
+        self.assertEqual(value['interfaces']['service']['accepts'], ['guest-loopback'])
         self.assertEqual(value['properties'], {'publish_port': 5335})
         self.assertFalse(value['storage']['config']['required'])
         self.assertEqual(value['connections'], {})
