@@ -1,0 +1,38 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: mariadb
+display_name: MariaDB
+interfaces:
+  service:
+    required: true
+    accepts:
+    - guest-interface
+listeners:
+  database:
+    service: mariadb
+    namespace: host
+    interface: service
+    bind: interface
+    protocol: tcp
+    port: 3306
+endpoints:
+  backend:
+    listener: database
+    protocol: tcp
+    via: service
+storage:
+  data:
+    target: /var/lib/mysql
+    read_only: false
+    required: true
+    kind: directory
+connections: {}
+software:
+- mariadb
+runtime:
+- native-mariadb
+health:
+  ready:
+    profile: adapter-ready
+monitoring:
+  profile: mariadb-agent

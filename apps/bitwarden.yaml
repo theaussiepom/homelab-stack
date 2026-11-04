@@ -1,0 +1,77 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: bitwarden
+display_name: Bitwarden
+interfaces:
+  web:
+    required: true
+    accepts:
+    - guest-interface
+  database:
+    required: true
+    accepts:
+    - guest-interface
+  management:
+    required: false
+    accepts:
+    - guest-interface
+  private:
+    required: true
+    accepts:
+    - app-network
+listeners:
+  web:
+    service: bitwarden
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 8080
+    publish:
+      scope: guest-interface
+      interface: web
+      port: 8080
+endpoints:
+  web:
+    listener: web
+    protocol: http
+    via: web
+storage:
+  data:
+    target: /etc/bitwarden
+    read_only: false
+    required: true
+    kind: directory
+  logs:
+    target: /var/log/bitwarden
+    read_only: false
+    required: true
+    kind: directory
+connections:
+  database:
+    type: mariadb
+    required: true
+    readiness:
+    - configure
+    - start
+  public:
+    type: https
+    required: false
+    readiness:
+    - start
+software:
+- docker
+- curl
+- bitwarden-images
+- mariadb-client
+runtime:
+- container-host
+- bitwarden
+health:
+  ready:
+    profile: adapter-ready
+secrets:
+  runtime_environment:
+    required: true
+monitoring:
+  profile: docker-agent

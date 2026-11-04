@@ -1,233 +1,124 @@
-schema: homelab-site-v3
-values:
-  accounts.mariadb_admin: fixture_maria_admin_a
-  accounts.mqtt_explorer: fixture_explorer_a
-  accounts.postgresql_admin: fixture_pg_admin_a
-  addresses.acme_dns_primary: 1.1.1.1
-  addresses.acme_dns_secondary: 1.0.0.1
-  addresses.automation_backend: 198.18.30.21
-  addresses.automation_frontend: 198.18.40.21
-  addresses.automation_home: 198.19.100.242
-  addresses.automation_influxdb: 198.18.33.21
-  addresses.automation_management: 198.18.25.21
-  addresses.automation_mariadb: 198.18.32.21
-  addresses.bitwarden_backend: 198.18.30.35
-  addresses.bitwarden_management: 198.18.25.35
-  addresses.bitwarden_mariadb: 198.18.32.35
-  addresses.db_tools_mariadb: 198.18.32.32
-  addresses.dns: 198.18.40.2
-  addresses.fallback_dns: 198.19.100.4
-  addresses.identity_backend: 198.18.30.20
-  addresses.identity_management: 198.18.25.20
-  addresses.identity_postgresql: 198.18.31.20
-  addresses.influxdb_backend: 198.18.33.26
-  addresses.influxdb_management: 198.18.25.26
-  addresses.ingress_backend: 198.18.30.33
-  addresses.ingress_frontend: 198.18.40.33
-  addresses.ingress_influxdb: 198.18.33.33
-  addresses.ingress_management: 198.18.25.33
-  addresses.mariadb_backend: 198.18.32.24
-  addresses.mariadb_management: 198.18.25.24
-  addresses.monitoring_influxdb: 198.18.33.36
-  addresses.monitoring_management: 198.18.25.36
-  addresses.monitoring_postgresql: 198.18.31.36
-  addresses.mqtt_backend: 198.18.30.37
-  addresses.mqtt_frontend: 198.18.41.21
-  addresses.mqtt_management: 198.18.25.37
-  addresses.music_backend: 198.18.30.31
-  addresses.music_home: 198.19.100.241
-  addresses.music_management: 198.18.25.31
-  addresses.nas: 198.18.25.2
-  addresses.pegaprox_management: 198.18.25.34
-  addresses.pgadmin_backend: 198.18.30.32
-  addresses.pgadmin_management: 198.18.25.32
-  addresses.pgadmin_postgresql: 198.18.31.32
-  addresses.pironman_apps: 198.18.40.4
-  addresses.pironman_matter: 198.18.50.4
-  addresses.postgresql_backend: 198.18.31.23
-  addresses.postgresql_management: 198.18.25.23
-  addresses.pve: 198.18.25.10
-  addresses.runner: 198.18.25.11
-  addresses.udm: 198.19.100.1
-  addresses.winet_inverter: 198.19.107.23
-  addresses.zigbee_backend: 198.18.30.22
-  addresses.zigbee_iot: 198.19.107.246
-  addresses.zigbee_management: 198.18.25.22
-  addresses.zigbeepi_apps: 198.18.40.6
-  bridges.frontend: vmbr1
-  bridges.home: vmbr1
-  bridges.http_backend: vmbr30
-  bridges.influxdb: vmbr33
-  bridges.iot: vmbr1
-  bridges.management: vmbr0
-  bridges.mariadb: vmbr32
-  bridges.mqtt: vmbr1
-  bridges.postgresql: vmbr31
-  contact.acme_email: operator@example.invalid
-  credentials.mariadb_admin: example-maria-admin-a
-  credentials.mqtt_explorer: example-explorer-a
-  credentials.postgresql_admin: example-pg-admin-a
-  custody.catalogue: |
-    {}
-  custody.mariadb_acceptance: |
-    {}
-  custody.postgresql_acceptance: |
-    {}
-  devices.zigbee_coordinator: /dev/serial/by-id/usb-example-coordinator
-  domains.bitwarden: service-1.example.invalid
-  domains.db_tools: db.example.invalid
-  domains.homeassistant: service-5.example.invalid
-  domains.identity: service-6.example.invalid
-  domains.monitoring: zabbix.example.invalid
-  domains.mqtt_explorer: mqtt-ui-a.example.invalid
-  domains.music: music.example.invalid
-  domains.node_red_alias: service-4.example.invalid
-  domains.node_red_primary: service-2.example.invalid
-  domains.pgadmin: service-3.example.invalid
-  domains.primary: service-7.example.invalid
-  domains.secondary: service-9.example.invalid
-  domains.udm_backend: udm.example.invalid
-  gateways.frontend: 198.18.40.1
-  gateways.home: 198.19.100.1
-  gateways.management: 198.18.25.1
-  gateways.mqtt: 198.18.41.1
-  hostnames.automation: automation
-  hostnames.bitwarden: bitwarden
-  hostnames.db-tools: db-tools
-  hostnames.dns: dns
-  hostnames.identity: security
-  hostnames.influxdb: influxdb
-  hostnames.ingress: traefik
-  hostnames.mariadb: mariadb
-  hostnames.mariadb_database: mariadb.database.example.invalid
-  hostnames.monitoring: zabbix
-  hostnames.mqtt: mqtt
-  hostnames.mqtt_broker: broker.mqtt
-  hostnames.music: music
-  hostnames.pegaprox: pegaprox
-  hostnames.postgresql: postgresql
-  hostnames.postgresql_database: postgresql.database.example.invalid
-  hostnames.zigbee2mqtt: radios
-  identity.db_tools_authorization_url: https://service-6.example.invalid/application/o/authorize/
-  identity.db_tools_jwks_url: https://service-6.example.invalid/application/o/pgadmin4/jwks/
-  identity.db_tools_token_url: https://service-6.example.invalid/application/o/token/
-  identity.db_tools_userinfo_url: https://service-6.example.invalid/application/o/userinfo/
-  identity.discovery_token: root@pam!example-discovery
-  identity.node_red_client: example-node-red-client
-  identity.pgadmin_client: example-pgadmin-client
-  mac.automation.0: 02:00:06:00:00:01
-  mac.automation.1: 02:00:06:01:00:01
-  mac.automation.2: 02:00:06:02:00:01
-  mac.automation.3: 02:00:06:03:00:01
-  mac.automation.4: 02:00:06:04:00:01
-  mac.automation.5: 02:00:06:05:00:01
-  mac.bitwarden.0: 02:00:07:00:00:01
-  mac.bitwarden.1: 02:00:07:01:00:01
-  mac.bitwarden.2: 02:00:07:02:00:01
-  mac.db-tools.0: 02:00:04:00:00:01
-  mac.db-tools.1: 02:00:04:01:00:01
-  mac.db-tools.2: 02:00:04:02:00:01
-  mac.db-tools.3: 02:00:04:03:00:01
-  mac.dns.0: 02:00:09:00:00:01
-  mac.identity.0: 02:00:03:00:00:01
-  mac.identity.1: 02:00:03:01:00:01
-  mac.identity.2: 02:00:03:02:00:01
-  mac.influxdb.0: 02:00:02:00:00:01
-  mac.influxdb.1: 02:00:02:01:00:01
-  mac.ingress.0: 02:00:05:00:00:01
-  mac.ingress.1: 02:00:05:01:00:01
-  mac.ingress.2: 02:00:05:02:00:01
-  mac.ingress.3: 02:00:05:03:00:01
-  mac.mariadb.0: 02:00:01:00:00:01
-  mac.mariadb.1: 02:00:01:01:00:01
-  mac.monitoring.0: 02:00:0b:00:00:01
-  mac.monitoring.1: 02:00:0b:01:00:01
-  mac.monitoring.2: 02:00:0b:02:00:01
-  mac.mqtt.0: 02:00:0d:00:00:01
-  mac.mqtt.1: 02:00:0d:01:00:01
-  mac.mqtt.2: 02:00:0d:02:00:01
-  mac.music.0: 02:00:0c:00:00:01
-  mac.music.1: 02:00:0c:01:00:01
-  mac.music.2: 02:00:0c:02:00:01
-  mac.pegaprox.0: 02:00:08:00:00:01
-  mac.postgresql.0: 02:00:00:00:00:01
-  mac.postgresql.1: 02:00:00:01:00:01
-  mac.zigbee.0: 02:00:0a:00:00:01
-  mac.zigbee.1: 02:00:0a:01:00:01
-  mac.zigbee.2: 02:00:0a:02:00:01
-  networks.admin_vpn: 198.18.10.0
-  networks.frontend: 198.18.40.0
-  networks.home: 198.19.100.0
-  networks.http_backend: 198.18.30.0
-  networks.iot: 198.19.107.0
-  networks.management: 198.18.25.0
-  networks.management_clients:
-    - 198.18.15.0/24
-    - 198.18.25.0/24
-    - 198.18.10.0/28
-  networks.mqtt: 198.18.41.0
-  networks.music_clients:
-    - 198.18.10.0/28
-    - 198.19.100.0/24
-  networks.policy_15: 198.18.15.0
-  networks.policy_50: 198.18.50.0
-  paths.api_token: /var/lib/homelab-inputs/pve-token
-  paths.backup_directory: /srv/homelab-backups/applications
-  paths.backup_mount: /srv/homelab-backups
-  paths.backup_source: nas.example.invalid:/backups/homelab
-  paths.ca_file: /usr/local/share/ca-certificates/homelab-pve.crt
-  paths.known_hosts: /var/lib/homelab-inputs/known_hosts
-  paths.mqtt_password_file: /mosquitto/config/example-passwords-a
-  paths.mqtt_probe: /var/lib/homelab-inputs/mqtt-probe.json
-  paths.private_key: /home/homelab-runner/.ssh/applications
-  paths.state_root: /var/lib/homelab-applications
-  paths.winet_options: /var/lib/homelab-inputs/winet-options.json
-  ports.nas_web: '31763'
-  prefixes.admin_vpn: 28
-  prefixes.frontend: 24
-  prefixes.home: 24
-  prefixes.http_backend: 24
-  prefixes.influxdb: 24
-  prefixes.iot: 24
-  prefixes.management: 24
-  prefixes.mariadb: 24
-  prefixes.mqtt: 24
-  prefixes.policy_15: 24
-  prefixes.policy_50: 24
-  prefixes.postgresql: 24
-  site.node: example-pve
-  ssh.public_keys:
-    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-  storage.guest: local-zfs
-  templates.debian_lxc: local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst
-  timezones.applications: Australia/Brisbane
-  timezones.dns: Etc/UTC
-  vlans.frontend: 40
-  vlans.home: 100
-  vlans.http_backend: null
-  vlans.influxdb: null
-  vlans.iot: 107
-  vlans.management: 25
-  vlans.mariadb: null
-  vlans.mqtt: 41
-  vlans.postgresql: null
-  vmids.automation: 200
-  vmids.bitwarden: 215
-  vmids.db-tools: 202
-  vmids.dns: 6101
-  vmids.identity: 211
-  vmids.influxdb: 204
-  vmids.ingress: 212
-  vmids.mariadb: 206
-  vmids.monitoring: 216
-  vmids.mqtt: 217
-  vmids.music: 207
-  vmids.pegaprox: 214
-  vmids.postgresql: 208
-  vmids.zigbee2mqtt: 209
-  winet.mqtt_prefix: homeassistant
-common: {}
-guests: {}
-images: {}
-accepted: {}
-routes: {}
+# Synthetic component source; supply real context and identity bindings before admission.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+storage:
+  local:
+    context: lab
+    pool: example-local
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination: 0.0.0.0/0
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination: 0.0.0.0/0
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination: 0.0.0.0/0
+        comment: Recursive DNS
+guests:
+  resolver:
+    context: lab
+    template: base
+    lifecycle: fresh
+    identity:
+      vmid: 610
+      hostname: example-resolver
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:00:10
+        address:
+          mode: static
+          value: 198.18.20.10
+        default_route: true
+        ipv6: manual
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - downloads
+    - recursive_dns
+    control_interface: primary
+apps:
+  recursive_dns:
+    profile: unbound
+    guest: resolver
+    lifecycle: fresh
+    interfaces:
+      service:
+        scope: guest-loopback
+      private:
+        scope: app-network
+        network: default

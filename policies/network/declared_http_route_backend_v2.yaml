@@ -1,0 +1,12 @@
+schema: homelab-components-v1
+kind: network-policy
+rules:
+- comment: Declared HTTP route backend
+  destination:
+    endpoint: destination
+  direction: out
+  port:
+    endpoint: destination
+  proto: tcp
+  source:
+    interface: source

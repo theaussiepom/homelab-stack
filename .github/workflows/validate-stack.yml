@@ -42,10 +42,10 @@ jobs:
       - name: Check repository boundaries
         run: python3 framework-source/tools/check_boundaries.py --mode stack --root .
       - name: Check generated workflows
-        run: python3 framework-source/blueprints/workflows.py --stack . --check
+        run: python3 framework-source/blueprints/workflows.py --stack . --site site.example.yaml --check
       - name: Install verified secret scanner
         run: python3 framework-source/.github/scripts/install_gitleaks.py "$RUNNER_TEMP/homelab-source-tools"
-      - name: Compile all guest profiles
+      - name: Compile examples
         run: |
           python3 framework-source/blueprints/compile.py --stack . --site site.example.yaml --check
           python3 framework-source/blueprints/compile.py --stack . --site examples/site.second.yaml --check

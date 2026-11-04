@@ -1,0 +1,63 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: zigbee2mqtt
+display_name: Zigbee2MQTT
+interfaces:
+  web:
+    required: true
+    accepts:
+    - guest-interface
+  broker:
+    required: true
+    accepts:
+    - guest-interface
+  private:
+    required: true
+    accepts:
+    - app-network
+listeners:
+  web:
+    service: zigbee2mqtt
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 8099
+    publish:
+      scope: guest-interface
+      interface: web
+      port: 8099
+endpoints:
+  web:
+    listener: web
+    protocol: http
+    via: web
+storage:
+  data:
+    target: /app/data
+    read_only: false
+    required: true
+    kind: directory
+connections:
+  broker:
+    type: mqtt
+    required: true
+    readiness:
+    - start
+devices:
+  coordinator:
+    type: serial
+    required: true
+software:
+- docker
+- curl
+- zigbee2mqtt-images
+- yaml-parser
+runtime:
+- container-host
+- zigbee2mqtt
+health:
+  ready:
+    profile: adapter-ready
+monitoring:
+  profile: docker-agent

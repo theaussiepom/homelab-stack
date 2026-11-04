@@ -1,0 +1,27 @@
+schema: homelab-components-v1
+kind: network-policy
+rules:
+- comment: Selected internal DNS only
+  destination:
+    endpoint: primary_dns
+  direction: out
+  port: '53'
+  proto: tcp
+- comment: Selected internal DNS only
+  destination:
+    endpoint: primary_dns
+  direction: out
+  port: '53'
+  proto: udp
+- comment: Selected internal DNS only
+  destination:
+    endpoint: fallback_dns
+  direction: out
+  port: '53'
+  proto: tcp
+- comment: Selected internal DNS only
+  destination:
+    endpoint: fallback_dns
+  direction: out
+  port: '53'
+  proto: udp

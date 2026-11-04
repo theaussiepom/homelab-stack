@@ -1,0 +1,105 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: zabbix
+display_name: Zabbix
+interfaces:
+  web:
+    required: true
+    accepts:
+    - guest-interface
+  server:
+    required: true
+    accepts:
+    - guest-interface
+  postgresql:
+    required: true
+    accepts:
+    - guest-interface
+  metrics:
+    required: false
+    accepts:
+    - guest-interface
+  management:
+    required: false
+    accepts:
+    - guest-interface
+  private:
+    required: true
+    accepts:
+    - app-network
+listeners:
+  server:
+    service: zabbix_server
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 10051
+    publish:
+      scope: guest-interface
+      interface: server
+      port: 10051
+  web:
+    service: zabbix_web
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 8080
+    publish:
+      scope: guest-interface
+      interface: web
+      port: 8080
+  local_web:
+    service: zabbix_web
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 8080
+    publish:
+      scope: guest-loopback
+      port: 8081
+endpoints:
+  web:
+    listener: web
+    protocol: http
+    via: web
+  server:
+    listener: server
+    protocol: tcp
+    via: server
+storage: {}
+connections:
+  database:
+    type: postgresql
+    required: true
+    readiness:
+    - start
+  public:
+    type: https
+    required: false
+    readiness:
+    - start
+  proxmox:
+    type: https
+    required: false
+  metrics:
+    type: influxdb
+    required: false
+software:
+- docker
+- curl
+- zabbix-images
+runtime:
+- container-host
+- zabbix
+health:
+  ready:
+    profile: adapter-ready
+authentication: zabbix-saml
+secrets:
+  database_password:
+    required: false
+monitoring:
+  profile: docker-agent

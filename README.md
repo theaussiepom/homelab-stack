@@ -1,190 +1,127 @@
 # HomeLab stack
 
-A copyable implementation of a small Proxmox homelab. This repository composes the
-reusable **homelab** framework into guests and applications. A consuming repository adopts a reviewed stack version and supplies concrete
-site bindings and deployment controls.
+This library describes independent applications and reusable guest templates.
+A consuming site chooses instances, placement, interfaces, storage and policy.
+The selected framework resolves that composition and drives the existing
+OpenTofu, Ansible and deployment workflow.
 
-The source is executable: profiles compile to the framework's guarded ordinary
-packet; reusable workflows run infrastructure, preparation, and the real app jobs.
-Reusable profiles contain no allocation defaults; the separate runnable examples
-use synthetic identities. The consumer owns reviewed deployment.
+The library has no implicit guest set. Applications can share a guest or run on
+separate guests. One deployment job represents each selected guest, with short
+application steps inside it.
 
-```mermaid
-flowchart TD
-  DNS[DNS: Unbound then Pi-hole] --> Ingress[Traefik]
-  DNS --> PG[PostgreSQL]
-  DNS --> Maria[MariaDB]
-  DNS --> Influx[InfluxDB]
-  DNS --> Pega[PegaProx]
-  PG --> Auth[Authentik: server + worker + Redis]
-  Ingress --> Auth
-  PG --> Admin[CloudBeaver]
-  Maria --> Admin
-  Ingress --> Gateway[Authentication gateway]
-  Gateway --> Admin
-  DNS --> Broker[MQTT: broker then Explorer]
-  Broker --> Auto[Home Automation: Home Assistant then Node-RED]
-  Maria --> Auto
-  Influx --> Auto
-  Broker --> Radio[Radios: Zigbee2MQTT then WiNet]
-  DNS --> Music[Music Assistant]
-  Ingress --> Music
-  Maria --> Vault[Bitwarden]
-  Ingress --> Vault
+## Source layout
+
+- `stack.json` indexes the component library and named shared declarations.
+- `apps/` contains independent application profiles.
+- `templates/` contains reusable resource, startup and security defaults.
+- `images.json` owns image selections and their declared policies.
+- `assets/` contains digest-checked, byte-preserved public vendor material.
+- `site.example.yaml` is a small synthetic standalone Unbound starter.
+- `examples/site.second.yaml` uses different placement and repeated instances.
+
+Examples use reserved addresses and example identities. They demonstrate source
+contracts; they do not commission a context or supply native acceptance evidence.
+Real allocations, trust, secrets, image archives and admission records belong to
+the consuming site.
+
+## Independent applications
+
+| Profile | Owned application and supporting containers |
+| --- | --- |
+| `homeassistant` | Home Assistant |
+| `node_red` | Node-RED |
+| `bitwarden` | Bitwarden |
+| `cloudbeaver` | CloudBeaver and its authentication gateway |
+| `pihole` | Pi-hole |
+| `unbound` | Unbound |
+| `authentik` | Authentik server, worker and dedicated Redis |
+| `influxdb` | Native InfluxDB |
+| `traefik` | Traefik |
+| `mariadb` | Native MariaDB |
+| `zabbix` | Zabbix server and web frontend |
+| `mqtt` | Mosquitto broker |
+| `mqtt_explorer` | MQTT Explorer and its authentication gateway |
+| `music_assistant` | Music Assistant |
+| `pegaprox` | PegaProx |
+| `postgresql` | Native PostgreSQL |
+| `zigbee2mqtt` | Zigbee2MQTT |
+| `winet` | WiNet |
+
+Pi-hole does not force Unbound. HA does not force Node-RED or database, MQTT,
+metrics, identity or ingress integrations. WiNet does not force Zigbee or a USB
+capability. Selected connections supply their actual requirements.
+
+The explicit `homeassistant-public` and `node_red-public` variants select official
+public images for new instances. They use the same independent adapters and
+shared resource/health declarations. Retained profiles keep their declared
+archive selections. See [public image options](docs/public-images.md).
+
+## Compose a site
+
+A site declares contexts, named networks/storage, guests and app instances.
+Interface maps select provider slots explicitly; addresses and VLANs are declared
+once on the site side. App roles refer to those interfaces. Connections name an
+app and a listener endpoint, rather than copying an address or inventing a wait.
+
+The minimal example selects Unbound with a private container listener and an
+explicit guest-loopback publication. A second instance can choose another
+supported publication port. Real listener, service, data, device and credential
+ownership conflicts refuse compilation.
+
+Application helpers remain owned by their app. A shared Compose project is
+explicit, with stable per-app service/network identities. Updating a GUI does not
+implicitly recreate another app's broker or data.
+
+Named network policy fragments are explicitly selected and bound by the site.
+Connections never create firewall rules, broaden client access or establish
+isolation. Existing policy rows retain their order and comments.
+
+## Fresh and retained state
+
+`lifecycle: fresh` permits creation of an absent owned resource through the normal
+pipeline. It does not adopt an existing resource or fabricate commissioning
+proof. An unsupported initialization path refuses explicitly.
+
+`lifecycle: retained` preserves exact guest, runtime, mount, data-owner and
+credential identities. Display names are cosmetic. Typed admission references
+select the original immutable evidence; raw custody strings preserve their exact
+bytes and newlines. Existing holds, trust and failure rules remain enforced.
+
+Storage bindings distinguish additional provider volumes from declared root
+filesystem data paths. Neither declaration invents observed ownership, relocates
+data or authorizes a broad chown. Accounts are explicit create-once selections;
+there is no password reuse, rotation or inferred privilege grant.
+
+## Root Zabbix selection
+
+```yaml
+zabbix:
 ```
 
-Each guest has one reusable workflow with one guest-named job. Its visible steps
-are **Setup**, **Infrastructure**, **Prepare**, each application and **Zabbix agent**
-when selected. Home Automation has **Home Assistant** and **Node-RED**; Radios has
-**Zigbee2MQTT** and **WiNet**. Shared framework actions keep phase-local validation,
-credential scopes, locks, health checks and failure-stop behavior. The existing
-45-minute phase caps and combined guest budget remain. GitHub may show its own
-setup and cleanup entries.
-Preparation installs a Linux baseline and, for container workloads, Docker/Compose
-once. A selected root `zabbix:` adds one explicit **Zabbix agent** step after each
-guest's applications, rather than repeating agent setup inside application steps.
-PostgreSQL, MariaDB and InfluxDB are native Debian guests. Authentik is one
-application phase covering its three containers. These are Debian LXC workflows;
-VM application support has not been qualified.
+This selects the unique configured Zabbix server capability and one agent phase
+per selected guest. The site's server app and guest retain explicit identities
+and bindings. If several server apps exist, select one with `zabbix: {server: ID}`.
+Omission leaves the feature unselected. Monitoring workloads derive from the
+actual selected applications.
 
-**Radios** combines the logical Zigbee2MQTT and WiNet services. Its concrete guest
-identity and hostname come from the consumer; image, data and coordinator
-contracts stay with the profile.
-It is an active Debian LXC with one declared coordinator, Docker in shared
-Preparation, and one Zigbee2MQTT application entity. Its profile enables guest
-startup and boot startup; its container inherits `restart: always`. Infrastructure
-uses the framework's registered host capability for the exact device. BPG owns
-the active guest and leaves device attachment to that capability because Proxmox
-refuses API-token device updates. Register the restricted forced-command helper
-before accepting `restricted-host-device-capability-registered`; the framework's
-stack contract documents operator registration. Normal reconciliation may attach
-the declared device if absent and verifies it inside the running guest. It refuses
-replacement, removal and pending device changes. There are no stopped deployment
-stages or separate radio controllers.
-The separately prepared data includes the existing configuration, device database
-and coordinator backup. Deployment preserves the network identity and never opens
-the radio from a configuration checker or rewrites Zigbee settings.
+## Validate and generate
 
-The dedicated MQTT guest's `app.published_services.mqtt` is the single broker
-owner. It declares a consumer-bound internal hostname, port 1883, backend/client addresses and which
-address DNS publishes. Home Assistant, Node-RED, Zigbee2MQTT and WiNet reference
-`mqtt.mqtt` through `app.service_connections`. The compiler derives container
-hostname aliases, the Pi-hole record and matching DNS verification. Both ends of
-each declared connection must have an explicit firewall allowance. The source
-preserves retained data and declared interfaces; it does not move broker data,
-remove a conflicting owner, or rewrite client configuration. The consumer must
-qualify prepared state and exclusive ownership before adoption. See [Music and MQTT](docs/music-mqtt.md).
-Its **MQTT Explorer** step adds a browser client behind the existing identity
-provider, using a separate dedicated account and saved profile. Broker operation
-and existing clients are retained; see [MQTT Explorer](docs/mqtt-explorer.md).
+Use the selected framework's safe reader, compiler and workflow generator.
+Component workflow generation always names the actual site or synthetic starter:
 
-| File | Purpose |
-| --- | --- |
-| [stack.json](stack.json) | Guest dependencies, prerequisites and required typed bindings |
-| [common.json](common.json) | Shared runner paths and PVE connection shape |
-| [images.json](images.json) | Image selection authority |
-| [guests](guests) | Executable profiles and public vendor keys/config templates |
-| [deploy workflow](.github/workflows/deploy.yml) | Generated guest workflow calls and real dependency edges |
-| [phase selection](.github/workflows/phase.yml) | The single framework revision selection; not called by guest jobs |
-| [site.example.yaml](site.example.yaml) | Explicit synthetic consumer fixture |
+```sh
+python3 "$FRAMEWORK/blueprints/compile.py" --stack . --site site.example.yaml --check
+python3 "$FRAMEWORK/blueprints/workflows.py" --stack . --site site.example.yaml --check
+```
 
-Follow [setup and local tests](docs/setup.md), [secrets and prerequisites](docs/secrets.md),
-[public-source policy](docs/public-boundary.md) and [adoption](docs/adoption.md).
-The [database-tools composition](docs/database-tools.md) keeps its existing guest
-and adds CloudBeaver Community with an authenticated web gateway, original
-metadata entries and dedicated PostgreSQL/MariaDB administration connections.
-Public pushes and pull requests run source CI only. Deployment is called from the
-private site after deliberate pin adoption and reviewed merge. Every declared
-guest participates by default. The optional `disabled` input defaults to `[]`;
-only named exclusions are skipped. Invalid prerequisites fail validation instead
-of silently disabling a guest. The public example is an offline input fixture.
+The generic `phase.yml` contains the sole immutable framework selection. A
+consumer's immutable `HOMELAB_STACK_SOURCE` locator selects this library checkout;
+it does not select the starter's guest graph. The framework generates the actual
+consumer graph from its site, including selected app steps, dependency edges and
+explicit secret subsets. Default `disabled: []` selects the composition; required
+dependencies and immutable custody closure still apply to disabled selections.
 
-The composition covers thirteen base guests, including Radios, Music Assistant
-and the dedicated MQTT broker. A root `zabbix:` additionally selects the existing
-monitoring guest. Other fleet applications, optional image updates and recovery
-projects remain outside this composition.
-
-Guest definitions combine a framework blueprint with a profile under `guests/`,
-the dependency entry in `stack.json` and private-site overrides. For example,
-[MariaDB's profile](guests/mariadb/profile.yaml) requests one CPU,
-1024 MiB RAM, a 4 GiB root disk and 16 GiB at `/var/lib/mysql`. Its blueprint
-selects Linux preparation and the MariaDB application phase; the stack makes it
-depend on DNS. The profile also supplies pinned packages, repository/configuration
-files, interfaces, firewall rules and health checks. Concrete guest/network/storage identities and keys
-are supplied by the consumer through declared typed bindings. No Actions jobs are written inside a profile.
-
-CI has three separate workflows, each with its own purpose and progress:
-
-| Workflow | When it runs | Checks |
-| --- | --- | --- |
-| [Validate stack](.github/workflows/validate-stack.yml) | Pull requests and pushes to main | Profiles, generated workflows, tests, 100% per-file coverage and complete-history source scanning |
-| [Review PR dependencies](.github/workflows/review-pr-dependencies.yml) | Pull requests only | Changed dependency vulnerabilities |
-| [Scan Python security](.github/workflows/scan-python-security.yml) | Pull requests and pushes to main | CodeQL Python analysis |
-
-Their required check names remain `Source contracts`, `Dependency review` and
-`CodeQL (python)`. The guest/deploy/phase workflows are separate reusable deployment
-definitions, called by the private site; public CI uses synthetic fixtures.
-
-The selected framework's `blueprints/workflows.py` generates `deploy.yml` and all
-`guest-*.yml` workflows from the catalogue, stack dependencies and its authoritative
-phase recipe. Each guest has one deployment job containing all its logical phases
-in order. The existing phase commands, packet names, guest dependency edges,
-runner/environment selection and credential step scopes are preserved. Phases
-share one runner/workspace per guest, with a combined phase budget and bounded
-steps; default step failure behavior stops later phases. Source checks establish
-the configured job count and command/security contract. Actual run names, rendering and service
-acceptance remain separate native checks. Edit the
-declarative inputs and regenerate; the checked-in generated files are not edited
-by hand. CI rejects stale generated files. The literal framework selection in
-`phase.yml`, source CI and private-site exclusions remain explicit controls.
-
-HTTP applications expose named endpoints, while the separate `routes` map owns
-hostnames and optional middleware references. Managed routes compile to Proxmox
-Notes; external NAS/host/Pi routes compile to the Traefik file provider. DNS records
-point their hostnames to ingress. Read [the routing contract](docs/routing.md) for
-examples, TLS trust, middleware definitions and explicit firewall requirements.
-
-## Root Zabbix feature
-
-An empty root `zabbix:` property in the private blueprint (JSON: `"zabbix": null`)
-adds the **Zabbix** guest. Without that property, the existing thirteen base guests and
-their packets remain unchanged. A boolean or custom object is rejected.
-
-The monitoring profile requests Debian LXC, 2 CPUs/2 GiB RAM and 12 GiB
-root storage; its guest identity and network/storage allocations are consumer bindings. It uses the management, PostgreSQL and InfluxDB networks and depends
-on PostgreSQL and Traefik. The compiler creates the browser route, DNS and exact
-monitoring firewall edges; existing guest dependency ordering remains intact.
-The example domain is `zabbix.example.invalid`; real values belong in the site.
-
-Every enabled guest receives an active Agent2 with a retained individual PSK.
-Docker-capable guests get Docker monitoring; the owning PostgreSQL/MariaDB guests
-manage dedicated statistics readers; InfluxDB supplies instance/health metrics.
-The server uses the official Proxmox HTTP template and dedicated read-only token.
-See the framework's `docs/zabbix-blueprint.md` for bootstrap/trust prerequisites,
-first-install behavior, local Docker privilege scope and verification limits.
-The optional workflow is skipped when the root property is absent; it does not
-make any existing guest depend on the monitoring server.
-
-The optional monitoring profile keeps exclusive-writer admission unconfirmed in
-public defaults. Its private site must confirm its fresh guest slot. The framework
-also derives the exact monitoring-to-PostgreSQL TCP5432 rules on both guests and
-the InfluxDB metrics connection; these are not duplicated in the profile. With
-root Zabbix selected, disabling only its server while other guests run is refused.
-Existing disabled leaf selections and the ordinary guest dependency graph remain.
-
-[WiNet](docs/winet.md) shares the existing radio guest with Zigbee2MQTT. Its
-published upstream image is selected by digest; private inverter/MQTT options
-remain controller inputs outside this repository.
-
-Music Assistant and MQTT require genuine state, trust, writer and network
-acceptance from the consumer. The separate synthetic examples are source-test
-fixtures and do not establish that a live guest or network exists.
-
-## Explicit site bindings
-
-Reusable definitions contain logical relationships and resource requirements,
-with concrete values declared by `required_site_bindings`. The consumer supplies
-those values explicitly; production admission rejects missing bindings and known
-synthetic address/domain identities. `site.example.yaml` is a synthetic input,
-not a default configuration or production authority. Shared logical-network
-bridge, VLAN and prefix bindings keep repeated assignments consistent.
+Source qualification includes distinct layouts, standalone and repeated apps,
+fresh/update contracts, generated workflows, exact desired-state preservation,
+coverage, boundaries, history, signatures, security and current source review.
+Consumers own deployment authorization and actual service acceptance.

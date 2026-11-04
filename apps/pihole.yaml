@@ -1,0 +1,78 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: pihole
+display_name: Pi-hole
+interfaces:
+  service:
+    required: true
+    accepts:
+    - guest-interface
+  upstream:
+    required: false
+    accepts:
+    - guest-interface
+    - guest-loopback
+listeners:
+  dns_udp:
+    service: pihole
+    namespace: host
+    interface: service
+    bind: wildcard
+    protocol: udp
+    port: 53
+  dns_tcp:
+    service: pihole
+    namespace: host
+    interface: service
+    bind: wildcard
+    protocol: tcp
+    port: 53
+  web:
+    service: pihole
+    namespace: host
+    interface: service
+    bind: wildcard
+    protocol: tcp
+    port: 80
+endpoints:
+  dns_udp:
+    listener: dns_udp
+    protocol: udp
+    via: service
+  dns_tcp:
+    listener: dns_tcp
+    protocol: tcp
+    via: service
+  web:
+    listener: web
+    protocol: http
+    via: service
+storage:
+  config:
+    target: /etc/pihole
+    read_only: false
+    required: true
+    kind: directory
+  database:
+    target: /ftl-db
+    read_only: false
+    required: false
+    kind: directory
+connections:
+  upstream:
+    type: dns
+    required: true
+    readiness:
+    - start
+software:
+- docker
+- curl
+- pihole-images
+runtime:
+- container-host
+- pihole
+health:
+  ready:
+    profile: adapter-ready
+monitoring:
+  profile: docker-agent

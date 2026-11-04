@@ -1,0 +1,92 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: homeassistant
+display_name: Home Assistant
+interfaces:
+  web:
+    required: true
+    accepts:
+    - guest-interface
+  home:
+    required: false
+    accepts:
+    - guest-interface
+  database:
+    required: false
+    accepts:
+    - guest-interface
+  metrics:
+    required: false
+    accepts:
+    - guest-interface
+  broker:
+    required: false
+    accepts:
+    - guest-interface
+listeners:
+  web:
+    service: homeassistant
+    namespace: host
+    interface: web
+    bind: wildcard
+    protocol: tcp
+    port: 8123
+endpoints:
+  web:
+    listener: web
+    protocol: http
+    via: web
+storage:
+  config:
+    target: /config
+    read_only: false
+    required: true
+    kind: directory
+    initialize:
+      type: directory
+      uid: 0
+      gid: 0
+      mode: '0700'
+  media:
+    target: /media
+    read_only: false
+    required: false
+    kind: directory
+  community:
+    target: /hacsfiles
+    read_only: false
+    required: false
+    kind: directory
+  startup:
+    target: /startup
+    read_only: true
+    required: false
+    kind: directory
+connections:
+  recorder:
+    type: mariadb
+    required: false
+    readiness:
+    - start
+  metrics:
+    type: influxdb
+    required: false
+    readiness:
+    - start
+  broker:
+    type: mqtt
+    required: false
+    readiness:
+    - start
+software:
+- docker
+- curl
+- homeassistant-public-images
+runtime:
+- container-host
+- homeassistant
+health:
+  ready:
+    profile: adapter-ready
+monitoring:
+  profile: docker-agent

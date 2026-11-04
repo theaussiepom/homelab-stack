@@ -1,23 +1,23 @@
 [
   {
-    "path": "guests/postgresql/profile.yaml",
-    "sha256": "3e58329b767517845ba38af44415c857966fd91a47a97fcbc1d56cd82e7d3100",
+    "path": "stack.json",
+    "sha256": "a14768621b07c86f0974f4529fa8a793073cfcee5959034e7f4cacdc5c9a7cd1",
     "rule": "generic-api-key",
-    "line": 143,
-    "reason": "SHA256 of the public postgresql vendor signing key, verified against the vendor.asc bytes embedded in this exact profile; not a credential."
+    "line": 469,
+    "reason": "SHA256 of the public postgresql vendor signing key, verified against the vendor.asc asset bytes referenced by this exact library; not a credential."
   },
   {
-    "path": "guests/mariadb/profile.yaml",
-    "sha256": "a7bc486e741eb9f3d5a830f4d8ede12ba40d8a6f186ba99d0d5408c7fecadbd3",
+    "path": "stack.json",
+    "sha256": "a14768621b07c86f0974f4529fa8a793073cfcee5959034e7f4cacdc5c9a7cd1",
     "rule": "generic-api-key",
-    "line": 131,
-    "reason": "SHA256 of the public mariadb vendor signing key, verified against the vendor.asc bytes embedded in this exact profile; not a credential."
+    "line": 474,
+    "reason": "SHA256 of the public mariadb vendor signing key, verified against the vendor.asc asset bytes referenced by this exact library; not a credential."
   },
   {
-    "path": "guests/influxdb/profile.yaml",
-    "sha256": "9c65122e7fc037115b118d4f760e9252417ed136c8e7c14b97513e95a9a7a0d1",
+    "path": "stack.json",
+    "sha256": "a14768621b07c86f0974f4529fa8a793073cfcee5959034e7f4cacdc5c9a7cd1",
     "rule": "generic-api-key",
-    "line": 123,
-    "reason": "SHA256 of the public influxdb vendor signing key, verified against the vendor.asc bytes embedded in this exact profile; not a credential."
+    "line": 479,
+    "reason": "SHA256 of the public influxdb vendor signing key, verified against the vendor.asc asset bytes referenced by this exact library; not a credential."
   }
 ]

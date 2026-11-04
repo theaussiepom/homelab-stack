@@ -72,7 +72,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertNotIn("permissions", source)
         self.assertEqual(source["steps"][0]["with"]["fetch-depth"], "0")
         commands = "\n".join(step.get("run", "") for step in source["steps"])
-        self.assertIn("blueprints/workflows.py --stack . --check", commands)
+        self.assertIn("blueprints/workflows.py --stack . --site site.example.yaml --check", commands)
         self.assertIn("blueprints/compile.py --stack . --site site.example.yaml --check", commands)
         self.assertIn("tools/check_boundaries.py --mode stack --root .", commands)
         self.assertIn("blueprints/compile.py --stack . --site examples/site.second.yaml --check", commands)

@@ -24,23 +24,37 @@ name: Guest phase
         required: true
       PROXMOX_APP_TOKEN:
         required: true
-      AUTOMATION_NODE_RED_API_TOKEN:
+      authentik_postgresql_password:
         required: false
-      FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD:
+      authentik_secret_key:
         required: false
-      FOUNDATION_AUTHENTIK_SECRET_KEY:
+      authentik_smtp_password:
         required: false
-      FOUNDATION_AUTHENTIK_SMTP_PASSWORD:
+      bitwarden_runtime_environment:
         required: false
-      FOUNDATION_PGADMIN_OAUTH_SECRET:
+      cloudbeaver_client_secret:
         required: false
-      FOUNDATION_CLOUDFLARE_DNS_TOKEN:
+      mqtt_explorer_broker_password:
+        required: false
+      mqtt_probe:
+        required: false
+      node_red_api_token:
+        required: false
+      pegaprox_database_key:
+        required: false
+      traefik_cloudflare_dns_token:
+        required: false
+      traefik_proxmox_token:
+        required: false
+      winet_options:
+        required: false
+      zabbix_database_password:
         required: false
 permissions:
   contents: read
 jobs:
   run:
-    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@f28725b1e8334a0baba26dfc2fa623cb3a63cdf5
+    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@105ecc34598e066cd9ad8d4c8619ea94d5a6007c
     with:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
@@ -50,9 +64,16 @@ jobs:
     secrets:
       APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
       PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
-      AUTOMATION_NODE_RED_API_TOKEN: ${{ secrets.AUTOMATION_NODE_RED_API_TOKEN }}
-      FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD: ${{ secrets.FOUNDATION_AUTHENTIK_POSTGRES_PASSWORD }}
-      FOUNDATION_AUTHENTIK_SECRET_KEY: ${{ secrets.FOUNDATION_AUTHENTIK_SECRET_KEY }}
-      FOUNDATION_AUTHENTIK_SMTP_PASSWORD: ${{ secrets.FOUNDATION_AUTHENTIK_SMTP_PASSWORD }}
-      FOUNDATION_PGADMIN_OAUTH_SECRET: ${{ secrets.FOUNDATION_PGADMIN_OAUTH_SECRET }}
-      FOUNDATION_CLOUDFLARE_DNS_TOKEN: ${{ secrets.FOUNDATION_CLOUDFLARE_DNS_TOKEN }}
+      authentik_postgresql_password: ${{ secrets.authentik_postgresql_password }}
+      authentik_secret_key: ${{ secrets.authentik_secret_key }}
+      authentik_smtp_password: ${{ secrets.authentik_smtp_password }}
+      bitwarden_runtime_environment: ${{ secrets.bitwarden_runtime_environment }}
+      cloudbeaver_client_secret: ${{ secrets.cloudbeaver_client_secret }}
+      mqtt_explorer_broker_password: ${{ secrets.mqtt_explorer_broker_password }}
+      mqtt_probe: ${{ secrets.mqtt_probe }}
+      node_red_api_token: ${{ secrets.node_red_api_token }}
+      pegaprox_database_key: ${{ secrets.pegaprox_database_key }}
+      traefik_cloudflare_dns_token: ${{ secrets.traefik_cloudflare_dns_token }}
+      traefik_proxmox_token: ${{ secrets.traefik_proxmox_token }}
+      winet_options: ${{ secrets.winet_options }}
+      zabbix_database_password: ${{ secrets.zabbix_database_password }}

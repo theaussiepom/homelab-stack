@@ -1,56 +1,46 @@
 # MQTT Explorer
 
-The MQTT guest runs the existing Mosquitto broker, then **MQTT Explorer**, in one
-guest job. Broker clients, its internal DNS publication, retained data and probe
-account are unchanged. The guest still depends only on DNS. The GUI phase adds no
-identity or ingress startup dependency, and existing fail-stop behavior remains.
+`mqtt_explorer` and `mqtt` are independently selected app profiles. A site can
+place them together or bind Explorer to a supported external broker. They are not
+a fixed guest bundle. Selected same-guest dependencies order app steps inside one
+guest job; no identity/ingress readiness is inferred from login or hostname data.
 
-The browser application uses the official upstream image selected in
-`images.json`. It runs as UID/GID1001 on a private Compose network with no host
-port. The existing pinned Traefik image supplies a separate file-only gateway on
-the selected backend address, port80. The outer ingress route supplies browser
-HTTPS. Every application and Socket.IO request passes through the existing
-Authentik outpost; callbacks go to the outpost separately. The sidecar has no
-ACME resolver, API/dashboard, Docker socket or infrastructure provider.
+Explorer uses the official image in `images.json`, UID/GID 1001 and a private
+app network with no direct host port. Its file-only Traefik gateway publishes the
+selected web endpoint. Every app and Socket.IO request passes through the named
+existing Authentik outpost; callbacks go to the outpost separately. The sidecar
+has no ACME, API/dashboard, Docker socket or infrastructure provider. It does not
+create an identity provider or change its policy.
 
-`domains.mqtt_explorer` is the GUI hostname. It is separate from
-`hostnames.mqtt_broker`, which remains the native MQTT publication. The consumer
-must select an already qualified Authentik provider and its access policy for the
-GUI hostname. This composition neither creates nor changes identity providers.
+The GUI's canonical HTTPS exposure and native broker DNS exposure are separate.
+A broker connection can retain its saved hostname while targeting the selected
+backend. The compiler derives one closed Explorer-only runtime alias from that
+endpoint; it does not change managed DNS, broker listeners or the gateway's alias
+map. Connection declarations do not grant network access.
 
-The source declares only the two additional backend connections: ingress to the
-GUI gateway on TCP80, and the GUI gateway to the existing outpost on TCP9000.
-Compilation checks declared relationships; it does not establish target firewall
-enforcement or introduce a broader access policy.
+## Saved account and profile
 
-## Dedicated broker account and saved profile
+An explicit same-guest managed account selects dedicated `read-write-all` access:
+it can read and publish every broker topic. Independent placement uses a supported
+explicit existing credential; it never silently creates an account on another
+guest. The broker probe, existing clients and identity-provider credentials remain
+separate inputs. The broker's selected password-file capability is explicit;
+no ACL or new authentication mechanism is inferred.
 
-The selected `stack.mqtt_explorer.broker_connection` names a new dedicated MQTT
-account with `access: read-write-all`. It can read and publish all broker topics.
-Its username and credential ID are consumer bindings. The read-only probe,
-existing client credentials and identity-provider secret are separate inputs.
+Ordinary input preparation creates or reuses the protected managed credential
+record. Account collision or drift refuses instead of rotating or adopting it.
+The existing guarded broker account lifecycle validates the parent-mounted
+password file before atomic addition and HUP. App changes target their own
+services; updating the GUI does not implicitly recreate a peer broker.
 
-Ordinary input preparation creates or reuses one private managed-credential
-record and binds its unchanged value to
-`${inputs}/managed-${credentials.mqtt_explorer}.json`. A mismatch or foreign
-account collision refuses instead of rotating, replacing or adopting it. The
-consumer supplies the exact existing `paths.mqtt_password_file`; no ACL file or
-new broker authentication mechanism is inferred. The framework qualifies the
-parent-mounted password file before an atomic account addition and HUP, without
-recreating the retained broker or disconnecting its established clients.
+The native version1 saved profile contains the password in plaintext at rest.
+It stays in the explicitly bound private workspace under umask 077; existing
+profiles and unrelated settings remain. No password enters Git or application
+environment variables. The generated startup boundary suppresses secret-bearing
+upstream console output while retaining fixed error signals. No fixed client ID,
+autoconnect, public demo broker or AI key is selected.
 
-Explorer stores a native version1 connection profile in its own
-`/srv/homelab/data/mqtt-explorer` workspace. Existing profiles and unrelated
-settings are retained. Its JSON contains the broker password, shared among the
-authorized GUI users, so the parent is private0700 and the generated process uses
-umask077. No password is placed in Git or application environment variables. No
-fixed MQTT client ID, automatic connection, public demo broker or AI API key is
-selected by the profile. Normal broker and GUI deployment phases target their
-own services; GUI-only changes do not recreate the broker.
-
-The GUI and gateway limits are256MiB and128MiB, alongside the unchanged256MiB
-broker limit in the existing1024MiB guest. These are initial source resource
-limits, not a load-capacity guarantee. Local health checks verify the application
-and loaded gateway without requiring the identity provider to be available.
-Actual browser sign-in, dedicated-account operation and existing-client
-continuity are acceptance checks after authorized deployment.
+Local readiness checks the app, loaded gateway and exact backend alias without
+requiring IdP availability. Actual sign-in, saved-account read/publish behavior
+and existing-client continuity are acceptance checks after authorized deployment.
+Resource declarations are placement policy, not a load-capacity guarantee.

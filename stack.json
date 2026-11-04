@@ -1,563 +1,559 @@
 {
-  "schema": "homelab-stack-v2",
-  "values": {},
-  "guests": {
-    "dns": {
-      "depends_on": [],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared",
-        "dns-state-adopted-separately"
+  "schema": "homelab-components-v1",
+  "kind": "library",
+  "app_profiles": {
+    "homeassistant": {
+      "source": "apps/homeassistant.yaml"
+    },
+    "node_red": {
+      "source": "apps/node_red.yaml"
+    },
+    "bitwarden": {
+      "source": "apps/bitwarden.yaml"
+    },
+    "cloudbeaver": {
+      "source": "apps/cloudbeaver.yaml"
+    },
+    "pihole": {
+      "source": "apps/pihole.yaml"
+    },
+    "unbound": {
+      "source": "apps/unbound.yaml"
+    },
+    "authentik": {
+      "source": "apps/authentik.yaml"
+    },
+    "influxdb": {
+      "source": "apps/influxdb.yaml"
+    },
+    "traefik": {
+      "source": "apps/traefik.yaml"
+    },
+    "mariadb": {
+      "source": "apps/mariadb.yaml"
+    },
+    "zabbix": {
+      "source": "apps/zabbix.yaml"
+    },
+    "mqtt": {
+      "source": "apps/mqtt.yaml"
+    },
+    "mqtt_explorer": {
+      "source": "apps/mqtt_explorer.yaml"
+    },
+    "music_assistant": {
+      "source": "apps/music_assistant.yaml"
+    },
+    "pegaprox": {
+      "source": "apps/pegaprox.yaml"
+    },
+    "postgresql": {
+      "source": "apps/postgresql.yaml"
+    },
+    "zigbee2mqtt": {
+      "source": "apps/zigbee2mqtt.yaml"
+    },
+    "winet": {
+      "source": "apps/winet.yaml"
+    },
+    "homeassistant-public": {
+      "source": "apps/homeassistant-public.yaml"
+    },
+    "node_red-public": {
+      "source": "apps/node_red-public.yaml"
+    },
+    "cloudbeaver-mariadb-admin": {
+      "source": "apps/cloudbeaver-mariadb-admin.yaml"
+    }
+  },
+  "guest_templates": {
+    "base": {
+      "source": "templates/base.yaml"
+    },
+    "docker": {
+      "source": "templates/docker.yaml"
+    }
+  },
+  "software": {
+    "docker": {
+      "packages": [
+        "docker.io=26.1.5+dfsg1-9+deb13u1",
+        "docker-cli=26.1.5+dfsg1-9+deb13u1",
+        "docker-compose=2.26.1-4"
       ]
     },
-    "ingress": {
-      "depends_on": [
-        "dns"
-      ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared",
-        "external-http-backends-prepared",
-        "external-tls-trust-reviewed"
+    "curl": {
+      "packages": [
+        "curl=8.14.1-2+deb13u7"
+      ]
+    },
+    "network-tools": {
+      "packages": [
+        "iproute2=6.15.0-1"
+      ]
+    },
+    "yaml-parser": {
+      "packages": [
+        "python3-yaml=6.0.2-1+b2"
+      ]
+    },
+    "mariadb-client": {
+      "packages": [
+        "mariadb-client-core=1:11.8.6-0+deb13u1"
       ]
     },
     "postgresql": {
-      "depends_on": [
-        "dns"
+      "packages": [
+        "postgresql-16=16.10-1.pgdg13+1",
+        "postgresql-client-16=16.10-1.pgdg13+1",
+        "libpq5=16.10-1.pgdg13+1"
       ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared"
+      "repositories": [
+        {
+          "name": "postgresql",
+          "source": "Types: deb\nURIs: https://apt-archive.postgresql.org/pub/repos/apt\nSuites: trixie-pgdg-archive\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/postgresql.asc\n",
+          "key_asset": "postgresql-repository-key"
+        }
       ]
     },
     "mariadb": {
-      "depends_on": [
-        "dns"
+      "packages": [
+        "mariadb-server=1:12.3.3+maria~deb13",
+        "mariadb-client=1:12.3.3+maria~deb13"
       ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared"
+      "repositories": [
+        {
+          "name": "mariadb",
+          "source": "Types: deb\nURIs: https://dlm.mariadb.com/repo/mariadb-server/12.3.3/repo/debian\nSuites: trixie\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/mariadb.asc\n",
+          "key_asset": "mariadb-repository-key"
+        }
       ]
     },
     "influxdb": {
-      "depends_on": [
-        "dns"
+      "packages": [
+        "influxdb2=2.7.12-1",
+        "influxdb2-cli=2.7.5-1"
       ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared"
+      "repositories": [
+        {
+          "name": "influxdata",
+          "source": "Types: deb\nURIs: https://repos.influxdata.com/debian\nSuites: stable\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/influxdata.asc\n",
+          "key_asset": "influxdb-repository-key"
+        }
       ]
     },
-    "identity": {
-      "depends_on": [
-        "postgresql",
-        "ingress"
-      ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared"
-      ]
+    "homeassistant-images": {
+      "images": {
+        "homeassistant": "homeassistant"
+      }
     },
-    "db-tools": {
-      "depends_on": [
-        "postgresql",
-        "mariadb",
-        "ingress"
-      ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared"
-      ]
+    "node_red-images": {
+      "images": {
+        "node_red": "node_red"
+      }
     },
-    "automation": {
-      "depends_on": [
-        "mariadb",
-        "influxdb",
-        "mqtt"
-      ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared",
-        "old-writers-retired",
-        "retained-custom-images",
-        "ha-config-converted-separately",
-        "node-red-login-prepared"
-      ]
+    "bitwarden-images": {
+      "images": {
+        "bitwarden": "bitwarden"
+      }
     },
-    "bitwarden": {
-      "depends_on": [
-        "ingress",
-        "mariadb"
-      ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared",
-        "old-writers-retired"
-      ]
+    "cloudbeaver-images": {
+      "images": {
+        "cloudbeaver": "cloudbeaver",
+        "auth_gateway": "auth_gateway"
+      }
     },
-    "pegaprox": {
-      "depends_on": [
-        "dns"
-      ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared",
-        "initial-account-prepared",
-        "database-key-retained"
-      ]
+    "pihole-images": {
+      "images": {
+        "pihole": "pihole"
+      }
     },
-    "zigbee2mqtt": {
-      "depends_on": [
-        "mqtt"
-      ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared",
-        "old-writers-retired",
-        "restricted-host-device-capability-registered"
-      ]
+    "unbound-images": {
+      "images": {
+        "unbound": "unbound"
+      }
     },
-    "monitoring": {
-      "depends_on": [
-        "postgresql",
-        "ingress"
-      ],
-      "prerequisites": []
+    "authentik-images": {
+      "images": {
+        "server": "authentik",
+        "worker": "authentik",
+        "redis": "redis"
+      }
     },
-    "music": {
-      "depends_on": [
-        "dns",
-        "ingress"
-      ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared",
-        "old-writers-retired",
-        "player-network-prepared"
-      ]
+    "traefik-images": {
+      "images": {
+        "traefik": "traefik"
+      }
     },
-    "mqtt": {
-      "depends_on": [
-        "dns"
-      ],
-      "prerequisites": [
-        "state-and-trust-reviewed",
-        "data-prepared",
-        "configuration-prepared",
-        "old-writers-retired",
-        "client-endpoints-prepared"
-      ]
+    "zabbix-images": {
+      "images": {
+        "zabbix_server": "zabbix_server",
+        "zabbix_web": "zabbix_web"
+      }
+    },
+    "mqtt-images": {
+      "images": {
+        "mqtt": "mqtt"
+      }
+    },
+    "mqtt_explorer-images": {
+      "images": {
+        "mqtt_explorer": "mqtt_explorer",
+        "explorer_gateway": "traefik"
+      }
+    },
+    "music_assistant-images": {
+      "images": {
+        "music_assistant": "music_assistant"
+      }
+    },
+    "pegaprox-images": {
+      "images": {
+        "pegaprox": "pegaprox"
+      }
+    },
+    "zigbee2mqtt-images": {
+      "images": {
+        "zigbee2mqtt": "zigbee2mqtt"
+      }
+    },
+    "winet-images": {
+      "images": {
+        "winet": "winet"
+      }
+    },
+    "homeassistant-public-images": {
+      "images": {
+        "homeassistant": "homeassistant_public"
+      }
+    },
+    "node_red-public-images": {
+      "images": {
+        "node_red": "node_red_public"
+      }
     }
   },
-  "routes": {
-    "homeassistant": {
-      "host": "hass.${domains.secondary}",
-      "aliases": [
-        "${domains.homeassistant}"
-      ],
-      "target": {
-        "endpoint": "automation.homeassistant.web"
+  "runtime_profiles": {
+    "container-host": {
+      "requirements": {
+        "nesting": true,
+        "keyctl": false
       }
     },
-    "node-red": {
-      "host": "${domains.node_red_alias}",
-      "aliases": [
-        "${domains.node_red_primary}"
-      ],
-      "target": {
-        "endpoint": "automation.node_red.web"
+    "homeassistant": {
+      "containers": {
+        "homeassistant": {
+          "memory_mib": 2048,
+          "pids_limit": 512,
+          "cpu_limit": 2
+        }
+      }
+    },
+    "node_red": {
+      "containers": {
+        "node_red": {
+          "memory_mib": 1024,
+          "pids_limit": 256,
+          "cpu_limit": 1,
+          "user": "node-red"
+        }
       }
     },
     "bitwarden": {
-      "host": "${domains.bitwarden}",
-      "target": {
-        "endpoint": "bitwarden.bitwarden.web"
+      "containers": {
+        "bitwarden": {
+          "memory_mib": 1536,
+          "pids_limit": 256,
+          "cpu_limit": 1
+        }
       }
     },
-    "db-tools": {
-      "host": "${domains.db_tools}",
-      "target": {
-        "endpoint": "db-tools.cloudbeaver.web"
-      },
-      "middlewares": [
-        "security-headers"
-      ]
+    "cloudbeaver": {
+      "containers": {
+        "cloudbeaver": {
+          "memory_mib": 1536,
+          "pids_limit": 512,
+          "cpu_limit": 1,
+          "cap_drop": [
+            "ALL"
+          ],
+          "user": "8978:8978",
+          "no_new_privileges": true
+        },
+        "auth_gateway": {
+          "memory_mib": 128,
+          "pids_limit": 128,
+          "cpu_limit": 1,
+          "read_only": true,
+          "cap_drop": [
+            "ALL"
+          ],
+          "user": "65532:65532",
+          "no_new_privileges": true
+        }
+      }
     },
-    "pgadmin-compat": {
-      "host": "${domains.pgadmin}",
-      "target": {
-        "endpoint": "db-tools.cloudbeaver.web"
-      },
-      "middlewares": [
-        "security-headers",
-        "db-canonical"
-      ]
+    "pihole": {
+      "containers": {
+        "pihole": {
+          "memory_mib": 256,
+          "pids_limit": 128,
+          "cpu_limit": 1
+        }
+      }
     },
-    "pihole1": {
-      "host": "pihole1.${domains.primary}",
-      "target": {
-        "endpoint": "dns.pihole.web"
+    "unbound": {
+      "containers": {
+        "unbound": {
+          "memory_mib": 256,
+          "pids_limit": 128,
+          "cpu_limit": 1
+        }
       }
     },
     "authentik": {
-      "host": "${domains.identity}",
-      "target": {
-        "endpoint": "identity.authentik.web"
+      "containers": {
+        "server": {
+          "memory_mib": 768,
+          "pids_limit": 256,
+          "cpu_limit": 1,
+          "user": "1000"
+        },
+        "worker": {
+          "memory_mib": 768,
+          "pids_limit": 256,
+          "cpu_limit": 1,
+          "user": "1000"
+        },
+        "redis": {
+          "memory_mib": 128,
+          "pids_limit": 256,
+          "cpu_limit": 1
+        }
       }
     },
-    "influxdb": {
-      "host": "influx.${domains.secondary}",
-      "target": {
-        "endpoint": "influxdb.influxdb.web"
+    "traefik": {
+      "containers": {
+        "traefik": {
+          "memory_mib": 512,
+          "pids_limit": 256,
+          "cpu_limit": 1
+        }
+      }
+    },
+    "zabbix": {
+      "containers": {
+        "zabbix_server": {
+          "memory_mib": 768,
+          "pids_limit": 256,
+          "cpu_limit": 1
+        },
+        "zabbix_web": {
+          "memory_mib": 512,
+          "pids_limit": 256,
+          "cpu_limit": 1
+        }
+      }
+    },
+    "mqtt": {
+      "containers": {
+        "mqtt": {
+          "memory_mib": 256,
+          "pids_limit": 128,
+          "cpu_limit": 1
+        }
+      }
+    },
+    "mqtt_explorer": {
+      "containers": {
+        "mqtt_explorer": {
+          "memory_mib": 256,
+          "pids_limit": 128,
+          "cpu_limit": 1,
+          "read_only": true,
+          "cap_drop": [
+            "ALL"
+          ],
+          "user": "1001:1001",
+          "no_new_privileges": true
+        },
+        "explorer_gateway": {
+          "memory_mib": 128,
+          "pids_limit": 128,
+          "cpu_limit": 1,
+          "read_only": true,
+          "cap_drop": [
+            "ALL"
+          ],
+          "user": "65532:65532",
+          "no_new_privileges": true
+        }
+      }
+    },
+    "music_assistant": {
+      "containers": {
+        "music_assistant": {
+          "memory_mib": 1536,
+          "pids_limit": 512,
+          "cpu_limit": 2
+        }
       }
     },
     "pegaprox": {
-      "host": "prox.${domains.secondary}",
-      "target": {
-        "endpoint": "pegaprox.pegaprox.web"
-      }
-    },
-    "zigbee1": {
-      "host": "zigbee1.${domains.primary}",
-      "target": {
-        "endpoint": "zigbee2mqtt.zigbee2mqtt.web"
-      }
-    },
-    "host": {
-      "host": "host.${domains.secondary}",
-      "target": {
-        "url": "https://${addresses.udm}:443"
+      "containers": {
+        "pegaprox": {
+          "memory_mib": 1536,
+          "pids_limit": 256,
+          "cpu_limit": 2,
+          "read_only": true,
+          "cap_drop": [
+            "ALL"
+          ],
+          "tmpfs": [
+            "/tmp:rw,nosuid,nodev,size=64m"
+          ],
+          "no_new_privileges": true
+        }
       },
-      "transport": "udm",
-      "middlewares": [
-        "security-headers",
-        "management-clients"
-      ]
-    },
-    "nas": {
-      "host": "nas.${domains.secondary}",
-      "target": {
-        "url": "http://${addresses.nas}:${ports.nas_web}"
-      },
-      "middlewares": [
-        "security-headers",
-        "management-clients"
-      ],
-      "aliases": [
-        "nas.${domains.primary}"
-      ]
-    },
-    "pihole2": {
-      "host": "pihole2.${domains.primary}",
-      "target": {
-        "url": "http://${addresses.pironman_apps}:80"
+      "requirements": {
+        "os_reserve_mib": 512
       }
     },
-    "zigbee2": {
-      "host": "zigbee2.${domains.primary}",
-      "target": {
-        "url": "http://${addresses.zigbeepi_apps}:8099"
+    "zigbee2mqtt": {
+      "containers": {
+        "zigbee2mqtt": {
+          "memory_mib": 512,
+          "pids_limit": 128,
+          "cpu_limit": 2
+        }
       }
     },
-    "thread": {
-      "host": "thread.${domains.primary}",
-      "target": {
-        "url": "http://${addresses.pironman_matter}:8080"
+    "winet": {
+      "containers": {
+        "winet": {
+          "memory_mib": 256,
+          "pids_limit": 128,
+          "cpu_limit": 1
+        }
       }
     },
-    "matter": {
-      "host": "matter.${domains.primary}",
-      "target": {
-        "url": "http://${addresses.pironman_matter}:5580"
+    "homeassistant-mdns": {
+      "containers": {
+        "homeassistant": {
+          "cap_add": [
+            "NET_ADMIN"
+          ]
+        }
       }
     },
-    "proxmox": {
-      "host": "proxmox.${domains.secondary}",
-      "target": {
-        "url": "https://${addresses.pve}:8006"
-      },
-      "transport": "proxmox",
-      "middlewares": [
-        "security-headers",
-        "management-clients"
-      ]
+    "native-postgresql": {
+      "native": {
+        "memory_mib": 1792
+      }
     },
-    "music": {
-      "host": "${domains.music}",
-      "target": {
-        "endpoint": "music.music_assistant.web"
-      },
-      "middlewares": [
-        "security-headers",
-        "music-clients"
-      ]
+    "native-mariadb": {
+      "native": {
+        "memory_mib": 768
+      }
     },
-    "mqtt-explorer": {
-      "host": "${domains.mqtt_explorer}",
-      "target": {
-        "endpoint": "mqtt.mqtt_explorer.web"
-      },
-      "middlewares": [
-        "security-headers"
-      ]
+    "native-influxdb": {
+      "native": {
+        "memory_mib": 1792
+      }
     }
   },
-  "required_site_bindings": {
-    "accounts.mariadb_admin": "string",
-    "accounts.mqtt_explorer": "string",
-    "accounts.postgresql_admin": "string",
-    "addresses.acme_dns_primary": "string",
-    "addresses.acme_dns_secondary": "string",
-    "addresses.automation_backend": "string",
-    "addresses.automation_frontend": "string",
-    "addresses.automation_home": "string",
-    "addresses.automation_influxdb": "string",
-    "addresses.automation_management": "string",
-    "addresses.automation_mariadb": "string",
-    "addresses.bitwarden_backend": "string",
-    "addresses.bitwarden_management": "string",
-    "addresses.bitwarden_mariadb": "string",
-    "addresses.db_tools_mariadb": "string",
-    "addresses.dns": "string",
-    "addresses.fallback_dns": "string",
-    "addresses.identity_backend": "string",
-    "addresses.identity_management": "string",
-    "addresses.identity_postgresql": "string",
-    "addresses.influxdb_backend": "string",
-    "addresses.influxdb_management": "string",
-    "addresses.ingress_backend": "string",
-    "addresses.ingress_frontend": "string",
-    "addresses.ingress_influxdb": "string",
-    "addresses.ingress_management": "string",
-    "addresses.mariadb_backend": "string",
-    "addresses.mariadb_management": "string",
-    "addresses.monitoring_influxdb": "string",
-    "addresses.monitoring_management": "string",
-    "addresses.monitoring_postgresql": "string",
-    "addresses.mqtt_backend": "string",
-    "addresses.mqtt_frontend": "string",
-    "addresses.mqtt_management": "string",
-    "addresses.music_backend": "string",
-    "addresses.music_home": "string",
-    "addresses.music_management": "string",
-    "addresses.nas": "string",
-    "addresses.pegaprox_management": "string",
-    "addresses.pgadmin_backend": "string",
-    "addresses.pgadmin_management": "string",
-    "addresses.pgadmin_postgresql": "string",
-    "addresses.pironman_apps": "string",
-    "addresses.pironman_matter": "string",
-    "addresses.postgresql_backend": "string",
-    "addresses.postgresql_management": "string",
-    "addresses.pve": "string",
-    "addresses.runner": "string",
-    "addresses.udm": "string",
-    "addresses.winet_inverter": "string",
-    "addresses.zigbee_backend": "string",
-    "addresses.zigbee_iot": "string",
-    "addresses.zigbee_management": "string",
-    "addresses.zigbeepi_apps": "string",
-    "bridges.frontend": "string",
-    "bridges.home": "string",
-    "bridges.http_backend": "string",
-    "bridges.influxdb": "string",
-    "bridges.iot": "string",
-    "bridges.management": "string",
-    "bridges.mariadb": "string",
-    "bridges.mqtt": "string",
-    "bridges.postgresql": "string",
-    "contact.acme_email": "string",
-    "credentials.mariadb_admin": "string",
-    "credentials.mqtt_explorer": "string",
-    "credentials.postgresql_admin": "string",
-    "custody.catalogue": "string",
-    "custody.mariadb_acceptance": "string",
-    "custody.postgresql_acceptance": "string",
-    "devices.zigbee_coordinator": "string",
-    "domains.bitwarden": "string",
-    "domains.db_tools": "string",
-    "domains.homeassistant": "string",
-    "domains.identity": "string",
-    "domains.monitoring": "string",
-    "domains.mqtt_explorer": "string",
-    "domains.music": "string",
-    "domains.node_red_alias": "string",
-    "domains.node_red_primary": "string",
-    "domains.pgadmin": "string",
-    "domains.primary": "string",
-    "domains.secondary": "string",
-    "domains.udm_backend": "string",
-    "gateways.frontend": "string",
-    "gateways.home": "string",
-    "gateways.management": "string",
-    "gateways.mqtt": "string",
-    "hostnames.automation": "string",
-    "hostnames.bitwarden": "string",
-    "hostnames.db-tools": "string",
-    "hostnames.dns": "string",
-    "hostnames.identity": "string",
-    "hostnames.influxdb": "string",
-    "hostnames.ingress": "string",
-    "hostnames.mariadb": "string",
-    "hostnames.mariadb_database": "string",
-    "hostnames.monitoring": "string",
-    "hostnames.mqtt": "string",
-    "hostnames.mqtt_broker": "string",
-    "hostnames.music": "string",
-    "hostnames.pegaprox": "string",
-    "hostnames.postgresql": "string",
-    "hostnames.postgresql_database": "string",
-    "hostnames.zigbee2mqtt": "string",
-    "identity.db_tools_authorization_url": "string",
-    "identity.db_tools_jwks_url": "string",
-    "identity.db_tools_token_url": "string",
-    "identity.db_tools_userinfo_url": "string",
-    "identity.discovery_token": "string",
-    "identity.node_red_client": "string",
-    "identity.pgadmin_client": "string",
-    "mac.automation.0": "string",
-    "mac.automation.1": "string",
-    "mac.automation.2": "string",
-    "mac.automation.3": "string",
-    "mac.automation.4": "string",
-    "mac.automation.5": "string",
-    "mac.bitwarden.0": "string",
-    "mac.bitwarden.1": "string",
-    "mac.bitwarden.2": "string",
-    "mac.db-tools.0": "string",
-    "mac.db-tools.1": "string",
-    "mac.db-tools.2": "string",
-    "mac.db-tools.3": "string",
-    "mac.dns.0": "string",
-    "mac.identity.0": "string",
-    "mac.identity.1": "string",
-    "mac.identity.2": "string",
-    "mac.influxdb.0": "string",
-    "mac.influxdb.1": "string",
-    "mac.ingress.0": "string",
-    "mac.ingress.1": "string",
-    "mac.ingress.2": "string",
-    "mac.ingress.3": "string",
-    "mac.mariadb.0": "string",
-    "mac.mariadb.1": "string",
-    "mac.monitoring.0": "string",
-    "mac.monitoring.1": "string",
-    "mac.monitoring.2": "string",
-    "mac.mqtt.0": "string",
-    "mac.mqtt.1": "string",
-    "mac.mqtt.2": "string",
-    "mac.music.0": "string",
-    "mac.music.1": "string",
-    "mac.music.2": "string",
-    "mac.pegaprox.0": "string",
-    "mac.postgresql.0": "string",
-    "mac.postgresql.1": "string",
-    "mac.zigbee.0": "string",
-    "mac.zigbee.1": "string",
-    "mac.zigbee.2": "string",
-    "networks.admin_vpn": "string",
-    "networks.frontend": "string",
-    "networks.home": "string",
-    "networks.http_backend": "string",
-    "networks.iot": "string",
-    "networks.management": "string",
-    "networks.management_clients": "string-list",
-    "networks.mqtt": "string",
-    "networks.music_clients": "string-list",
-    "networks.policy_15": "string",
-    "networks.policy_50": "string",
-    "paths.api_token": "string",
-    "paths.backup_directory": "string",
-    "paths.backup_mount": "string",
-    "paths.backup_source": "string",
-    "paths.ca_file": "string",
-    "paths.known_hosts": "string",
-    "paths.mqtt_password_file": "string",
-    "paths.mqtt_probe": "string",
-    "paths.private_key": "string",
-    "paths.state_root": "string",
-    "paths.winet_options": "string",
-    "ports.nas_web": "string",
-    "prefixes.admin_vpn": "integer",
-    "prefixes.frontend": "integer",
-    "prefixes.home": "integer",
-    "prefixes.http_backend": "integer",
-    "prefixes.influxdb": "integer",
-    "prefixes.iot": "integer",
-    "prefixes.management": "integer",
-    "prefixes.mariadb": "integer",
-    "prefixes.mqtt": "integer",
-    "prefixes.policy_15": "integer",
-    "prefixes.policy_50": "integer",
-    "prefixes.postgresql": "integer",
-    "site.node": "string",
-    "ssh.public_keys": "string-list",
-    "storage.guest": "string",
-    "templates.debian_lxc": "string",
-    "timezones.applications": "string",
-    "timezones.dns": "string",
-    "vlans.frontend": [
-      "integer",
-      "null"
-    ],
-    "vlans.home": [
-      "integer",
-      "null"
-    ],
-    "vlans.http_backend": [
-      "integer",
-      "null"
-    ],
-    "vlans.influxdb": [
-      "integer",
-      "null"
-    ],
-    "vlans.iot": [
-      "integer",
-      "null"
-    ],
-    "vlans.management": [
-      "integer",
-      "null"
-    ],
-    "vlans.mariadb": [
-      "integer",
-      "null"
-    ],
-    "vlans.mqtt": [
-      "integer",
-      "null"
-    ],
-    "vlans.postgresql": [
-      "integer",
-      "null"
-    ],
-    "vmids.automation": "integer",
-    "vmids.bitwarden": "integer",
-    "vmids.db-tools": "integer",
-    "vmids.dns": "integer",
-    "vmids.identity": "integer",
-    "vmids.influxdb": "integer",
-    "vmids.ingress": "integer",
-    "vmids.mariadb": "integer",
-    "vmids.monitoring": "integer",
-    "vmids.mqtt": "integer",
-    "vmids.music": "integer",
-    "vmids.pegaprox": "integer",
-    "vmids.postgresql": "integer",
-    "vmids.zigbee2mqtt": "integer",
-    "winet.mqtt_prefix": "string"
+  "assets": {
+    "postgresql-repository-key": {
+      "type": "raw-utf8",
+      "source": "assets/postgresql/vendor.asc",
+      "sha256": "0144068502a1eddd2a0280ede10ef607d1ec592ce819940991203941564e8e76"
+    },
+    "mariadb-repository-key": {
+      "type": "raw-utf8",
+      "source": "assets/mariadb/vendor.asc",
+      "sha256": "00adb387f4c12e8982cfc28165d225695621494354cd58108c6845063bfb74b5"
+    },
+    "influxdb-repository-key": {
+      "type": "raw-utf8",
+      "source": "assets/influxdb/vendor.asc",
+      "sha256": "40557e261cdbdccac91a2dde474cbf101ef672661e64b211b711cc0b904d5dac"
+    }
+  },
+  "health_profiles": {
+    "adapter-ready": {
+      "type": "adapter",
+      "check": "readiness"
+    }
+  },
+  "policies": {
+    "network": {
+      "declared_backend_mqtt_client": {
+        "source": "policies/network/declared_backend_mqtt_client.yaml"
+      },
+      "declared_http_route_backend_v2": {
+        "source": "policies/network/declared_http_route_backend_v2.yaml"
+      },
+      "existing_internal_dns": {
+        "source": "policies/network/existing_internal_dns.yaml"
+      },
+      "packages_selected_upstream_image_and_provider_https": {
+        "source": "policies/network/packages_selected_upstream_image_and_provider_https.yaml"
+      },
+      "selected_internal_dns_only": {
+        "source": "policies/network/selected_internal_dns_only.yaml"
+      },
+      "signed_package_downloads": {
+        "source": "policies/network/signed_package_downloads.yaml"
+      },
+      "signed_packages_pinned_images_provider_and_https": {
+        "source": "policies/network/signed_packages_pinned_images_provider_and_https.yaml"
+      }
+    }
+  },
+  "authentication_profiles": {
+    "cloudbeaver-oidc": {
+      "type": "cloudbeaver-oidc",
+      "required": true
+    },
+    "node-red-retained-oidc": {
+      "type": "node-red-retained-oidc",
+      "required": true
+    },
+    "zabbix-saml": {
+      "type": "zabbix-saml",
+      "required": false
+    }
+  },
+  "monitoring_profiles": {
+    "linux-agent": {
+      "type": "zabbix-agent",
+      "profiles": [
+        "linux"
+      ]
+    },
+    "docker-agent": {
+      "type": "zabbix-agent",
+      "profiles": [
+        "docker"
+      ]
+    },
+    "postgresql-agent": {
+      "type": "zabbix-agent",
+      "profiles": [
+        "postgresql"
+      ]
+    },
+    "mariadb-agent": {
+      "type": "zabbix-agent",
+      "profiles": [
+        "mysql"
+      ]
+    },
+    "influxdb-agent": {
+      "type": "zabbix-agent",
+      "profiles": [
+        "influxdb"
+      ]
+    }
   }
 }

@@ -1,123 +1,29 @@
-# Completed commissioning groups and ordinary deployment
+# Retained evidence and custody
 
-A private site may select exact completed-group custody as provenance for ordinary
-per-guest maintenance. Initial scope is the MariaDB singleton and the PostgreSQL,
-Identity and db-tools group. Public profiles select no historical group. Actual
-record paths, group and receipt hashes, trust bindings and backend anchors belong
-in the reviewed private overlay; public examples and tests use invented evidence.
-Completion alone is insufficient. With no exact selection, coordinated membership
-retains its existing refusal.
+Reusable app profiles select no historical commissioning group. A consuming site
+owns its immutable evidence and binds it to explicit guest/app admission subjects.
+The selected framework validates the closed evidence schema, subject, role,
+context and resource identity; arbitrary source assertions are not native proof.
 
-The optional guest configuration field `coordinated_custody` must bind the exact
-closed contract of the selected published framework. It identifies the complete
-immutable group proof and each member's qualified starting generation. Every
-configured member carries the identical complete selection, including members
-excluded from this run. The compiler rejects missing or conflicting copies,
-wrong roles or VMIDs, overlap and unrelated groups before packet admission.
-This selection is provenance, not a readiness or exclusive-writer acceptance.
+Use document evidence for typed admission records and raw UTF-8 evidence assets
+for byte-bound catalogue/acceptance text. Raw assets preserve all bytes, whitespace,
+newlines and literal tokens. Do not parse and reserialize a historical proof to
+make its digest match. Secret material stays outside source, including private Git.
 
-## Private proof inputs
+A selected completed group must remain complete across the configured composition,
+including disabled members. Disabling a guest does not waive missing/conflicting
+provenance, enable another member or create an atomic deployment job. Actual
+readiness edges come from the declared composition. A disabled packet never
+enters target admission.
 
-Read `docs/coordinated-custody.md` in the exact selected framework revision; the
-workflow reference is the version authority. That contract defines the closed `homelab-coordinated-custody-v1` selection. Supply it under
-`guests.<member>.config.coordinated_custody`, and set that member's
-`config.paths.coordinated_custody_inputs` to `${inputs}`. The compiler binds this
-to the exact guest packet directory; all members still carry the same selection.
-Both supported group schemas use `database-network-cutover-<operation>` for the
-existing group directory, including MariaDB. Do not rename a retained group to
-match a different prefix.
+Existing requests, claims, completions, trust bindings, ordinary receipts, state
+hashes, locks and local/mirror identity checks remain mandatory. Initial provenance
+is distinct from a successful current-framework receipt. Source compilation does
+not create missing evidence, replay commissioning, rename a retained record,
+clear a failure/hold or authorize a different writer.
 
-The four public profiles provide these immutable text-file slots:
-
-| Packet file | Private central value |
-| --- | --- |
-| `custody-catalogue.json` | `custody.catalogue`, shared by all four members |
-| `custody-acceptance.json` in PostgreSQL, Identity and db-tools | `custody.postgresql_acceptance` |
-| `custody-acceptance.json` in MariaDB | `custody.mariadb_acceptance` |
-
-Set the group's `catalogue.file` and `acceptance.file` to those exact filenames.
-Their `sha256` fields must hash the complete raw UTF-8 bytes of the corresponding
-central value, including whitespace and final newlines. The selected proof bytes
-are never interpolated: even literal `${inputs}` and central-value tokens stay
-unchanged. Ordinary runtime configuration retains its existing substitution.
-Do not reconstruct or normalize retained JSON to make a digest match.
-
-The synthetic examples supply inert `{}` proof text; reusable profiles select no
-group. These examples neither represent retained evidence nor grant admission.
-The consumer must replace them with the exact retained catalogue and each group's
-acceptance proof, supply every member/record/anchor binding required by the closed
-schema, and retain all prerequisite gates. The synthetic overlay has no accepted prerequisites. Tests construct invented selections solely to check source compilation;
-they do not qualify a NAS mount, retained state or real commissioning record.
-
-## Configured provenance and enabled guests
-
-All thirteen base guests remain configured and `disabled: []` enables all of
-them; root `zabbix:` adds the monitoring guest. The
-existing guest dependency graph decides which exclusions are valid. Custody does
-not enable an excluded guest or turn the historical group into an atomic job.
-
-| Disabled guests | Existing selection result |
-| --- | --- |
-| None | All thirteen base guests enabled |
-| db-tools | Valid leaf exclusion; PostgreSQL and Identity remain enabled |
-| Identity alone, or Identity with Automation while db-tools stays active | Valid; db-tools still requires PostgreSQL, MariaDB and ingress |
-| Identity with db-tools | Valid; Automation and Music have independent prerequisites |
-| Identity, db-tools and Automation | Valid; Music still requires DNS and Traefik |
-| PegaProx or Bitwarden alone | Valid unrelated leaf exclusion |
-| DNS with consumers active | Invalid prerequisite exclusion |
-
-An excluded group member still contributes its configured immutable provenance.
-Removing its copy or required proof is not permitted. Its disabled packet does not
-enter runtime admission or contact its target. Enabled members verify the full
-immutable group proof, while each member's mutable backend generation is checked
-under that member's existing locks when it runs. The independent DAG does not
-promise simultaneous peer-state equality or execution of every group member.
-
-## State progression and refusal
-
-Admission retains the original requests, claims, completions, overlays and
-installation/source/input/trust records. Local and NAS proof must agree under the
-existing recovery identity and path rules. Ordinary deployment does not create
-missing proof, copy or rename a historical receipt, replay commissioning, or clear
-a hold to obtain admission.
-
-The first run requires the exact qualified starting backend generation and the
-selected absent-or-exact starting ordinary receipt. A selected older four-field
-receipt is recognized only by exact selected raw bytes: `initial_ordinary.sha256`
-pins the canonical receipt, while optional `immutable_sha256` pins its immutable
-operation copy separately. Omitting `immutable_sha256` requires that copy to have
-the same raw hash. After both raw pins pass, the complete decoded records must
-match with nested values and JSON types preserved. Different historical key order
-is supported; a changed value or type is refused. Neither file is normalized or
-rewritten. This is initial provenance, never a current-framework success; later
-framework receipts still require exact canonical/immutable byte equality.
-Identity and db-tools can start from their separately qualified later ordinary-CD
-generation instead of being forced back to an older overlay state.
-
-After successful infrastructure, the same run uses its exact owned hold and
-immutable infrastructure receipt. Later runs use a successful current-framework
-ordinary receipt whose canonical bytes match its immutable operation copy and
-whose state hash matches the current backend. Lineage and closed resource identity
-remain required. Existing workflow sequence, source ancestry, binding, phase
-ordering and no-replay checks continue to apply. Successful receipts may advance
-the complete state hash and serial without repinning an old overlay.
-
-A present failure, pending or foreign marker, malformed receipt, unfinished
-operation, changed proof or unexplained backend generation refuses admission.
-It never falls back to an older anchor. Admission neither clears markers nor
-repairs custody; normal successful phase receipts remain the only ordinary state
-progression. Immutable proof participates in normal drift checks; mutable backend
-state, holds and latest-receipt pointers are not immutable inputs.
-
-## Private adoption remains separate
-
-Before native adoption, retire or drain the old cooperating writer and service
-verifier entrypoints through the existing global queue, and separately review the
-owner/window for manual or noncooperating writers. The existing database shared
-lock and per-member exclusive locks do not exclude an old shared-lock service
-verifier for a whole phase. An idle sample is not an ownership reservation.
-
-This source contract introduces no migration executor, handoff write, global
-serialization or readiness/writer flag. A source pin, synthetic tests and passing
-CI do not authorize a main merge, deployment, native mutation, hold release or
-application acceptance. Keep all existing prerequisite and failure custody checks.
+Exact schema fields and mutable-state progression belong to the selected
+framework's custody contract. The library does not duplicate that parser or
+execution engine. Before changing source ownership, compare retained evidence
+against the accepted composition and separately qualify cooperating and manual
+writers. An idle sample is not an ownership reservation.

@@ -1,0 +1,12 @@
+schema: homelab-components-v1
+kind: network-policy
+rules:
+- comment: Declared backend MQTT client
+  destination:
+    interface: destination
+  direction: in
+  interface: kernel
+  port: '1883'
+  proto: tcp
+  source:
+    interface: source

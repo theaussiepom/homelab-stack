@@ -1,24 +1,19 @@
 # Working agreement
 
-- Compose homelab capabilities into reusable guest profiles, services,
-  resource requirements, images and deployment dependencies.
-- Describe logical network relationships. Obtain concrete addresses, VLANs,
-  bridges, VMIDs, MACs, hostnames, domains, storage bindings and local access
-  policy from the consuming site.
-- Keep site allocations, secrets, private repository names, local setup
-  instructions and operating histories out of public source.
-- Keep runnable public examples explicitly synthetic and separate from
-  reusable definitions. Production admission must reject missing site bindings
-  and unresolved example identities.
-- Put reusable capability changes in homelab. Do not duplicate framework
-  compilation, validation or deployment engines.
-- Do not add migration, cutover or one-off site repair executors.
-- Keep versions and hashes in their declared authoritative manifests or
-  workflow references. Follow declared image policies, including intentional
-  floating selections; do not invent a blanket immutable-image requirement.
-- Preserve guest dependencies and selection behavior. Keep one deployment
-  job per guest, named for that guest, with short, readable steps.
-- Validate generated workflows and compile the composition against distinct
-  synthetic sites to expose hidden local assumptions.
-- Preserve validation, coverage, security and review gates. Consumers own
-  deployment authorization and actual service acceptance.
+- Own reusable app profiles, guest templates and supported defaults.
+  homelab owns contracts, compilation and deployment capabilities.
+- Compose existing components; do not duplicate validators or deployment engines.
+- Profiles declare interfaces, endpoints, storage, connections and capabilities.
+  Sites supply concrete allocations, credentials and access policy.
+- Keep apps independently selectable. Supporting containers belong to their app.
+  Do not impose a fixed guest bundle.
+- Add profiles through the library index. Document required bindings, supported
+  placement, fresh/update behavior and explicit dependencies.
+- Keep examples synthetic. Test individual definitions and bindings, then use
+  focused real compiler integrations with different layouts and repeated apps.
+- Keep versions and image policies in their authoritative manifests.
+- Generate one deployment job per guest, named only for that guest, with short
+  application steps.
+- Remove obsolete definitions, tests and references after replacement proof.
+  Preserve all existing quality gates.
+- Read docs/composition.md for use and extension; docs/testing.md for checks.

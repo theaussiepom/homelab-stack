@@ -93,5 +93,15 @@
     "repository": "ghcr.io/thomasnordquist/mqtt-explorer",
     "tag": null,
     "digest": "sha256:fa2ff4300d867f1f3e131af6b6ccff54bc9d2905815e28e3aa5de6de5240f0fc"
+  },
+  "homeassistant_public": {
+    "repository": "ghcr.io/home-assistant/home-assistant",
+    "tag": null,
+    "digest": "sha256:23f4dfbb69ce76315dbc4de7915504f1c2dcecd7ca2648113a493a385972e133"
+  },
+  "node_red_public": {
+    "repository": "nodered/node-red",
+    "tag": null,
+    "digest": "sha256:2ccd38b4066648bd5e17430c50a2f8102c566a82fd4f2fc5c342e61664d6896f"
   }
 }

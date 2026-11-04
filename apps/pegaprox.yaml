@@ -1,0 +1,56 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: pegaprox
+display_name: PegaProx
+interfaces:
+  web:
+    required: true
+    accepts:
+    - guest-interface
+  private:
+    required: true
+    accepts:
+    - app-network
+listeners:
+  web:
+    service: pegaprox
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 5000
+    publish:
+      scope: guest-interface
+      interface: web
+      port: 5000
+endpoints:
+  web:
+    listener: web
+    protocol: http
+    via: web
+storage:
+  config:
+    target: /app/config
+    read_only: false
+    required: true
+    kind: directory
+  logs:
+    target: /app/logs
+    read_only: false
+    required: true
+    kind: directory
+connections: {}
+software:
+- docker
+- pegaprox-images
+runtime:
+- container-host
+- pegaprox
+health:
+  ready:
+    profile: adapter-ready
+secrets:
+  database_key:
+    required: true
+monitoring:
+  profile: docker-agent
