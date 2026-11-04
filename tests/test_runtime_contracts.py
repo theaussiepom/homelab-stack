@@ -239,6 +239,37 @@ class RuntimeContractTests(unittest.TestCase):
                 self.phase_variables(root, "dns", "unbound", dhcp_endpoint="198.18.40.2/25")
             self.assertEqual(list((root / "attempt").iterdir()), [])
 
+    def test_explorer_health_uses_the_installed_lifecycle_helper(self):
+        ready = yaml.safe_load((TASKS / "guest-ready.yml").read_text())
+        install = next(task for task in ready if task.get("ansible.builtin.copy", {}).get("src", "").endswith("/mqtt-explorer-runtime.py"))
+        copied = install["ansible.builtin.copy"]
+        source = Path(copied["src"].replace("{{ playbook_dir }}", str(TASKS.parent))).resolve()
+        self.assertEqual(source, (FRAMEWORK / "proxmox/applications/mqtt-explorer-runtime.py").resolve())
+        self.assertTrue(source.is_file())
+        self.assertEqual((copied["owner"], copied["group"], copied["mode"]), ("root", "root", "0700"))
+        self.assertEqual(install["when"], "app.kind == 'mqtt' and 'mqtt_explorer' in app.service_health_checks")
+        workspace = next(task for task in ready if task.get("ansible.builtin.command", {}).get("argv", [None, None, None])[2:3] == ["workspace"] and task["ansible.builtin.command"]["argv"][1] == copied["dest"])
+        self.assertEqual(workspace["ansible.builtin.command"]["argv"][:3], ["python3", copied["dest"], "workspace"])
+
+        cfg = json.loads(self.packet("mqtt")["files"]["site.json"])
+        full = [check for check in cfg["app"]["health_checks"] if check["expect"] == '"mqtt_explorer": "passed"']
+        self.assertEqual(len(full), 1)
+        self.assertEqual(full, cfg["app"]["service_health_checks"]["mqtt_explorer"])
+        self.assertEqual(full[0]["argv"], ["python3", copied["dest"], "health", "--config", "/opt/homelab-app/runtime/mqtt-explorer-public.json"])
+        with tempfile.TemporaryDirectory() as directory:
+            variables = self.phase_variables(Path(directory), "mqtt", "mqtt_explorer")
+            self.assertEqual(variables["application_service"], "mqtt_explorer")
+            self.assertEqual(variables["app"]["health_checks"], full)
+            self.assertEqual(variables["mqtt_explorer_owner"], {
+                "node": cfg["site"]["node"], "vmid": cfg["guest"]["vmid"],
+                "hostname": cfg["guest"]["hostname"],
+            })
+
+        tasks = yaml.safe_load((TASKS.parent / "reconcile.yml").read_text())[0]["tasks"]
+        installed_at = next(index for index, task in enumerate(tasks) if task.get("ansible.builtin.import_tasks") == "tasks/guest-ready.yml")
+        checked_at = next(index for index, task in enumerate(tasks) if task.get("loop") == "{{ app.health_checks }}")
+        self.assertLess(installed_at, checked_at)
+
     def test_compiled_runtime_shapes_reach_the_shared_image_task(self):
         source = next(
             t

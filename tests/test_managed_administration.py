@@ -87,7 +87,7 @@ class ManagedAdministrationTests(unittest.TestCase):
         self.assertEqual(mqtt['app']['service_health_checks']['mqtt'][0]['argv'][-1], 'mqtt-broker')
         checks = mqtt['app']['service_health_checks']['mqtt_explorer']
         self.assertEqual(len(checks), 1)
-        self.assertEqual(checks[0]['argv'], ['python3', '/opt/homelab-app/mqtt-explorer-runtime.py', 'health', '--config', '/opt/homelab-app/runtime/mqtt-explorer-public.json'])
+        self.assertEqual(checks[0]['argv'], ['python3', '/usr/local/bin/homelab-mqtt-explorer.py', 'health', '--config', '/opt/homelab-app/runtime/mqtt-explorer-public.json'])
         self.assertEqual(checks[0]['expect'], '"mqtt_explorer": "passed"')
         self.assertFalse(any('https://' in argument or '9000' in argument for check in checks for argument in check['argv']))
 

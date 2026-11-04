@@ -213,7 +213,7 @@
           "name": "MQTT Explorer private service and authentication gateway",
           "argv": [
             "python3",
-            "/opt/homelab-app/mqtt-explorer-runtime.py",
+            "/usr/local/bin/homelab-mqtt-explorer.py",
             "health",
             "--config",
             "/opt/homelab-app/runtime/mqtt-explorer-public.json"
@@ -238,7 +238,7 @@
             "name": "MQTT Explorer private service and authentication gateway",
             "argv": [
               "python3",
-              "/opt/homelab-app/mqtt-explorer-runtime.py",
+              "/usr/local/bin/homelab-mqtt-explorer.py",
               "health",
               "--config",
               "/opt/homelab-app/runtime/mqtt-explorer-public.json"
