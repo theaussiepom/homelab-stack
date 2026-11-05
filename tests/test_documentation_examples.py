@@ -24,13 +24,13 @@ NAMES = {'site.yaml', 'connections/filtering-upstream.yaml',
 
 
 def example_files():
-    """Extract only the three named YAML fences, never arbitrary paths or code."""
-    text = (ROOT / 'docs/examples/local-dns.md').read_text()
-    rows = re.findall(r'^## (site\.yaml|connections/filtering-upstream\.yaml|exposures/filtering-dns\.yaml)\n\n```yaml\n(.*?)^```\s*$',
-                      text, re.MULTILINE | re.DOTALL)
-    if len(rows) != 3 or {name for name, _ in rows} != NAMES:
-        raise AssertionError('Keep the three complete named source examples')
-    return dict(rows)
+    """Read the three canonical files linked by the worked guide."""
+    guide = (ROOT / 'docs/examples/local-dns.md').read_text()
+    for name in NAMES:
+        if '../../examples/catalogue/local-dns/' + name not in guide:
+            raise AssertionError('Keep the complete worked-source links')
+    return {name: (ROOT / 'examples/catalogue/local-dns' / name).read_text()
+            for name in NAMES}
 
 
 def no_native(*args, **kwargs):
@@ -54,7 +54,7 @@ class DocumentationExamples(unittest.TestCase):
     def plan(self):
         return compiler.resolve_plan(ROOT, self.root / 'site.yaml', [])
 
-    def test_complete_markdown_sources_match_inline_packet_and_explicit_readiness(self):
+    def test_complete_documented_sources_match_inline_packet_and_explicit_readiness(self):
         split = self.plan()
         self.assertEqual(set(split.pins['site']), NAMES)
         packets = compiler.lower_plan(split)

@@ -1,0 +1,363 @@
+# Complete SYNTHETIC source-only composition. Retained entries require an already owned installation.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+    timezone: Etc/UTC
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  identity:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 850
+      hostname: example-identity
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:32
+        address:
+          mode: static
+          value: 198.18.20.50
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/identity
+    compose_projects:
+      identity:
+        name: example-identity
+        file: compose-identity.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: connect_identity_database
+  monitoring:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 851
+      hostname: example-monitoring
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:33
+        address:
+          mode: static
+          value: 198.18.20.51
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/monitoring
+    compose_projects:
+      monitoring:
+        name: example-monitoring
+        file: compose-monitoring.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: connect_monitoring_database
+  monitoring-storage:
+    context: lab
+    template: base
+    lifecycle: retained
+    identity:
+      vmid: 852
+      hostname: example-monitoring-storage
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 3072
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:34
+        address:
+          mode: static
+          value: 198.18.20.52
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/monitoring-storage
+      native:
+        path: /var/lib/postgresql
+    compose_projects: {}
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: connect_monitoring_database_incoming
+apps:
+  identity:
+    profile: authentik
+    guest: identity
+    lifecycle: retained
+    interfaces:
+      web:
+        interface: primary
+      private:
+        scope: app-network
+        network: default
+      postgresql:
+        interface: primary
+    storage:
+      media:
+        root_path: data
+        subpath: identity/media
+      templates:
+        root_path: data
+        subpath: identity/templates
+      certs:
+        root_path: data
+        subpath: identity/certs
+      redis:
+        root_path: data
+        subpath: identity/redis
+    identity:
+      phase: identity
+      runtime_id: example-identity
+      services:
+        server: identity_server
+        worker: identity_worker
+        redis: identity_redis
+      networks:
+        default: default
+      runtime_directory: /opt/homelab-app/runtime/identity
+      project: identity
+    secrets:
+      secret_key: identity_secret_key
+      postgresql_password: identity_postgresql_password
+    properties:
+      database:
+        name: example_identity
+        user: example_identity
+  monitoring:
+    profile: zabbix
+    guest: monitoring
+    lifecycle: retained
+    interfaces:
+      web:
+        interface: primary
+      server:
+        interface: primary
+      postgresql:
+        interface: primary
+      private:
+        scope: app-network
+        network: default
+    storage: {}
+    identity:
+      phase: monitoring
+      runtime_id: example-monitoring
+      services:
+        zabbix_server: monitoring_zabbix_server
+        zabbix_web: monitoring_zabbix_web
+      networks:
+        default: default
+      runtime_directory: /opt/homelab-app/runtime/monitoring
+      project: monitoring
+    properties:
+      database:
+        name: example_monitoring
+        user: example_monitoring
+  monitoring_storage:
+    profile: postgresql
+    guest: monitoring-storage
+    lifecycle: retained
+    interfaces:
+      service:
+        interface: primary
+    storage:
+      data:
+        root_path: native
+        subpath: ''
+    identity:
+      phase: monitoring_storage
+      runtime_id: example-monitoring_storage
+      services: {}
+      networks: {}
+domains: {}
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+  identity_database:
+    protocol: tcp
+    address: 192.0.2.60
+    port: 5432
+identity_providers: {}
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+  identity_secret_key:
+    type: file
+    path: /run/example/identity_secret_key
+  identity_postgresql_password:
+    type: file
+    path: /run/example/identity_postgresql_password
+accounts: {}
+devices: {}
+evidence: {}
+connections:
+  identity_database:
+    consumer:
+      app: identity
+      connection: database
+    target:
+      external: identity_database
+    source_interface: postgresql
+  monitoring_database:
+    consumer:
+      app: monitoring
+      connection: database
+    target:
+      app: monitoring_storage
+      endpoint: backend
+    source_interface: postgresql
+exposures: {}
+images: {}
+host_aliases: {}
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+    connect_identity_database:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 192.0.2.60/32
+        port: '5432'
+        comment: Selected identity_database relationship
+    connect_monitoring_database:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.52/32
+        port: '5432'
+        comment: Selected monitoring_database relationship
+    connect_monitoring_database_incoming:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.51/32
+        port: '5432'
+        comment: Selected monitoring_database client
+  transport: {}
+  tls: {}
+  middlewares: {}
+  authentication: {}
+zabbix:
+  server: monitoring

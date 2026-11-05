@@ -1,0 +1,259 @@
+# Complete SYNTHETIC source-only composition. Retained entries require an already owned installation.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+    timezone: Etc/UTC
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  edge:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 870
+      hostname: example-edge
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:46
+        address:
+          mode: static
+          value: 198.18.20.70
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/edge
+    compose_projects:
+      edge:
+        name: example-edge
+        file: compose-edge.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+  manager:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 871
+      hostname: example-manager
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:47
+        address:
+          mode: static
+          value: 198.18.20.71
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/manager
+    compose_projects:
+      manager:
+        name: example-manager
+        file: compose-manager.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+apps:
+  edge:
+    profile: traefik
+    guest: edge
+    lifecycle: retained
+    interfaces:
+      frontend:
+        interface: primary
+      management:
+        interface: primary
+    storage:
+      certs:
+        root_path: data
+        subpath: edge/certs
+    identity:
+      phase: edge
+      runtime_id: example-edge
+      services:
+        traefik: edge_traefik
+      networks: {}
+      runtime_directory: /opt/homelab-app/runtime/edge
+      project: edge
+    properties:
+      provider:
+        context: lab
+        token_id: example@pve!reader
+      acme:
+        email: admin@example.invalid
+        resolvers:
+        - external: resolver
+    secrets:
+      cloudflare_dns_token: edge_cloudflare_dns_token
+      proxmox_token: edge_proxmox_token
+  manager:
+    profile: pegaprox
+    guest: manager
+    lifecycle: retained
+    interfaces:
+      web:
+        interface: primary
+      private:
+        scope: app-network
+        network: default
+    storage:
+      config:
+        root_path: data
+        subpath: manager/config
+      logs:
+        root_path: data
+        subpath: manager/logs
+    identity:
+      phase: manager
+      runtime_id: example-manager
+      services:
+        pegaprox: manager_pegaprox
+      networks:
+        default: default
+      runtime_directory: /opt/homelab-app/runtime/manager
+      project: manager
+    secrets:
+      database_key: manager_database_key
+    properties:
+      trusted_proxy:
+        app: edge
+        interface: management
+domains: {}
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+identity_providers: {}
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+  edge_cloudflare_dns_token:
+    type: file
+    path: /run/example/edge_cloudflare_dns_token
+  edge_proxmox_token:
+    type: file
+    path: /run/example/edge_proxmox_token
+  manager_database_key:
+    type: file
+    path: /run/example/manager_database_key
+accounts: {}
+devices: {}
+evidence: {}
+connections: {}
+exposures: {}
+images: {}
+host_aliases: {}
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+  transport: {}
+  tls: {}
+  middlewares: {}
+  authentication: {}

@@ -13,7 +13,6 @@ Provide a recursive resolver with a private container listener and explicit gues
 | Site selection | `apps.<instance>.profile: unbound` |
 | Adapter | `unbound` |
 | Owned containers | `unbound` |
-| Fresh / update | Fresh mode requires no storage bindings and uses the packaged config with declared resource sizing. Retained mode requires the existing config binding; optional nested state/control files preserve their exact types. |
 | Multiple instances | Repeated instances are compiler-tested on one guest with different publish_port values and independent service/network identities. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -24,6 +23,36 @@ The complete reusable declaration is [unbound.yaml](../../../apps/unbound.yaml).
 
 service accepts guest-loopback only. A physical NIC binding is rejected; it does not expose Unbound on the LAN. Fresh config sizing comes from the declared app memory/CPU budget rather than host memory.
 
+## First installation
+
+Can install from empty without a configuration bind. The maintained starter uses `lifecycle: fresh`; keep that value unchanged for later deployments of the same resolver.
+
+Complete creation-policy source: [site.example.yaml](../../../site.example.yaml), app `recursive_dns`. It must pass both resolution and packet generation; it is not proof of a deployed service.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../site.example.yaml).
+
+```yaml
+apps:
+  recursive_dns:
+    profile: unbound
+    guest: resolver
+    lifecycle: fresh
+```
+
+### Practical complete example
+
+Use app `recursive_dns` in [site.example.yaml](../../../site.example.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/site.example.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
+
 ## Interfaces
 
 | Role | Required in profile | Accepted binding scopes |
@@ -31,7 +60,7 @@ service accepts guest-loopback only. A physical NIC binding is rejected; it does
 | `service` | Yes | `guest-loopback` |
 | `private` | Yes | `app-network` |
 
-A physical role binds `{interface: NIC_ID}`; loopback and app-network use explicit scopes. Roles name requirements, not additional NICs. See [Multiple interfaces](../../guides/multiple-interfaces.md).
+Bind `service` to `{scope: guest-loopback}` and `private` to `{scope: app-network, network: default}`. This profile does not accept a physical NIC for either role. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
 ## Listeners and endpoints
 
@@ -45,7 +74,7 @@ A physical role binds `{interface: NIC_ID}`; loopback and app-network use explic
 | `dns_udp` | `udp` | `dns_udp` via `service` |
 | `dns_tcp` | `tcp` | `dns_tcp` via `service` |
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
+Wildcard binding remains inside the declared app network. Only explicit publications map a socket onto the guest. Endpoints do not grant traffic or add readiness waits.
 
 ## Storage
 
@@ -65,17 +94,22 @@ Bind roles to explicit guest volumes/subpaths or supported root data paths. Reta
 
 No connection role is declared.
 
-The readiness column lists permitted choices, **not an automatic dependency**. The site selects `readiness` on the connection explicitly. Value links alone do not wait or grant traffic. See [Connect apps](../../guides/connect-apps.md).
-
-No direct `app.secrets` role is declared; selected authentication, account or connection capabilities may have their own private inputs.
-
-Secrets remain outside Git. File/environment references are metadata. Private role material cannot rotate implicitly during an ordinary update.
+No direct app secret role is declared.
 
 ## Application properties
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
 | publish_port | Optional integer, default 5335 | 1..65535; changes both guest-loopback publications, not container port 53. A duplicate instance can select 5336. |
+
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Bind service to a physical NIC | Refuses: this profile publishes only guest-loopback sockets. |
+| Give two same-guest instances the same publication port | Refuses the listener/publication conflict; choose distinct explicit ports. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
 
 ## Software and resource policy
 
@@ -91,10 +125,14 @@ Software selections: `docker`, `curl`, `unbound-images`. Runtime selections: `co
 
 These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
-## Check and update
+## Later deployments
+
+Maintains the same resolver and selected loopback publications. With no config bind, startup generates the bounded configuration from the selected app budget; a retained config bind remains separately protected. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

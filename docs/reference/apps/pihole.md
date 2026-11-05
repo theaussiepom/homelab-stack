@@ -13,7 +13,6 @@ Provide DNS filtering and a web UI. Select an upstream resolver explicitly; Unbo
 | Site selection | `apps.<instance>.profile: pihole` |
 | Adapter | `pihole` |
 | Owned containers | `pihole` |
-| Fresh / update | Fresh and owned-repeat controller/helper paths are tested. Supply the supported config directory; declaring a path is not a data restoration operation. The optional database role preserves an existing FTL database location. |
 | Multiple instances | One Pi-hole per guest: the managed-record sidecar is a fixed owned leaf, and DNS/web host sockets must not collide. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -23,6 +22,34 @@ The complete reusable declaration is [pihole.yaml](../../../apps/pihole.yaml). S
 ## Application requirements
 
 The optional upstream interface role becomes necessary when binding the required upstream connection. A same-guest Unbound target uses guest-loopback; a remote target uses a physical role. Context DNS is a value and does not create that connection or a wait.
+
+## First installation
+
+Requires a prepared Pi-hole configuration directory and explicit upstream. This profile does not generate a complete new Pi-hole configuration or adopt arbitrary existing data. The practical example therefore uses an already HomeLab-managed installation.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/local-dns/site.yaml).
+
+```yaml
+apps:
+  filtering:
+    profile: pihole
+    guest: resolver
+    lifecycle: retained
+```
+
+### Practical complete example
+
+Use app `filtering` in [examples/catalogue/local-dns/site.yaml](../../../examples/catalogue/local-dns/site.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/local-dns/site.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
 
 ## Interfaces
 
@@ -66,13 +93,20 @@ Bind roles to explicit guest volumes/subpaths or supported root data paths. Reta
 
 The readiness column lists permitted choices, **not an automatic dependency**. The site selects `readiness` on the connection explicitly. Value links alone do not wait or grant traffic. See [Connect apps](../../guides/connect-apps.md).
 
-No direct `app.secrets` role is declared; selected authentication, account or connection capabilities may have their own private inputs.
-
-Secrets remain outside Git. File/environment references are metadata. Private role material cannot rotate implicitly during an ordinary update.
+No direct app secret role is declared.
 
 ## Application properties
 
 No application property keys are accepted for this adapter. Unknown keys refuse; there is no command/environment/mount override bag.
+
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Omit the upstream connection | Refuses the required connection. |
+| Use a physical source role for a same-guest loopback upstream | Refuses the connection-scope relationship. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
 
 ## Software and resource policy
 
@@ -88,10 +122,14 @@ Software selections: `docker`, `curl`, `pihole-images`. Runtime selections: `con
 
 These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
-## Check and update
+## Later deployments
+
+Updates the explicit upstream and owned managed DNS records while preserving the configuration and unrelated records. Record retirement is limited to names proved by the prior owned payload, not general DNS cleanup. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

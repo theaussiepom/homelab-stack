@@ -13,7 +13,6 @@ Run the independent WiNet poller with explicit inverter, MQTT and private option
 | Site selection | `apps.<instance>.profile: winet` |
 | Adapter | `winet` |
 | Owned containers | `winet` |
-| Fresh / update | The private options parser and existing retained settings/data boundary remain authoritative. Source acceptance is not inverter or MQTT data-flow acceptance. |
 | Multiple instances | Independent of Zigbee; same-guest duplicate WiNet operation is not qualified here. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -24,6 +23,34 @@ The complete reusable declaration is [winet.yaml](../../../apps/winet.yaml). Sel
 
 Private options are supplied by the selected options role and validated against inverter/MQTT metadata. Existing inverter and broker credentials stay inside that protected record; neither is copied into Git.
 
+## First installation
+
+Requires an already configured inverter and valid protected vendor options/credentials. The profile can reconcile its container, but does not commission an inverter or generate those credentials. The example uses an existing managed service.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/messaging-radio.yaml).
+
+```yaml
+apps:
+  telemetry:
+    profile: winet
+    guest: telemetry
+    lifecycle: retained
+```
+
+### Practical complete example
+
+Use app `telemetry` in [examples/catalogue/messaging-radio.yaml](../../../examples/catalogue/messaging-radio.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/messaging-radio.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
+
 ## Interfaces
 
 | Role | Required in profile | Accepted binding scopes |
@@ -31,7 +58,7 @@ Private options are supplied by the selected options role and validated against 
 | `broker` | Yes | `guest-interface` |
 | `inverter` | Yes | `guest-interface` |
 
-A physical role binds `{interface: NIC_ID}`; loopback and app-network use explicit scopes. Roles name requirements, not additional NICs. See [Multiple interfaces](../../guides/multiple-interfaces.md).
+Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role names an application requirement; it does not create another NIC. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
 ## Listeners and endpoints
 
@@ -39,13 +66,9 @@ No listener is declared by this profile.
 
 No endpoint is advertised.
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
-
 ## Storage
 
 No app storage role is declared. Generated private runtime files retain their separate owned paths.
-
-Bind roles to explicit guest volumes/subpaths or supported root data paths. Retained data is verified, not chowned or relocated. An initializer applies only to a newly created leaf beneath a proved provider volume, never an existing directory.
 
 ## Connections, accounts and private inputs
 
@@ -68,6 +91,15 @@ Secrets remain outside Git. File/environment references are metadata. Private ro
 | --- | --- | --- |
 | mqtt_prefix | Required string | 1..128 characters: initial letter/digit followed by letters/digits/slash/underscore/hyphen. |
 
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Omit the protected options role | Refuses the selected private input. |
+| Use a non-443/non-HTTPS inverter or malformed discovery prefix | Refuses the finite endpoint/property contract. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+
 ## Software and resource policy
 
 Software selections: `docker`, `curl`, `winet-images`. Runtime selections: `container-host`, `winet`.
@@ -82,10 +114,14 @@ Software selections: `docker`, `curl`, `winet-images`. Runtime selections: `cont
 
 These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
-## Check and update
+## Later deployments
+
+Reconciles the same service against its existing inverter/options owner and broker relationship. It does not reconfigure the physical inverter, replace vendor credentials or commission another device. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

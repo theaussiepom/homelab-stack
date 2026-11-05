@@ -13,7 +13,6 @@ Provide the CloudBeaver database UI behind its owned OIDC gateway. Users can ent
 | Site selection | `apps.<instance>.profile: cloudbeaver` |
 | Adapter | `cloudbeaver` |
 | Owned containers | `cloudbeaver`, `auth_gateway` |
-| Fresh / update | Fresh workspace creation and owned repeats have source/helper tests. Retained workspaces must have the genuine matching owner receipt; foreign/nonempty data is not adopted. External identity/database availability is a separate prerequisite. |
 | Multiple instances | Namespace-aware helper tests cover independent instances. Distinct project, services, private network, published address/port, storage, runtime and custody directories are required. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -22,7 +21,39 @@ The complete reusable declaration is [cloudbeaver.yaml](../../../apps/cloudbeave
 
 ## Application requirements
 
-Only the OIDC gateway is published; the Community service remains private. Authentication is required through the named cloudbeaver-oidc policy, including its client-secret source and canonical HTTPS app origin. At least one metadata or managed datasource is selected. Managed PostgreSQL administration is SUPERUSER; managed MariaDB administration is global ALL with GRANT. Dedicated create-once accounts are deliberate privileges, never inferred. Saved managed datasource passwords are plaintext at rest in the private workspace.
+The profile marks `public` optional, but a usable current packet requires its explicit HTTPS connection and canonical origin: the owned sign-in health check uses both. Profile structural optionality does not waive that packet/health requirement.
+
+Only the OIDC gateway is published; the Community service remains private. Authentication is required through the named cloudbeaver-oidc policy, including its client-secret source and canonical HTTPS app origin. At least one managed datasource is required by the current canonical-account binder. Unmanaged metadata may be added alongside it; an unmanaged-only selection currently refuses. Managed PostgreSQL administration is SUPERUSER; managed MariaDB administration is global ALL with GRANT. Dedicated create-once accounts are deliberate privileges, never inferred. Saved managed datasource passwords are plaintext at rest in the private workspace.
+
+## First installation
+
+Can create an empty owned workspace beneath a declared provider volume. A configured OIDC provider/client and at least one explicitly managed database-administration connection are prerequisites; this does not create the identity provider or import a foreign workspace.
+
+Complete creation-policy source: [examples/catalogue/new-database-guis.yaml](../../../examples/catalogue/new-database-guis.yaml), app `cloud`. It must pass both resolution and packet generation; it is not proof of a deployed service.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/database-guis.yaml).
+
+```yaml
+apps:
+  cloud:
+    profile: cloudbeaver
+    guest: cloud
+    lifecycle: retained
+```
+
+### Practical complete example
+
+Use app `cloud` in [examples/catalogue/database-guis.yaml](../../../examples/catalogue/database-guis.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/database-guis.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
 
 ## Interfaces
 
@@ -47,7 +78,7 @@ A physical role binds `{interface: NIC_ID}`; loopback and app-network use explic
 | --- | --- | --- |
 | `web` | `http` | `web` via `web` |
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
+Wildcard binding remains inside the declared app network. Only explicit publications map a socket onto the guest. Endpoints do not grant traffic or add readiness waits.
 
 ## Storage
 
@@ -86,6 +117,15 @@ Secrets remain outside Git. File/environment references are metadata. Private ro
 | connections | Required mapping | 1..24 metadata records keyed by a selected connection role; each has name (nonempty <=100) and database (<=128, may be empty). `sslmode` is required only for unmanaged PostgreSQL and must be `disable`, `prefer` or `require`; it is forbidden for managed PostgreSQL and all MariaDB connections. Managed transport is enforced by the selected account contract. |
 | mariadb_jdbc | Variant-owned conditional capability | The MariaDB-admin variant pins version, SHA-256 and compatibility filename. Do not introduce a site-owned driver version. |
 
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Keep only unmanaged metadata connections | Current canonical-account binder refuses the empty managed set; at least one managed connection is required. |
+| Omit public connection or origin, or give sslmode to a managed connection | Packet/health or property validation refuses. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+
 ## Software and resource policy
 
 Software selections: `docker`, `curl`, `cloudbeaver-images`. Runtime selections: `container-host`, `cloudbeaver`.
@@ -108,10 +148,14 @@ The OIDC gateway validates issuer, audience, signature/JWKS, nonce, PKCE and ver
 
 Managed connections write a private native datasource file in the owned workspace. Passwords are plaintext at rest and shared by the authorized selected users. They do not enter Git, the application environment or normal logs. The mode does not invoke recovery/bootstrap or replace unrelated user connections. PostgreSQL SUPERUSER includes server-file/program powers; treat that deliberate privilege separately from metadata-only connection entries.
 
-## Check and update
+## Later deployments
+
+Maintains the owned workspace, gateway and dedicated selected SQL account records. Existing user connections and workspace identity remain protected; changing public connection metadata does not rotate their saved material. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

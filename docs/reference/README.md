@@ -36,3 +36,5 @@ Choose a profile by its supported lifecycle and requirements, not only its produ
 - [Examples](../examples/README.md): complete maintained sources and their tested boundaries.
 
 The library index is [stack.json](../../stack.json); image versions/policies are [images.json](../../images.json). There is no implicit guest set or unselected dependency.
+
+Maintainers: use the [profile documentation template](../templates/application-profile.md) and [contributor workflow](../contributing.md). Every registered profile has a concrete, tested [complete composition](../../examples/catalogue/README.md).

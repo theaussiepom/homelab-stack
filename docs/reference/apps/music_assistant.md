@@ -13,7 +13,6 @@ Run an existing Music Assistant installation without resetting its provider/acco
 | Site selection | `apps.<instance>.profile: music_assistant` |
 | Adapter | `music_assistant` |
 | Owned containers | `music_assistant` |
-| Fresh / update | Fresh commissioning refuses. The helper verifies retained settings before startup. A floating-image update retains its protected pre-upgrade data copy and resolved-image record. |
 | Multiple instances | Fixed host player/web sockets prevent an identical co-located instance; use another guest. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -22,7 +21,37 @@ The complete reusable declaration is [music_assistant.yaml](../../../apps/music_
 
 ## Application requirements
 
+The `public` role is optional in profile metadata, but current packet generation requires its explicit HTTPS connection and canonical origin for the owned route check. The connection source must be the physical web role. Independent selection therefore still needs the declared ingress relationship.
+
 Player/web addresses derive from the selected web role. The existing helper checks settings through the selected data root before startup; it does not reset streaming providers. The declared latest image policy is intentional and remains distinct from digest-pinned profiles.
+
+## First installation
+
+Brand-new Music Assistant commissioning is not implemented by this retained profile. The example requires an already HomeLab-managed installation and its valid existing settings/data.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/music.yaml).
+
+```yaml
+apps:
+  music:
+    profile: music_assistant
+    guest: media
+    lifecycle: retained
+```
+
+### Practical complete example
+
+Use app `music` in [examples/catalogue/music.yaml](../../../examples/catalogue/music.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/music.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
 
 ## Interfaces
 
@@ -62,13 +91,20 @@ Bind roles to explicit guest volumes/subpaths or supported root data paths. Reta
 
 The readiness column lists permitted choices, **not an automatic dependency**. The site selects `readiness` on the connection explicitly. Value links alone do not wait or grant traffic. See [Connect apps](../../guides/connect-apps.md).
 
-No direct `app.secrets` role is declared; selected authentication, account or connection capabilities may have their own private inputs.
-
-Secrets remain outside Git. File/environment references are metadata. Private role material cannot rotate implicitly during an ordinary update.
+No direct app secret role is declared.
 
 ## Application properties
 
 No application property keys are accepted for this adapter. Unknown keys refuse; there is no command/environment/mount override bag.
+
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Omit explicit public HTTPS connection or canonical origin | Real packet health generation refuses. |
+| Bind the HTTPS source to a different address than the web role | Refuses the source-address requirement. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
 
 ## Software and resource policy
 
@@ -84,10 +120,14 @@ Software selections: `docker`, `curl`, `music_assistant-images`. Runtime selecti
 
 These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
-## Check and update
+## Later deployments
+
+Maintains the existing settings/data and verifies the core listener, stream listener and selected HTTPS route. It does not commission providers, replace authentication or repair vendor state. This profile requires `lifecycle: retained`: it updates an already HomeLab-managed instance and refuses creation or import.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

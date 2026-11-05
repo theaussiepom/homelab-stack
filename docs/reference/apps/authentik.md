@@ -13,7 +13,6 @@ Run the identity application, worker and dedicated Redis together. PostgreSQL re
 | Site selection | `apps.<instance>.profile: authentik` |
 | Adapter | `authentik` |
 | Owned containers | `server`, `worker`, `redis` |
-| Fresh / update | Existing database, storage and private material must be supplied and owned. Source/render support does not claim provider/application bootstrap or user migration. |
 | Multiple instances | Supporting server/worker/Redis belong to one app. Same-guest independent identity installations are not qualified by this page. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -23,6 +22,34 @@ The complete reusable declaration is [authentik.yaml](../../../apps/authentik.ya
 ## Application requirements
 
 secret_key and postgresql_password are required distinct private roles. smtp_password is conditional on SMTP configuration. Redis is supporting infrastructure owned by this app, not a mandatory separately placed app.
+
+## First installation
+
+Container configuration is available with a prepared PostgreSQL database/user and supplied application keys. Administrator onboarding, users, providers and client registrations are not created by this profile. The complete example maintains an already configured installation; source compilation is not target onboarding verification.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/identity-monitoring.yaml).
+
+```yaml
+apps:
+  identity:
+    profile: authentik
+    guest: identity
+    lifecycle: retained
+```
+
+### Practical complete example
+
+Use app `identity` in [examples/catalogue/identity-monitoring.yaml](../../../examples/catalogue/identity-monitoring.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/identity-monitoring.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
 
 ## Interfaces
 
@@ -46,7 +73,7 @@ A physical role binds `{interface: NIC_ID}`; loopback and app-network use explic
 | --- | --- | --- |
 | `web` | `http` | `web` via `web` |
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
+Wildcard binding remains inside the declared app network. Only explicit publications map a socket onto the guest. Endpoints do not grant traffic or add readiness waits.
 
 ## Storage
 
@@ -84,6 +111,15 @@ Secrets remain outside Git. File/environment references are metadata. Private ro
 | smtp | Optional mapping | host, port (1..65535), use_tls, use_ssl, from and username; username may be empty. TLS/SSL cannot both be true. Optional timeout:1..300 seconds. |
 | callbacks | Optional mapping | evidence references the ongoing identity-callback document; it is not a provider creation request. |
 
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Omit secret_key or postgresql_password | Refuses the required selected roles. |
+| Bind database to a non-PostgreSQL/incorrect-port endpoint | Refuses the database binding. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+
 ## Software and resource policy
 
 Software selections: `docker`, `curl`, `authentik-images`. Runtime selections: `container-host`, `authentik`.
@@ -102,10 +138,14 @@ Software selections: `docker`, `curl`, `authentik-images`. Runtime selections: `
 
 These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
-## Check and update
+## Later deployments
+
+Reconciles the owned server, worker and dedicated Redis configuration while preserving the PostgreSQL data and selected application keys. Existing users/provider/client registrations are not rebuilt from the profile. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

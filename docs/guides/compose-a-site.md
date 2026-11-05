@@ -12,7 +12,7 @@ A profile is a reusable declaration in this library's `apps/`. A site's `apps` e
 
 ## 2. Give each guest its facts
 
-A complete guest chooses context, template, lifecycle, persistent VMID/hostname, template file, root storage, named NICs and control interface. Optional resource/startup/security fields inherit from the [template](../reference/templates.md). Declare extra volumes or supported root-filesystem data paths explicitly.
+A complete guest chooses context, template, lifecycle, persistent VMID/hostname, template file, root storage, named NICs and control interface. `fresh` permits supported creation if absent and remains valid for later owned updates; `retained` requires an already managed guest and refuses creation. App lifecycle is selected independently, so a supported fresh app may be added to an owned guest with free identity, capacity and storage. Neither policy imports foreign data. Optional resource/startup/security fields inherit from the [template](../reference/templates.md). Declare extra volumes or supported root-filesystem data paths explicitly.
 
 The [alternate HA guest](../../examples/second/guests/home-app.yaml) is a complete example. It needs more memory than the base default because the HA reservation and OS reserve must fit. Its named `apps` volume is not an app profile or a command to import existing data.
 
@@ -73,3 +73,5 @@ With the tutorial environment:
 ```
 
 Compilation checks the combined identities, budgets, listeners, storage and graph. It is stronger than validating each app separately, but still source-only. For an installed site, preserve current receipts/state/private material and use its own generated protected workflow. [Images and updates](images-and-updates.md) explains the update boundary.
+
+For a missing reusable profile, follow [Contributing](../contributing.md) and its [profile documentation template](../templates/application-profile.md). Do not invent private configuration engines or publish untested fragments as complete sites.

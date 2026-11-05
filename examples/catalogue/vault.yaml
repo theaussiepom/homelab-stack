@@ -1,0 +1,340 @@
+# Complete SYNTHETIC source-only composition. Retained entries require an already owned installation.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+    timezone: Etc/UTC
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  vault:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 860
+      hostname: example-vault
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:3c
+        address:
+          mode: static
+          value: 198.18.20.60
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/vault
+    compose_projects:
+      vault:
+        name: example-vault
+        file: compose-vault.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_vault_in
+    - policy: connect_vault_public
+    - policy: connect_vault_database
+  ingress:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 1000
+      hostname: example-ingress
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:c8
+        address:
+          mode: static
+          value: 198.18.20.200
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/ingress
+    compose_projects:
+      ingress:
+        name: example-ingress
+        file: compose-ingress.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_vault
+    - policy: connect_vault_public_incoming
+apps:
+  vault:
+    profile: bitwarden
+    guest: vault
+    lifecycle: retained
+    interfaces:
+      web:
+        interface: primary
+      database:
+        interface: primary
+      private:
+        scope: app-network
+        network: default
+    storage:
+      data:
+        root_path: data
+        subpath: vault/data
+      logs:
+        root_path: data
+        subpath: vault/logs
+    identity:
+      phase: vault
+      runtime_id: example-vault
+      services:
+        bitwarden: vault_bitwarden
+      networks:
+        default: default
+      project: vault
+    secrets:
+      runtime_environment: vault_runtime_environment
+    origin:
+      exposure: vault
+    properties:
+      issuer:
+        protocol: https
+        domain: vault
+      database_name: example_vault
+      data_uid: 1000
+      data_gid: 1000
+  ingress:
+    profile: traefik
+    guest: ingress
+    lifecycle: retained
+    interfaces:
+      frontend:
+        interface: primary
+      management:
+        interface: primary
+    storage:
+      certs:
+        root_path: data
+        subpath: ingress/certs
+    identity:
+      phase: ingress
+      runtime_id: example-ingress
+      services:
+        traefik: ingress_traefik
+      networks: {}
+      runtime_directory: /opt/homelab-app/runtime/ingress
+      project: ingress
+    properties:
+      provider:
+        context: lab
+        token_id: example@pve!reader
+      acme:
+        email: admin@example.invalid
+        resolvers:
+        - external: resolver
+    secrets:
+      cloudflare_dns_token: ingress_cloudflare_dns_token
+      proxmox_token: ingress_proxmox_token
+domains:
+  vault: vault.example.invalid
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+  vault_database:
+    protocol: tcp
+    address: 198.18.21.61
+    port: 3306
+identity_providers: {}
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+  vault_runtime_environment:
+    type: file
+    path: /run/example/vault_runtime_environment
+  ingress_cloudflare_dns_token:
+    type: file
+    path: /run/example/ingress_cloudflare_dns_token
+  ingress_proxmox_token:
+    type: file
+    path: /run/example/ingress_proxmox_token
+accounts: {}
+devices: {}
+evidence: {}
+connections:
+  vault_public:
+    consumer:
+      app: vault
+      connection: public
+    target:
+      app: ingress
+      endpoint: https
+    source_interface: web
+    hostname:
+      domain: vault
+  vault_database:
+    consumer:
+      app: vault
+      connection: database
+    target:
+      external: vault_database
+    source_interface: database
+exposures:
+  vault:
+    type: http
+    endpoint:
+      app: vault
+      endpoint: web
+    domain: vault
+    ingress:
+      app: ingress
+      endpoint: https
+    tls: public
+images: {}
+host_aliases: {}
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+    ingress_vault:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.60/32
+        port: '8080'
+        comment: Selected vault route backend
+    ingress_vault_in:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.200/32
+        port: '8080'
+        comment: Selected vault ingress
+    connect_vault_public:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.200/32
+        port: '443'
+        comment: Selected vault_public relationship
+    connect_vault_public_incoming:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.60/32
+        port: '443'
+        comment: Selected vault_public client
+    connect_vault_database:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.21.61/32
+        port: '3306'
+        comment: Selected vault_database relationship
+  transport: {}
+  tls:
+    public:
+      type: acme
+      resolver: letsencrypt
+  middlewares: {}
+  authentication: {}

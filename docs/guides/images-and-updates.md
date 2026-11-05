@@ -34,7 +34,7 @@ Changing an image digest may cause container recreation and interruption. Changi
 
 ## Preserve ownership
 
-Stable app/project/service/network identities, NIC slots/MACs, writable storage and credential owners remain bound. A display label does not rename them. A fresh flag cannot adopt existing state. Retained updates require genuine current canonical/immutable receipts, matching backend, source ancestry and sealed private role material.
+Stable app/project/service/network identities, NIC slots/MACs, writable storage and credential owners remain bound. A display label does not rename them. The fresh creation policy cannot adopt foreign state and stays unchanged for later owned deployments. Both fresh-policy and retained-policy updates require current ownership, matching backend/source ancestry and protected material continuity. Retained refuses creation.
 
 Ordinary source changes cannot implicitly rotate or remove a sealed credential role, even if a source ID is renamed. Existing managed credentials are create-once and collisions refuse. Active or pending HOLDs are not released by a new commit. Preserve evidence and follow the owning site's reviewed failure procedure rather than issuing a local helper, manual retry or broad chown.
 

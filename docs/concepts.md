@@ -32,3 +32,11 @@ An interface role is an app requirement, such as `web` or `broker`. It points at
 Templates supply defaults; explicit guest fields replace the corresponding defaults. There is no arbitrary recursive overlay language. Runtime requirements can raise the effective OS reserve, and all selected workload budgets must fit.
 
 Display names are labels. Stable app IDs, service/project/network names, NIC slots/MACs, storage sources, runtime/custody paths and credential owners control persistent resources. Reorganizing YAML does not rename them. Read [templates](reference/templates.md) and [updates](guides/images-and-updates.md) before changing them.
+
+## First installation and later deployments
+
+`fresh` means the supported resource may be created if it is absent, and later ordinary deployments update that same managed instance. Keep `fresh` unchanged after installation; it is not a per-run toggle.
+
+`retained` requires an instance that already exists and is HomeLab-managed. It refuses creation and does not import a foreign installation. Both policies can update an owned instance, subject to the selected profile's actual lifecycle support. Some profiles have no creation path. See each profile's **First installation** and **Later deployments** sections rather than assuming that a syntactically accepted lifecycle commissions every application.
+
+Guest and app policies are separate. An already owned guest can host a supported new app with a free identity, budget and storage binding; this does not change its existing peers' data ownership. [Compose a site](guides/compose-a-site.md) shows the declarations.

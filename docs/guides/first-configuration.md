@@ -11,7 +11,7 @@ Start a Bash-compatible shell in the root of a clean library Git checkout at the
 ```sh
 STACK="$(pwd -P)"
 STACK_REVISION="$(git rev-parse HEAD)"
-FRAMEWORK_REVISION=93f22ea190110d1952ac6d05c7db4a4df44073c4
+FRAMEWORK_REVISION=e168b25019dc4ceff0f48821925c8c519f2d63c5
 WORK_ROOT="$(mktemp -d)"
 WORK_ROOT="$(cd "$WORK_ROOT" && pwd -P)"
 FRAMEWORK="$WORK_ROOT/homelab"

@@ -13,7 +13,6 @@ Start an independent Home Assistant using the declared official public image and
 | Site selection | `apps.<instance>.profile: homeassistant-public` |
 | Adapter | `homeassistant` |
 | Owned containers | `homeassistant` |
-| Fresh / update | Fresh source, directory creation, caller and onboarding-probe paths are tested. This is not a claim of a completed native first install. Retained repeats preserve the owned config. |
 | Multiple instances | Fixed host TCP 8123; put another instance on another guest. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -23,6 +22,36 @@ The complete reusable declaration is [homeassistant-public.yaml](../../../apps/h
 ## Application requirements
 
 The config initializer is create-only beneath a proven provider volume with a nonempty app subpath. It does not chown an existing tree or adopt an unowned directory. Optional integrations do not make Node-RED, databases, MQTT, identity or ingress mandatory.
+
+## First installation
+
+Can create a new configuration directory beneath the declared provider volume and start the public image. Home Assistant onboarding and household integrations are separate user setup, not supplied configuration.
+
+Complete creation-policy source: [examples/catalogue/new-automation.yaml](../../../examples/catalogue/new-automation.yaml), app `homeassistant`. It must pass both resolution and packet generation; it is not proof of a deployed service.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/new-automation.yaml).
+
+```yaml
+apps:
+  homeassistant:
+    profile: homeassistant-public
+    guest: homeassistant-public
+    lifecycle: fresh
+```
+
+### Practical complete example
+
+Use app `homeassistant` in [examples/catalogue/new-automation.yaml](../../../examples/catalogue/new-automation.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/new-automation.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
 
 ## Interfaces
 
@@ -34,7 +63,7 @@ The config initializer is create-only beneath a proven provider volume with a no
 | `metrics` | No; selected capability can require it | `guest-interface` |
 | `broker` | No; selected capability can require it | `guest-interface` |
 
-A physical role binds `{interface: NIC_ID}`; loopback and app-network use explicit scopes. Roles name requirements, not additional NICs. See [Multiple interfaces](../../guides/multiple-interfaces.md).
+Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role names an application requirement; it does not create another NIC. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
 ## Listeners and endpoints
 
@@ -69,15 +98,22 @@ Bind roles to explicit guest volumes/subpaths or supported root data paths. Reta
 
 The readiness column lists permitted choices, **not an automatic dependency**. The site selects `readiness` on the connection explicitly. Value links alone do not wait or grant traffic. See [Connect apps](../../guides/connect-apps.md).
 
-No direct `app.secrets` role is declared; selected authentication, account or connection capabilities may have their own private inputs.
-
-Secrets remain outside Git. File/environment references are metadata. Private role material cannot rotate implicitly during an ordinary update.
+No direct app secret role is declared.
 
 ## Application properties
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
 | mdns | Optional mapping | interface and startup are declared role IDs. Retained only; select homeassistant-mdns runtime, a physical Home role and read-only /startup binding. No NET_ADMIN in the base runtime. |
+
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Use a pre-existing foreign configuration directory as fresh initialization | Refuses instead of adopting/chowning it. |
+| Add the retained mDNS/NET_ADMIN startup capability without its declared support | Refuses the capability/security contract. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
 
 ## Software and resource policy
 
@@ -93,10 +129,14 @@ Software selections: `docker`, `curl`, `homeassistant-public-images`. Runtime se
 
 These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
-## Check and update
+## Later deployments
+
+Updates the same instance with its existing configuration directory. The initializer does not run again against existing data; household/onboarding choices remain in that owned configuration. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

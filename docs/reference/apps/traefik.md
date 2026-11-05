@@ -13,7 +13,6 @@ Provide the selected HTTP/HTTPS ingress with its declared provider, ACME, trust 
 | Site selection | `apps.<instance>.profile: traefik` |
 | Adapter | `traefik` |
 | Owned containers | `traefik` |
-| Fresh / update | The current runtime binder requires explicit provider and ACME capabilities and their inputs. Source/rendering is not certificate issuance, provider permission or externally verified TLS. |
 | Multiple instances | Listener address/port ownership must be distinct. An arbitrary second same-guest ingress is not qualified here. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -24,6 +23,34 @@ The complete reusable declaration is [traefik.yaml](../../../apps/traefik.yaml).
 
 Although secret roles and properties are structurally conditional, the current supported runtime binds both provider and ACME and requires their proxmox_token/cloudflare_dns_token roles. No Docker socket, arbitrary provider or raw route file override is exposed.
 
+## First installation
+
+Requires its certificate workspace, existing provider reader and DNS API credentials. The profile does not create a Proxmox token, discovery owner, DNS zone or account. The practical example maintains owned ingress; those first-use prerequisites are separate from container creation.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/edge-management.yaml).
+
+```yaml
+apps:
+  edge:
+    profile: traefik
+    guest: edge
+    lifecycle: retained
+```
+
+### Practical complete example
+
+Use app `edge` in [examples/catalogue/edge-management.yaml](../../../examples/catalogue/edge-management.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/edge-management.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
+
 ## Interfaces
 
 | Role | Required in profile | Accepted binding scopes |
@@ -33,7 +60,7 @@ Although secret roles and properties are structurally conditional, the current s
 | `backend` | No; selected capability can require it | `guest-interface` |
 | `metrics` | No; selected capability can require it | `guest-interface` |
 
-A physical role binds `{interface: NIC_ID}`; loopback and app-network use explicit scopes. Roles name requirements, not additional NICs. See [Multiple interfaces](../../guides/multiple-interfaces.md).
+Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role names an application requirement; it does not create another NIC. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
 ## Listeners and endpoints
 
@@ -48,7 +75,7 @@ A physical role binds `{interface: NIC_ID}`; loopback and app-network use explic
 | `https` | `https` | `https` via `frontend` |
 | `dashboard` | `internal` | `dashboard` (requires selected internal capability) |
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
+Listeners bind their declared interface or namespace. An endpoint advertises a value; it does not grant traffic or add a readiness wait.
 
 ## Storage
 
@@ -81,6 +108,15 @@ Secrets remain outside Git. File/environment references are metadata. Private ro
 | provider | Required by current runtime | context and token_id select the existing HTTPS provider. Optional discovery has local_directory, mirror_directory, owner_sha256 and guests; its existing writer ownership guards remain. |
 | acme | Required by current runtime | email and1..3 named DNS endpoint refs. Optional propagation_timeout_seconds:120..2100. The selected existing DNS credential role is required. |
 
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Omit current provider/ACME inputs or their secret roles | Refuses the current adapter floor despite optional profile flags. |
+| Expose dashboard without the required authentication middleware | Refuses the dashboard exposure. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+
 ## Software and resource policy
 
 Software selections: `docker`, `curl`, `traefik-images`, `network-tools`. Runtime selections: `container-host`, `traefik`.
@@ -95,10 +131,14 @@ Software selections: `docker`, `curl`, `traefik-images`, `network-tools`. Runtim
 
 These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
-## Check and update
+## Later deployments
+
+Regenerates the selected static/route inputs and reconciles the owned ingress service. Certificate data, provider reader identity and selected private material stay protected; exposure changes do not provision a new DNS zone or API account. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

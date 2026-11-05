@@ -13,7 +13,6 @@ Run the monitoring server and web frontend. Root Zabbix selection owns the gener
 | Site selection | `apps.<instance>.profile: zabbix` |
 | Adapter | `zabbix` |
 | Owned containers | `zabbix_server`, `zabbix_web` |
-| Fresh / update | The root feature retains its create-once monitoring owner/credential records and native provider checks. Source/fixture checks do not establish native server enrollment or an authenticated login. |
 | Multiple instances | Select one root monitoring server explicitly when several exist. Independent same-guest server installations are not qualified here. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -23,6 +22,34 @@ The complete reusable declaration is [zabbix.yaml](../../../apps/zabbix.yaml). S
 ## Application requirements
 
 Select root zabbix to activate the existing generated monitoring credential owner. database_password is structurally optional in the profile; the current ordinary caller uses monitoring-owned material and refuses an arbitrary supplied scalar. SAML is optional through the named policy. Local web8081 is the bounded setup path, not a second user-facing exposure.
+
+## First installation
+
+The current ordinary deployment path requires explicit root monitoring, its already configured provider/credential owner and a selected owned PostgreSQL app. The example uses this path; an outside-root password is structurally accepted but does not satisfy the ordinary materializer. Root monitoring does not by itself commission a new fleet or prove schema readiness/administrator login.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/identity-monitoring.yaml).
+
+```yaml
+apps:
+  monitoring:
+    profile: zabbix
+    guest: monitoring
+    lifecycle: retained
+```
+
+### Practical complete example
+
+Use app `monitoring` in [examples/catalogue/identity-monitoring.yaml](../../../examples/catalogue/identity-monitoring.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/identity-monitoring.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
 
 ## Interfaces
 
@@ -50,13 +77,11 @@ A physical role binds `{interface: NIC_ID}`; loopback and app-network use explic
 | `web` | `http` | `web` via `web` |
 | `server` | `tcp` | `server` via `server` |
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
+Wildcard binding remains inside the declared app network. Only explicit publications map a socket onto the guest. Endpoints do not grant traffic or add readiness waits.
 
 ## Storage
 
 No app storage role is declared. Generated private runtime files retain their separate owned paths.
-
-Bind roles to explicit guest volumes/subpaths or supported root data paths. Retained data is verified, not chowned or relocated. An initializer applies only to a newly created leaf beneath a proved provider volume, never an existing directory.
 
 ## Connections, accounts and private inputs
 
@@ -83,6 +108,15 @@ Secrets remain outside Git. File/environment references are metadata. Private ro
 | --- | --- | --- |
 | database | Required mapping | name and user use [a-z][a-z0-9_]{0,62}, excluding postgres/template0/template1. |
 
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Select root monitoring and also supply database_password | Refuses duplicate credential ownership. |
+| Bind database to the wrong protocol/port | Refuses the PostgreSQL binding. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+
 ## Software and resource policy
 
 Software selections: `docker`, `curl`, `zabbix-images`. Runtime selections: `container-host`, `zabbix`.
@@ -99,10 +133,14 @@ Software selections: `docker`, `curl`, `zabbix-images`. Runtime selections: `con
 
 These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
-## Check and update
+## Later deployments
+
+Maintains the selected root server, member inventory and ordinary agent configuration while preserving existing monitoring credential/PSK identities and history. Root selection is an explicit monitoring capability, not an instruction to rebuild a fleet. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

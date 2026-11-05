@@ -13,7 +13,6 @@ Run an existing Node-RED installation with its explicit custom archive, settings
 | Site selection | `apps.<instance>.profile: node_red` |
 | Adapter | `node_red` |
 | Owned containers | `node_red` |
-| Fresh / update | Retained path requires all four data/config/settings/healthcheck bindings and the selected OIDC policy, even where a role is structurally optional. It is not the public-image first-install path. |
 | Multiple instances | Fixed host TCP 1880; use separate guests for independent instances. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -23,6 +22,34 @@ The complete reusable declaration is [node_red.yaml](../../../apps/node_red.yaml
 ## Application requirements
 
 The optional settings and healthcheck roles become mandatory in retained mode. The node-red-retained-oidc policy is required. Existing custom nodes, flows, secrets and strategy are neither installed nor migrated implicitly. api_token is optional until the selected API capability requires it.
+
+## First installation
+
+Not implemented by this retained profile: it cannot create a brand-new public Node-RED setup or its existing OIDC strategy/settings. Choose [node_red-public](node_red-public.md) for the supported new public-image path.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/existing-automation.yaml).
+
+```yaml
+apps:
+  node_red:
+    profile: node_red
+    guest: node-red
+    lifecycle: retained
+```
+
+### Practical complete example
+
+Use app `node_red` in [examples/catalogue/existing-automation.yaml](../../../examples/catalogue/existing-automation.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/existing-automation.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
 
 ## Interfaces
 
@@ -76,6 +103,15 @@ Secrets remain outside Git. File/environment references are metadata. Private ro
 
 No application property keys are accepted for this adapter. Unknown keys refuse; there is no command/environment/mount override bag.
 
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Use lifecycle fresh with the retained OIDC selection | Refuses the incompatible fresh runtime. |
+| Omit settings or healthcheck storage on a retained app | Refuses the exact retained wrapper storage contract. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+
 ## Software and resource policy
 
 Software selections: `docker`, `curl`, `node_red-images`. Runtime selections: `container-host`, `node_red`.
@@ -90,10 +126,14 @@ Software selections: `docker`, `curl`, `node_red-images`. Runtime selections: `c
 
 These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
-## Check and update
+## Later deployments
+
+Maintains the same managed instance, keeping its declared service/project identities, storage and selected protected inputs. Review software/default changes against the effective configuration; a source update is not permission for data import, credential replacement or a vendor upgrade. This profile requires `lifecycle: retained`: it updates an already HomeLab-managed instance and refuses creation or import.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

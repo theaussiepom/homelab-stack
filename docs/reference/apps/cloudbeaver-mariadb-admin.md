@@ -13,7 +13,6 @@ Select CloudBeaver with the additional library-owned MariaDB Connector/J capabil
 | Site selection | `apps.<instance>.profile: cloudbeaver-mariadb-admin` |
 | Adapter | `cloudbeaver` |
 | Owned containers | `cloudbeaver`, `auth_gateway` |
-| Fresh / update | Same workspace lifecycle as the generic profile. Managed administration requires an already initialized, running, TLS-enabled database; it does not initialize that database. |
 | Multiple instances | Same namespace rules as CloudBeaver; never share a workspace or account identity between instances. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -22,7 +21,39 @@ The complete reusable declaration is [cloudbeaver-mariadb-admin.yaml](../../../a
 
 ## Application requirements
 
+The profile marks `public` optional, but a usable current packet requires its explicit HTTPS connection and canonical origin: the owned sign-in health check uses both. Profile structural optionality does not waive that packet/health requirement.
+
 This variant makes mariadb-admin mandatory and selects the library-owned Connector/J 3.5.11 replacement. Its compatibility filename targets the pinned image's existing single jar slot; replacement bytes are verified separately. PostgreSQL uses required TLS/SCRAM/channel binding; MariaDB uses PARSEC with verify-full. No manual CA lifecycle is introduced.
+
+## First installation
+
+Can create an empty owned workspace beneath a declared provider volume. A configured OIDC provider/client and the selected owned MariaDB target/account capability are prerequisites. The variant supplies the declared JDBC artifact, not a new version choice.
+
+Complete creation-policy source: [examples/catalogue/new-database-guis.yaml](../../../examples/catalogue/new-database-guis.yaml), app `administration`. It must pass both resolution and packet generation; it is not proof of a deployed service.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/database-guis.yaml).
+
+```yaml
+apps:
+  administration:
+    profile: cloudbeaver-mariadb-admin
+    guest: administration
+    lifecycle: retained
+```
+
+### Practical complete example
+
+Use app `administration` in [examples/catalogue/database-guis.yaml](../../../examples/catalogue/database-guis.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/database-guis.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
 
 ## Interfaces
 
@@ -47,7 +78,7 @@ A physical role binds `{interface: NIC_ID}`; loopback and app-network use explic
 | --- | --- | --- |
 | `web` | `http` | `web` via `web` |
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
+Wildcard binding remains inside the declared app network. Only explicit publications map a socket onto the guest. Endpoints do not grant traffic or add readiness waits.
 
 ## Storage
 
@@ -88,6 +119,15 @@ Secrets remain outside Git. File/environment references are metadata. Private ro
 
 This variant already supplies `mariadb_jdbc`; its exact values belong to the [profile source](../../../apps/cloudbeaver-mariadb-admin.yaml), not another site version declaration.
 
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Omit the managed MariaDB selection | Refuses the variant-owned driver capability contract. |
+| Override the JDBC artifact in site properties or add MariaDB sslmode | Refuses software authority or the connection property contract. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+
 ## Software and resource policy
 
 Software selections: `docker`, `curl`, `cloudbeaver-images`. Runtime selections: `container-host`, `cloudbeaver`.
@@ -110,10 +150,14 @@ The OIDC gateway validates issuer, audience, signature/JWKS, nonce, PKCE and ver
 
 Managed connections write a private native datasource file in the owned workspace. Passwords are plaintext at rest and shared by the authorized selected users. They do not enter Git, the application environment or normal logs. The mode does not invoke recovery/bootstrap or replace unrelated user connections. PostgreSQL SUPERUSER includes server-file/program powers; treat that deliberate privilege separately from metadata-only connection entries.
 
-## Check and update
+## Later deployments
+
+Maintains the owned workspace/gateway and its explicit MariaDB administration capability. The authoritative JDBC selection remains in the library; changing instance labels cannot create a second workspace or credential owner. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

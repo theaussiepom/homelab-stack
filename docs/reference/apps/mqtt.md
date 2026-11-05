@@ -13,7 +13,6 @@ Run the Mosquitto broker using the explicitly bound existing configuration, pers
 | Site selection | `apps.<instance>.profile: mqtt` |
 | Adapter | `mqtt` |
 | Owned containers | `mqtt` |
-| Fresh / update | Bind a valid existing Mosquitto configuration. The adapter does not invent broker config, ACLs or accounts. Explicit managed account creation is a separate selected capability. |
 | Multiple instances | Fixed host MQTT 1883 conflicts with another identical broker on the same guest. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -24,6 +23,34 @@ The complete reusable declaration is [mqtt.yaml](../../../apps/mqtt.yaml). Selec
 
 The profile marks `probe` as optional metadata, but the current MQTT adapter requires it to select an existing controller MQTT probe record through a file secret source. A source without that binding refuses with `component.secret-required`. The record is distinct from GUI, application and identity credentials. Ordinary account changes use the guarded parent-mounted password-file/HUP path and do not recreate peer clients.
 
+## First installation
+
+Requires valid prepared Mosquitto configuration/data directories and the existing controller probe record. The profile does not invent broker configuration, ACLs or arbitrary accounts. The practical example uses an already HomeLab-managed broker.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/messaging-radio.yaml).
+
+```yaml
+apps:
+  broker:
+    profile: mqtt
+    guest: broker
+    lifecycle: retained
+```
+
+### Practical complete example
+
+Use app `broker` in [examples/catalogue/messaging-radio.yaml](../../../examples/catalogue/messaging-radio.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/messaging-radio.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
+
 ## Interfaces
 
 | Role | Required in profile | Accepted binding scopes |
@@ -31,7 +58,7 @@ The profile marks `probe` as optional metadata, but the current MQTT adapter req
 | `backend` | Yes | `guest-interface` |
 | `frontend` | Yes | `guest-interface` |
 
-A physical role binds `{interface: NIC_ID}`; loopback and app-network use explicit scopes. Roles name requirements, not additional NICs. See [Multiple interfaces](../../guides/multiple-interfaces.md).
+Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role names an application requirement; it does not create another NIC. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
 ## Listeners and endpoints
 
@@ -60,8 +87,6 @@ Bind roles to explicit guest volumes/subpaths or supported root data paths. Reta
 
 No connection role is declared.
 
-The readiness column lists permitted choices, **not an automatic dependency**. The site selects `readiness` on the connection explicitly. Value links alone do not wait or grant traffic. See [Connect apps](../../guides/connect-apps.md).
-
 | App secret role | Requirement |
 | --- | --- |
 | `probe` | Required by the current adapter; bind a file secret source |
@@ -73,6 +98,15 @@ Secrets remain outside Git. File/environment references are metadata. Private ro
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
 | password_file | Conditional string | Only /mosquitto/config/<safe-basename>; needed for an explicitly managed MQTT account. Does not create config/ACL implicitly. |
+
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Omit probe or bind it to a non-file secret source | Refuses component.secret-required. |
+| Place another wildcard MQTT1883 listener on the same guest | Refuses conflicting host listeners. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
 
 ## Software and resource policy
 
@@ -88,10 +122,14 @@ Software selections: `docker`, `curl`, `mqtt-images`. Runtime selections: `conta
 
 These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
-## Check and update
+## Later deployments
+
+Reconciles the owned broker configuration/container and probe binding. Existing broker data and credentials stay owned. The guarded password-file/HUP path applies only when the separate managed-account capability is explicitly selected. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).

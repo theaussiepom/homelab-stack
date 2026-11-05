@@ -13,3 +13,7 @@ These are maintained synthetic source inputs, not installed layouts. Complete ex
 Run the first two directly using [First configuration](../guides/first-configuration.md). The local DNS page defines its source files and commands. Reference pages use clearly labelled app/property fragments and link these complete examples; a fragment alone is not a deployable site.
 
 Source tests also exercise unsupported roles, collisions, unselected dependencies and exact inherited/default behavior. Profile-specific retained data/auth/hardware paths require their stated consumer facts; this index does not claim every listed app has a fresh commissioning tutorial.
+
+## Every profile, including variants
+
+The [complete profile-composition index](../../examples/catalogue/README.md) maps all 21 registered selections to a canonical YAML file and app ID. Those sources are tested through real resolution and packet generation. They show specific dependencies and retained prerequisites; independent selection does not mean dependency-free installation.

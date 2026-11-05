@@ -13,7 +13,6 @@ Run PegaProx with the explicitly selected database key and owned data/config/log
 | Site selection | `apps.<instance>.profile: pegaprox` |
 | Adapter | `pegaprox` |
 | Owned containers | `pegaprox` |
-| Fresh / update | Existing key/data ownership is required. Declaring root-filesystem data paths does not create a volume, adopt a directory or reset the database. |
 | Multiple instances | Distinct publications, runtime/key leaves and writable paths are required; no broad duplicate-instance claim is made. |
 
 The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
@@ -23,6 +22,34 @@ The complete reusable declaration is [pegaprox.yaml](../../../apps/pegaprox.yaml
 ## Application requirements
 
 The selected runtime requires at least 512 MiB OS reserve. The effective guest reserve is max(guest reserve, selected runtime requirement); it is placement policy, not measured load. The management endpoint address retains the private/benchmark-only floor.
+
+## First installation
+
+Requires prepared data/config/logs, its existing database key and completed administrator setup. The profile does not create a new application administrator or adopt an unrelated manager. The practical example maintains an already HomeLab-managed instance.
+
+## Minimal usage
+
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/edge-management.yaml).
+
+```yaml
+apps:
+  manager:
+    profile: pegaprox
+    guest: manager
+    lifecycle: retained
+```
+
+### Practical complete example
+
+Use app `manager` in [examples/catalogue/edge-management.yaml](../../../examples/catalogue/edge-management.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+
+After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
+
+```sh
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/edge-management.yaml" --check
+```
+
+Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
 
 ## Interfaces
 
@@ -43,7 +70,7 @@ A physical role binds `{interface: NIC_ID}`; loopback and app-network use explic
 | --- | --- | --- |
 | `web` | `http` | `web` via `web` |
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
+Wildcard binding remains inside the declared app network. Only explicit publications map a socket onto the guest. Endpoints do not grant traffic or add readiness waits.
 
 ## Storage
 
@@ -58,8 +85,6 @@ Bind roles to explicit guest volumes/subpaths or supported root data paths. Reta
 
 No connection role is declared.
 
-The readiness column lists permitted choices, **not an automatic dependency**. The site selects `readiness` on the connection explicitly. Value links alone do not wait or grant traffic. See [Connect apps](../../guides/connect-apps.md).
-
 | App secret role | Requirement |
 | --- | --- |
 | `database_key` | Required |
@@ -71,6 +96,15 @@ Secrets remain outside Git. File/environment references are metadata. Private ro
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
 | trusted_proxy | Required mapping | {app,interface} selecting a physical interface of the named Traefik app. It must be a distinct private address, not a hostname or arbitrary trust range. |
+
+## Invalid cases
+
+| Invalid change | Intended result |
+| --- | --- |
+| Use a public/loopback/link-local management listener | Refuses the existing private management-address floor. |
+| Name an arbitrary address as trusted_proxy | Refuses; select the actual Traefik physical role. |
+
+The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
 
 ## Software and resource policy
 
@@ -86,10 +120,14 @@ Software selections: `docker`, `pegaprox-images`. Runtime selections: `container
 
 These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
-## Check and update
+## Later deployments
+
+Maintains the configured manager using the same data, config, logs and database key. Existing administrator/setup state stays protected; changing a trusted-proxy binding does not initialize a new manager. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+
+### Check and update
 
 Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/93f22ea190110d1952ac6d05c7db4a4df44073c4/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/proxmox/applications/component_runtime.py).
