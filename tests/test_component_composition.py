@@ -13,6 +13,7 @@ sys.path[:0] = [str(FRAMEWORK / 'blueprints'), str(FRAMEWORK / 'proxmox/applicat
 import component_lower
 import component_plan
 import component_sources
+from component_errors import ComponentError
 import render
 sys.path[:0] = [str(ROOT / 'tests'), str(ROOT)]
 
@@ -32,6 +33,29 @@ class ComponentCompositionTests(unittest.TestCase):
 
     def starter(self):
         return component_sources.site(ROOT / 'site.example.yaml')[0]
+
+    def test_pegaprox_api_binding_checks_egress_without_configuring_cluster_or_scheduling(self):
+        value = component_sources.site(ROOT / 'examples/catalogue/edge-management.yaml')[0]
+        selected = self.plan(value)
+        absent = copy.deepcopy(value)
+        absent['connections'].pop('manager_provider')
+        omitted = self.plan(absent)
+        self.assertEqual(selected.resolved['apps']['manager']['resolved_connections']['proxmox']['target']['port'], 8006)
+        self.assertEqual(omitted.resolved['apps']['manager']['resolved_connections'], {})
+        self.assertEqual(selected.resolved['guest_dependencies'], omitted.resolved['guest_dependencies'])
+        self.assertEqual(render.compositions(component_lower.runtime_config(selected, 'manager')),
+                         render.compositions(component_lower.runtime_config(omitted, 'manager')))
+        for change in ('missing-rule', 'wrong-api-port'):
+            with self.subTest(change=change):
+                broken = copy.deepcopy(value)
+                if change == 'missing-rule':
+                    broken['guests']['manager']['network_policy'] = [
+                        row for row in broken['guests']['manager']['network_policy']
+                        if row['policy'] != 'provider_api']
+                else:
+                    broken['policies']['network']['provider_api']['rules'][0]['port'] = '8443'
+                with self.assertRaisesRegex(ComponentError, 'component.traffic-egress'):
+                    self.plan(broken)
 
     def test_typed_example_sources_and_inline_bodies_resolve_to_the_same_composition(self):
         for name in ('site.example.yaml', 'examples/site.second.yaml'):

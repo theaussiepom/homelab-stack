@@ -83,7 +83,16 @@ Bind roles to explicit guest volumes/subpaths or supported root data paths. Reta
 
 ## Connections, accounts and private inputs
 
-No connection role is declared.
+| Connection role | Required | Type | Meaning |
+| --- | --- | --- | --- |
+| `proxmox` | No | `https` | Selected hypervisor API; bind its endpoint and source interface explicitly. |
+
+The complete example binds `manager_provider` to the existing external Proxmox
+endpoint through the app's `web` interface and admits its API port in the guest
+policy. The connection makes source traffic validation check that dependency;
+it does not configure a retained PegaProx cluster or add a readiness/deployment
+dependency. A site with no configured cluster can omit this role. Do not open
+SSH, console or other ports just because an API connection is selected.
 
 | App secret role | Requirement |
 | --- | --- |
@@ -103,6 +112,7 @@ Secrets remain outside Git. File/environment references are metadata. Private ro
 | --- | --- |
 | Use a public/loopback/link-local management listener | Refuses the existing private management-address floor. |
 | Name an arbitrary address as trusted_proxy | Refuses; select the actual Traefik physical role. |
+| Select a hypervisor connection without the corresponding outbound API policy | Refuses traffic validation. |
 
 The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
 

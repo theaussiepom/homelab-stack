@@ -218,6 +218,7 @@ class ProfileDefinitionTests(unittest.TestCase):
 
     def test_pegaprox_declares_rootfs_compatible_data_and_omits_unneeded_curl(self):
         value = self.profile('pegaprox')
+        self.assertEqual(value['connections'], {'proxmox': {'type': 'https', 'required': False}})
         self.assertEqual({row['target'] for row in value['storage'].values()}, {'/app/config', '/app/logs'})
         self.assertNotIn('curl', value['software'])
         self.assertTrue(value['secrets']['database_key']['required'])

@@ -39,7 +39,10 @@ storage:
     read_only: false
     required: true
     kind: directory
-connections: {}
+connections:
+  proxmox:
+    type: https
+    required: false
 software:
 - docker
 - pegaprox-images

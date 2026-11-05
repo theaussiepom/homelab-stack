@@ -113,6 +113,10 @@ guests:
     - policy: downloads
       address_groups:
         internet: internet
+    - policy: provider_api
+      endpoints:
+        provider:
+          external: proxmox
 apps:
   edge:
     profile: traefik
@@ -212,7 +216,14 @@ secret_sources:
 accounts: {}
 devices: {}
 evidence: {}
-connections: {}
+connections:
+  manager_provider:
+    consumer:
+      app: manager
+      connection: proxmox
+    target:
+      external: proxmox
+    source_interface: web
 exposures: {}
 images: {}
 host_aliases: {}
@@ -222,6 +233,15 @@ address_groups:
     - 0.0.0.0/0
 policies:
   network:
+    provider_api:
+      rules:
+      - direction: out
+        proto: tcp
+        destination:
+          endpoint: provider
+        port:
+          endpoint: provider
+        comment: Selected hypervisor API
     deployment:
       rules:
       - direction: in
