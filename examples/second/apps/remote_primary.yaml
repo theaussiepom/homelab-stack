@@ -1,0 +1,12 @@
+schema: homelab-components-v1
+kind: app
+profile: unbound
+guest: resolver-west
+lifecycle: fresh
+interfaces:
+  service:
+    scope: guest-loopback
+  private:
+    scope: app-network
+    network: default
+display_name: Remote DNS

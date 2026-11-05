@@ -9,11 +9,6 @@
     "tag": null,
     "digest": "sha256:dc07e81b4462a1dad9c6720f4c73993e37d7cb2d2f94a306187318704d112e71"
   },
-  "pgadmin": {
-    "repository": "dpage/pgadmin4",
-    "tag": null,
-    "digest": "sha256:cefc4cc6b7d9d71a9e81e76fb9d7e14038ab5661b539a190eea1b63fa612589a"
-  },
   "traefik": {
     "repository": "traefik",
     "tag": null,
@@ -36,8 +31,8 @@
   },
   "bitwarden": {
     "repository": "ghcr.io/bitwarden/lite",
-    "tag": "latest",
-    "digest": null
+    "tag": null,
+    "digest": "sha256:94484fe9382df51ad755151ea360663e922e60a32385500454dd1f38045bf6a6"
   },
   "pegaprox": {
     "repository": "ghcr.io/pegaprox/pegaprox",

@@ -12,6 +12,13 @@ instance's retained image or data.
 | `node_red` | Retained archive | Explicit retained settings, palette and authentication |
 | `node_red-public` | Official public image | Standard `/data`; no retained settings wrapper |
 
+Bitwarden selects its current official image through the immutable digest in
+`images.json`. The catalogue owns the version; a profile selection, instance label
+or source-file reorganization does not select a newer release. Its existing
+runtime environment, installation identity, credentials and data remain separate
+bindings. HA and Node-RED's current custom archives remain explicit software
+artifacts; an official public variant does not replace those image bytes.
+
 A new HA instance selects `homeassistant-public`, its guest and web interface,
 and a config storage binding. Node-RED, recorder, MQTT, InfluxDB, Authentik and
 ingress are separate selections. The mDNS helper additionally requires its

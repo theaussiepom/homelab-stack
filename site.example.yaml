@@ -69,56 +69,30 @@ policies:
       - direction: out
         proto: tcp
         port: 80,443
-        destination: 0.0.0.0/0
+        destination:
+          address_group: internet
         comment: Package and image downloads
     recursive_dns:
       rules:
       - direction: out
         proto: udp
         port: '53'
-        destination: 0.0.0.0/0
+        destination:
+          address_group: internet
         comment: Recursive DNS
       - direction: out
         proto: tcp
         port: '53'
-        destination: 0.0.0.0/0
+        destination:
+          address_group: internet
         comment: Recursive DNS
 guests:
   resolver:
-    context: lab
-    template: base
-    lifecycle: fresh
-    identity:
-      vmid: 610
-      hostname: example-resolver
-    template_file_id: example:vztmpl/debian.tar.zst
-    root_storage: local
-    interfaces:
-      primary:
-        network: services
-        slot: 0
-        mac: 02:00:00:20:00:10
-        address:
-          mode: static
-          value: 198.18.20.10
-        default_route: true
-        ipv6: manual
-    network_policy:
-    - policy: deployment
-      endpoints:
-        runner:
-          external: runner
-    - downloads
-    - recursive_dns
-    control_interface: primary
+    source: examples/minimal/guests/resolver.yaml
 apps:
   recursive_dns:
-    profile: unbound
-    guest: resolver
-    lifecycle: fresh
-    interfaces:
-      service:
-        scope: guest-loopback
-      private:
-        scope: app-network
-        network: default
+    source: examples/minimal/apps/recursive_dns.yaml
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0

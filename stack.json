@@ -487,26 +487,26 @@
   },
   "policies": {
     "network": {
-      "declared_backend_mqtt_client": {
-        "source": "policies/network/declared_backend_mqtt_client.yaml"
+      "mqtt_backend_ingress": {
+        "source": "policies/network/mqtt_backend_ingress.yaml"
       },
-      "declared_http_route_backend_v2": {
-        "source": "policies/network/declared_http_route_backend_v2.yaml"
+      "http_backend_egress": {
+        "source": "policies/network/http_backend_egress.yaml"
       },
-      "existing_internal_dns": {
-        "source": "policies/network/existing_internal_dns.yaml"
+      "resolver_dns_udp_first": {
+        "source": "policies/network/resolver_dns_udp_first.yaml"
       },
-      "packages_selected_upstream_image_and_provider_https": {
-        "source": "policies/network/packages_selected_upstream_image_and_provider_https.yaml"
+      "source_bound_package_image_provider_web_egress": {
+        "source": "policies/network/source_bound_package_image_provider_web_egress.yaml"
       },
-      "selected_internal_dns_only": {
-        "source": "policies/network/selected_internal_dns_only.yaml"
+      "resolver_dns_tcp_first": {
+        "source": "policies/network/resolver_dns_tcp_first.yaml"
       },
-      "signed_package_downloads": {
-        "source": "policies/network/signed_package_downloads.yaml"
+      "package_repository_web_egress": {
+        "source": "policies/network/package_repository_web_egress.yaml"
       },
-      "signed_packages_pinned_images_provider_and_https": {
-        "source": "policies/network/signed_packages_pinned_images_provider_and_https.yaml"
+      "package_image_provider_web_egress": {
+        "source": "policies/network/package_image_provider_web_egress.yaml"
       }
     }
   },

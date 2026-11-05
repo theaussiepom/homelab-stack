@@ -10,9 +10,9 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 FRAMEWORK = Path(os.environ.get('HOMELAB_FRAMEWORK', ROOT.parent / 'homelab')).resolve()
 sys.path[:0] = [str(FRAMEWORK / 'blueprints'), str(FRAMEWORK / 'proxmox/applications')]
-import authored_config
 import component_lower
 import component_plan
+import component_sources
 import render
 sys.path[:0] = [str(ROOT / 'tests'), str(ROOT)]
 
@@ -30,7 +30,60 @@ class ComponentCompositionTests(unittest.TestCase):
     def compose(self, value, guest='resolver'):
         return render.compositions(component_lower.runtime_config(self.plan(value), guest))
 
-    def test_main_starter_selects_only_one_unbound_and_no_historical_evidence(self):
+    def starter(self):
+        return component_sources.site(ROOT / 'site.example.yaml')[0]
+
+    def test_typed_example_sources_and_inline_bodies_resolve_to_the_same_composition(self):
+        for name in ('site.example.yaml', 'examples/site.second.yaml'):
+            with self.subTest(site=name):
+                path = ROOT / name
+                plan = component_plan.resolve(ROOT, path)
+                inline, sources = component_sources.site(path)
+                other = self.plan(inline)
+                self.assertEqual(plan.resolved, other.resolved)
+                self.assertEqual(plan.pins['site'], sources.pins)
+                self.assertNotEqual(plan.pins['site'], other.pins['site'])
+                self.assertEqual(len(sources.pins), 1 + len(inline['guests']) + len(inline['apps']))
+                for guest in inline['guests']:
+                    self.assertEqual(render.compositions(component_lower.runtime_config(plan, guest)),
+                                     render.compositions(component_lower.runtime_config(other, guest)))
+
+    def test_shared_address_group_replaces_only_the_repeated_literal_destinations(self):
+        grouped = self.starter()
+        literal = copy.deepcopy(grouped)
+        del literal['address_groups']
+        for name in ('downloads', 'recursive_dns'):
+            for row in literal['policies']['network'][name]['rules']:
+                self.assertEqual(row['destination'], {'address_group': 'internet'})
+                row['destination'] = '0.0.0.0/0'
+        for selected in literal['guests']['resolver']['network_policy']:
+            if selected['policy'] in ('downloads', 'recursive_dns'):
+                self.assertEqual(selected.pop('address_groups'), {'internet': 'internet'})
+        grouped_plan, literal_plan = self.plan(grouped), self.plan(literal)
+        resolved = copy.deepcopy(grouped_plan.resolved)
+        self.assertEqual(resolved.pop('address_groups'), {'internet': ['0.0.0.0/0']})
+        for selected in resolved['guests']['resolver']['network_policy']:
+            if selected['policy'] in ('downloads', 'recursive_dns'):
+                self.assertEqual(selected.pop('address_groups'), {'internet': 'internet'})
+        self.assertEqual(resolved, literal_plan.resolved)
+        self.assertEqual(self.compose(grouped), self.compose(literal))
+
+    def test_group_composition_preserves_explicit_duplicates_and_requires_the_selected_binding(self):
+        source = self.starter()
+        source['address_groups']['test_targets'] = {
+            'members': [{'network': 'services'}, '192.0.2.53', {'network': 'services'}]}
+        source['address_groups']['internet'] = {'members': [{'address_group': 'test_targets'}]}
+        plan = self.plan(source)
+        rows = plan.resolved['guests']['resolver']['rules']
+        downloads = [row for row in rows if row['comment'] == 'Package and image downloads']
+        self.assertEqual([row['destination'] for row in downloads],
+                         ['198.18.20.0/24', '192.0.2.53', '198.18.20.0/24'])
+        self.assertEqual(plan.resolved['guest_dependencies']['resolver'], [])
+        del source['guests']['resolver']['network_policy'][1]['address_groups']
+        with self.assertRaises(ValueError):
+            self.plan(source)
+
+    def test_main_starter_selects_only_one_independent_unbound(self):
         plan = component_plan.resolve(ROOT, ROOT / 'site.example.yaml')
         self.assertEqual(set(plan.resolved['guests']), {'resolver'})
         self.assertEqual(set(plan.resolved['apps']), {'recursive_dns'})
@@ -48,14 +101,14 @@ class ComponentCompositionTests(unittest.TestCase):
         self.assertNotIn('network_mode', service)
 
     def test_unbound_loopback_binding_succeeds_and_physical_nic_binding_refuses(self):
-        source = authored_config.read(ROOT / 'site.example.yaml')
+        source = self.starter()
         app = self.plan(source).resolved['apps']['recursive_dns']
         self.assertEqual(app['listeners']['dns_tcp']['publication_address'], '127.0.0.1')
         source['apps']['recursive_dns']['interfaces']['service'] = {'interface': 'primary'}
         with self.assertRaises(ValueError): self.plan(source)
 
     def test_repeated_profile_has_distinct_runtime_and_publication_with_cosmetic_labels(self):
-        source = authored_config.read(ROOT / 'site.example.yaml')
+        source = self.starter()
         source['apps']['backup'] = copy.deepcopy(source['apps']['recursive_dns'])
         source['apps']['backup']['properties'] = {'publish_port': 5336}
         plan = self.plan(source)
@@ -95,7 +148,7 @@ class ComponentCompositionTests(unittest.TestCase):
         self.assertEqual(home['pull_policy'], 'missing')
 
     def pihole(self):
-        source = authored_config.read(ROOT / 'site.example.yaml')
+        source = self.starter()
         source['contexts']['lab']['timezone'] = 'Etc/UTC'
         guest = source['guests']['resolver']
         guest.update(lifecycle='retained', compose_projects={'shared': {'name': 'homelab-dns', 'file': 'compose.yml'}},
@@ -138,7 +191,7 @@ class ComponentCompositionTests(unittest.TestCase):
         for name, mode in selected.values():
             self.assertIn('/srv/homelab/data/unbound/' + name + ':/opt/unbound/etc/unbound/' + name + ':' + mode,
                           document['services']['unbound']['volumes'])
-        fresh = authored_config.read(ROOT / 'site.example.yaml')
+        fresh = self.starter()
         fresh['guests']['resolver']['root_paths'] = {'state': {'path': '/srv/example/unbound'}}
         fresh['apps']['recursive_dns']['storage'] = {'dev': {'root_path': 'state', 'subpath': 'dev'}}
         with self.assertRaises(ValueError): self.compose(fresh)

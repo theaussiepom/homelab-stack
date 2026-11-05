@@ -61,8 +61,7 @@ The selected mode does not invoke recovery/admin bootstrap or place database
 passwords in Git, container environment or application logs. Authorized users
 share the selected administration connections.
 
-Retained transitions require the exact old owned runtime identity and preserve
-its data. Fresh instances do not require a retired pgAdmin image. Existing
-workspace, credential and receipt drift is refused rather than silently adopted.
-Use [adoption checks](adoption.md) before a retained update; record actual browser,
+Existing instances preserve their owned runtime identity and workspace data.
+Current workspace, credential and receipt drift is refused rather than silently adopted.
+Use [update checks](adoption.md) before a retained update; record actual browser,
 SQL, TLS and grant acceptance after authorized deployment.

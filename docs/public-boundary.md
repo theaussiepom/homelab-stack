@@ -19,6 +19,6 @@ select official images for supported fresh paths. There is no silent registry
 fallback, policy override or image substitution. See [image options](public-images.md).
 
 The shared selected-framework boundary checker is mandatory. Source publication
-and a public-source merge do not authorize native changes. Actual adoption uses
-the consuming site's protected CD and its existing evidence, trust, state and
-review gates; service acceptance is recorded separately.
+and a public-source merge do not authorize native changes. Deployments use the
+consuming site's protected CD and its current ownership, trust, state and review
+gates; service acceptance is recorded separately.

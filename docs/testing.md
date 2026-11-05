@@ -34,6 +34,12 @@ Use the actual compiler, lowerer and renderer for focused integration cases:
   dependency selections refuse.
 - Workflow generation uses the actual site, one job per guest, app-only step
   labels and the existing explicit secret subsets.
+- Typed guest/app source splits resolve like their complete inline bodies.
+  File pins change with the source layout; provider/runtime values and the graph
+  remain equal. Mutating a referenced app must still fail the generated selector's
+  source-model check.
+- Named address groups retain ordered membership, duplicates and explicit policy
+  bindings. Fragment renames preserve rule objects, comments and expansion order.
 
 Compile/render is integration. End-to-end means an authorized CD followed by
 verification of the deployed service. An image fixture, parsed plan, green CI or

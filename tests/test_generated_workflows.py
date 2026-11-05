@@ -162,6 +162,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
             root = Path(directory).resolve(); copy_library(root / 'stack-source')
             (root / 'framework-source').symlink_to(FRAMEWORK, target_is_directory=True)
             shutil.copyfile(ROOT / 'site.example.yaml', root / 'site.yaml')
+            shutil.copytree(ROOT / 'examples/minimal', root / 'examples/minimal')
             def execute(disabled):
                 return subprocess.run(['sh', '-eu', '-c', step['run']], cwd=root,
                     env=dict(os.environ, DISABLED=disabled, EXPECTED_MODEL=step['env']['EXPECTED_MODEL'],
@@ -173,9 +174,10 @@ class GeneratedWorkflowTests(unittest.TestCase):
                 with self.subTest(disabled=disabled):
                     result = execute(disabled)
                     self.assertEqual(result.returncode == 0, accepted, result.stderr)
-            value = yaml.safe_load((root / 'site.yaml').read_text())
-            value['apps']['recursive_dns']['display_name'] = 'Changed component label'
-            (root / 'site.yaml').write_text(yaml.safe_dump(value, sort_keys=False))
+            app = root / 'examples/minimal/apps/recursive_dns.yaml'
+            value = yaml.safe_load(app.read_text())
+            value['display_name'] = 'Changed component label'
+            app.write_text(yaml.safe_dump(value, sort_keys=False))
             result = execute('[]')
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('Regenerate', result.stderr)

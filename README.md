@@ -18,11 +18,17 @@ application steps inside it.
 - `assets/` contains digest-checked, byte-preserved public vendor material.
 - `site.example.yaml` is a small synthetic standalone Unbound starter.
 - `examples/site.second.yaml` uses different placement and repeated instances.
+- Each example references complete typed guest and app-instance documents.
+  Their paths are relative to that example's site file directory.
 
 Examples use reserved addresses and example identities. They demonstrate source
-contracts; they do not commission a context or supply native acceptance evidence.
-Real allocations, trust, secrets, image archives and admission records belong to
-the consuming site.
+contracts; deployed-service acceptance is verified separately. Real allocations,
+trust, secrets, image archives and current state records belong to the consuming
+site.
+
+Sites can share named, ordered address groups across explicitly selected network
+policies and allow-list middleware. Groups preserve membership and order; they
+do not select a policy or create access. See [composition](docs/composition.md).
 
 ## Independent applications
 
@@ -79,13 +85,13 @@ isolation. Existing policy rows retain their order and comments.
 ## Fresh and retained state
 
 `lifecycle: fresh` permits creation of an absent owned resource through the normal
-pipeline. It does not adopt an existing resource or fabricate commissioning
-proof. An unsupported initialization path refuses explicitly.
+pipeline. Existing resources require verified current ownership. An unsupported
+initialization path refuses explicitly.
 
 `lifecycle: retained` preserves exact guest, runtime, mount, data-owner and
-credential identities. Display names are cosmetic. Typed admission references
-select the original immutable evidence; raw custody strings preserve their exact
-bytes and newlines. Existing holds, trust and failure rules remain enforced.
+credential identities. Display names are cosmetic. Current canonical and
+immutable receipts, state ancestry, locks and unresolved HOLDs remain the ordinary
+update authority. Historical records remain unchanged.
 
 Storage bindings distinguish additional provider volumes from declared root
 filesystem data paths. Neither declaration invents observed ownership, relocates
@@ -118,8 +124,9 @@ The generic `phase.yml` contains the sole immutable framework selection. A
 consumer's immutable `HOMELAB_STACK_SOURCE` locator selects this library checkout;
 it does not select the starter's guest graph. The framework generates the actual
 consumer graph from its site, including selected app steps, dependency edges and
-explicit secret subsets. Default `disabled: []` selects the composition; required
-dependencies and immutable custody closure still apply to disabled selections.
+explicit secret subsets. Default `disabled: []` selects the composition. Required
+dependencies remain explicit; disabling a guest does not repair unresolved state
+or grant another writer ownership.
 
 Source qualification includes distinct layouts, standalone and repeated apps,
 fresh/update contracts, generated workflows, exact desired-state preservation,

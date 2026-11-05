@@ -1,4 +1,4 @@
-# Adopt a selected composition
+# Update a selected composition
 
 Source qualification and deployed-service acceptance are separate. Select exact
 published framework and library revisions, then generate from the consuming
@@ -11,10 +11,11 @@ Compose project filenames and per-app service names. Cosmetic labels do not
 rename state. Root filesystem data declarations do not create provider volumes or
 authorize ownership changes.
 
-Bind genuine admission evidence through the selected framework's closed evidence
-contract. Keep raw proof text, hashes, group membership, holds and ordinary receipt
-lineage intact. See [custody](coordinated-custody.md) and [secrets](secrets.md).
-Synthetic examples supply neither native acceptance nor a commissioning waiver.
+Use the existing current component receipts and matching state for an ordinary
+update. Preserve canonical and immutable completions, source ancestry, private
+material continuity, locks and unresolved HOLDs. Historical records remain intact;
+source reorganization does not adopt a foreign resource or reset its history.
+See [secrets and data](secrets.md). Synthetic examples supply no target acceptance.
 
 Run the [source checks](testing.md), required hosted checks and actual current
 source review. The consuming site's protected CD still requires its normal trust,

@@ -90,6 +90,12 @@ class ProfileDefinitionTests(unittest.TestCase):
         self.assertEqual(value['storage']['data']['target'], '/etc/bitwarden')
         self.assertTrue(value['connections']['database']['required'])
         self.assertTrue(value['secrets']['runtime_environment']['required'])
+        self.assertEqual(value.get('properties', {}), {})
+        self.assertEqual(self.library['software']['bitwarden-images'],
+                         {'images': {'bitwarden': 'bitwarden'}})
+        self.assertEqual(json.loads((ROOT / 'images.json').read_text())['bitwarden'], {
+            'repository': 'ghcr.io/bitwarden/lite', 'tag': None,
+            'digest': 'sha256:94484fe9382df51ad755151ea360663e922e60a32385500454dd1f38045bf6a6'})
 
     def test_cloudbeaver_helpers_and_database_roles_do_not_require_identity_readiness(self):
         value = self.profile('cloudbeaver')
@@ -249,6 +255,12 @@ class SharedDefinitionTests(unittest.TestCase):
         self.assertFalse({'guests', 'default_enabled', 'required_site_bindings'} & set(self.library))
         self.assertEqual(set(self.library['guest_templates']), {'base', 'docker'})
 
+    def test_image_catalogue_has_only_current_named_software_owners(self):
+        images = json.loads((ROOT / 'images.json').read_text())
+        referenced = {image for software in self.library['software'].values()
+                      for image in software.get('images', {}).values()}
+        self.assertEqual(set(images), referenced)
+
     def test_templates_explicit_reserve_and_common_docker_packages(self):
         for name, value in self.library['guest_templates'].items():
             with self.subTest(template=name):
@@ -287,8 +299,21 @@ class SharedDefinitionTests(unittest.TestCase):
 
     def test_network_fragments_are_optional_definitions_not_a_site_access_default(self):
         rows = self.library['policies']['network']
-        self.assertEqual(len(rows), 7)
+        self.assertEqual(set(rows), {'mqtt_backend_ingress', 'http_backend_egress',
+            'resolver_dns_udp_first', 'resolver_dns_tcp_first', 'package_repository_web_egress',
+            'package_image_provider_web_egress', 'source_bound_package_image_provider_web_egress'})
         self.assertEqual(sum(len(v['rules']) for v in rows.values()), 13)
+        for name, protocols in (('resolver_dns_udp_first', ['udp', 'tcp', 'udp', 'tcp']),
+                                ('resolver_dns_tcp_first', ['tcp', 'udp', 'tcp', 'udp'])):
+            rules = rows[name]['rules']
+            self.assertEqual([row['proto'] for row in rules], protocols)
+            self.assertEqual([row['destination'] for row in rules],
+                [{'endpoint': 'primary_dns'}] * 2 + [{'endpoint': 'fallback_dns'}] * 2)
+        self.assertEqual(rows['mqtt_backend_ingress']['rules'][0]['direction'], 'in')
+        self.assertEqual(rows['http_backend_egress']['rules'][0]['direction'], 'out')
+        bound = rows['source_bound_package_image_provider_web_egress']['rules'][0]
+        self.assertEqual(bound['source'], {'interface': 'source'})
+        self.assertEqual(bound['interface'], 'kernel')
         for template in self.library['guest_templates'].values():
             self.assertNotIn('network_policy', template)
 
