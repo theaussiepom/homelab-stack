@@ -25,7 +25,7 @@ Start with a small source-only result, then look up the profile and binding you 
 - [Software and runtime](reference/software-and-runtime.md): package/image roles, security, budgets, health, monitoring and optional policy fragments.
 - [Complete examples](examples/README.md): maintained source files and what they test.
 
-The [framework configuration guide](https://github.com/theaussiepom/homelab/blob/e168b25019dc4ceff0f48821925c8c519f2d63c5/docs/reference/README.md) owns the language and deployment API. Library pages explain which of those capabilities each profile selects.
+The [framework configuration guide](https://github.com/theaussiepom/homelab/blob/692c87d23a5238d38cbe92b19d71f3d9e5b5797c/docs/reference/README.md) owns the language and deployment API. Library pages explain which of those capabilities each profile selects.
 
 ## Maintain and contribute
 
