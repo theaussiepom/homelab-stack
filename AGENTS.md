@@ -16,4 +16,5 @@
   application steps.
 - Remove obsolete definitions, tests and references after replacement proof.
   Preserve all existing quality gates.
-- Read docs/composition.md for use and extension; docs/testing.md for checks.
+- Read docs/README.md for guides/reference and docs/testing.md for checks.
+- Keep profile docs, maintained examples and tests aligned with public contracts.

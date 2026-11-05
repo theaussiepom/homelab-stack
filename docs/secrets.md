@@ -32,8 +32,8 @@ Managed MQTT/DB accounts have separate explicit owners and credential identities
 Their protected create-once record is reused unchanged; collision, drift and
 foreign ownership refuse. Explorer's saved profile and CloudBeaver's managed
 native datasource contain plaintext passwords at rest and remain private. No
-encryption-at-rest guarantee is claimed. See [Explorer](mqtt-explorer.md) and
-[database administration](database-tools.md#connections-and-dedicated-administration).
+encryption-at-rest guarantee is claimed. See [Explorer](reference/apps/mqtt_explorer.md) and
+[database administration](reference/apps/cloudbeaver.md#application-requirements).
 
 Application data, private archives, HA/Node-RED credentials, Zigbee network keys,
 radio backups and historical commissioning records remain consumer-owned. The

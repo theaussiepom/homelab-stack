@@ -1,85 +1,73 @@
-# Test component definitions and compositions
+# Test the library
 
-Keep tests at their owning boundary. Repeating a shared validator's entire
-negative matrix through every application makes failures harder to interpret.
+[Documentation index](README.md) · [Contributing](contributing.md)
 
-## Unit tests
+Use the clean selected source checkouts and isolated Python environment from [First configuration](guides/first-configuration.md). That page defines STACK, FRAMEWORK, WORK_ROOT and PYTHON. Commands below work from that same shell; no target/Docker operation is required for the library source suite.
 
-- Framework component contracts test their own success and invalid-input cases.
-  Filesystem, secret, ownership, transport and lifecycle guards belong there.
-- Application units test their own bindings, requirements and behavior, mocking
-  shared component helpers. Exercise app-specific failures without retesting the
-  resource or image parser for every app.
-- Guest units mock application components and test placement, aggregation,
-  explicit interfaces, budgets, identity and selected dependencies.
-- Library definition tests check registration, references, declared roles and
-  software/policy selections. Mock framework component contracts where that is
-  the unit boundary; the library must not implement another validator.
+## Test the owning boundary
 
-Each component needs successful compilation coverage and meaningful refusals.
-Unsupported inputs must fail explicitly; a test must not change just to hide an
-implementation failure. Keep useful regressions when replacing their old caller.
+- Framework component units own type/default/reference/path/ownership/transport failure matrices.
+- App units mock conforming shared contracts and test app-specific capability/binding behavior.
+- Guest units mock app results and test placement, aggregation, budgets, identities and selected dependencies.
+- Library units check registration, profile requirements and manifest choices without implementing another validator.
+- Focused compiler integration exercises actual supported components and distinct/repeated app compositions.
+- End-to-end means authorized CD followed by actual deployed service verification. Compile/render, mocked native calls and image startup fixtures are different evidence.
 
-## Real composition integration
+Preserve useful current guards when porting an obsolete test. Establish whether a failure is a product defect or an old fixture assumption before changing it.
 
-Use the actual compiler, lowerer and renderer for focused integration cases:
-
-- The retained composition preserves current resource, runtime, data, credential
-  and evidence identities.
-- A materially different layout changes placement and app selection, not only
-  addresses.
-- Standalone apps omit unselected integrations. Repeated profiles have distinct
-  runtime, listener and storage ownership.
-- Real conflicts, missing required bindings, unsupported overrides and invalid
-  dependency selections refuse.
-- Workflow generation uses the actual site, one job per guest, app-only step
-  labels and the existing explicit secret subsets.
-- Typed guest/app source splits resolve like their complete inline bodies.
-  File pins change with the source layout; provider/runtime values and the graph
-  remain equal. Mutating a referenced app must still fail the generated selector's
-  source-model check.
-- Named address groups retain ordered membership, duplicates and explicit policy
-  bindings. Fragment renames preserve rule objects, comments and expansion order.
-
-Compile/render is integration. End-to-end means an authorized CD followed by
-verification of the deployed service. An image fixture, parsed plan, green CI or
-generated graph does not establish native acceptance.
-
-## Run source checks
-
-Use the selected framework and its locked requirements. The source workflow runs
-these checks; keep that workflow authoritative as interfaces change:
+## Run source and example checks
 
 ```sh
-python3 "$FRAMEWORK/tools/check_boundaries.py" --mode stack --root .
-python3 "$FRAMEWORK/blueprints/compile.py" --stack . --site site.example.yaml --check
-python3 "$FRAMEWORK/blueprints/compile.py" --stack . --site examples/site.second.yaml --check
-python3 "$FRAMEWORK/blueprints/workflows.py" --stack . --site site.example.yaml --check
-HOMELAB_FRAMEWORK="$FRAMEWORK" python3 -m unittest discover -s tests
+"$PYTHON" "$FRAMEWORK/tools/check_boundaries.py" --mode stack --root "$STACK"
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK"   --site "$STACK/site.example.yaml" --check
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK"   --site "$STACK/examples/site.second.yaml" --check
+"$PYTHON" "$FRAMEWORK/blueprints/workflows.py" --stack "$STACK"   --site "$STACK/site.example.yaml" --check
 ```
 
-For direct unittest/security runs, set `GITLEAKS_BIN` to the verified Gitleaks
-8.30.1 executable and require zero skips. The coverage runner resolves the same
-scanner from that variable, `hooks.gitleaksPath` or `PATH`.
+Expect zero boundary findings and unchanged generated workflows. The [example index](examples/README.md) identifies complete maintained sources; fragments are labelled and backed by actual complete cases where supported.
 
-Run the required coverage gate as well; plain unittest success does not replace
-per-file line and branch coverage:
+## Install the verified scanner
+
+The source workflow uses the selected framework's pinned scanner installer. This downloads a verified development tool into the disposable workspace, not onto a guest:
 
 ```sh
-STACK_TEST_OUTPUT="$(mktemp -d)"
-python3 "$FRAMEWORK/tools/measure_coverage.py" --suite stack --stack . \
-  --fail-under 100 --output "$STACK_TEST_OUTPUT"
+SCANNER_ROOT="$WORK_ROOT/source-tools"
+"$PYTHON" "$FRAMEWORK/.github/scripts/install_gitleaks.py" "$SCANNER_ROOT"
+GITLEAKS_BIN="$SCANNER_ROOT/gitleaks"
+export GITLEAKS_BIN
+"$GITLEAKS_BIN" version
 ```
 
-History, signatures, source boundaries, security, dependency checks and current
-source review remain required. A scanner exception needs its existing narrow
-justification and exact source binding; do not relax a gate for a bootstrap.
+Require the selected installer/version and zero security-test skips. Direct tests and hooks use GITLEAKS_BIN; the coverage runner can also resolve the configured hooks.gitleaksPath or PATH. Do not treat a skipped scanner as a passing security check.
 
-## Retire a replacement's old path
+## Run tests and per-file coverage
 
-Record its current callers and replacement, prove the new integration, then
-remove obsolete definitions, tests, scaffolding and references. Do not keep a
-dead guest bundle or duplicate validator solely to make old tests pass. Preserve
-required records, immutable history and regressions that still protect the
-current contract. Any public compatibility path needs a concrete caller or
-supported contract justification.
+The output directory must be **new and nonexistent**. mktemp creates only its parent:
+
+```sh
+COVERAGE_PARENT="$(mktemp -d)"
+COVERAGE_PARENT="$(cd "$COVERAGE_PARENT" && pwd -P)"
+COVERAGE_OUTPUT="$COVERAGE_PARENT/stack-coverage"
+HOMELAB_FRAMEWORK="$FRAMEWORK" GITLEAKS_BIN="$GITLEAKS_BIN"   "$PYTHON" "$FRAMEWORK/tools/measure_coverage.py" --suite stack --stack "$STACK"   --fail-under 100 --output "$COVERAGE_OUTPUT"
+```
+
+Expect passing current tests with no skipped security cases and100% executable lines/branches for **each** production Python file in the stack scope. Read summary.json/summary.md in the new output directory. Reports are local private artifacts, not public uploads. Plain unittest success does not replace coverage.
+
+For focused definition work, after the scanner is available:
+
+```sh
+HOMELAB_FRAMEWORK="$FRAMEWORK" GITLEAKS_BIN="$GITLEAKS_BIN"   "$PYTHON" -m unittest discover -s "$STACK/tests" -p test_component_definitions.py
+```
+
+## Preserve the complete gates
+
+```sh
+"$PYTHON" "$STACK/.github/scripts/check_history.py" --root "$STACK"   --framework "$FRAMEWORK" --scanner "$GITLEAKS_BIN"
+git -C "$STACK" diff --check
+```
+
+Use complete Git history. Normal staged/push hooks, trusted signature verification, workflow lint, security/dependency checks and genuine current source reviews remain required. The [source workflow](../.github/workflows/validate-stack.yml) is authoritative for the actual selected setup and gates; do not hand-patch generated files or thresholds.
+
+Composition integration covers standalone Unbound, HA without unselected integrations, different placement, repeated instances, fresh/retained ownership, explicit readiness and source splits/groups. It checks identity, data/credential references, policy order and generated jobs. Native lifecycle/hardware/protocol acceptance remains at its separately qualified boundary.
+
+After a replacement qualifies, inventory callers and retire obsolete definitions/tests/scaffolding and duplicate guidance. Keep immutable history and current regressions; a compatibility branch needs a concrete supported caller. Documentation changes move examples and tests together and do not authorize target actions.

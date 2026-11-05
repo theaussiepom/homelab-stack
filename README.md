@@ -1,134 +1,36 @@
-# HomeLab stack
+# HomeLab application library
 
-This library describes independent applications and reusable guest templates.
-A consuming site chooses instances, placement, interfaces, storage and policy.
-The selected framework resolves that composition and drives the existing
-OpenTofu, Ansible and deployment workflow.
+Compose independent applications into Debian LXC guests on Proxmox. Choose a profile, give each app a stable identity, and bind its networks, storage and integrations in a site. The shared framework compiles that source and drives OpenTofu infrastructure and Ansible configuration through protected CD.
 
-The library has no implicit guest set. Applications can share a guest or run on
-separate guests. One deployment job represents each selected guest, with short
-application steps inside it.
+You can run a standalone resolver, place several apps together, or separate them across guests. There is no fixed guest list and no mandatory Home Assistant/Node-RED, Pi-hole/Unbound or MQTT/Explorer bundle.
 
-## Source layout
+## Start here
 
-- `stack.json` indexes the component library and named shared declarations.
-- `apps/` contains independent application profiles.
-- `templates/` contains reusable resource, startup and security defaults.
-- `images.json` owns image selections and their declared policies.
-- `assets/` contains digest-checked, byte-preserved public vendor material.
-- `site.example.yaml` is a small synthetic standalone Unbound starter.
-- `examples/site.second.yaml` uses different placement and repeated instances.
-- Each example references complete typed guest and app-instance documents.
-  Their paths are relative to that example's site file directory.
+- **New to the project:** [Start here](docs/start-here.md), then [compile your first configuration](docs/guides/first-configuration.md). The tutorial needs no Proxmox host, Docker daemon or credentials.
+- **Choose an app:** [Browse all 21 profiles](docs/reference/README.md), including explicit public-image and MariaDB-admin variants.
+- **Build a site:** [Compose a site](docs/guides/compose-a-site.md), [bind interfaces](docs/guides/multiple-interfaces.md), and [connect apps](docs/guides/connect-apps.md).
+- **Maintain or extend it:** [Images and updates](docs/guides/images-and-updates.md), [contributing](docs/contributing.md), [tests](docs/testing.md), and [troubleshooting](docs/troubleshooting.md).
 
-Examples use reserved addresses and example identities. They demonstrate source
-contracts; deployed-service acceptance is verified separately. Real allocations,
-trust, secrets, image archives and current state records belong to the consuming
-site.
+The [documentation index](docs/README.md) links the full guide and reference suite.
 
-Sites can share named, ordered address groups across explicitly selected network
-policies and allow-list middleware. Groups preserve membership and order; they
-do not select a policy or create access. See [composition](docs/composition.md).
+## What is in the library?
 
-## Independent applications
+Home Assistant, Node-RED, Bitwarden, CloudBeaver, Pi-hole, Unbound, Authentik, InfluxDB, Traefik, MariaDB, Zabbix, Mosquitto, MQTT Explorer, Music Assistant, PegaProx, PostgreSQL, Zigbee2MQTT and WiNet. Supporting containers stay with their owning app. Profile pages state fresh/update limits; a listed product is not a promise of unrestricted first-install or hardware support.
 
-| Profile | Owned application and supporting containers |
+| Source | Owns |
 | --- | --- |
-| `homeassistant` | Home Assistant |
-| `node_red` | Node-RED |
-| `bitwarden` | Bitwarden |
-| `cloudbeaver` | CloudBeaver and its authentication gateway |
-| `pihole` | Pi-hole |
-| `unbound` | Unbound |
-| `authentik` | Authentik server, worker and dedicated Redis |
-| `influxdb` | Native InfluxDB |
-| `traefik` | Traefik |
-| `mariadb` | Native MariaDB |
-| `zabbix` | Zabbix server and web frontend |
-| `mqtt` | Mosquitto broker |
-| `mqtt_explorer` | MQTT Explorer and its authentication gateway |
-| `music_assistant` | Music Assistant |
-| `pegaprox` | PegaProx |
-| `postgresql` | Native PostgreSQL |
-| `zigbee2mqtt` | Zigbee2MQTT |
-| `winet` | WiNet |
+| [stack.json](stack.json) | Profile/template registration, named software, runtime, health and policy declarations |
+| [apps/](apps/) | Complete reusable app profiles |
+| [templates/](templates/) | Guest defaults |
+| [images.json](images.json) | Authoritative image selections and policies |
+| [assets/](assets/) | Hash-bound public vendor material |
+| [site.example.yaml](site.example.yaml) | Small standalone Unbound source example |
+| [examples/site.second.yaml](examples/site.second.yaml) | Different placement, repeated resolvers and independent HA |
 
-Pi-hole does not force Unbound. HA does not force Node-RED or database, MQTT,
-metrics, identity or ingress integrations. WiNet does not force Zigbee or a USB
-capability. Selected connections supply their actual requirements.
+The library owns reusable choices. A consuming site owns actual allocations, trust, credentials, identities and access policy. The framework owns validation, rendering and deployment capabilities. See [the model](docs/concepts.md) and [working agreement](AGENTS.md).
 
-The explicit `homeassistant-public` and `node_red-public` variants select official
-public images for new instances. They use the same independent adapters and
-shared resource/health declarations. Retained profiles keep their declared
-archive selections. See [public image options](docs/public-images.md).
+## What a successful source check means
 
-## Compose a site
+A successful compiler check proves the selected declarations can be resolved. It does not create a guest, load private credentials, change firewall/routing policy or verify a running service. The examples use synthetic addresses and are intentionally unsuitable for real deployment admission.
 
-A site declares contexts, named networks/storage, guests and app instances.
-Interface maps select provider slots explicitly; addresses and VLANs are declared
-once on the site side. App roles refer to those interfaces. Connections name an
-app and a listener endpoint, rather than copying an address or inventing a wait.
-
-The minimal example selects Unbound with a private container listener and an
-explicit guest-loopback publication. A second instance can choose another
-supported publication port. Real listener, service, data, device and credential
-ownership conflicts refuse compilation.
-
-Application helpers remain owned by their app. A shared Compose project is
-explicit, with stable per-app service/network identities. Updating a GUI does not
-implicitly recreate another app's broker or data.
-
-Named network policy fragments are explicitly selected and bound by the site.
-Connections never create firewall rules, broaden client access or establish
-isolation. Existing policy rows retain their order and comments.
-
-## Fresh and retained state
-
-`lifecycle: fresh` permits creation of an absent owned resource through the normal
-pipeline. Existing resources require verified current ownership. An unsupported
-initialization path refuses explicitly.
-
-`lifecycle: retained` preserves exact guest, runtime, mount, data-owner and
-credential identities. Display names are cosmetic. Current canonical and
-immutable receipts, state ancestry, locks and unresolved HOLDs remain the ordinary
-update authority. Historical records remain unchanged.
-
-Storage bindings distinguish additional provider volumes from declared root
-filesystem data paths. Neither declaration invents observed ownership, relocates
-data or authorizes a broad chown. Accounts are explicit create-once selections;
-there is no password reuse, rotation or inferred privilege grant.
-
-## Root Zabbix selection
-
-```yaml
-zabbix:
-```
-
-This selects the unique configured Zabbix server capability and one agent phase
-per selected guest. The site's server app and guest retain explicit identities
-and bindings. If several server apps exist, select one with `zabbix: {server: ID}`.
-Omission leaves the feature unselected. Monitoring workloads derive from the
-actual selected applications.
-
-## Validate and generate
-
-Use the selected framework's safe reader, compiler and workflow generator.
-Component workflow generation always names the actual site or synthetic starter:
-
-```sh
-python3 "$FRAMEWORK/blueprints/compile.py" --stack . --site site.example.yaml --check
-python3 "$FRAMEWORK/blueprints/workflows.py" --stack . --site site.example.yaml --check
-```
-
-The generic `phase.yml` contains the sole immutable framework selection. A
-consumer's immutable `HOMELAB_STACK_SOURCE` locator selects this library checkout;
-it does not select the starter's guest graph. The framework generates the actual
-consumer graph from its site, including selected app steps, dependency edges and
-explicit secret subsets. Default `disabled: []` selects the composition. Required
-dependencies remain explicit; disabling a guest does not repair unresolved state
-or grant another writer ownership.
-
-Source qualification includes distinct layouts, standalone and repeated apps,
-fresh/update contracts, generated workflows, exact desired-state preservation,
-coverage, boundaries, history, signatures, security and current source review.
-Consumers own deployment authorization and actual service acceptance.
+Ordinary updates preserve current receipts, state, private material and data ownership. Unsupported initialization, identity conflicts and unresolved holds refuse. Deployment and service verification belong to the consuming site's separately authorized protected CD path.
