@@ -1,6 +1,6 @@
 # Application-profile documentation template
 
-[Contributing](../contributing.md) · [Profile catalogue](../reference/README.md) · [Framework documentation standard](https://github.com/theaussiepom/homelab/blob/692c87d23a5238d38cbe92b19d71f3d9e5b5797c/docs/contributing/documentation.md)
+[Contributing](../contributing.md) · [Profile catalogue](../reference/README.md) · [Framework documentation standard](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/contributing/documentation.md)
 
 Use this checklist when creating or changing a profile page. It is an authoring template, not a configuration to execute. Replace the instructions with concrete facts from the selected profile, adapter and maintained complete example; delete irrelevant guidance. Do not publish blank sections, invented defaults or unsupported examples.
 
