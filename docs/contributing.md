@@ -4,11 +4,11 @@
 
 This repository owns reusable profiles, templates and version/runtime declarations. The framework owns schemas, reference resolution, compiler/render/deployment engines and security/lifecycle helpers. A site owns allocations, access policy, protected references and placement.
 
-Apply the selected [framework documentation standard](https://github.com/theaussiepom/homelab/blob/090c9b82ce62eacb8e3ee5cf4901bf552d3b4a43/docs/contributing/documentation.md). Use the [application-profile documentation template](templates/application-profile.md) for every new or changed profile page. It requires concrete syntax, conditional properties, complete tested examples, First installation, Later deployments and invalid cases; empty boilerplate is not a substitute.
+Apply the selected [framework documentation standard](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/contributing/documentation.md). Use the [application-profile documentation template](templates/application-profile.md) for every new or changed profile page. It requires concrete syntax, conditional properties, complete tested examples, First installation, Later deployments and invalid cases; empty boilerplate is not a substitute.
 
 ## Extend an existing capability
 
-1. Check the [catalogue](reference/README.md) and [framework contract](https://github.com/theaussiepom/homelab/blob/090c9b82ce62eacb8e3ee5cf4901bf552d3b4a43/docs/reference/README.md). Reuse an adapter rather than introducing a fixed guest bundle or private parser.
+1. Check the [catalogue](reference/README.md) and [framework contract](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/README.md). Reuse an adapter rather than introducing a fixed guest bundle or private parser.
 2. Add `apps/<profile>.yaml` with schema homelab-components-v1 and kind app-profile. Declare exact interfaces, listeners, endpoints, storage, connection requirements, software/runtime/health and conditional inputs. Supporting containers stay owned by the app.
 3. Register that complete definition in stack.json. Keep image/version policy in images.json and named runtime policy in stack.json. No raw command, environment, extra-mount or Compose override bag is a replacement for a missing typed capability.
 4. Add/update its reference page under docs/reference/apps and catalogue index. Explain required/optional/conditional bindings, defaults, data/secret/auth ownership, first installation, later deployment and multi-instance limits. Link a real complete composition where supported; label fragments and unqualified commissioning honestly.

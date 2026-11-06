@@ -12,7 +12,7 @@ backup:
 ```
 
 The library registers one `pbs-client` backup profile. An explicit equivalent is
-`backup: {profile: pbs-client}`. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/090c9b82ce62eacb8e3ee5cf4901bf552d3b4a43/docs/reference/backup.md) owns validation,
+`backup: {profile: pbs-client}`. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/backup.md) owns validation,
 compilation, coordinated capture, phase execution and the language contract. This library owns the
 client package/repository definition and each app's recovery classification.
 

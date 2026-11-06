@@ -136,10 +136,16 @@ class BackupProfileTests(unittest.TestCase):
             self.assertEqual(set(packets),set(source['guests']))
             associations=[row for guest in operational.resolved['guests'].values()
                 for app in guest['backup']['applications'].values() for row in app['databases']]
-            self.assertTrue(any(row['type']=='postgresql' and 'address' in row['target'] and 'app' in row['target'] for row in associations))
+            expected={'postgresql':'postgres_database','mariadb':'database'}
+            self.assertEqual({row['type']:row['target']['app'] for row in associations},expected)
+            self.assertTrue(all('address' in row['target'] for row in associations))
+            packet_associations=[]
             for packet in packets.values():
                 import backup_agent
                 cfg=json.loads(packet['files']['site.json']);backup_agent.configuration(cfg)
+                packet_associations.extend(row for app in cfg['app']['backup']['applications'].values()
+                    for row in app['databases'])
+            self.assertEqual({row['type']:row['target']['app'] for row in packet_associations},expected)
 
 
 if __name__ == '__main__': unittest.main()
