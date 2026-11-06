@@ -42,7 +42,3 @@ backup:
       category: database
       capture: database-export
   exclude: {}
-  configuration:
-    influxdb:
-      path: /etc/influxdb
-      kind: directory

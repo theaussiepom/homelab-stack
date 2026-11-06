@@ -16,7 +16,7 @@ Start with a small source-only result, then look up the profile and binding you 
 - [Bind multiple interfaces](guides/multiple-interfaces.md)
 - [Connect apps and select readiness](guides/connect-apps.md)
 - [Choose images and update safely](guides/images-and-updates.md)
-- [Prepare PBS clients](backup.md) and review [application recovery coverage](reference/backup-coverage.md)
+- [Configure PBS backups](backup.md) and review [application recovery coverage](reference/backup-coverage.md)
 - [Keep secrets and data owned](secrets.md)
 
 ## Look something up
@@ -26,7 +26,7 @@ Start with a small source-only result, then look up the profile and binding you 
 - [Software and runtime](reference/software-and-runtime.md): package/image roles, security, budgets, health, monitoring and optional policy fragments.
 - [Complete examples](examples/README.md): maintained source files and what they test.
 
-The [framework configuration guide](https://github.com/theaussiepom/homelab/blob/dbca1f93f434c70d97f99df845972a3c467f6fc3/docs/reference/README.md) owns the language and deployment API. Library pages explain which of those capabilities each profile selects.
+The [framework configuration guide](https://github.com/theaussiepom/homelab/blob/dcba8641270378305fa53a6979ca93f1b7fa794c/docs/reference/README.md) owns the language and deployment API. Library pages explain which of those capabilities each profile selects.
 
 ## Maintain and contribute
 

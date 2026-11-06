@@ -44,7 +44,9 @@ class BackupProfileTests(unittest.TestCase):
                               ('influxdb', '/etc/influxdb')]:
             profile = self.library['app_profiles'][adapter]['backup']
             self.assertEqual(profile['include']['data'], {'category': 'database', 'capture': 'database-export'})
-            self.assertEqual(next(iter(profile['configuration'].values()))['path'], path)
+            self.assertNotIn('configuration', profile)
+            import component_native
+            self.assertEqual(component_native.configuration_root(adapter), path)
 
     def test_critical_state_is_not_misclassified_as_logs_or_rebuildable_cache(self):
         expected = {'bitwarden': 'data', 'node_red': 'data', 'homeassistant': 'config',
@@ -58,7 +60,7 @@ class BackupProfileTests(unittest.TestCase):
         self.assertEqual(self.library['app_profiles']['pihole']['backup']['exclude']['database'], 'transient')
         self.assertEqual(self.library['app_profiles']['bitwarden']['backup']['exclude']['logs'], 'transient')
 
-    def test_complete_real_example_adds_only_the_requested_client_phase_and_inventory(self):
+    def test_complete_operational_example_keeps_dag_and_binds_job_network_and_staging(self):
         original = component_plan.resolve(ROOT, ROOT/'site.example.yaml')
         prepared = component_plan.resolve(ROOT, ROOT/'site.backup.example.yaml')
         self.assertEqual(original.resolved['guest_dependencies'], prepared.resolved['guest_dependencies'])
@@ -67,12 +69,24 @@ class BackupProfileTests(unittest.TestCase):
             self.assertNotIn('backup', original.resolved['guests'][guest])
             row = prepared.resolved['guests'][guest]
             self.assertIn('proxmox-backup-client=4.2.8-1', row['software_selection']['packages'])
-            self.assertEqual(original.resolved['guests'][guest]['rules'], row['rules'])
+            original_rules = original.resolved['guests'][guest]['rules']
+            added = [rule for rule in row['rules'] if rule not in original_rules]
+            self.assertEqual(len(added), 1)
+            self.assertIn('8007', json.dumps(added[0]))
+            self.assertTrue(all(rule in row['rules'] for rule in original_rules))
             packet = component_packet.lower_guest(prepared, guest)
             cfg = json.loads(packet['files']['site.json'])
             self.assertEqual(cfg['deployment']['phases'][-1], 'pbs-agent')
             self.assertEqual(component_workflows.model(prepared)['guests'][guest]['phases'][-1]['name'], 'PBS agent')
-            self.assertNotIn('schedule', cfg['app']['backup'])
+            job = cfg['app']['backup']['job']
+            self.assertEqual(job['destination']['backup_id'], 'guest-610')
+            self.assertEqual(job['schedule']['calendar'], '02:00')
+            self.assertFalse(cfg['guest']['volumes']['backup-stage']['backup'])
+            self.assertEqual(job['staging']['path'], cfg['guest']['volumes']['backup-stage']['path'])
+            self.assertIn('backup-group.json', packet['files'])
+            self.assertEqual(set(job['group']), {'name', 'member'})
+            import backup_agent
+            backup_agent.configuration(cfg)
         disabled = component_plan.resolve(ROOT, ROOT/'site.backup.example.yaml', disabled=list(prepared.resolved['guests']))
         self.assertEqual(disabled.resolved['enabled'], [])
         self.assertTrue(all('backup' in row for row in disabled.resolved['guests'].values()))

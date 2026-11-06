@@ -23,6 +23,8 @@ contexts:
     dns_servers:
     - external: resolver
 secret_sources:
+  pbs-password: {type: file, path: /run/example/pbs-password}
+  pbs-key: {type: file, path: /run/example/pbs-key}
   api:
     type: file
     path: /run/example/api-token
@@ -30,6 +32,10 @@ secret_sources:
     type: file
     path: /run/example/ssh-key
 external_endpoints:
+  pbs:
+    protocol: https
+    address: 192.0.2.50
+    port: 8007
   proxmox:
     protocol: https
     address: 192.0.2.10
@@ -55,6 +61,13 @@ storage:
     pool: example-local
 policies:
   network:
+    pbs:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: {endpoint: pbs}
+        port: {endpoint: pbs}
+        comment: Encrypted PBS transfer
     deployment:
       rules:
       - direction: in
@@ -88,7 +101,7 @@ policies:
         comment: Recursive DNS
 guests:
   resolver:
-    source: examples/minimal/guests/resolver.yaml
+    source: examples/backup/guests/resolver.yaml
 apps:
   recursive_dns:
     source: examples/minimal/apps/recursive_dns.yaml
@@ -97,5 +110,22 @@ address_groups:
     members:
     - 0.0.0.0/0
 
-# Prepare PBS clients; configure the destination and schedules in a later stage.
+# Full operational example; paths and identities are synthetic, never credentials.
 backup:
+  job:
+    name: example-recovery
+    destination:
+      endpoint: {external: pbs}
+      datastore: recovery
+      namespace: guests
+      fingerprint: ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab
+    schedule: {calendar: '02:00', jitter_seconds: 300}
+    clients:
+      resolver:
+        auth_id: resolver@pbs!backup
+        password: pbs-password
+        encryption_key: pbs-key
+        staging_volume: backup-stage
+        interface: primary
+    capture: {pause: [], database_lock: [], influx_tokens: {}}
+    limits: {max_bytes: 33554432, max_files: 10000, timeout_seconds: 300}

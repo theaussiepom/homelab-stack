@@ -20,4 +20,4 @@
 - Keep profile docs, maintained examples and tests aligned with public contracts.
 - Use docs/templates/application-profile.md for profile documentation; keep complete examples and lifecycle/update behavior tested.
 
-- Every profile classifies backup coverage in [the recovery catalogue](docs/reference/backup-coverage.md). Keep client/software selection reusable; site integration owns destinations, scheduling and native qualification.
+- Classify every app storage role in [the recovery catalogue](docs/reference/backup-coverage.md). Reuse bound paths; native producers belong upstream. Keep operational examples complete and tested; private sites supply PBS destinations, keys, pause permissions and live qualification.

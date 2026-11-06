@@ -1,6 +1,6 @@
 # Application backup coverage
 
-[Prepare PBS clients](../backup.md) · [Profile catalogue](README.md)
+[Configure PBS backups](../backup.md) · [Profile catalogue](README.md)
 
 These are source recovery requirements, not observations of installed protection.
 Profile roles map to guest volume/root paths through the existing app bindings.
@@ -21,9 +21,9 @@ individually; public source/Git alone cannot replace private credentials or keys
 | InfluxDB | Native backup plus organization/bucket/authentication and version/engine metadata; verify query and write behavior after restore | `/etc/influxdb` |
 
 Each producer owns its own credentials and consistency boundary. A database
-connection from another app is not a backup producer. Scheduled export jobs and
-real restore qualification are part of the later site integration, not installed
-by this client-preparation feature.
+connection from another app is not a backup producer. A bound root `backup.job` runs the finite native producers and coordinated
+application capture window. Bare `backup:` installs no timer. Actual restore
+qualification and NAS/server maintenance remain part of site integration.
 
 ## Application recovery notes
 
@@ -32,11 +32,11 @@ by this client-preparation feature.
 | Home Assistant | Config, `.storage`, auth/fabric/pairing/private state, compatible custom integrations/patches and selected media; recorder recovery is separate when connected. An existing SQLite database needs a supported consistent capture. |
 | Node-RED | Flows, credentials, credential encryption key, settings, modules and persistent context as one usable generation. Preserve private API/OIDC inputs independently where the guest does not retain them. |
 | Bitwarden | `/etc/bitwarden` includes attachments and application protection material. Associate it with the MariaDB generation and required environment/encryption material; database-only recovery is insufficient. Logs are excluded. |
-| Authentik | PostgreSQL generation plus secret key, media, custom templates, certs and compatible Redis state. A Redis directory copy is not a native coherent export. |
+| Authentik | PostgreSQL generation plus secret key, media, custom templates, certs and compatible Redis state. Stop the owned Redis and Authentik services before capture; a warm Redis directory copy is not coherent. |
 | MQTT | Broker configuration/password/cert material plus retained messages, durable sessions and QoS persistence. Use a broker-supported consistent capture; do not publish synthetic device commands as a backup test. |
 | MQTT Explorer | Saved connection/UI state plus the separately owned broker account. Capturing the GUI is not a broker backup. |
 | Zigbee2MQTT | Keys, devices/groups/database/state plus existing coordinator backups, hardware/firmware identity and backup age. No routine radio/NVM commands, reset or duplicate coordinator activation. |
-| Pi-hole | Teleporter/native export and coherent configuration SQLite/private state. Optional query-history volume is excluded by default; it is not the authoritative configuration export. Keep DNS running unless a separate supported interruption is approved. |
+| Pi-hole | Teleporter/native export and coherent configuration SQLite/private state. Optional query-history volume is excluded by default; it is not the authoritative configuration export. A Pi-hole configuration capture requires explicit permission to pause its owned services; do not assume DNS can be interrupted. |
 | Unbound | Configuration, private control/server keys and trust-anchor state. Device/chroot nodes and cache are reproducible; the mixed runtime `var` role requires a service-aware selection rather than guessing its contents. |
 | Music Assistant | Provider identities, authentication and private app state, including consistent SQLite/native artifacts. A backup test must not issue playback/player commands. |
 | PegaProx | Config, encryption key/accounts and coherent encrypted SQLite/state. Application logs are excluded; database files alone do not restore the key. |
