@@ -2,14 +2,15 @@
 
 [Project overview](../README.md)
 
-This suite answers three questions: which reusable profile fits, how its requirements bind to a site, and what evidence is needed before operating it. The supported base is Debian LXC on Proxmox; adapter-specific hardware and lifecycle limits are explicit in each profile.
+Start with the services you want and turn them into your own Proxmox configuration. The supported base is Debian 13 LXC; each application profile states its creation, data and hardware requirements. You can work offline before completing the host and deployment prerequisites.
 
 ## Learn and reach a first service
 
-1. [Start here](start-here.md) identifies prerequisites and compatible source.
-2. [First configuration](guides/first-configuration.md) resolves a complete offline resolver example.
-3. [Concepts](concepts.md) explains how profiles, instances, guests and services relate; the [glossary](glossary.md) supplies short definitions.
-4. [Preparation, installation and service verification](guides/installation.md) separates the next three stages and identifies their owning procedures.
+1. [Design your homelab](guides/design-your-homelab.md) takes you through service choice, guest layout, a Proxmox facts worksheet, a complete source copy, personalisation and compiler-result checks. Add optional Home Assistant and try sharing or separating guests.
+2. [Preparation, installation and service verification](guides/installation.md) carries that configuration through the distinct site-owned deployment and acceptance stages.
+3. [Images and updates](guides/images-and-updates.md) explains later changes to an already owned installation.
+
+[Start here](start-here.md) helps choose another route. [First configuration](guides/first-configuration.md) is a shorter compiler exercise using the unchanged maintained resolver, useful when you want to inspect the tools first. [Concepts](concepts.md) and the [glossary](glossary.md) explain terms as you need them.
 
 ## Choose and look up
 
@@ -21,7 +22,7 @@ This suite answers three questions: which reusable profile fits, how its require
 
 ## Compose and maintain
 
-Follow [Compose a site](guides/compose-a-site.md), then the specific relationship you need:
+Once you have a complete starting source, use [Compose a site](guides/compose-a-site.md) as the checklist for adding another application, then the specific relationship you need:
 
 | Decision | Guide |
 | --- | --- |

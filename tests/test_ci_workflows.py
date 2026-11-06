@@ -36,6 +36,9 @@ class CiWorkflowTests(unittest.TestCase):
             'test_documentation_examples.DocumentationExamples',
             'test_documentation_navigation.DocumentationNavigation',
             'test_documentation_navigation.NavigationMechanism',
+            'test_documentation_personalisation.PersonalisationWalkthrough',
+            'test_documentation_personalisation.PersonalisationWalkthrough.test_practice_worksheet_and_separate_home_bind_real_allocations_and_browser_access',
+            'test_documentation_personalisation.PersonalisationWalkthrough.test_shared_layout_moves_selected_address_access_and_storage_without_inventing_dependencies',
         ]
         script = '''import json,sys,unittest
 from pathlib import Path

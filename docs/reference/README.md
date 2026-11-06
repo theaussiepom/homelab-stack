@@ -2,13 +2,13 @@
 
 [Documentation index](../README.md) · [Complete example catalogue](../../examples/catalogue/README.md)
 
-A selection ID names a reusable contract, not a complete installed service. Open its page for required bindings, first-install prerequisites, placement limits and ordinary update behavior. [Templates](templates.md) supply guest defaults without choosing an app bundle.
+A selection ID names a reusable application recipe, not a complete installed service. For your first configuration, [Design your homelab](../guides/design-your-homelab.md) connects these choices to your actual host facts and an editable complete source. Open a profile's page for required bindings, first-install prerequisites, placement limits and ordinary update behavior. [Templates](templates.md) supply guest defaults without choosing an app bundle.
 
 ## Start with the intended outcome
 
 | Outcome | Profiles and important choice |
 | --- | --- |
-| Resolve and filter DNS | [Unbound](apps/unbound.md) is independently selectable and publishes guest-loopback DNS; [Pi-hole](apps/pihole.md) needs its selected upstream binding. Follow the [complete DNS walkthrough](../examples/local-dns.md). |
+| Resolve and filter DNS | [Unbound](apps/unbound.md) can start from empty and publishes guest-loopback DNS only. [Pi-hole](apps/pihole.md) needs prepared configuration and its selected upstream binding. The [complete DNS walkthrough](../examples/local-dns.md) uses genuine retained-ownership prerequisites; it is not a fresh LAN DNS installation. |
 | Home automation | [Home Assistant public](apps/homeassistant-public.md) and [Node-RED public](apps/node_red-public.md) select public images and create-only configuration. The [Home Assistant](apps/homeassistant.md) and [Node-RED](apps/node_red.md) retained variants have different archive and authentication requirements. |
 | Messaging, radio and telemetry | [MQTT](apps/mqtt.md) owns the prepared broker; [MQTT Explorer](apps/mqtt_explorer.md) is a separately selected authenticated browser. [Zigbee2MQTT](apps/zigbee2mqtt.md) and [WiNet](apps/winet.md) need their own hardware/network and broker inputs. |
 | Databases and administration | [PostgreSQL](apps/postgresql.md), [MariaDB](apps/mariadb.md) and [InfluxDB](apps/influxdb.md) are native profiles. [CloudBeaver](apps/cloudbeaver.md) and its [MariaDB-admin variant](apps/cloudbeaver-mariadb-admin.md) differ in administrator capability; a connection value alone does not grant it. |

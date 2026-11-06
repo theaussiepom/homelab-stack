@@ -1,18 +1,21 @@
 # HomeLab Stack
 
-Choose reusable application profiles and compose them into Debian LXC guests on Proxmox. Each profile describes the application's interfaces, storage, connections, software and runtime requirements. Your site chooses the instances, placement, allocations and access policy.
+Describe the services you want on Proxmox, choose supported application profiles, and build your own configuration for Debian 13 LXC guests. This library supplies reusable application recipes and guest defaults. You choose the applications, which guests they share, and your host, network and storage allocations.
 
-Start with one resolver, combine compatible apps on a guest, or place them separately. Supporting containers stay with their owning app; selecting a product does not select unrelated applications.
+**New here? [Design your homelab](docs/guides/design-your-homelab.md)** walks from desired services to a complete editable configuration: collect your Proxmox facts, check a fresh recursive resolver, optionally add Home Assistant, and compare separate or shared guests. You finish with inspected compiler output and the exact remaining deployment inputs. The resolver starts on guest loopback; the guide explains the additional prepared-input boundary for LAN filtering DNS.
 
 | Your next decision | Start here |
 | --- | --- |
-| Understand and try the model | [Learn with an offline resolver](docs/guides/first-configuration.md) |
+| Create your first personalised configuration | [Design your homelab](docs/guides/design-your-homelab.md) |
+| Try the compiler before designing a site | [Compile an offline resolver](docs/guides/first-configuration.md) |
 | Choose a profile or variant | [Application catalogue](docs/reference/README.md) |
 | Join profiles into a site | [Composition workflow](docs/guides/compose-a-site.md) |
 | Prepare or maintain an installation | [Preparation, installation and service verification](docs/guides/installation.md), then [updates](docs/guides/images-and-updates.md) |
 | Extend the reusable library | [Contributor workflow](docs/contributing.md) |
 
 The [documentation index](docs/README.md) connects these journeys to the complete reference and examples.
+
+Supporting containers stay with their owning app; choosing one profile does not choose unrelated applications. The supported catalogue has explicit creation, data and integration requirements. Arbitrary VM operating systems and unregistered Compose applications are outside this library's application path.
 
 ## Three owners
 

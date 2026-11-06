@@ -2,7 +2,9 @@
 
 [Documentation index](../README.md) · [Start here](../start-here.md)
 
-This tutorial produces a resolver deployment packet from the maintained synthetic YAML example. It does not provision a guest, install a package, run a container or read the example's credential/trust paths.
+This short tool exercise produces a resolver deployment packet from the unchanged maintained synthetic YAML example. To choose your own services and allocations, start with [Design your homelab](design-your-homelab.md): it supplies a complete editable copy, a Proxmox facts worksheet and optional Home Assistant layouts. Both paths use the same source environment below.
+
+This exercise does not provision a guest, install a package, run a container or read the example's credential/trust paths.
 
 ## 1. Prepare an isolated source environment
 
@@ -85,4 +87,4 @@ For actual deployment, use a consuming site's qualified source and protected CD 
 
 ## Continue toward a service
 
-You have checked source compatibility. Follow [preparation, first installation and service verification](installation.md) for the next stages; each needs distinct site-owned evidence. To vary the source first, [compose a site](compose-a-site.md) or inspect the [complete local DNS walkthrough](../examples/local-dns.md).
+You have checked source compatibility. Continue with [Design your homelab](design-your-homelab.md#3-collect-your-proxmox-facts) to collect your facts and make a complete source copy; reuse this shell's variables when you reach its setup step. Follow [preparation, first installation and service verification](installation.md) after personalising the source. For a prepared, already owned filtering resolver, inspect the [complete local DNS walkthrough](../examples/local-dns.md).
