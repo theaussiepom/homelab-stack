@@ -23,7 +23,11 @@ The tutorial defines every shell variable, fetches the selected published framew
 
 Authored site and app-instance files are YAML. The library index remains `stack.json`; generated packets, runtime documents and receipts remain JSON. The safe YAML subset rejects duplicate keys, custom tags, anchors, aliases and merge keys.
 
-## Know the boundary before deploying
+## Continue through preparation, installation and verification
+
+The [installation journey](guides/installation.md) gives each stage an observable result and its owning procedure. Return to the selected profile before choosing a creation path.
+
+### Know the boundary before deploying
 
 The first tutorial is source-only. Moving to deployment requires a real consuming site with qualified provider/trust/SSH inputs, infrastructure/state and recovery prerequisites, supported lifecycle/data bindings, a protected runner/workflow, selected secrets and current source review. Those facts cannot be supplied by the synthetic example.
 

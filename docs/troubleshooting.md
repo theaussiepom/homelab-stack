@@ -31,3 +31,7 @@ Exact codes and nested property paths come from the selected framework. This tab
 - [Zigbee](reference/apps/zigbee2mqtt.md): registered coordinator and unchanged network evidence; never initialize a coordinator to make health pass.
 
 Use [source checks](testing.md) to establish a reproducible source defect. Container startup, protocol fixtures and a green sub-job do not establish target service acceptance. No command on this page changes a target or grants a retry.
+
+## MQTT probe refusal
+
+`component.secret-required at apps.broker.properties` can mean the broker's probe role is missing or names a non-file source. This is the selected MQTT adapter's effective requirement even though profile metadata says optional. Follow [Probe binding](reference/apps/mqtt.md#mqtt-probe), restore the valid file-source reference in the [complete broker entry](reference/apps/mqtt.md#complete-broker-entry), then resolve and lower the complete source. The adapter reports its properties context; do not infer that a literal `properties.probe` field exists. Source checks do not read the probe record or prove broker authentication.

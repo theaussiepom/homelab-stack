@@ -1,6 +1,11 @@
 """Protect CI triggers, required status names and source-only security boundaries."""
 
 from pathlib import Path
+import json
+import os
+import subprocess
+import sys
+import tempfile
 import unittest
 
 import yaml
@@ -22,6 +27,74 @@ def workflows():
 
 
 class CiWorkflowTests(unittest.TestCase):
+    def test_documentation_conformance_is_nonempty_and_normally_discovered(self):
+        # This existing harness remains collected if a documentation module is
+        # deleted or emptied. Keep control facts in their source, not here.
+        required = [
+            'test_documentation_examples.DocumentationConformance',
+            'test_documentation_examples.DocumentationConformanceMechanism',
+            'test_documentation_examples.DocumentationExamples',
+            'test_documentation_navigation.DocumentationNavigation',
+            'test_documentation_navigation.NavigationMechanism',
+        ]
+        script = '''import json,sys,unittest
+from pathlib import Path
+directory=Path(sys.argv[1]).resolve()
+sys.path.insert(0,str(directory))
+def cases(suite):
+    for item in suite:
+        if isinstance(item,unittest.TestSuite):yield from cases(item)
+        else:yield item
+for name in json.loads(sys.argv[2]):
+    loader=unittest.TestLoader()
+    named=loader.loadTestsFromName(name)
+    if loader.errors or not named.countTestCases():
+        raise SystemExit('DOC_COLLECTION: missing or empty '+name)
+    selected=list(cases(named))
+    for case in selected:
+        method=getattr(case,case._testMethodName)
+        if (getattr(case,'__unittest_skip__',False) or getattr(method,'__unittest_skip__',False)
+                or getattr(method,'__unittest_expecting_failure__',False)):
+            raise SystemExit('DOC_COLLECTION: skipped or expected failure '+case.id())
+    discovered=loader.discover(str(directory),pattern=name.split('.')[0]+'.py')
+    if loader.errors or not {case.id() for case in selected} <= {case.id() for case in cases(discovered)}:
+        raise SystemExit('DOC_COLLECTION: not discovered '+name)
+'''
+        result = subprocess.run([sys.executable, '-c', script, str(ROOT / 'tests'), json.dumps(required)],
+            cwd=ROOT, capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        with tempfile.TemporaryDirectory() as directory:
+            module = Path(directory) / 'test_fixture.py'
+            for body, names in [
+                ('import unittest\nclass Contract(unittest.TestCase):\n    def test_present(self): pass\n', ['test_fixture.Contract']),
+                ('import unittest\nclass Contract(unittest.TestCase): pass\n', ['test_fixture.Contract']),
+                ("import unittest\n@unittest.skip('disabled')\nclass Contract(unittest.TestCase):\n    def test_disabled(self): pass\n", ['test_fixture.Contract']),
+                ('import unittest\nclass Contract(unittest.TestCase):\n    @unittest.expectedFailure\n    def test_disabled(self): pass\n', ['test_fixture.Contract']),
+                ('', ['test_removed.Contract']),
+            ]:
+                module.write_text(body)
+                result = subprocess.run([sys.executable, '-c', script, directory, json.dumps(names)],
+                    capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode == 0, 'test_present' in body, result.stderr)
+
+    def test_documentation_producer_cannot_be_skipped_or_swallow_a_failure(self):
+        workflow = workflows()['validate-stack.yml']
+        self.assertIn(workflow['on']['pull_request'], ('', None))
+        source = workflow['jobs']['source']
+        self.assertNotIn('if', source)
+        self.assertNotIn('continue-on-error', source)
+        step = next(step for step in source['steps'] if '--suite stack --stack .' in step.get('run', ''))
+        self.assertNotIn('if', step)
+        self.assertNotIn('continue-on-error', step)
+        with tempfile.TemporaryDirectory() as directory:
+            executable = Path(directory) / 'python3'
+            executable.write_text('#!/bin/sh\nexit 41\n')
+            executable.chmod(0o755)
+            result = subprocess.run(['/bin/bash', '-e', '-o', 'pipefail', '-c', step['run']], cwd=ROOT,
+                env=dict(os.environ, PATH=directory + os.pathsep + os.environ['PATH'], RUNNER_TEMP=directory),
+                capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 41, result.stdout + result.stderr)
+
     def test_purposes_publish_the_original_required_checks_without_call_prefixes(self):
         self.assertFalse((DIRECTORY / "ci.yml").exists())
         checks = []

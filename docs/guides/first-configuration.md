@@ -82,3 +82,7 @@ The [alternate layout](../../examples/site.second.yaml) contains three guests, t
 The source compiles without providing a HomeLab credential or host. It does not prove that those services have been installed. Follow [Compose a site](compose-a-site.md), [interfaces](multiple-interfaces.md) and [connections](connect-apps.md) to understand the bindings before replacing synthetic facts.
 
 For actual deployment, use a consuming site's qualified source and protected CD prerequisites. This tutorial grants no target action and does not create state, accounts, DNS records or firewall access.
+
+## Continue toward a service
+
+You have checked source compatibility. Follow [preparation, first installation and service verification](installation.md) for the next stages; each needs distinct site-owned evidence. To vary the source first, [compose a site](compose-a-site.md) or inspect the [complete local DNS walkthrough](../examples/local-dns.md).

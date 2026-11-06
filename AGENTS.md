@@ -18,4 +18,6 @@
   Preserve all existing quality gates.
 - Read docs/README.md for guides/reference and docs/testing.md for checks.
 - Keep profile docs, maintained examples and tests aligned with public contracts.
-- Use docs/templates/application-profile.md for profile documentation; keep complete examples and lifecycle/update behavior tested.
+- Follow docs/contributing/documentation-standard.md and docs/templates/application-profile.md (or the guest-template template).
+- Update canonical records, test-local source/document pointers, complete examples and relevant checks with each contract/default change. Keep real configuration/validators authoritative; never mirror defaults in test mappings.
+- Validate against the library-selected real framework. Report source, integration, hosted enforcement, deployment and service evidence separately.

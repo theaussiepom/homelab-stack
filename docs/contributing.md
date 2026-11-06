@@ -4,7 +4,7 @@
 
 This repository owns reusable profiles, templates and version/runtime declarations. The framework owns schemas, reference resolution, compiler/render/deployment engines and security/lifecycle helpers. A site owns allocations, access policy, protected references and placement.
 
-Apply the selected [framework documentation standard](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/contributing/documentation.md). Use the [application-profile documentation template](templates/application-profile.md) for every new or changed profile page. It requires concrete syntax, conditional properties, complete tested examples, First installation, Later deployments and invalid cases; empty boilerplate is not a substitute.
+Apply the local [documentation standard](contributing/documentation-standard.md) to profile, template and composition documentation. The compatible [framework documentation policy](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/contributing/documentation.md) owns the language and deployment contract. Use the [application-profile template](templates/application-profile.md) or [guest-template template](templates/guest-template.md), then review the result against the standard's rubric. A filled checklist does not prove completeness.
 
 ## Extend an existing capability
 
@@ -24,3 +24,11 @@ Update docs, maintained examples and tests when a public profile changes. New de
 After the replacement is integrated, inventory old callers and remove obsolete code/tests/scaffolding and duplicate guidance. Keep useful current regressions and immutable history; do not retain an unused compatibility branch solely to satisfy old tests.
 
 AGENTS.md stays short and links the [documentation index](README.md). Security/review/coverage/history/signature requirements are preserved; documentation work is not permission to relax them.
+
+## Maintain the checked contract
+
+Read [conformance scope](testing.md#documentation-conformance) before changing a public control/default. Keep configuration and validators authoritative. The test-local `documentation_records.py` stores only source paths, document paths and field/registration identifiers; never add a second set of types, constraints or defaults. Update a canonical declaration table, its pointer mapping and complete example together. A new record with no accepted source, a new source field with no record, a duplicate or stale value must fail.
+
+Review adapter/property changes for semantic requirements that structural inventory cannot discover. Preserve the MQTT file-probe floor even while metadata says optional, and distinguish declared template defaults from actual inheritance and execution policy. Use the real selected framework, compare excerpts with canonical source, and assert the intended refusal code/context.
+
+Follow README → catalogue → property/type → complete example → diagnostic → later deployments as a reader. Check rendered Markdown as well as local links. Run [required gates](testing.md), report the checked denominator and remaining semantic/native limits, and do not equate local source success with hosted merge enforcement or service acceptance.

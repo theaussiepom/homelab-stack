@@ -1,36 +1,31 @@
-# HomeLab application library
+# HomeLab Stack
 
-Compose independent applications into Debian LXC guests on Proxmox. Choose a profile, give each app a stable identity, and bind its networks, storage and integrations in a site. The shared framework compiles that source and drives OpenTofu infrastructure and Ansible configuration through protected CD.
+Choose reusable application profiles and compose them into Debian LXC guests on Proxmox. Each profile describes the application's interfaces, storage, connections, software and runtime requirements. Your site chooses the instances, placement, allocations and access policy.
 
-You can run a standalone resolver, place several apps together, or separate them across guests. There is no fixed guest list and no mandatory Home Assistant/Node-RED, Pi-hole/Unbound or MQTT/Explorer bundle.
+Start with one resolver, combine compatible apps on a guest, or place them separately. Supporting containers stay with their owning app; selecting a product does not select unrelated applications.
 
-## Start here
-
-- **New to the project:** [Start here](docs/start-here.md), then [compile your first configuration](docs/guides/first-configuration.md). The tutorial needs no Proxmox host, Docker daemon or credentials.
-- **Choose an app:** [Browse all 21 profiles](docs/reference/README.md), including explicit public-image and MariaDB-admin variants.
-- **Build a site:** [Compose a site](docs/guides/compose-a-site.md), [bind interfaces](docs/guides/multiple-interfaces.md), and [connect apps](docs/guides/connect-apps.md).
-- **Maintain or extend it:** [Images and updates](docs/guides/images-and-updates.md), [contributing](docs/contributing.md), [tests](docs/testing.md), and [troubleshooting](docs/troubleshooting.md).
-
-The [documentation index](docs/README.md) links the full guide and reference suite.
-
-## What is in the library?
-
-Home Assistant, Node-RED, Bitwarden, CloudBeaver, Pi-hole, Unbound, Authentik, InfluxDB, Traefik, MariaDB, Zabbix, Mosquitto, MQTT Explorer, Music Assistant, PegaProx, PostgreSQL, Zigbee2MQTT and WiNet. Supporting containers stay with their owning app. Profile pages state fresh/update limits; a listed product is not a promise of unrestricted first-install or hardware support.
-
-| Source | Owns |
+| Your next decision | Start here |
 | --- | --- |
-| [stack.json](stack.json) | Profile/template registration, named software, runtime, health and policy declarations |
-| [apps/](apps/) | Complete reusable app profiles |
-| [templates/](templates/) | Guest defaults |
-| [images.json](images.json) | Authoritative image selections and policies |
-| [assets/](assets/) | Hash-bound public vendor material |
-| [site.example.yaml](site.example.yaml) | Small standalone Unbound source example |
-| [examples/site.second.yaml](examples/site.second.yaml) | Different placement, repeated resolvers and independent HA |
+| Understand and try the model | [Learn with an offline resolver](docs/guides/first-configuration.md) |
+| Choose a profile or variant | [Application catalogue](docs/reference/README.md) |
+| Join profiles into a site | [Composition workflow](docs/guides/compose-a-site.md) |
+| Prepare or maintain an installation | [Preparation, installation and service verification](docs/guides/installation.md), then [updates](docs/guides/images-and-updates.md) |
+| Extend the reusable library | [Contributor workflow](docs/contributing.md) |
 
-The library owns reusable choices. A consuming site owns actual allocations, trust, credentials, identities and access policy. The framework owns validation, rendering and deployment capabilities. See [the model](docs/concepts.md) and [working agreement](AGENTS.md).
+The [documentation index](docs/README.md) connects these journeys to the complete reference and examples.
 
-## What a successful source check means
+## Three owners
 
-A successful compiler check proves the selected declarations can be resolved. It does not create a guest, load private credentials, change firewall/routing policy or verify a running service. The examples use synthetic addresses and are intentionally unsuitable for real deployment admission.
+| Owner | Responsibility |
+| --- | --- |
+| This library | [Registered profiles](docs/reference/README.md), [guest defaults](docs/reference/templates.md), [shared software/runtime choices](docs/reference/software-and-runtime.md) and complete synthetic compositions |
+| [HomeLab framework](https://github.com/theaussiepom/homelab) | Typed grammar, resolution, compilation, infrastructure/configuration engines and supported execution boundaries |
+| Your consuming site | Concrete allocations, trust, credentials, data ownership, protected CD and authority to operate |
 
-Ordinary updates preserve current receipts, state, private material and data ownership. Unsupported initialization, identity conflicts and unresolved holds refuse. Deployment and service verification belong to the consuming site's separately authorized protected CD path.
+The [library index](stack.json) and [image catalogue](images.json) remain authoritative. The [phase workflow](.github/workflows/phase.yml) selects the compatible framework; a newer framework checkout is not automatically compatible.
+
+## Know what has been established
+
+The offline examples resolve and lower with the selected real framework. They use synthetic inputs and need no host, Docker daemon or credential values. This establishes source compatibility, not installation or service availability.
+
+Profiles state what first installation needs and what later deployments preserve or refuse. Protected CD and actual endpoint, authentication, persistence and integration checks belong to the consuming site. See the [working agreement](AGENTS.md) for contribution boundaries.

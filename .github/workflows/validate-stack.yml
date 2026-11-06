@@ -50,6 +50,8 @@ jobs:
           python3 framework-source/blueprints/compile.py --stack . --site site.example.yaml --check
           python3 framework-source/blueprints/compile.py --stack . --site examples/site.second.yaml --check
       - name: Run stack tests and enforce coverage
+        # Includes declaration/docs drift, real examples, navigation and the
+        # independent test_ci_workflows required-collection assertion.
         env:
           HOMELAB_FRAMEWORK: framework-source
           GITLEAKS_BIN: ${{ runner.temp }}/homelab-source-tools/gitleaks

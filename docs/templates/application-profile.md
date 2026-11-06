@@ -1,6 +1,6 @@
 # Application-profile documentation template
 
-[Contributing](../contributing.md) · [Profile catalogue](../reference/README.md) · [Framework documentation standard](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/contributing/documentation.md)
+[Contributing](../contributing.md) · [Profile catalogue](../reference/README.md) · [Library documentation standard](../contributing/documentation-standard.md)
 
 Use this checklist when creating or changing a profile page. It is an authoring template, not a configuration to execute. Replace the instructions with concrete facts from the selected profile, adapter and maintained complete example; delete irrelevant guidance. Do not publish blank sections, invented defaults or unsupported examples.
 
@@ -50,3 +50,13 @@ Maintain profile-to-example coverage in the library's documentation tests. Run t
 ## Related guidance
 
 Link the profile declaration, complete example, related variant, shared lifecycle/reference and task guides. Preserve useful existing anchors or canonical pointers when replacing old guidance. Review the complete page as a new user before publication.
+
+## Declaration records and effect evidence
+
+Provide stable field destinations for the full supplied profile definition, including named map objects and nested leaves. Use the normal path/selected-value table from [declaration records](../reference/declaration-records.md). Keep definition source/document pointers in `tests/documentation_records.py`; do not add a parallel field list. The checker derives fields from source and reconciles new/removed documentation rows both ways. These rows describe reusable definition values; do not present them as an arbitrary instance override API.
+
+For every nontrivial binding/property, include type, presence, default/absence, omitted/null/empty distinctions, allowed values, applying owner and resolution/override rules. Link the exact nested type, prerequisite, complete example and relevant diagnostic where the relationship is explained. Record adapter floors that exceed profile metadata.
+
+Explain the resolved addresses/ports, identities, generated configuration and explicit dependency/access effects. Classify ordinary updates, possible interruption, refused changes and unknown behavior separately. Include exact negative code/context and repair; source compilation does not prove a runtime transition.
+
+Add return links from task/diagnostic/example pages and retain published destinations. Apply the standard's [review rubric](../contributing/documentation-standard.md#10-verification-and-review-rubric), including semantic and rendered review; [conformance tests](../testing.md#documentation-conformance) have a deliberately bounded automated scope.
