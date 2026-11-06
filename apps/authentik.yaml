@@ -94,3 +94,18 @@ secrets:
     required: false
 monitoring:
   profile: docker-agent
+backup:
+  include:
+    media:
+      category: state
+      capture: application-export
+    templates:
+      category: configuration
+      capture: files
+    certs:
+      category: configuration
+      capture: files
+    redis:
+      category: state
+      capture: application-export
+  exclude: {}

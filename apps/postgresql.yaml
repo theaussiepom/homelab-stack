@@ -36,3 +36,13 @@ health:
     profile: adapter-ready
 monitoring:
   profile: postgresql-agent
+backup:
+  include:
+    data:
+      category: database
+      capture: database-export
+  exclude: {}
+  configuration:
+    postgresql:
+      path: /etc/postgresql
+      kind: directory

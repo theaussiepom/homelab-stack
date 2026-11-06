@@ -19,3 +19,5 @@
 - Read docs/README.md for guides/reference and docs/testing.md for checks.
 - Keep profile docs, maintained examples and tests aligned with public contracts.
 - Use docs/templates/application-profile.md for profile documentation; keep complete examples and lifecycle/update behavior tested.
+
+- Every profile classifies backup coverage in [the recovery catalogue](docs/reference/backup-coverage.md). Keep client/software selection reusable; site integration owns destinations, scheduling and native qualification.

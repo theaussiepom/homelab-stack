@@ -36,3 +36,13 @@ health:
     profile: adapter-ready
 monitoring:
   profile: mariadb-agent
+backup:
+  include:
+    data:
+      category: database
+      capture: database-export
+  exclude: {}
+  configuration:
+    mysql:
+      path: /etc/mysql
+      kind: directory

@@ -38,3 +38,5 @@ Choose a profile by its supported lifecycle and requirements, not only its produ
 The library index is [stack.json](../../stack.json); image versions/policies are [images.json](../../images.json). There is no implicit guest set or unselected dependency.
 
 Maintainers: use the [profile documentation template](../templates/application-profile.md) and [contributor workflow](../contributing.md). Every registered profile has a concrete, tested [complete composition](../../examples/catalogue/README.md).
+
+[Backup coverage for every profile](backup-coverage.md) classifies retained state, native database exports and explicit transient/rebuildable exclusions. [PBS preparation](../backup.md) explains activation boundaries.
