@@ -129,7 +129,7 @@ Keep stable app/service/project, writable storage and credential identities. Rea
 
 Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/dcba8641270378305fa53a6979ca93f1b7fa794c/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/dcba8641270378305fa53a6979ca93f1b7fa794c/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/dcba8641270378305fa53a6979ca93f1b7fa794c/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/dcba8641270378305fa53a6979ca93f1b7fa794c/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/dcba8641270378305fa53a6979ca93f1b7fa794c/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/090c9b82ce62eacb8e3ee5cf4901bf552d3b4a43/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/090c9b82ce62eacb8e3ee5cf4901bf552d3b4a43/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/090c9b82ce62eacb8e3ee5cf4901bf552d3b4a43/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/090c9b82ce62eacb8e3ee5cf4901bf552d3b4a43/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/090c9b82ce62eacb8e3ee5cf4901bf552d3b4a43/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 

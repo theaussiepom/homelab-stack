@@ -4,6 +4,8 @@ import json
 import os
 from pathlib import Path
 import sys
+import tempfile
+import yaml
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -72,7 +74,11 @@ class BackupProfileTests(unittest.TestCase):
             original_rules = original.resolved['guests'][guest]['rules']
             added = [rule for rule in row['rules'] if rule not in original_rules]
             self.assertEqual(len(added), 1)
-            self.assertIn('8007', json.dumps(added[0]))
+            destination = row['backup']['job']['destination']
+            self.assertEqual(added[0]['direction'], 'out')
+            self.assertEqual(added[0]['proto'], 'tcp')
+            self.assertEqual(added[0]['destination'], destination['server'] + '/32')
+            self.assertEqual(added[0]['port'], str(destination['port']))
             self.assertTrue(all(rule in row['rules'] for rule in original_rules))
             packet = component_packet.lower_guest(prepared, guest)
             cfg = json.loads(packet['files']['site.json'])
@@ -90,6 +96,50 @@ class BackupProfileTests(unittest.TestCase):
         disabled = component_plan.resolve(ROOT, ROOT/'site.backup.example.yaml', disabled=list(prepared.resolved['guests']))
         self.assertEqual(disabled.resolved['enabled'], [])
         self.assertTrue(all('backup' in row for row in disabled.resolved['guests'].values()))
+
+    def test_database_consumers_compile_as_one_complete_backup_group(self):
+        source = yaml.safe_load((ROOT/'examples/catalogue/new-database-guis.yaml').read_text())
+        job = yaml.safe_load((ROOT/'site.backup.example.yaml').read_text())['backup']['job']
+        source['external_endpoints']['pbs'] = {'protocol':'https','address':'192.0.2.50','port':8007}
+        job['clients'] = {}
+        for guest_id, guest in source['guests'].items():
+            for volume in guest.get('volumes', {}).values():volume['backup'] = None
+            volumes = guest.setdefault('volumes', {})
+            volumes['backup-stage'] = {'storage':guest['root_storage'],'slot':max([v['slot'] for v in volumes.values()],default=-1)+1,
+                'path':'/srv/backup-stage','size_gib':1}
+            for role in ('password','key'):
+                source['secret_sources']['pbs-'+role+'-'+guest_id] = {'type':'file','path':'/run/example/pbs-'+role+'-'+guest_id}
+            job['clients'][guest_id] = {'auth_id':guest_id+'@pbs!backup',
+                'password':'pbs-password-'+guest_id,
+                'encryption_key':'pbs-key-'+guest_id,
+                'staging_volume':'backup-stage','interface':'primary'}
+        source['backup'] = None
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary).resolve()/'site.yaml';path.write_text(yaml.safe_dump(source))
+            planned=component_plan.resolve(ROOT,path)
+            inventories=[g['backup'] for g in planned.resolved['guests'].values()]
+            job['capture'] = {'pause':[name for inv in inventories for name,app in inv['applications'].items()
+                if any(row.get('capture')=='application-export' for row in app['storage'].values())],
+                'database_lock':[name for name,app in planned.resolved['apps'].items() if app['adapter']=='mariadb'],
+                'influx_tokens':{}}
+            source['backup']={'job':job};path.write_text(yaml.safe_dump(source))
+            from component_errors import ComponentError
+            with self.assertRaisesRegex(ComponentError,'backup-database-producer'):
+                component_plan.resolve(ROOT,path)
+            # The optional remote browse connection has no root-group producer.
+            # Keep the two genuinely managed administration links for this set.
+            source['connections'].pop('browse')
+            source['apps']['cloud']['properties']['connections'].pop('postgresql')
+            path.write_text(yaml.safe_dump(source))
+            operational=component_plan.resolve(ROOT,path)
+            packets=component_packet.lower_plan(operational)
+            self.assertEqual(set(packets),set(source['guests']))
+            associations=[row for guest in operational.resolved['guests'].values()
+                for app in guest['backup']['applications'].values() for row in app['databases']]
+            self.assertTrue(any(row['type']=='postgresql' and 'address' in row['target'] and 'app' in row['target'] for row in associations))
+            for packet in packets.values():
+                import backup_agent
+                cfg=json.loads(packet['files']['site.json']);backup_agent.configuration(cfg)
 
 
 if __name__ == '__main__': unittest.main()
