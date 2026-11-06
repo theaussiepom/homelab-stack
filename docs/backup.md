@@ -12,7 +12,7 @@ backup:
 ```
 
 The library registers one `pbs-client` backup profile. An explicit equivalent is
-`backup: {profile: pbs-client}`. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/4d926e82869f5fc2b497577f341ff82c3e7f619b/docs/reference/backup.md) owns validation,
+`backup: {profile: pbs-client}`. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/dbca1f93f434c70d97f99df845972a3c467f6fc3/docs/reference/backup.md) owns validation,
 compilation, phase execution and the language contract. This library owns the
 client package/repository definition and each app's recovery classification.
 
@@ -66,11 +66,24 @@ client-only repository using its digest-pinned public signing asset. A separate
 configuration and checks the client binary. PBS uses a command-line client;
 this does not require an always-running guest daemon.
 
+The client-only repository uses Proxmox's documented HTTP APT endpoint.
+Its signed release metadata and package hashes are verified against the
+digest-pinned official Trixie keyring, and the client version is exact. This
+authenticates package contents; it does not encrypt package-download traffic.
+The keyring retains the vendor's two published archive keys. No `trusted=yes`,
+insecure APT option or disabled certificate check is used. See the vendor's
+[client repository and SecureApt guidance](https://pbs.proxmox.com/docs/installation.html#proxmox-backup-client-only-repository).
+
 The coverage record includes the guest identity, configuration paths, each
 bound storage role, individually owned runtime files, related database
 endpoints and native full-volume inclusion flags. Every library storage role
 has an explicit include or exclusion disposition. The compiler refuses missing
 classifications; optional unbound roles need no invented host path.
+
+With root monitoring also selected, the framework adds the Zabbix agent's
+configuration, existing PSK and successful ownership receipt to each guest's
+inventory. Downloaded package caches are reproducible. Controller credentials
+and failed-operation records still require separate protected custody.
 
 ## Database and application consistency
 
