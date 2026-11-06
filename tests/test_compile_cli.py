@@ -1,4 +1,4 @@
-"""Compiler and credential CLIs exercise the same current catalogues offline."""
+"""The authored library examples reach the real component packet CLI offline."""
 
 import json
 import os
@@ -15,10 +15,10 @@ FRAMEWORK = Path(os.environ.get("HOMELAB_FRAMEWORK", ROOT.parent / "homelab")).r
 class CompilerCLITests(unittest.TestCase):
     def test_default_and_empty_disable_nothing_while_named_guests_are_excluded(self):
         for arguments, guest, expected in (
-            ([], "dns", True),
-            (["--disabled", ""], "dns", True),
-            (["--disabled", "[]"], "dns", True),
-            (["--disabled", '["zigbee2mqtt"]'], "zigbee2mqtt", False),
+            ([], "resolver", True),
+            (["--disabled", ""], "resolver", True),
+            (["--disabled", "[]"], "resolver", True),
+            (["--disabled", '["resolver"]'], "resolver", False),
         ):
             with self.subTest(
                 arguments=arguments
@@ -38,37 +38,51 @@ class CompilerCLITests(unittest.TestCase):
                 "--stack",
                 str(ROOT),
                 "--site",
-                str(ROOT / "site.example.json"),
+                str(ROOT / "site.example.yaml"),
                 *args,
             ],
             capture_output=True,
             text=True,
+            timeout=30,
         )
 
     def test_check_and_packet_output_are_offline_and_exclusive(self):
-        self.assertEqual(self.command("--check").returncode, 0)
+        for example in ("site.example.yaml", "examples/site.second.yaml"):
+            with self.subTest(example=example):
+                result = subprocess.run(
+                    [sys.executable, str(FRAMEWORK / "blueprints/compile.py"),
+                     "--stack", str(ROOT), "--site", str(ROOT / example), "--check"],
+                    capture_output=True, text=True, timeout=30,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "packet.json"
-            result = self.command("--guest", "dns", "--output", str(output))
+            result = self.command("--guest", "resolver", "--output", str(output))
             self.assertEqual(result.returncode, 0, result.stderr)
             packet = json.loads(output.read_text())
+            self.assertEqual(packet["schema"], "homelab-component-guest-deployment-v1")
+            self.assertEqual(packet["guest"], "resolver")
             self.assertTrue(packet["enabled"])
+            self.assertEqual(set(packet), {"schema", "guest", "enabled", "identity", "files"})
+            runtime = json.loads(packet["files"]["component-runtime.json"])
+            self.assertEqual(set(runtime["applications"]), {"recursive_dns"})
+            self.assertEqual(runtime["applications"]["recursive_dns"]["adapter"], "unbound")
             before = output.read_bytes()
             self.assertNotEqual(
-                self.command("--guest", "dns", "--output", str(output)).returncode, 0
+                self.command("--guest", "resolver", "--output", str(output)).returncode, 0
             )
             self.assertEqual(output.read_bytes(), before)
             for args in (
                 [],
-                ["--guest", "dns", "--output", str(Path(tmp) / "other"), "--admit"],
+                ["--guest", "resolver", "--output", str(Path(tmp) / "other"), "--admit"],
                 [
                     "--guest",
-                    "dns",
+                    "resolver",
                     "--output",
                     str(Path(tmp) / "other"),
                     "--admit",
                     "--disabled",
-                    '["dns"]',
+                    '["resolver"]',
                 ],
             ):
                 result = self.command(*args)

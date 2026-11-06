@@ -1,0 +1,75 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: mqtt_explorer
+display_name: MQTT Explorer
+interfaces:
+  web:
+    required: true
+    accepts:
+    - guest-interface
+  private:
+    required: true
+    accepts:
+    - app-network
+  broker:
+    required: true
+    accepts:
+    - guest-interface
+listeners:
+  web:
+    service: explorer_gateway
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 4180
+    publish:
+      scope: guest-interface
+      interface: web
+      port: 80
+  explorer:
+    service: mqtt_explorer
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 3000
+endpoints:
+  web:
+    listener: web
+    protocol: http
+    via: web
+storage:
+  data:
+    target: /app/data
+    read_only: false
+    required: true
+    kind: directory
+    initialize:
+      type: directory
+      uid: 1001
+      gid: 1001
+      mode: '0700'
+connections:
+  broker:
+    type: mqtt
+    required: true
+    readiness:
+    - start
+    accounts:
+    - mqtt-client
+  outpost:
+    type: http
+    required: true
+software:
+- docker
+- curl
+- mqtt_explorer-images
+runtime:
+- container-host
+- mqtt_explorer
+health:
+  ready:
+    profile: adapter-ready
+monitoring:
+  profile: docker-agent

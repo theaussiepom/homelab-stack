@@ -1,0 +1,96 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: authentik
+display_name: Authentik
+interfaces:
+  web:
+    required: true
+    accepts:
+    - guest-interface
+  private:
+    required: true
+    accepts:
+    - app-network
+  postgresql:
+    required: true
+    accepts:
+    - guest-interface
+  management:
+    required: false
+    accepts:
+    - guest-interface
+listeners:
+  web:
+    service: server
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 9000
+    publish:
+      scope: guest-interface
+      interface: web
+      port: 9000
+  redis:
+    service: redis
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 6379
+endpoints:
+  web:
+    listener: web
+    protocol: http
+    via: web
+storage:
+  media:
+    target: /media
+    read_only: false
+    required: true
+    kind: directory
+  templates:
+    target: /templates
+    read_only: false
+    required: true
+    kind: directory
+  certs:
+    target: /certs
+    read_only: false
+    required: true
+    kind: directory
+  redis:
+    target: /data
+    read_only: false
+    required: true
+    kind: directory
+connections:
+  database:
+    type: postgresql
+    required: true
+    readiness:
+    - start
+  public:
+    type: https
+    required: false
+    readiness:
+    - start
+software:
+- docker
+- curl
+- authentik-images
+runtime:
+- container-host
+- authentik
+health:
+  ready:
+    profile: adapter-ready
+secrets:
+  secret_key:
+    required: true
+  postgresql_password:
+    required: true
+  smtp_password:
+    required: false
+monitoring:
+  profile: docker-agent

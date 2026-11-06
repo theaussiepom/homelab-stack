@@ -1,0 +1,104 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: cloudbeaver
+display_name: CloudBeaver
+interfaces:
+  web:
+    required: true
+    accepts:
+    - guest-interface
+  private:
+    required: true
+    accepts:
+    - app-network
+  postgresql:
+    required: false
+    accepts:
+    - guest-interface
+  mariadb:
+    required: false
+    accepts:
+    - guest-interface
+  management:
+    required: false
+    accepts:
+    - guest-interface
+listeners:
+  web:
+    service: auth_gateway
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 4180
+    publish:
+      scope: guest-interface
+      interface: web
+      port: 80
+  community:
+    service: cloudbeaver
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 8978
+endpoints:
+  web:
+    listener: web
+    protocol: http
+    via: web
+storage:
+  workspace:
+    target: /opt/cloudbeaver/workspace
+    read_only: false
+    required: true
+    kind: directory
+    initialize:
+      type: directory
+      uid: 8978
+      gid: 8978
+      mode: '0700'
+connections:
+  postgresql:
+    type: postgresql
+    required: false
+    readiness:
+    - start
+  mariadb:
+    type: mariadb
+    required: false
+    readiness:
+    - start
+  postgresql-admin:
+    type: postgresql
+    required: false
+    accounts:
+    - postgresql-admin
+  mariadb-admin:
+    type: mariadb
+    required: true
+    accounts:
+    - mariadb-admin
+  public:
+    type: https
+    required: false
+    readiness:
+    - start
+software:
+- docker
+- curl
+- cloudbeaver-images
+runtime:
+- container-host
+- cloudbeaver
+health:
+  ready:
+    profile: adapter-ready
+authentication: cloudbeaver-oidc
+monitoring:
+  profile: docker-agent
+properties:
+  mariadb_jdbc:
+    version: 3.5.11
+    sha256: 42604178b9e57ec08ee0035079961516f086e455d0141f0b22c6eff29fb2fff4
+    image_filename: mariadb-java-client-3.5.10.jar

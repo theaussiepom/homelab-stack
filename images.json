@@ -9,11 +9,6 @@
     "tag": null,
     "digest": "sha256:dc07e81b4462a1dad9c6720f4c73993e37d7cb2d2f94a306187318704d112e71"
   },
-  "pgadmin": {
-    "repository": "dpage/pgadmin4",
-    "tag": null,
-    "digest": "sha256:cefc4cc6b7d9d71a9e81e76fb9d7e14038ab5661b539a190eea1b63fa612589a"
-  },
   "traefik": {
     "repository": "traefik",
     "tag": null,
@@ -36,8 +31,8 @@
   },
   "bitwarden": {
     "repository": "ghcr.io/bitwarden/lite",
-    "tag": "latest",
-    "digest": null
+    "tag": null,
+    "digest": "sha256:94484fe9382df51ad755151ea360663e922e60a32385500454dd1f38045bf6a6"
   },
   "pegaprox": {
     "repository": "ghcr.io/pegaprox/pegaprox",
@@ -58,5 +53,50 @@
     "repository": "koenkk/zigbee2mqtt",
     "tag": null,
     "digest": "sha256:fef0de769dcd04c27b3a6d277b61046eb96284bdd4198dcb1687c3a01b3020f3"
+  },
+  "zabbix_server": {
+    "repository": "zabbix/zabbix-server-pgsql",
+    "tag": "ubuntu-7.0.32",
+    "digest": "sha256:bc0505eff209ab5ca9cfb6c7363f061b03b1a31ed529102274413febae54f002"
+  },
+  "zabbix_web": {
+    "repository": "zabbix/zabbix-web-nginx-pgsql",
+    "tag": "ubuntu-7.0.32",
+    "digest": "sha256:562b70986134a6083ba503ed5189afeda98b9b69c1960a5f0fb2faa13dfd5151"
+  },
+  "winet": {
+    "repository": "ghcr.io/theaussiepom/winet-extractor",
+    "tag": null,
+    "digest": "sha256:82c6b886967995f0a3cfe6fb5e20eeef70d10aa525d5bd824064eb272e1ce51a"
+  },
+  "music_assistant": {
+    "repository": "ghcr.io/music-assistant/server",
+    "tag": "latest",
+    "digest": null
+  },
+  "cloudbeaver": {
+    "repository": "dbeaver/cloudbeaver",
+    "tag": "26.2.3",
+    "digest": "sha256:a537c60a7ca98d8d791c11c01172c1354e8dedfe222d04a54795ceeb32f12bbc"
+  },
+  "auth_gateway": {
+    "repository": "quay.io/oauth2-proxy/oauth2-proxy",
+    "tag": "v7.15.5",
+    "digest": "sha256:0d989b27d90d5e527fb2b045d864c4001c3104bdd763b3211b7e9ba2110380ea"
+  },
+  "mqtt_explorer": {
+    "repository": "ghcr.io/thomasnordquist/mqtt-explorer",
+    "tag": null,
+    "digest": "sha256:fa2ff4300d867f1f3e131af6b6ccff54bc9d2905815e28e3aa5de6de5240f0fc"
+  },
+  "homeassistant_public": {
+    "repository": "ghcr.io/home-assistant/home-assistant",
+    "tag": null,
+    "digest": "sha256:23f4dfbb69ce76315dbc4de7915504f1c2dcecd7ca2648113a493a385972e133"
+  },
+  "node_red_public": {
+    "repository": "nodered/node-red",
+    "tag": null,
+    "digest": "sha256:2ccd38b4066648bd5e17430c50a2f8102c566a82fd4f2fc5c342e61664d6896f"
   }
 }

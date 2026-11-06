@@ -1,0 +1,351 @@
+# Complete SYNTHETIC source-only composition. Retained entries require an already owned installation.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+    timezone: Etc/UTC
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  homeassistant:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 820
+      hostname: example-homeassistant
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:14
+        address:
+          mode: static
+          value: 198.18.20.20
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/homeassistant
+    compose_projects:
+      homeassistant:
+        name: example-homeassistant
+        file: compose-homeassistant.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+  node-red:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 821
+      hostname: example-node-red
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:15
+        address:
+          mode: static
+          value: 198.18.20.21
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/node-red
+    compose_projects:
+      node_red:
+        name: example-node_red
+        file: compose-node_red.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_node_red_in
+  ingress:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 1000
+      hostname: example-ingress
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:c8
+        address:
+          mode: static
+          value: 198.18.20.200
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/ingress
+    compose_projects:
+      ingress:
+        name: example-ingress
+        file: compose-ingress.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_node_red
+apps:
+  homeassistant:
+    profile: homeassistant
+    guest: homeassistant
+    lifecycle: retained
+    interfaces:
+      web:
+        interface: primary
+    storage:
+      config:
+        root_path: data
+        subpath: homeassistant/config
+    identity:
+      phase: homeassistant
+      runtime_id: example-homeassistant
+      services:
+        homeassistant: homeassistant_homeassistant
+      networks: {}
+      project: homeassistant
+  node_red:
+    profile: node_red
+    guest: node-red
+    lifecycle: retained
+    interfaces:
+      web:
+        interface: primary
+    storage:
+      data:
+        root_path: data
+        subpath: node_red/data
+      config:
+        root_path: data
+        subpath: node_red/config
+      settings:
+        root_path: data
+        subpath: node_red/settings.js
+      healthcheck:
+        root_path: data
+        subpath: node_red/healthcheck.js
+    identity:
+      phase: node_red
+      runtime_id: example-node_red
+      services:
+        node_red: node_red_node_red
+      networks: {}
+      project: node_red
+    origin:
+      exposure: node_red
+    authentication: node_red
+  ingress:
+    profile: traefik
+    guest: ingress
+    lifecycle: retained
+    interfaces:
+      frontend:
+        interface: primary
+      management:
+        interface: primary
+    storage:
+      certs:
+        root_path: data
+        subpath: ingress/certs
+    identity:
+      phase: ingress
+      runtime_id: example-ingress
+      services:
+        traefik: ingress_traefik
+      networks: {}
+      runtime_directory: /opt/homelab-app/runtime/ingress
+      project: ingress
+    properties:
+      provider:
+        context: lab
+        token_id: example@pve!reader
+      acme:
+        email: admin@example.invalid
+        resolvers:
+        - external: resolver
+    secrets:
+      cloudflare_dns_token: ingress_cloudflare_dns_token
+      proxmox_token: ingress_proxmox_token
+domains:
+  node_red: node-red.example.invalid
+  identity: identity.example.invalid
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+identity_providers:
+  login:
+    type: retained-node-red-oidc
+    origin:
+      domain: identity
+    provider_slug: example-flow
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+  ingress_cloudflare_dns_token:
+    type: file
+    path: /run/example/ingress_cloudflare_dns_token
+  ingress_proxmox_token:
+    type: file
+    path: /run/example/ingress_proxmox_token
+accounts: {}
+devices: {}
+evidence: {}
+connections: {}
+exposures:
+  node_red:
+    type: http
+    endpoint:
+      app: node_red
+      endpoint: web
+    domain: node_red
+    ingress:
+      app: ingress
+      endpoint: https
+    tls: public
+images: {}
+host_aliases: {}
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+    ingress_node_red:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.21/32
+        port: '1880'
+        comment: Selected node_red route backend
+    ingress_node_red_in:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.200/32
+        port: '1880'
+        comment: Selected node_red ingress
+  transport: {}
+  tls:
+    public:
+      type: acme
+      resolver: letsencrypt
+  middlewares: {}
+  authentication:
+    node_red:
+      type: node-red-retained-oidc
+      provider: login
+      client_id: example-flow

@@ -1,0 +1,94 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: unbound
+display_name: Unbound
+interfaces:
+  service:
+    required: true
+    accepts:
+    - guest-loopback
+  private:
+    required: true
+    accepts:
+    - app-network
+listeners:
+  dns_udp:
+    service: unbound
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: udp
+    port: 53
+    publish:
+      scope: guest-loopback
+      port: 5335
+  dns_tcp:
+    service: unbound
+    namespace: app-network
+    interface: private
+    bind: wildcard
+    protocol: tcp
+    port: 53
+    publish:
+      scope: guest-loopback
+      port: 5335
+endpoints:
+  dns_udp:
+    listener: dns_udp
+    protocol: udp
+    via: service
+  dns_tcp:
+    listener: dns_tcp
+    protocol: tcp
+    via: service
+storage:
+  config:
+    target: /opt/unbound/etc/unbound
+    read_only: false
+    required: false
+    kind: directory
+  dev:
+    target: /opt/unbound/etc/unbound/dev
+    read_only: false
+    required: false
+    kind: directory
+  var:
+    target: /opt/unbound/etc/unbound/var
+    read_only: false
+    required: false
+    kind: directory
+  control_key:
+    target: /opt/unbound/etc/unbound/unbound_control.key
+    read_only: true
+    required: false
+    kind: file
+  control_cert:
+    target: /opt/unbound/etc/unbound/unbound_control.pem
+    read_only: true
+    required: false
+    kind: file
+  server_key:
+    target: /opt/unbound/etc/unbound/unbound_server.key
+    read_only: true
+    required: false
+    kind: file
+  server_cert:
+    target: /opt/unbound/etc/unbound/unbound_server.pem
+    read_only: true
+    required: false
+    kind: file
+connections: {}
+properties:
+  publish_port: 5335
+software:
+- docker
+- curl
+- unbound-images
+runtime:
+- container-host
+- unbound
+health:
+  ready:
+    profile: adapter-ready
+monitoring:
+  profile: docker-agent

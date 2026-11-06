@@ -1,0 +1,114 @@
+# Synthetic alternate placement: independent HA plus repeated resolver instances.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.19.40.2
+    port: 22
+networks:
+  services:
+    context: lab
+    cidr: 198.19.40.0/25
+    bridge: vmbr-example-alt
+    vlan: 320
+    gateway: 198.19.40.1
+  clients:
+    context: lab
+    cidr: 198.19.50.0/24
+    bridge: vmbr-example-clients
+    vlan: 321
+    gateway: 198.19.50.1
+storage:
+  local:
+    context: lab
+    pool: example-local
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+guests:
+  resolver-east:
+    source: second/guests/resolver-east.yaml
+  resolver-west:
+    source: second/guests/resolver-west.yaml
+  home-app:
+    source: second/guests/home-app.yaml
+apps:
+  local_primary:
+    source: second/apps/local_primary.yaml
+  local_backup:
+    source: second/apps/local_backup.yaml
+  remote_primary:
+    source: second/apps/remote_primary.yaml
+  home:
+    source: second/apps/home.yaml
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0

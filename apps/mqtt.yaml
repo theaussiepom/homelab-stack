@@ -1,0 +1,62 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: mqtt
+display_name: MQTT
+interfaces:
+  backend:
+    required: true
+    accepts:
+    - guest-interface
+  frontend:
+    required: true
+    accepts:
+    - guest-interface
+listeners:
+  mqtt:
+    service: mqtt
+    namespace: host
+    interface: backend
+    bind: wildcard
+    protocol: tcp
+    port: 1883
+endpoints:
+  backend:
+    listener: mqtt
+    protocol: tcp
+    via: backend
+  frontend:
+    listener: mqtt
+    protocol: tcp
+    via: frontend
+storage:
+  config:
+    target: /mosquitto/config
+    read_only: false
+    required: true
+    kind: directory
+  data:
+    target: /mosquitto/data
+    read_only: false
+    required: true
+    kind: directory
+  log:
+    target: /mosquitto/log
+    read_only: false
+    required: true
+    kind: directory
+connections: {}
+software:
+- docker
+- curl
+- mqtt-images
+runtime:
+- container-host
+- mqtt
+health:
+  ready:
+    profile: adapter-ready
+monitoring:
+  profile: docker-agent
+secrets:
+  probe:
+    required: false

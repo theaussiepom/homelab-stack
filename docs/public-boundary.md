@@ -1,25 +1,24 @@
 # Public source policy
 
-This public repository contains an executable, sanitized version of Ben's selected guest composition. Public
-source uses benchmark networks (198.18.0.0/15), example.invalid names, synthetic
-MACs and a placeholder SSH public key. Central values describe topology once.
-These example identities are not approved deployment identities.
+This repository owns reusable app profiles, guest templates, supported defaults
+and logical relationships. Sites own concrete allocations, identity, storage,
+trust, credentials and access policy. Library definitions contain no implicit
+site graph. Separate examples use reserved addresses, synthetic MACs and example
+names; source compilation does not admit those values for real deployment.
 
-Only declarative infrastructure shape, package selections, bounded health checks,
-resource limits, reusable app settings and public vendor keys may be ported from
-private preparation. Review each field before publishing. Replace site addresses,
-domains, PVE node, runner storage endpoints and MACs with central example values.
-Do not copy credential values, restore receipts, backup hashes, capture paths,
-observations, application data, HA or Node-RED configuration, Zigbee state, radio
-backups or exported custom images. A path to an external secret file may be
-specified; its content must stay outside Git.
+Only reviewed declarations, public vendor assets and bounded supported component
+settings belong here. Do not import private receipts, backup hashes, captures,
+observations, application data, configuration secrets, radio state or image
+archives. A supported external secret reference belongs to the consuming site;
+its value remains outside Git. Public assets retain their exact bytes and hash.
 
-Official image digests are source selections, not credentials. A missing recorded
-tag is null, never invented. Custom HA and Node-RED images remain external:
-public entries are explicit placeholders; the private overlay must supply their
-retained local IDs, archive paths and archive hashes before admission. This work
-does not update or convert those images.
+Official image digests are public source selections. Retained archive catalogue
+entries keep their explicit policy; a consuming site supplies the exact retained
+local ID, archive path and hash. Separately declared public profile variants
+select official images for supported fresh paths. There is no silent registry
+fallback, policy override or image substitution. See [image options](guides/images-and-updates.md).
 
-The private site supplies actual central values and approved identity overrides.
-A public-source merge runs CI only. Live adoption requires a deliberate private
-stack selection, prerequisite acceptance, readiness changes and reviewed main merge.
+The shared selected-framework boundary checker is mandatory. Source publication
+and a public-source merge do not authorize native changes. Deployments use the
+consuming site's protected CD and its current ownership, trust, state and review
+gates; service acceptance is recorded separately.

@@ -126,31 +126,33 @@ class StackPushGuardTests(unittest.TestCase):
 
 
 class PublicPolicyTests(unittest.TestCase):
-    def test_vendor_key_exceptions_bind_exact_public_key_profiles(self):
+    def test_vendor_key_exceptions_bind_exact_public_key_assets(self):
         import hashlib
         import json
 
         entries = json.loads((ROOT / ".githooks/reviewed-findings.json").read_text())
-        self.assertEqual(
-            {entry["path"] for entry in entries},
-            {f"guests/{name}/profile.json" for name in ("postgresql", "mariadb", "influxdb")},
-        )
-        for entry in entries:
-            raw = (ROOT / entry["path"]).read_bytes()
-            profile = json.loads(raw)
-            key = profile["files"]["vendor.asc"]
-            repository = profile["config"]["app"]["repositories"][0]
-            with self.subTest(path=entry["path"]):
+        raw = (ROOT / "stack.json").read_bytes()
+        library = json.loads(raw)
+        names = ("postgresql", "mariadb", "influxdb")
+        self.assertEqual(len(entries), len(names))
+        self.assertEqual({entry["path"] for entry in entries}, {"stack.json"})
+        self.assertEqual(len({entry["line"] for entry in entries}), len(names))
+        for entry, name in zip(entries, names, strict=True):
+            asset = library["assets"][name + "-repository-key"]
+            key = (ROOT / asset["source"]).read_bytes()
+            with self.subTest(asset=name):
+                self.assertEqual(asset["source"], "assets/" + name + "/vendor.asc")
+                self.assertEqual(asset["type"], "raw-utf8")
                 self.assertEqual(entry["rule"], "generic-api-key")
                 self.assertEqual(hashlib.sha256(raw).hexdigest(), entry["sha256"])
-                self.assertTrue(key.startswith("-----BEGIN PGP PUBLIC KEY BLOCK-----"))
-                self.assertEqual(hashlib.sha256(key.encode()).hexdigest(), repository["key_sha256"])
-                self.assertIn(repository["key_sha256"], raw.decode().splitlines()[entry["line"] - 1])
+                self.assertTrue(key.startswith(b"-----BEGIN PGP PUBLIC KEY BLOCK-----"))
+                self.assertEqual(hashlib.sha256(key).hexdigest(), asset["sha256"])
+                self.assertIn(asset["sha256"], raw.decode().splitlines()[entry["line"] - 1])
 
     def test_private_file_ignore_rules_preserve_example_exceptions(self):
-        private = [".env", ".env.local", ".env.production", "site.json", "archive.p12",
+        private = [".env", ".env.local", ".env.production", "site.json", "site.yaml", "site.yml", "archive.p12",
                    "certificate.pfx", "runtime.db", "state.sqlite3", ".coverage", ".coverage.fixture"]
-        examples = [".env.example", ".env.sample", ".env.template", "site.example.json"]
+        examples = [".env.example", ".env.sample", ".env.template", "site.example.json", "site.example.yaml", "site.example.yml"]
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             subprocess.run(["git", "init", "-q", str(root)], check=True)

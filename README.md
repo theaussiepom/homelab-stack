@@ -1,118 +1,36 @@
-# HomeLab stack
+# HomeLab application library
 
-A copyable implementation of a small Proxmox homelab. This repository composes the
-reusable **homelab** framework into guests and applications. A private
-**homelab-site** repository adopts a reviewed stack version and supplies actual
-settings and deployment controls.
+Compose independent applications into Debian LXC guests on Proxmox. Choose a profile, give each app a stable identity, and bind its networks, storage and integrations in a site. The shared framework compiles that source and drives OpenTofu infrastructure and Ansible configuration through protected CD.
 
-The source is executable: profiles compile to the framework's guarded ordinary
-packet; reusable workflows run infrastructure, preparation, and the real app jobs.
-The addresses and MACs here are sanitized examples. This repository publishes source only; the redesign has not been deployed.
+You can run a standalone resolver, place several apps together, or separate them across guests. There is no fixed guest list and no mandatory Home Assistant/Node-RED, Pi-hole/Unbound or MQTT/Explorer bundle.
 
-```mermaid
-flowchart TD
-  DNS[DNS: Unbound then Pi-hole] --> Ingress[Traefik]
-  DNS --> PG[PostgreSQL]
-  DNS --> Maria[MariaDB]
-  DNS --> Influx[InfluxDB]
-  DNS --> Pega[PegaProx]
-  PG --> Auth[Authentik: server + worker + Redis]
-  Ingress --> Auth
-  PG --> Admin[pgAdmin]
-  Auth --> Admin
-  Ingress --> Admin
-  Ingress --> Auto[Automation: MQTT then Home Assistant then Node-RED]
-  Auth --> Auto
-  Maria --> Auto
-  Influx --> Auto
-  Auto --> Radio[Zigbee2MQTT: Radio 209]
-  Maria --> Vault[Bitwarden]
-  Ingress --> Vault
-```
+## Start here
 
-Each guest expands to **Infrastructure -> Preparation -> Application(s)**.
-Preparation installs a Linux baseline and, for container workloads, Docker/Compose
-once. PostgreSQL, MariaDB and InfluxDB are native Debian guests. Authentik is one
-application job covering its three containers. These are Debian LXC workflows;
-VM application support has not been qualified.
+- **New to the project:** [Start here](docs/start-here.md), then [compile your first configuration](docs/guides/first-configuration.md). The tutorial needs no Proxmox host, Docker daemon or credentials.
+- **Choose an app:** [Browse all 21 profiles](docs/reference/README.md), including explicit public-image and MariaDB-admin variants.
+- **Build a site:** [Compose a site](docs/guides/compose-a-site.md), [bind interfaces](docs/guides/multiple-interfaces.md), and [connect apps](docs/guides/connect-apps.md).
+- **Maintain or extend it:** [Images and updates](docs/guides/images-and-updates.md), [contributing](docs/contributing.md), [tests](docs/testing.md), and [troubleshooting](docs/troubleshooting.md).
 
-Zigbee2MQTT is an active Debian LXC with one declared coordinator, Docker in shared
-Preparation, and one Zigbee2MQTT application entity. Its profile enables guest
-startup and boot startup; its container inherits `restart: always`. Infrastructure
-uses the framework's registered host capability for the exact device. BPG owns
-the active guest and leaves device attachment to that capability because Proxmox
-refuses API-token device updates. Register the restricted forced-command helper
-before accepting `restricted-host-device-capability-registered`; the framework's
-stack contract documents operator registration. Normal reconciliation may attach
-the declared device if absent and verifies it inside the running guest. It refuses
-replacement, removal and pending device changes. There are no stopped deployment
-stages or separate radio controllers.
-The separately prepared data includes the existing configuration, device database
-and coordinator backup. Deployment preserves the network identity and never opens
-the radio from a configuration checker or rewrites Zigbee settings.
+The [documentation index](docs/README.md) links the full guide and reference suite.
 
-Automation's `app.published_services.mqtt` is the broker definition. It declares
-the hostname, port, frontend/backend addresses and which address DNS publishes.
-Radio references `automation.mqtt` at its backend address through
-`app.service_connections`. The compiler derives its container hostname alias,
-the Pi-hole record and the matching DNS verification from that definition. An
-address or hostname change therefore updates all of them together. Firewall
-validation checks both ends of the MQTT connection. Pi-hole reconciliation updates
-only the selected hostnames, preserves unrelated aliases and records, and restarts
-only Pi-hole when the actual records change.
+## What is in the library?
 
-| File | Purpose |
+Home Assistant, Node-RED, Bitwarden, CloudBeaver, Pi-hole, Unbound, Authentik, InfluxDB, Traefik, MariaDB, Zabbix, Mosquitto, MQTT Explorer, Music Assistant, PegaProx, PostgreSQL, Zigbee2MQTT and WiNet. Supporting containers stay with their owning app. Profile pages state fresh/update limits; a listed product is not a promise of unrestricted first-install or hardware support.
+
+| Source | Owns |
 | --- | --- |
-| [stack.json](stack.json) | Guest dependencies, prerequisite names and central example values |
-| [common.json](common.json) | Shared runner paths and PVE connection shape |
-| [images.json](images.json) | Image selection authority |
-| [guests](guests) | Executable profiles and public vendor keys/config templates |
-| [deploy workflow](.github/workflows/deploy.yml) | Generated guest groups and real dependency edges |
-| [phase workflow](.github/workflows/phase.yml) | The single framework revision selection |
-| [site.example.json](site.example.json) | Empty private overlay shape |
+| [stack.json](stack.json) | Profile/template registration, named software, runtime, health and policy declarations |
+| [apps/](apps/) | Complete reusable app profiles |
+| [templates/](templates/) | Guest defaults |
+| [images.json](images.json) | Authoritative image selections and policies |
+| [assets/](assets/) | Hash-bound public vendor material |
+| [site.example.yaml](site.example.yaml) | Small standalone Unbound source example |
+| [examples/site.second.yaml](examples/site.second.yaml) | Different placement, repeated resolvers and independent HA |
 
-Follow [setup and local tests](docs/setup.md), [secrets and prerequisites](docs/secrets.md),
-[public-source policy](docs/public-boundary.md) and [adoption](docs/adoption.md).
-Public pushes and pull requests run source CI only. Deployment is called from the
-private site after deliberate pin adoption and reviewed merge. Every declared
-guest participates by default. The optional `disabled` input defaults to `[]`;
-only named exclusions are skipped. Invalid prerequisites fail validation instead
-of silently disabling a guest. The public example is an offline input fixture.
+The library owns reusable choices. A consuming site owns actual allocations, trust, credentials, identities and access policy. The framework owns validation, rendering and deployment capabilities. See [the model](docs/concepts.md) and [working agreement](AGENTS.md).
 
-The composition covers eleven prepared guests, including Zigbee2MQTT. Other fleet
-applications, optional image updates and recovery projects are outside this redesign.
-Monitoring source components remain in the framework; this stack
-does not deploy an additional monitoring guest.
+## What a successful source check means
 
-Guest definitions combine a framework blueprint with a profile under `guests/`,
-the dependency entry in `stack.json` and private-site overrides. For example,
-[MariaDB's profile](guests/mariadb/profile.json) selects VMID 206, one CPU,
-1024 MiB RAM, a 4 GiB root disk and 16 GiB at `/var/lib/mysql`. Its blueprint
-selects Linux preparation and the MariaDB application phase; the stack makes it
-depend on DNS. The profile also supplies pinned packages, repository/configuration
-files, interfaces, firewall rules and health checks. Actual addresses and keys
-are supplied by the private site. No Actions jobs are written inside a profile.
+A successful compiler check proves the selected declarations can be resolved. It does not create a guest, load private credentials, change firewall/routing policy or verify a running service. The examples use synthetic addresses and are intentionally unsuitable for real deployment admission.
 
-CI has three separate workflows, each with its own purpose and progress:
-
-| Workflow | When it runs | Checks |
-| --- | --- | --- |
-| [Validate stack](.github/workflows/validate-stack.yml) | Pull requests and pushes to main | Profiles, generated workflows, tests, 100% per-file coverage and complete-history source scanning |
-| [Review PR dependencies](.github/workflows/review-pr-dependencies.yml) | Pull requests only | Changed dependency vulnerabilities |
-| [Scan Python security](.github/workflows/scan-python-security.yml) | Pull requests and pushes to main | CodeQL Python analysis |
-
-Their required check names remain `Source contracts`, `Dependency review` and
-`CodeQL (python)`. The guest/deploy/phase workflows are separate reusable deployment
-definitions, called by the private site; public CI uses synthetic fixtures.
-
-The selected framework's `blueprints/workflows.py` generates `deploy.yml` and all
-`guest-*.yml` workflows from the catalogue and stack dependencies. Edit those
-declarative inputs and regenerate; the checked-in generated files are not edited
-by hand. CI rejects stale generated files. The literal framework selection in
-`phase.yml`, source CI and private-site exclusions remain explicit controls.
-
-HTTP applications expose named endpoints, while the separate `routes` map owns
-hostnames and optional middleware references. Managed routes compile to Proxmox
-Notes; external NAS/host/Pi routes compile to the Traefik file provider. DNS records
-point their hostnames to ingress. Read [the routing contract](docs/routing.md) for
-examples, TLS trust, middleware definitions and explicit firewall requirements.
+Ordinary updates preserve current receipts, state, private material and data ownership. Unsupported initialization, identity conflicts and unresolved holds refuse. Deployment and service verification belong to the consuming site's separately authorized protected CD path.

@@ -1,0 +1,38 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: postgresql
+display_name: PostgreSQL
+interfaces:
+  service:
+    required: true
+    accepts:
+    - guest-interface
+listeners:
+  database:
+    service: postgresql
+    namespace: host
+    interface: service
+    bind: interface
+    protocol: tcp
+    port: 5432
+endpoints:
+  backend:
+    listener: database
+    protocol: tcp
+    via: service
+storage:
+  data:
+    target: /var/lib/postgresql
+    read_only: false
+    required: true
+    kind: directory
+connections: {}
+software:
+- postgresql
+runtime:
+- native-postgresql
+health:
+  ready:
+    profile: adapter-ready
+monitoring:
+  profile: postgresql-agent

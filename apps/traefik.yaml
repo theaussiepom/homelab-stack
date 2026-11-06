@@ -1,0 +1,77 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: traefik
+display_name: Traefik
+interfaces:
+  frontend:
+    required: true
+    accepts:
+    - guest-interface
+  management:
+    required: false
+    accepts:
+    - guest-interface
+  backend:
+    required: false
+    accepts:
+    - guest-interface
+  metrics:
+    required: false
+    accepts:
+    - guest-interface
+listeners:
+  http:
+    service: traefik
+    namespace: host
+    interface: frontend
+    bind: interface
+    protocol: tcp
+    port: 80
+  https:
+    service: traefik
+    namespace: host
+    interface: frontend
+    bind: interface
+    protocol: tcp
+    port: 443
+endpoints:
+  http:
+    listener: http
+    protocol: http
+    via: frontend
+  https:
+    listener: https
+    protocol: https
+    via: frontend
+  dashboard:
+    internal: dashboard
+properties:
+  dashboard: false
+storage:
+  certs:
+    target: /var/traefik/certs
+    read_only: false
+    required: true
+    kind: directory
+connections:
+  provider:
+    type: https
+    required: false
+software:
+- docker
+- curl
+- traefik-images
+- network-tools
+runtime:
+- container-host
+- traefik
+health:
+  ready:
+    profile: adapter-ready
+secrets:
+  cloudflare_dns_token:
+    required: false
+  proxmox_token:
+    required: false
+monitoring:
+  profile: docker-agent

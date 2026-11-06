@@ -1,0 +1,42 @@
+schema: homelab-components-v1
+kind: guest
+context: lab
+template: base
+lifecycle: fresh
+identity:
+  vmid: 711
+  hostname: example-resolver-east
+template_file_id: example:vztmpl/debian.tar.zst
+root_storage: local
+interfaces:
+  primary:
+    network: services
+    slot: 0
+    mac: 02:00:00:40:00:11
+    address:
+      mode: static
+      value: 198.19.40.11
+    default_route: true
+    ipv6: manual
+  clients:
+    network: clients
+    slot: 1
+    mac: 02:00:00:50:00:11
+    address:
+      mode: static
+      value: 198.19.50.11
+    default_route: false
+    ipv6: manual
+network_policy:
+- policy: deployment
+  endpoints:
+    runner:
+      external: runner
+- policy: downloads
+  address_groups:
+    internet: internet
+- policy: recursive_dns
+  address_groups:
+    internet: internet
+display_name: East resolver
+control_interface: primary

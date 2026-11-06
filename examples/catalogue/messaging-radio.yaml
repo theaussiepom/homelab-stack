@@ -1,0 +1,586 @@
+# Complete SYNTHETIC source-only composition. Retained entries require an already owned installation.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+    timezone: Etc/UTC
+    capabilities:
+      serial:
+        type: serial-device
+        ssh_private_key: ssh
+        known_hosts: /etc/example/serial-known_hosts
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  broker:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 890
+      hostname: example-broker
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:5a
+        address:
+          mode: static
+          value: 198.18.20.90
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/broker
+    compose_projects:
+      broker:
+        name: example-broker
+        file: compose-broker.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+  browser:
+    context: lab
+    template: docker
+    lifecycle: fresh
+    identity:
+      vmid: 891
+      hostname: example-browser
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:5b
+        address:
+          mode: static
+          value: 198.18.20.91
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/browser
+    compose_projects: {}
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_browser_in
+    - policy: connect_browser_broker
+    - policy: connect_browser_outpost
+    volumes:
+      apps:
+        storage: local
+        slot: 0
+        path: /srv/example/apps
+        size_gib: 4
+  ingress:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 1000
+      hostname: example-ingress
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:c8
+        address:
+          mode: static
+          value: 198.18.20.200
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/ingress
+    compose_projects:
+      ingress:
+        name: example-ingress
+        file: compose-ingress.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_browser
+  telemetry:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 892
+      hostname: example-telemetry
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:5c
+        address:
+          mode: static
+          value: 198.18.20.92
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/telemetry
+    compose_projects:
+      telemetry:
+        name: example-telemetry
+        file: compose-telemetry.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: connect_telemetry_broker
+    - policy: connect_telemetry_inverter
+  radio:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 893
+      hostname: example-radio
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:5d
+        address:
+          mode: static
+          value: 198.18.20.93
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/radio
+    compose_projects:
+      radio:
+        name: example-radio
+        file: compose-radio.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: connect_radio_broker
+apps:
+  broker:
+    profile: mqtt
+    guest: broker
+    lifecycle: retained
+    interfaces:
+      backend:
+        interface: primary
+      frontend:
+        interface: primary
+    storage:
+      config:
+        root_path: data
+        subpath: broker/config
+      data:
+        root_path: data
+        subpath: broker/data
+      log:
+        root_path: data
+        subpath: broker/log
+    identity:
+      phase: broker
+      runtime_id: example-broker
+      services:
+        mqtt: broker_mqtt
+      networks: {}
+      runtime_directory: /opt/homelab-app/runtime/broker
+      project: broker
+    secrets:
+      probe: broker_probe
+  browser:
+    profile: mqtt_explorer
+    guest: browser
+    lifecycle: fresh
+    interfaces:
+      web:
+        interface: primary
+      private:
+        scope: app-network
+        network: explorer
+      broker:
+        interface: primary
+    storage:
+      data:
+        volume: apps
+        subpath: browser
+    origin:
+      exposure: browser
+    properties:
+      connection_name: Example existing broker
+  ingress:
+    profile: traefik
+    guest: ingress
+    lifecycle: retained
+    interfaces:
+      frontend:
+        interface: primary
+      management:
+        interface: primary
+    storage:
+      certs:
+        root_path: data
+        subpath: ingress/certs
+    identity:
+      phase: ingress
+      runtime_id: example-ingress
+      services:
+        traefik: ingress_traefik
+      networks: {}
+      runtime_directory: /opt/homelab-app/runtime/ingress
+      project: ingress
+    properties:
+      provider:
+        context: lab
+        token_id: example@pve!reader
+      acme:
+        email: admin@example.invalid
+        resolvers:
+        - external: resolver
+    secrets:
+      cloudflare_dns_token: ingress_cloudflare_dns_token
+      proxmox_token: ingress_proxmox_token
+  telemetry:
+    profile: winet
+    guest: telemetry
+    lifecycle: retained
+    interfaces:
+      broker:
+        interface: primary
+      inverter:
+        interface: primary
+    storage: {}
+    identity:
+      phase: telemetry
+      runtime_id: example-telemetry
+      services:
+        winet: telemetry_winet
+      networks: {}
+      runtime_directory: /opt/homelab-app/runtime/telemetry
+      project: telemetry
+    secrets:
+      options: telemetry_options
+    properties:
+      mqtt_prefix: winet-extractor/example
+  radio:
+    profile: zigbee2mqtt
+    guest: radio
+    lifecycle: retained
+    interfaces:
+      web:
+        interface: primary
+      broker:
+        interface: primary
+      private:
+        scope: app-network
+        network: default
+    storage:
+      data:
+        root_path: data
+        subpath: radio/data
+    identity:
+      phase: radio
+      runtime_id: example-radio
+      services:
+        zigbee2mqtt: radio_zigbee2mqtt
+      networks:
+        default: default
+      project: radio
+    properties:
+      adapter: ember
+      mqtt_base_topic: example-zigbee
+    devices:
+      coordinator: coordinator
+domains:
+  browser: browser.example.invalid
+  broker: broker.example.invalid
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+  existing_broker:
+    protocol: tcp
+    address: 192.0.2.63
+    port: 1883
+  outpost:
+    protocol: http
+    address: 192.0.2.64
+    port: 9000
+  inverter:
+    protocol: https
+    address: 192.0.2.65
+    port: 443
+identity_providers: {}
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+  broker_probe:
+    type: file
+    path: /run/example/broker_probe
+  ingress_cloudflare_dns_token:
+    type: file
+    path: /run/example/ingress_cloudflare_dns_token
+  ingress_proxmox_token:
+    type: file
+    path: /run/example/ingress_proxmox_token
+  browser_password:
+    type: file
+    path: /run/example/browser_password
+  telemetry_options:
+    type: file
+    path: /run/example/telemetry_options
+accounts: {}
+devices:
+  coordinator:
+    type: serial
+    context: lab
+    path: /dev/serial/by-id/usb-example-coordinator
+    capability: serial
+evidence: {}
+connections:
+  browser_broker:
+    consumer:
+      app: browser
+      connection: broker
+    target:
+      external: existing_broker
+    source_interface: broker
+    hostname:
+      domain: broker
+    credential:
+      principal: example_gui
+      secret: browser_password
+  browser_outpost:
+    consumer:
+      app: browser
+      connection: outpost
+    target:
+      external: outpost
+    source_interface: web
+  telemetry_broker:
+    consumer:
+      app: telemetry
+      connection: broker
+    target:
+      external: existing_broker
+    source_interface: broker
+  telemetry_inverter:
+    consumer:
+      app: telemetry
+      connection: inverter
+    target:
+      external: inverter
+    source_interface: inverter
+  radio_broker:
+    consumer:
+      app: radio
+      connection: broker
+    target:
+      external: existing_broker
+    source_interface: broker
+exposures:
+  browser:
+    type: http
+    endpoint:
+      app: browser
+      endpoint: web
+    domain: browser
+    ingress:
+      app: ingress
+      endpoint: https
+    tls: public
+images: {}
+host_aliases: {}
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+    ingress_browser:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.91/32
+        port: '80'
+        comment: Selected browser route backend
+    ingress_browser_in:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.200/32
+        port: '80'
+        comment: Selected browser ingress
+    connect_browser_broker:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 192.0.2.63/32
+        port: '1883'
+        comment: Selected browser_broker relationship
+    connect_browser_outpost:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 192.0.2.64/32
+        port: '9000'
+        comment: Selected browser_outpost relationship
+    connect_telemetry_broker:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 192.0.2.63/32
+        port: '1883'
+        comment: Selected telemetry_broker relationship
+    connect_telemetry_inverter:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 192.0.2.65/32
+        port: '443'
+        comment: Selected telemetry_inverter relationship
+    connect_radio_broker:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 192.0.2.63/32
+        port: '1883'
+        comment: Selected radio_broker relationship
+  transport: {}
+  tls:
+    public:
+      type: acme
+      resolver: letsencrypt
+  middlewares: {}
+  authentication: {}

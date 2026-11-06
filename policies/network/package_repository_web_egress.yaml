@@ -1,0 +1,8 @@
+schema: homelab-components-v1
+kind: network-policy
+rules:
+- comment: Signed package downloads
+  destination: 0.0.0.0/0
+  direction: out
+  port: 80,443
+  proto: tcp

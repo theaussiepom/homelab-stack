@@ -1,0 +1,678 @@
+# Complete SYNTHETIC source-only composition. Retained entries require an already owned installation.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+    timezone: Etc/UTC
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  cloud:
+    context: lab
+    template: docker
+    lifecycle: fresh
+    identity:
+      vmid: 880
+      hostname: example-cloud
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 6144
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:50
+        address:
+          mode: static
+          value: 198.18.20.80
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/cloud
+    compose_projects: {}
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_cloud_in
+    - policy: connect_cloud_public
+    - policy: connect_browse
+    - policy: connect_postgres_administration
+    volumes:
+      apps:
+        storage: local
+        slot: 0
+        path: /srv/example/apps
+        size_gib: 4
+  ingress:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 1000
+      hostname: example-ingress
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:c8
+        address:
+          mode: static
+          value: 198.18.20.200
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/ingress
+    compose_projects:
+      ingress:
+        name: example-ingress
+        file: compose-ingress.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_cloud
+    - policy: ingress_administration
+    - policy: connect_cloud_public_incoming
+    - policy: connect_administration_public_incoming
+  administration:
+    context: lab
+    template: docker
+    lifecycle: fresh
+    identity:
+      vmid: 881
+      hostname: example-administration
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 6144
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:51
+        address:
+          mode: static
+          value: 198.18.20.81
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/administration
+    compose_projects: {}
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_administration_in
+    - policy: connect_administration_public
+    - policy: connect_administration
+    volumes:
+      apps:
+        storage: local
+        slot: 0
+        path: /srv/example/apps
+        size_gib: 4
+  existing-postgres:
+    context: lab
+    template: base
+    lifecycle: retained
+    identity:
+      vmid: 882
+      hostname: example-existing-postgres
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 3072
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:52
+        address:
+          mode: static
+          value: 198.18.20.82
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/existing-postgres
+      native:
+        path: /var/lib/postgresql
+    compose_projects: {}
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: connect_postgres_administration_incoming
+  existing-maria:
+    context: lab
+    template: base
+    lifecycle: retained
+    identity:
+      vmid: 883
+      hostname: example-existing-maria
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 3072
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:53
+        address:
+          mode: static
+          value: 198.18.20.83
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/existing-maria
+      native:
+        path: /var/lib/mysql
+    compose_projects: {}
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: connect_administration_incoming
+apps:
+  cloud:
+    profile: cloudbeaver
+    guest: cloud
+    lifecycle: fresh
+    interfaces:
+      web:
+        interface: primary
+      private:
+        scope: app-network
+        network: database_tools
+      postgresql:
+        interface: primary
+    storage:
+      workspace:
+        volume: apps
+        subpath: cloud
+    origin:
+      exposure: cloud
+    authentication: cloud
+    properties:
+      server_name: Example database UI
+      recovery_admin: local-recovery
+      heap_mib: 1024
+      auth_headers:
+        user: X-User
+        team: X-Team
+      connections:
+        postgresql:
+          name: Example PostgreSQL
+          database: example
+          sslmode: require
+        postgresql-admin:
+          name: Example PostgreSQL administration
+          database: postgres
+  ingress:
+    profile: traefik
+    guest: ingress
+    lifecycle: retained
+    interfaces:
+      frontend:
+        interface: primary
+      management:
+        interface: primary
+    storage:
+      certs:
+        root_path: data
+        subpath: ingress/certs
+    identity:
+      phase: ingress
+      runtime_id: example-ingress
+      services:
+        traefik: ingress_traefik
+      networks: {}
+      runtime_directory: /opt/homelab-app/runtime/ingress
+      project: ingress
+    properties:
+      provider:
+        context: lab
+        token_id: example@pve!reader
+      acme:
+        email: admin@example.invalid
+        resolvers:
+        - external: resolver
+    secrets:
+      cloudflare_dns_token: ingress_cloudflare_dns_token
+      proxmox_token: ingress_proxmox_token
+  postgres_database:
+    profile: postgresql
+    guest: existing-postgres
+    lifecycle: retained
+    interfaces:
+      service:
+        interface: primary
+    storage:
+      data:
+        root_path: native
+        subpath: ''
+    identity:
+      phase: postgres_database
+      runtime_id: example-postgres_database
+      services: {}
+      networks: {}
+  administration:
+    profile: cloudbeaver-mariadb-admin
+    guest: administration
+    lifecycle: fresh
+    interfaces:
+      web:
+        interface: primary
+      private:
+        scope: app-network
+        network: database_tools
+      mariadb:
+        interface: primary
+    storage:
+      workspace:
+        volume: apps
+        subpath: administration
+    origin:
+      exposure: administration
+    authentication: administration
+    properties:
+      server_name: Example database UI
+      recovery_admin: local-recovery
+      heap_mib: 1024
+      auth_headers:
+        user: X-User
+        team: X-Team
+      connections:
+        mariadb-admin:
+          name: Example MariaDB administration
+          database: example
+  database:
+    profile: mariadb
+    guest: existing-maria
+    lifecycle: retained
+    interfaces:
+      service:
+        interface: primary
+    storage:
+      data:
+        root_path: native
+        subpath: ''
+    identity:
+      phase: database
+      runtime_id: example-database
+      services: {}
+      networks: {}
+domains:
+  cloud: cloud.example.invalid
+  identity: identity.example.invalid
+  administration: administration.example.invalid
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+  postgres:
+    protocol: tcp
+    address: 192.0.2.62
+    port: 5432
+identity_providers:
+  login:
+    type: oidc
+    origin:
+      domain: identity
+    issuer_path: /application/o/example/
+    endpoints:
+      authorization: /application/o/authorize/
+      token: /application/o/token/
+      userinfo: /application/o/userinfo/
+      jwks: /application/o/example/jwks/
+    signing_algorithms:
+    - RS256
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+  ingress_cloudflare_dns_token:
+    type: file
+    path: /run/example/ingress_cloudflare_dns_token
+  ingress_proxmox_token:
+    type: file
+    path: /run/example/ingress_proxmox_token
+  cloud_oauth:
+    type: environment
+    name: EXAMPLE_CLOUD_OAUTH
+  postgres_admin:
+    type: generated
+    credential_id: example-postgres-admin
+  administration_oauth:
+    type: environment
+    name: EXAMPLE_ADMINISTRATION_OAUTH
+  database_admin:
+    type: generated
+    credential_id: example-admin
+accounts:
+  postgres_admin:
+    adapter: postgresql-admin
+    owner: cloud
+    target:
+      app: postgres_database
+      endpoint: backend
+    principal: example_admin
+    credential: postgres_admin
+    access: server-administration
+    lifecycle: create-once
+  database_admin:
+    adapter: mariadb-admin
+    owner: administration
+    target:
+      app: database
+      endpoint: backend
+    principal: example_admin
+    credential: database_admin
+    access: server-administration
+    lifecycle: create-once
+devices: {}
+evidence: {}
+connections:
+  cloud_public:
+    consumer:
+      app: cloud
+      connection: public
+    target:
+      app: ingress
+      endpoint: https
+    source_interface: web
+    hostname:
+      domain: cloud
+  browse:
+    consumer:
+      app: cloud
+      connection: postgresql
+    target:
+      external: postgres
+    source_interface: postgresql
+  postgres_administration:
+    consumer:
+      app: cloud
+      connection: postgresql-admin
+    target:
+      app: postgres_database
+      endpoint: backend
+    source_interface: postgresql
+    account: postgres_admin
+  administration_public:
+    consumer:
+      app: administration
+      connection: public
+    target:
+      app: ingress
+      endpoint: https
+    source_interface: web
+    hostname:
+      domain: administration
+  administration:
+    consumer:
+      app: administration
+      connection: mariadb-admin
+    target:
+      app: database
+      endpoint: backend
+    source_interface: mariadb
+    account: database_admin
+exposures:
+  cloud:
+    type: http
+    endpoint:
+      app: cloud
+      endpoint: web
+    domain: cloud
+    ingress:
+      app: ingress
+      endpoint: https
+    tls: public
+  administration:
+    type: http
+    endpoint:
+      app: administration
+      endpoint: web
+    domain: administration
+    ingress:
+      app: ingress
+      endpoint: https
+    tls: public
+images: {}
+host_aliases: {}
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+    ingress_cloud:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.80/32
+        port: '80'
+        comment: Selected cloud route backend
+    ingress_cloud_in:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.200/32
+        port: '80'
+        comment: Selected cloud ingress
+    ingress_administration:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.81/32
+        port: '80'
+        comment: Selected administration route backend
+    ingress_administration_in:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.200/32
+        port: '80'
+        comment: Selected administration ingress
+    connect_cloud_public:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.200/32
+        port: '443'
+        comment: Selected cloud_public relationship
+    connect_cloud_public_incoming:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.80/32
+        port: '443'
+        comment: Selected cloud_public client
+    connect_browse:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 192.0.2.62/32
+        port: '5432'
+        comment: Selected browse relationship
+    connect_postgres_administration:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.82/32
+        port: '5432'
+        comment: Selected postgres_administration relationship
+    connect_postgres_administration_incoming:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.80/32
+        port: '5432'
+        comment: Selected postgres_administration client
+    connect_administration_public:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.200/32
+        port: '443'
+        comment: Selected administration_public relationship
+    connect_administration_public_incoming:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.81/32
+        port: '443'
+        comment: Selected administration_public client
+    connect_administration:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.83/32
+        port: '3306'
+        comment: Selected administration relationship
+    connect_administration_incoming:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.81/32
+        port: '3306'
+        comment: Selected administration client
+  transport: {}
+  tls:
+    public:
+      type: acme
+      resolver: letsencrypt
+  middlewares: {}
+  authentication:
+    cloud:
+      type: cloudbeaver-oidc
+      provider: login
+      client_id: example-client
+      client_secret: cloud_oauth
+      display_name: Example sign-in
+      user_claim: preferred_username
+    administration:
+      type: cloudbeaver-oidc
+      provider: login
+      client_id: example-client
+      client_secret: administration_oauth
+      display_name: Example sign-in
+      user_claim: preferred_username

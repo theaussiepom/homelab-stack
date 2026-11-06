@@ -1,0 +1,14 @@
+schema: homelab-components-v1
+kind: app
+profile: unbound
+guest: resolver-east
+lifecycle: fresh
+interfaces:
+  service:
+    scope: guest-loopback
+  private:
+    scope: app-network
+    network: default
+display_name: Backup DNS
+properties:
+  publish_port: 5336

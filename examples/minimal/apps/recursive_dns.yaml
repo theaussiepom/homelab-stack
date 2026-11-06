@@ -1,0 +1,11 @@
+schema: homelab-components-v1
+kind: app
+profile: unbound
+guest: resolver
+lifecycle: fresh
+interfaces:
+  service:
+    scope: guest-loopback
+  private:
+    scope: app-network
+    network: default

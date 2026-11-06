@@ -1,0 +1,40 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: winet
+display_name: WiNet
+interfaces:
+  broker:
+    required: true
+    accepts:
+    - guest-interface
+  inverter:
+    required: true
+    accepts:
+    - guest-interface
+listeners: {}
+endpoints: {}
+storage: {}
+connections:
+  broker:
+    type: mqtt
+    required: true
+    readiness:
+    - start
+  inverter:
+    type: https
+    required: true
+software:
+- docker
+- curl
+- winet-images
+runtime:
+- container-host
+- winet
+health:
+  ready:
+    profile: adapter-ready
+secrets:
+  options:
+    required: true
+monitoring:
+  profile: docker-agent

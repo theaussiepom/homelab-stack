@@ -1,0 +1,55 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: node_red
+display_name: Node-RED
+interfaces:
+  web:
+    required: true
+    accepts:
+    - guest-interface
+  broker:
+    required: false
+    accepts:
+    - guest-interface
+listeners:
+  web:
+    service: node_red
+    namespace: host
+    interface: web
+    bind: wildcard
+    protocol: tcp
+    port: 1880
+endpoints:
+  web:
+    listener: web
+    protocol: http
+    via: web
+storage:
+  data:
+    target: /data
+    read_only: false
+    required: true
+    kind: directory
+    initialize:
+      type: directory
+      uid: 1000
+      gid: 1000
+      mode: '0700'
+connections:
+  broker:
+    type: mqtt
+    required: false
+    readiness:
+    - start
+software:
+- docker
+- curl
+- node_red-public-images
+runtime:
+- container-host
+- node_red
+health:
+  ready:
+    profile: adapter-ready
+monitoring:
+  profile: docker-agent

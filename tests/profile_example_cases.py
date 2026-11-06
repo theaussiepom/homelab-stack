@@ -1,0 +1,34 @@
+"""Documentation scenario index; bodies live only in the canonical YAML files."""
+PROFILE_EXAMPLES = {
+ 'homeassistant': ('examples/catalogue/existing-automation.yaml', 'homeassistant'),
+ 'node_red': ('examples/catalogue/existing-automation.yaml', 'node_red'),
+ 'bitwarden': ('examples/catalogue/vault.yaml', 'vault'),
+ 'cloudbeaver': ('examples/catalogue/database-guis.yaml', 'cloud'),
+ 'pihole': ('examples/catalogue/local-dns/site.yaml', 'filtering'),
+ 'unbound': ('site.example.yaml', 'recursive_dns'),
+ 'authentik': ('examples/catalogue/identity-monitoring.yaml', 'identity'),
+ 'influxdb': ('examples/catalogue/native-databases.yaml', 'influxdb'),
+ 'traefik': ('examples/catalogue/edge-management.yaml', 'edge'),
+ 'mariadb': ('examples/catalogue/native-databases.yaml', 'mariadb'),
+ 'zabbix': ('examples/catalogue/identity-monitoring.yaml', 'monitoring'),
+ 'mqtt': ('examples/catalogue/messaging-radio.yaml', 'broker'),
+ 'mqtt_explorer': ('examples/catalogue/messaging-radio.yaml', 'browser'),
+ 'music_assistant': ('examples/catalogue/music.yaml', 'music'),
+ 'pegaprox': ('examples/catalogue/edge-management.yaml', 'manager'),
+ 'postgresql': ('examples/catalogue/native-databases.yaml', 'postgresql'),
+ 'zigbee2mqtt': ('examples/catalogue/messaging-radio.yaml', 'radio'),
+ 'winet': ('examples/catalogue/messaging-radio.yaml', 'telemetry'),
+ 'homeassistant-public': ('examples/catalogue/new-automation.yaml', 'homeassistant'),
+ 'node_red-public': ('examples/catalogue/new-automation.yaml', 'node_red'),
+ 'cloudbeaver-mariadb-admin': ('examples/catalogue/database-guis.yaml', 'administration'),
+}
+CREATION_EXAMPLES = {
+ 'unbound': PROFILE_EXAMPLES['unbound'],
+ 'homeassistant-public': PROFILE_EXAMPLES['homeassistant-public'],
+ 'node_red-public': PROFILE_EXAMPLES['node_red-public'],
+ 'mqtt_explorer': PROFILE_EXAMPLES['mqtt_explorer'],
+ 'cloudbeaver': ('examples/catalogue/new-database-guis.yaml', 'cloud'),
+ 'cloudbeaver-mariadb-admin': ('examples/catalogue/new-database-guis.yaml', 'administration'),
+ **{name: ('examples/catalogue/new-native-databases.yaml', name)
+    for name in ('postgresql','mariadb','influxdb')},
+}

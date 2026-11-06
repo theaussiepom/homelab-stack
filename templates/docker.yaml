@@ -1,0 +1,22 @@
+schema: homelab-components-v1
+kind: guest-template
+resources:
+  cpu_cores: 1
+  memory_mib: 1024
+  root_gib: 8
+  os_reserve_mib: 256
+startup:
+  started: true
+  start_on_boot: true
+  boot_order: 50
+security:
+  unprivileged: true
+  protection: true
+  nesting: true
+  keyctl: false
+software:
+- docker
+runtime:
+- container-host
+monitoring:
+  profile: linux-agent
