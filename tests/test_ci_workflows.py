@@ -56,6 +56,9 @@ def cases(suite):
         if isinstance(item,unittest.TestSuite):yield from cases(item)
         else:yield item
 for name in json.loads(sys.argv[2]):
+    # Imported collaborators may prepend their own test/source directory.
+    # Always resolve the next required test from the owning repository.
+    sys.path[:]=[str(directory), *[part for part in sys.path if part!=str(directory)]]
     loader=unittest.TestLoader()
     named=loader.loadTestsFromName(name)
     if loader.errors or not named.countTestCases():
@@ -73,6 +76,13 @@ for name in json.loads(sys.argv[2]):
         result = subprocess.run([sys.executable, '-c', script, str(ROOT / 'tests'), json.dumps(required)],
             cwd=ROOT, capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        with tempfile.TemporaryDirectory() as directory:
+            folder=Path(directory);foreign=folder/'upstream';foreign.mkdir()
+            (foreign/'test_navigation.py').write_text('import unittest\nclass Wrong(unittest.TestCase):\n def test_wrong(self):pass\n')
+            (folder/'test_navigation.py').write_text('import unittest\nclass Owned(unittest.TestCase):\n def test_owned(self):pass\n')
+            (folder/'test_first.py').write_text('import sys,unittest\nsys.path.insert(0,'+repr(str(foreign))+')\nclass Contract(unittest.TestCase):\n def test_present(self):pass\n')
+            result=subprocess.run([sys.executable,'-c',script,directory,json.dumps(['test_first.Contract','test_navigation.Owned'])],capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         with tempfile.TemporaryDirectory() as directory:
             module = Path(directory) / 'test_fixture.py'
             for body, names in [

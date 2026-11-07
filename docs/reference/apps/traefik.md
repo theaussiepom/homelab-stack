@@ -23,6 +23,10 @@ The complete reusable declaration is [traefik.yaml](../../../apps/traefik.yaml).
 
 Although secret roles and properties are structurally conditional, the current supported runtime binds both provider and ACME and requires the proxmox_token role for the provider and the cloudflare_dns_token role for ACME. No Docker socket, arbitrary provider or raw route file override is exposed.
 
+The optional `cloudflare-source` exposure policy adds the framework-owned local middleware and requires `cloudflare_origin_token`. Bind the existing token through a protected secret source; its header name and internal allowlist belong to site policy. The plugin checks socket sources, sanitizes visitor headers and bounds address-feed refresh/failure behavior. See the framework [middleware contract](https://github.com/theaussiepom/homelab/blob/5d4d178daf0688c9ffc6de7770ee44c2f7d38e7a/docs/reference/policies.md#cloudflare-source-boundary).
+
+Deploy route restrictions before opening the ingress frontend firewall in a later deployment. Validate the actual selected Traefik image, internal access, public TLS and visitor identity after CD; source checks alone do not establish service acceptance.
+
 ## First installation
 
 Before installing, prepare its certificate workspace, existing provider reader and DNS API credentials. The profile does not create a Proxmox token, discovery owner, DNS zone or account. The practical example maintains HomeLab-managed ingress; those first-use prerequisites are separate from container creation.
@@ -50,6 +54,8 @@ After [the source-only setup](../../guides/first-configuration.md) defines STACK
 ```
 
 The command should compile every selected guest without reading credentials or contacting a guest, container or device. The integration test also generates each guest’s deployment files and checks its resources, identities, application files and health-check definitions.
+
+The complete [Cloudflare ingress example](../../../examples/catalogue/cloudflare-ingress.yaml) binds a retained origin-token file, a named RFC1918 local allowlist, a public route and explicit backend permissions. Its test also exercises an environment-backed secret through generated workflows; neither variant provisions or rotates the secret.
 
 ## Interfaces
 
@@ -81,7 +87,7 @@ Listeners use the declared interface or network namespace. Endpoints tell consum
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/5d4d178daf0688c9ffc6de7770ee44c2f7d38e7a/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -100,13 +106,14 @@ The readiness column lists the ordering options you can choose. Set `readiness` 
 | App secret role | Requirement |
 | --- | --- |
 | `cloudflare_dns_token` | Optional until its capability requires it |
+| `cloudflare_origin_token` | Required when an exposure selects `cloudflare-source`; preserve its existing value |
 | `proxmox_token` | Optional until its capability requires it |
 
 Keep secret values outside Git. A file or environment reference identifies where to obtain a secret; it does not contain the value. An ordinary update cannot silently replace the secret.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/5d4d178daf0688c9ffc6de7770ee44c2f7d38e7a/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -149,7 +156,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/5d4d178daf0688c9ffc6de7770ee44c2f7d38e7a/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/5d4d178daf0688c9ffc6de7770ee44c2f7d38e7a/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/5d4d178daf0688c9ffc6de7770ee44c2f7d38e7a/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/5d4d178daf0688c9ffc6de7770ee44c2f7d38e7a/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/5d4d178daf0688c9ffc6de7770ee44c2f7d38e7a/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -222,6 +229,8 @@ These are the complete supplied fields in [traefik.yaml](../../../apps/traefik.y
 | <a id="declaration-secrets"></a>`secrets` | `object` |
 | <a id="declaration-secrets-cloudflare-dns-token"></a>`secrets.cloudflare_dns_token` | `object` |
 | <a id="declaration-secrets-cloudflare-dns-token-required"></a>`secrets.cloudflare_dns_token.required` | `false` |
+| <a id="declaration-secrets-cloudflare-origin-token"></a>`secrets.cloudflare_origin_token` | `object` |
+| <a id="declaration-secrets-cloudflare-origin-token-required"></a>`secrets.cloudflare_origin_token.required` | `false` |
 | <a id="declaration-secrets-proxmox-token"></a>`secrets.proxmox_token` | `object` |
 | <a id="declaration-secrets-proxmox-token-required"></a>`secrets.proxmox_token.required` | `false` |
 | <a id="declaration-monitoring"></a>`monitoring` | `object` |
