@@ -62,3 +62,7 @@ For every nontrivial binding or property, state its type, whether it is required
 Explain the resulting addresses, ports and identities, the generated configuration, and the effects of explicitly selected dependencies and access rules. Classify ordinary updates, possible interruption, refused changes and unknown behavior separately. Include the exact diagnostic code and context for invalid inputs, along with the supported correction; source compilation does not prove a runtime transition.
 
 Add return links from task guides, diagnostics and examples and retain published destinations. Apply the standard's [review rubric](../contributing/documentation-standard.md#10-verification-and-review-rubric), including a review of meaning and the rendered page; [conformance tests](../testing.md#documentation-conformance) check only the documented parts of this contract automatically.
+
+## Backup coverage
+
+Classify every storage role as authoritative configuration, state or database data, or explicitly exclude it as transient or rebuildable. Link its exact classification and capture requirement in the recovery catalogue. Explain native configuration, individually managed runtime inputs, related databases and the credentials and keys needed for recovery. State what has actually been verified. Installing a client, copying raw database files or copying a running SQLite directory does not prove that the application can be restored.

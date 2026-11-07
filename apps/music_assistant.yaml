@@ -56,3 +56,9 @@ health:
     source_interface: web
 monitoring:
   profile: docker-agent
+backup:
+  include:
+    data:
+      category: state
+      capture: application-export
+  exclude: {}

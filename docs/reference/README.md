@@ -51,3 +51,7 @@ A selection ID names a reusable application recipe, not a complete installed ser
 - [Examples](../examples/README.md): complete maintained sources and source-only evidence.
 
 The registration authority is [stack.json](../../stack.json); [images.json](../../images.json) owns image policy. Maintainers use the [profile documentation template](../templates/application-profile.md), [contributor workflow](../contributing.md) and [documentation conformance scope](../testing.md#documentation-conformance). Every profile's complete usage is recorded in the [example catalogue](../../examples/catalogue/README.md).
+
+[Backup coverage for every profile](backup-coverage.md) identifies the state to preserve, required native database exports and explicit exclusions for transient or rebuildable data. The [PBS backup guide](../backup.md) explains client preparation, operational schedules and their prerequisites.
+
+The [PBS client backup profile](backup-profiles.md) lists its selected software and exact guest configuration paths.

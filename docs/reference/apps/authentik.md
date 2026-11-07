@@ -79,7 +79,7 @@ A wildcard listener accepts connections within the declared app network. A port 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -109,7 +109,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -156,7 +156,11 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/proxmox/applications/component_runtime.py).
+
+## Backup coverage
+
+See the [storage classifications and capture requirements](../backup-coverage.md#authentik) and [PBS backup guide](../../backup.md). A declared classification does not prove that a backup is installed or that a restore has succeeded.
 
 ## Declaration records
 
@@ -247,3 +251,18 @@ These are the complete supplied fields in [authentik.yaml](../../../apps/authent
 | <a id="declaration-secrets-smtp-password-required"></a>`secrets.smtp_password.required` | `false` |
 | <a id="declaration-monitoring"></a>`monitoring` | `object` |
 | <a id="declaration-monitoring-profile"></a>`monitoring.profile` | `"docker-agent"` |
+| <a id="declaration-backup"></a>`backup` | `object` |
+| <a id="declaration-backup-include"></a>`backup.include` | `object` |
+| <a id="declaration-backup-include-media"></a>`backup.include.media` | `object` |
+| <a id="declaration-backup-include-media-category"></a>`backup.include.media.category` | `"state"` |
+| <a id="declaration-backup-include-media-capture"></a>`backup.include.media.capture` | `"application-export"` |
+| <a id="declaration-backup-include-templates"></a>`backup.include.templates` | `object` |
+| <a id="declaration-backup-include-templates-category"></a>`backup.include.templates.category` | `"configuration"` |
+| <a id="declaration-backup-include-templates-capture"></a>`backup.include.templates.capture` | `"files"` |
+| <a id="declaration-backup-include-certs"></a>`backup.include.certs` | `object` |
+| <a id="declaration-backup-include-certs-category"></a>`backup.include.certs.category` | `"configuration"` |
+| <a id="declaration-backup-include-certs-capture"></a>`backup.include.certs.capture` | `"files"` |
+| <a id="declaration-backup-include-redis"></a>`backup.include.redis` | `object` |
+| <a id="declaration-backup-include-redis-category"></a>`backup.include.redis.category` | `"state"` |
+| <a id="declaration-backup-include-redis-capture"></a>`backup.include.redis.capture` | `"application-export"` |
+| <a id="declaration-backup-exclude"></a>`backup.exclude` | `{}` |

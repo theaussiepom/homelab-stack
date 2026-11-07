@@ -75,3 +75,9 @@ secrets:
     required: false
 monitoring:
   profile: docker-agent
+backup:
+  include:
+    certs:
+      category: state
+      capture: application-export
+  exclude: {}

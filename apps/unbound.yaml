@@ -92,3 +92,25 @@ health:
     profile: adapter-ready
 monitoring:
   profile: docker-agent
+backup:
+  include:
+    config:
+      category: configuration
+      capture: files
+    var:
+      category: state
+      capture: application-export
+    control_key:
+      category: configuration
+      capture: files
+    control_cert:
+      category: configuration
+      capture: files
+    server_key:
+      category: configuration
+      capture: files
+    server_cert:
+      category: configuration
+      capture: files
+  exclude:
+    dev: transient

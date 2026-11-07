@@ -76,3 +76,10 @@ health:
     profile: adapter-ready
 monitoring:
   profile: docker-agent
+backup:
+  include:
+    config:
+      category: state
+      capture: application-export
+  exclude:
+    database: transient

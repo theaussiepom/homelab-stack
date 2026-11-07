@@ -35,9 +35,10 @@ A software entry selects exact packages, public signed repository definitions, a
 | <a id="registration-software-winet-images"></a>`software.winet-images` | None | `winet` → `winet` | None |
 | <a id="registration-software-homeassistant-public-images"></a>`software.homeassistant-public-images` | None | `homeassistant` → `homeassistant_public` | None |
 | <a id="registration-software-node-red-public-images"></a>`software.node_red-public-images` | None | `node_red` → `node_red_public` | None |
+| <a id="registration-software-pbs-client"></a>`software.pbs-client` | `proxmox-backup-client=4.2.8-1` | None | `pbs-client` |
 
 
-Repository signing keys come from hash-bound public assets. The three vendor assets remain exact bytes. Framework adapters generate native service configuration and PostgreSQL host-based authentication (HBA) rules from typed inputs. They do not accept arbitrary templates as a way around those inputs.
+Repository signing keys come from hash-bound public assets. All four vendor assets retain their exact published bytes. Framework adapters generate native service configuration and PostgreSQL host-based authentication (HBA) rules from typed inputs. They do not accept arbitrary templates as a way around those inputs.
 
 ## Image policies
 
@@ -131,7 +132,9 @@ The loader checks hash-bound assets as public source bytes; they are vendor repo
 | <a id="registration-assets-postgresql-repository-key"></a>`assets.postgresql-repository-key` | [Public asset](../../assets/postgresql/vendor.asc) |
 | <a id="registration-assets-mariadb-repository-key"></a>`assets.mariadb-repository-key` | [Public asset](../../assets/mariadb/vendor.asc) |
 | <a id="registration-assets-influxdb-repository-key"></a>`assets.influxdb-repository-key` | [Public asset](../../assets/influxdb/vendor.asc) |
+| <a id="registration-assets-proxmox-backup-repository-key"></a>`assets.proxmox-backup-repository-key` | [Public PBS repository key](../../assets/proxmox-backup/vendor.asc) |
+| <a id="registration-backup-profiles-pbs-client"></a>`backup_profiles.pbs-client` | [PBS client profile and exact configuration records](backup-profiles.md) |
 
-The tests check for both missing and extra registered names through [documentation conformance](../testing.md#documentation-conformance). Tests compare exact profile and template field values with their typed records. The shared catalogue check covers registered names; a reviewer must still compare its nested values and procedural explanations with the source.
+The tests check for both missing and extra registered names through [documentation conformance](../testing.md#documentation-conformance). Tests compare exact app, guest-template and backup-profile field values with their typed records. The shared catalogue check covers registered names; a reviewer must still compare its nested values and procedural explanations with the source.
 
 The compatible loader also accepts a bundle registry, but this library registers no bundles; no fixed guest/application bundle is implied. New registrations must acquire explicit catalogue and pointer records.

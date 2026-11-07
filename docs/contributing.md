@@ -4,11 +4,11 @@
 
 This repository owns reusable profiles, templates and version/runtime declarations. The framework owns schemas, reference resolution, compiler/render/deployment engines and security/lifecycle helpers. A site owns allocations, access policy, protected references and placement.
 
-Apply the local [documentation standard](contributing/documentation-standard.md) to profile, template and composition documentation. The compatible [framework documentation policy](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/contributing/documentation.md) defines the language and deployment requirements. Use the [application-profile template](templates/application-profile.md) or [guest-template template](templates/guest-template.md), then review the result against the standard's rubric. A filled checklist does not prove completeness.
+Apply the local [documentation standard](contributing/documentation-standard.md) to profile, template and composition documentation. The compatible [framework documentation policy](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/contributing/documentation.md) defines the language and deployment requirements. Use the [application-profile template](templates/application-profile.md) or [guest-template template](templates/guest-template.md), then review the result against the standard's rubric. A filled checklist does not prove completeness.
 
 ## Extend an existing capability
 
-1. Check the [catalogue](reference/README.md) and [framework contract](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/README.md). Reuse an adapter rather than introducing a fixed guest bundle or private parser.
+1. Check the [catalogue](reference/README.md) and [framework contract](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/README.md). Reuse an adapter rather than introducing a fixed guest bundle or private parser.
 2. Add `apps/<profile>.yaml` with schema homelab-components-v1 and kind app-profile. Declare exact interfaces, listeners, endpoints, storage, connection requirements, software/runtime/health and conditional inputs. Supporting containers stay owned by the app.
 3. Register that complete definition in stack.json. Keep image/version policy in images.json and named runtime policy in stack.json. Do not work around a missing typed capability by adding arbitrary commands, environment variables, mounts or Compose settings.
 4. Add/update its reference page under docs/reference/apps and catalogue index. Explain required/optional/conditional bindings, defaults, data/secret/auth ownership, first installation, later deployment and multi-instance limits. Link a real complete composition where supported; label fragments and unqualified commissioning honestly.
@@ -32,3 +32,7 @@ Read [conformance scope](testing.md#documentation-conformance) before changing a
 Review adapter/property changes for semantic requirements that structural inventory cannot discover. Preserve MQTT’s requirement for probe credentials in a file even though the metadata marks the role optional, and distinguish declared template defaults from actual inheritance and execution policy. Use the real selected framework, compare excerpts with canonical source, and assert the intended refusal code/context.
 
 Follow README → catalogue → property/type → complete example → diagnostic → later deployments as a reader. Check rendered Markdown as well as local links. Run [required gates](testing.md), report how many items were checked, what behavior remains unreviewed and what still needs verification on a target, and do not equate local source success with hosted merge enforcement or service acceptance.
+
+## Backup classification
+
+Classify every app storage role in its `backup.include` or `backup.exclude` map. In the [coverage catalogue](reference/backup-coverage.md), explain the native configuration, related databases, consistency requirements and protection of credentials and keys. Follow [PBS backup preparation](backup.md); declaring a profile does not prove that capture or restore works on a target. Cover new roles and examples with definition tests and real compiler integration.

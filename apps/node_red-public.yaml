@@ -53,3 +53,9 @@ health:
     profile: adapter-ready
 monitoring:
   profile: docker-agent
+backup:
+  include:
+    data:
+      category: state
+      capture: application-export
+  exclude: {}

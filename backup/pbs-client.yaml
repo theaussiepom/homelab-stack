@@ -1,0 +1,15 @@
+schema: homelab-components-v1
+kind: backup-profile
+type: pbs-client
+software:
+- pbs-client
+configuration:
+  hostname:
+    path: /etc/hostname
+    kind: file
+  hosts:
+    path: /etc/hosts
+    kind: file
+  ssh:
+    path: /etc/ssh
+    kind: directory

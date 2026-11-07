@@ -32,6 +32,13 @@ class CiWorkflowTests(unittest.TestCase):
         # deleted or emptied. Keep control facts in their source, not here.
         required = [
             'test_documentation_examples.DocumentationConformance',
+            'test_documentation_examples.DocumentationConformance.test_backup_recovery_catalogue_matches_every_loaded_role_and_capture',
+            'test_documentation_examples.DocumentationConformance.test_backup_preparation_and_volume_fragments_follow_presence_controls',
+            'test_documentation_examples.DocumentationConformance.test_backup_operational_excerpt_matches_canonical_job_and_real_packet',
+            'test_documentation_examples.DocumentationConformance.test_backup_documented_refusals_keep_exact_codes_and_context',
+            'test_documentation_examples.DocumentationConformanceMechanism.test_backup_profile_pointer_cannot_be_missing_stale_or_orphaned',
+            'test_documentation_examples.DocumentationConformanceMechanism.test_backup_recovery_catalogue_rejects_missing_extra_and_wrong_statements',
+            'test_backup_profiles.BackupProfileTests',
             'test_documentation_examples.DocumentationConformanceMechanism',
             'test_documentation_examples.DocumentationExamples',
             'test_documentation_navigation.DocumentationNavigation',

@@ -31,6 +31,7 @@ Once you have a complete starting source, use [Compose a site](guides/compose-a-
 | Select values, explicit readiness and credentials | [Connect apps](guides/connect-apps.md) |
 | Preserve private material and data ownership | [Secrets](secrets.md) |
 | Review changed images, defaults or installed inputs | [Images and updates](guides/images-and-updates.md) |
+| Configure backups and check what recovery needs | [PBS backups](backup.md) and [application recovery coverage](reference/backup-coverage.md) |
 | Understand a source or operation refusal | [Troubleshooting](troubleshooting.md) |
 
 ## Extend and review

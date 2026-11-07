@@ -5,6 +5,7 @@ loader and validator own acceptance; documentation cells own the statements test
 """
 
 DEFINITIONS = {
+    ('backup_profiles', 'pbs-client'): ('backup/pbs-client.yaml', 'docs/reference/backup-profiles.md'),
     ('app_profiles', 'homeassistant'): ('apps/homeassistant.yaml', 'docs/reference/apps/homeassistant.md'),
     ('app_profiles', 'node_red'): ('apps/node_red.yaml', 'docs/reference/apps/node_red.md'),
     ('app_profiles', 'bitwarden'): ('apps/bitwarden.yaml', 'docs/reference/apps/bitwarden.md'),
@@ -36,12 +37,13 @@ REGISTRATIONS = {
     'policies.middlewares': (),
     'policies.transport': (),
     'bundles': (),
-    'software': ('docker', 'curl', 'network-tools', 'yaml-parser', 'mariadb-client', 'postgresql', 'mariadb', 'influxdb', 'homeassistant-images', 'node_red-images', 'bitwarden-images', 'cloudbeaver-images', 'pihole-images', 'unbound-images', 'authentik-images', 'traefik-images', 'zabbix-images', 'mqtt-images', 'mqtt_explorer-images', 'music_assistant-images', 'pegaprox-images', 'zigbee2mqtt-images', 'winet-images', 'homeassistant-public-images', 'node_red-public-images'),
+    'backup_profiles': ('pbs-client',),
+    'software': ('pbs-client', 'docker', 'curl', 'network-tools', 'yaml-parser', 'mariadb-client', 'postgresql', 'mariadb', 'influxdb', 'homeassistant-images', 'node_red-images', 'bitwarden-images', 'cloudbeaver-images', 'pihole-images', 'unbound-images', 'authentik-images', 'traefik-images', 'zabbix-images', 'mqtt-images', 'mqtt_explorer-images', 'music_assistant-images', 'pegaprox-images', 'zigbee2mqtt-images', 'winet-images', 'homeassistant-public-images', 'node_red-public-images'),
     'runtime_profiles': ('container-host', 'homeassistant', 'node_red', 'bitwarden', 'cloudbeaver', 'pihole', 'unbound', 'authentik', 'traefik', 'zabbix', 'mqtt', 'mqtt_explorer', 'music_assistant', 'pegaprox', 'zigbee2mqtt', 'winet', 'homeassistant-mdns', 'native-postgresql', 'native-mariadb', 'native-influxdb'),
     'health_profiles': ('adapter-ready',),
     'authentication_profiles': ('cloudbeaver-oidc', 'node-red-retained-oidc', 'zabbix-saml'),
     'monitoring_profiles': ('linux-agent', 'docker-agent', 'postgresql-agent', 'mariadb-agent', 'influxdb-agent'),
-    'assets': ('postgresql-repository-key', 'mariadb-repository-key', 'influxdb-repository-key'),
+    'assets': ('proxmox-backup-repository-key', 'postgresql-repository-key', 'mariadb-repository-key', 'influxdb-repository-key'),
     'policies.network': ('mqtt_backend_ingress', 'http_backend_egress', 'resolver_dns_udp_first', 'source_bound_package_image_provider_web_egress', 'resolver_dns_tcp_first', 'package_repository_web_egress', 'package_image_provider_web_egress'),
 }
 

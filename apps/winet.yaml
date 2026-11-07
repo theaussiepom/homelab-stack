@@ -38,3 +38,6 @@ secrets:
     required: true
 monitoring:
   profile: docker-agent
+backup:
+  include: {}
+  exclude: {}

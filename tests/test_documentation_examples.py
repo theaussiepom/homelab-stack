@@ -111,9 +111,10 @@ class DocumentationExamples(unittest.TestCase):
 
 # Source-backed documentation conformance remains inside normal source discovery.
 import component_types
+import component_backup
 import component_foundations
 from documentation_contracts import (DocumentationError, assert_excerpt, documented_rows,
-    expect_refusal, inventory, mapped_mqtt_property_inventory, mqtt_property_inventory, read_excerpt, reconcile, registration_rows, table_cells, typed_equal, validate_definition_pointers)
+    expect_refusal, inventory, mapped_mqtt_property_inventory, mqtt_property_inventory, read_excerpt, reconcile, reconcile_recovery, registration_rows, table_cells, typed_equal, validate_definition_pointers)
 from documentation_records import DEFINITIONS, MQTT_PROPERTIES, REGISTRATIONS
 
 
@@ -134,7 +135,8 @@ class DocumentationConformance(unittest.TestCase):
         for (group, name), (source, document) in DEFINITIONS.items():
             with self.subTest(declaration=f'{group}.{name}'):
                 value = self.library[group][name]
-                (component_types.profile if group == 'app_profiles' else component_types.template)(value)
+                {'app_profiles': component_types.profile, 'guest_templates': component_types.template,
+                 'backup_profiles': component_backup.profile}[group](value)
                 total += reconcile(value, (ROOT / document).read_text(), source, document)
         self.assertGreater(total, 0)
 
@@ -147,7 +149,7 @@ class DocumentationConformance(unittest.TestCase):
                           if group.startswith('policies.')})
         accepted = {}
         for group in ('software', 'runtime_profiles', 'health_profiles',
-                      'authentication_profiles', 'monitoring_profiles', 'assets', 'bundles'):
+                      'authentication_profiles', 'monitoring_profiles', 'assets', 'bundles', 'backup_profiles'):
             accepted[group] = tuple(self.library[group])
         for group, values in self.library['policies'].items():
             accepted['policies.' + group] = tuple(values)
@@ -253,6 +255,72 @@ class DocumentationConformance(unittest.TestCase):
                 expect_refusal(lambda: self.source_plan(changed), ComponentError, code, 'guests.resolver')
 
 
+    def test_backup_recovery_catalogue_matches_every_loaded_role_and_capture(self):
+        page = (ROOT / 'docs/reference/backup-coverage.md').read_text()
+        count = reconcile_recovery(self.library['app_profiles'], page)
+        self.assertEqual(count, sum(len(p.get('storage', {}))
+                                    for p in self.library['app_profiles'].values()))
+
+    def test_backup_preparation_and_volume_fragments_follow_presence_controls(self):
+        page = (ROOT / 'docs/backup.md').read_text()
+        selection = read_excerpt(page, 'Select client preparation', yaml.safe_load)
+        self.assertEqual(selection, {'backup': None})
+        source, _ = component_sources.site(ROOT / 'site.example.yaml')
+        original, _ = self.source_plan(source)
+        self.assertNotIn('backup', original.resolved['guests']['resolver'])
+        volume = read_excerpt(page, 'Protect managed volumes explicitly', yaml.safe_load)
+        inventories = []
+        for value in (selection['backup'], {}, {'profile': 'pbs-client'}):
+            changed = copy.deepcopy(source)
+            changed['backup'] = value
+            changed['guests']['resolver'].update(copy.deepcopy(volume))
+            plan, packets = self.source_plan(changed)
+            cfg = json.loads(packets['resolver']['files']['site.json'])
+            self.assertEqual(cfg['deployment']['phases'][-1], 'pbs-agent')
+            self.assertTrue(cfg['guest']['volumes']['application']['backup'])
+            self.assertFalse(cfg['guest']['volumes']['cache']['backup'])
+            self.assertNotIn('job', cfg['app']['backup'])
+            self.assertNotIn('backup-group.json', packets['resolver']['files'])
+            inventories.append(plan.resolved['guests']['resolver']['backup'])
+        self.assertTrue(all(value == inventories[0] for value in inventories))
+
+    def test_backup_operational_excerpt_matches_canonical_job_and_real_packet(self):
+        source, _ = component_sources.site(ROOT / 'site.backup.example.yaml')
+        page = (ROOT / 'docs/backup.md').read_text()
+        assert_excerpt(page, 'Operational job example', {'backup': source['backup']}, yaml.safe_load)
+        self.assertIn('../site.backup.example.yaml', page)
+        self.assertIn('../examples/backup/guests/resolver.yaml', page)
+        plan, packets = self.source_plan(source)
+        cfg = json.loads(packets['resolver']['files']['site.json'])
+        job = cfg['app']['backup']['job']
+        self.assertEqual(job['schedule'], source['backup']['job']['schedule'])
+        self.assertIn('backup-group.json', packets['resolver']['files'])
+        self.assertFalse(cfg['guest']['volumes']['backup-stage']['backup'])
+        self.assertEqual(job['staging']['path'], source['guests']['resolver']['volumes']['backup-stage']['path'])
+        self.assertEqual(set(plan.resolved['guests']), set(source['backup']['job']['clients']))
+
+    def test_backup_documented_refusals_keep_exact_codes_and_context(self):
+        source, _ = component_sources.site(ROOT / 'site.example.yaml')
+        page = (ROOT / 'docs/backup.md').read_text()
+        for value, code in ((True, 'component.fields'), (False, 'component.fields'),
+                            ({'profile': 'missing'}, 'component.backup-profile-selection')):
+            changed = copy.deepcopy(source)
+            changed['backup'] = value
+            with self.subTest(selection=value):
+                self.assertIn('`' + code + '`', page)
+                expect_refusal(lambda: self.source_plan(changed), ComponentError, code, ())
+        changed = copy.deepcopy(source)
+        changed['backup'] = None
+        changed['guests']['resolver'].update(read_excerpt(page, 'Protect managed volumes explicitly', yaml.safe_load))
+        changed['guests']['resolver']['volumes']['application']['backup'] = True
+        expect_refusal(lambda: self.source_plan(changed), ComponentError,
+                       'component.backup-presence', 'guests.resolver.volumes.application')
+        operational, _ = component_sources.site(ROOT / 'site.backup.example.yaml')
+        operational['guests']['resolver']['volumes']['backup-stage']['backup'] = None
+        expect_refusal(lambda: self.source_plan(operational), ComponentError,
+                       'component.backup-staging-volume', ())
+
+
 class DocumentationConformanceMechanism(unittest.TestCase):
     SOURCE = {'startup': {'boot_order': 50, 'started': True}}
     PAGE = '''## Declaration records
@@ -286,7 +354,7 @@ class DocumentationConformanceMechanism(unittest.TestCase):
 
     def test_definition_pointer_missing_stale_source_document_and_registration_fail(self):
         registration = {'app_profiles': {'fixture': {'source': 'apps/fixture.yaml'}},
-                        'guest_templates': {}}
+                        'guest_templates': {}, 'backup_profiles': {}}
         definitions = {('app_profiles', 'fixture'): ('apps/fixture.yaml', 'docs/fixture.md')}
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
@@ -397,6 +465,53 @@ class DocumentationConformanceMechanism(unittest.TestCase):
             raise ComponentError('component.fields')
         with self.assertRaisesRegex(DocumentationError, 'DOC_WRONG_REFUSAL'):
             expect_refusal(wrong, ComponentError, 'component.invalid', 'apps.broker')
+
+
+    def test_backup_profile_pointer_cannot_be_missing_stale_or_orphaned(self):
+        registration = compiler.read(ROOT / 'stack.json')
+        key = ('backup_profiles', 'pbs-client')
+        for replacement in (None, ('backup/missing.yaml', DEFINITIONS[key][1]),
+                            (DEFINITIONS[key][0], 'docs/reference/missing.md')):
+            changed = dict(DEFINITIONS)
+            if replacement is None:
+                changed.pop(key)
+            else:
+                changed[key] = replacement
+            with self.subTest(replacement=replacement), self.assertRaises(DocumentationError):
+                validate_definition_pointers(registration, changed, ROOT)
+        removed = copy.deepcopy(registration)
+        removed['backup_profiles'].pop('pbs-client')
+        with self.assertRaisesRegex(DocumentationError, 'DOC_INVENTORY'):
+            validate_definition_pointers(removed, DEFINITIONS, ROOT)
+
+    def test_backup_recovery_catalogue_rejects_missing_extra_and_wrong_statements(self):
+        profiles = {
+            'fixture': {'storage': {'data': {'target': '/data'}, 'logs': {'target': '/logs'}},
+                        'backup': {'include': {'data': {'category': 'state', 'capture': 'application-export'}},
+                                   'exclude': {'logs': 'transient'}}},
+            'empty': {'storage': {}, 'backup': {'include': {}, 'exclude': {}}}}
+        page = ('## Exact profile storage dispositions\n\n### fixture\n\n'
+                '| Role / app target | Disposition | Capture requirement |\n| --- | --- | --- |\n'
+                '| `data` — `/data` | state | application-export |\n'
+                '| `logs` — `/logs` | Excluded: transient | None |\n\n'
+                '### empty\n\nNo declared storage roles.\n')
+        self.assertEqual(reconcile_recovery(profiles, page), 2)
+        row = '| `logs` — `/logs` | Excluded: transient | None |\n'
+        cases = [page.replace('/data', '/wrong'), page.replace('application-export', 'files'),
+                 page.replace('Excluded: transient', 'Excluded: rebuildable'),
+                 page.replace(row, ''), page.replace(row, row + row),
+                 page.replace('### empty', '### unknown'), page + '\n### empty\nNo declared storage roles.\n',
+                 page.replace('No declared storage roles.', ''),
+                 page.replace('| state | application-export |', '| state | application-export | extra |'),
+                 page.replace('| Role / app target | Disposition | Capture requirement |', '|'),
+                 page.replace('| Role / app target | Disposition | Capture requirement |',
+                              '| Role / app target | Disposition | Capture requirement | extra |'),
+                 '## Exact profile storage dispositions\n']
+        for changed in cases:
+            with self.subTest(changed=changed), self.assertRaises(DocumentationError):
+                reconcile_recovery(profiles, changed)
+        with self.assertRaises(DocumentationError):
+            reconcile_recovery({}, page)
 
 
 if __name__ == '__main__':

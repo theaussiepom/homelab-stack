@@ -14,3 +14,5 @@
 - Follow docs/contributing/documentation-standard.md and docs/templates/application-profile.md (or the guest-template template). Write direct explanations for new readers, define necessary terms, and review complete pages for readability as well as technical accuracy.
 - Update canonical records, test-local source/document pointers, complete examples and relevant checks with each contract/default change. Keep real configuration/validators authoritative; never mirror defaults in test mappings.
 - Validate against the library-selected real framework. Report source, integration, hosted enforcement, deployment and service evidence separately.
+
+- Classify every app storage role in [the recovery catalogue](docs/reference/backup-coverage.md). Reuse bound paths; keep native capture implementations in the framework. Keep operational examples complete and tested. Sites supply PBS destinations, keys, service-pause permissions and verification on their targets.

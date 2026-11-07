@@ -107,7 +107,7 @@ def typed_equal(left, right):
 def validate_definition_pointers(registration, definitions, root):
     """Check the small source/document map against real registered definitions."""
     from pathlib import Path
-    registered = {(group, name) for group in ('app_profiles', 'guest_templates')
+    registered = {(group, name) for group in ('app_profiles', 'guest_templates', 'backup_profiles')
                   for name in registration[group]}
     if not registered or not definitions:
         fail('DOC_EMPTY_SCOPE', 'registered definition pointers')
@@ -276,3 +276,55 @@ def registration_rows(text):
     if len(rows) != len(set(rows)):
         fail('DOC_AMBIGUOUS', 'duplicate shared registration')
     return set(rows)
+
+
+def recovery_rows(text):
+    """Read the bounded per-profile recovery tables independently of source."""
+    sections = re.findall(r'^## Exact profile storage dispositions\n(.*?)(?=^## |\Z)', text, re.M | re.S)
+    if len(sections) != 1:
+        fail('DOC_BACKUP_COVERAGE', 'expected one recovery catalogue section')
+    result = {}
+    for name, body in re.findall(r'^### ([a-z][a-z0-9_-]*)\n(.*?)(?=^### |\Z)', sections[0], re.M | re.S):
+        if name in result:
+            fail('DOC_BACKUP_COVERAGE', 'duplicate profile: ' + name)
+        rows = {}
+        for line in body.splitlines():
+            if not line.startswith('|'):
+                continue
+            cells = table_cells(line)
+            if len(cells) != 3:
+                fail('DOC_BACKUP_COVERAGE', 'expected three recovery columns: ' + line)
+            if cells[0] == 'Role / app target' or re.fullmatch(r'[-: ]+', cells[0]):
+                continue
+            role = re.fullmatch(r'`([^`]+)` — `([^`]+)`', cells[0])
+            if not role or role[1] in rows:
+                fail('DOC_BACKUP_COVERAGE', 'ambiguous recovery row: ' + line)
+            rows[role[1]] = (role[2], cells[1], cells[2])
+        if not rows and 'No declared storage roles.' not in body:
+            fail('DOC_BACKUP_COVERAGE', 'unexplained empty profile: ' + name)
+        result[name] = rows
+    if not result:
+        fail('DOC_EMPTY_SCOPE', 'recovery catalogue')
+    return result
+
+
+def reconcile_recovery(profiles, text):
+    """Compare role targets and capture/exclusion statements with loaded profiles."""
+    rows = recovery_rows(text)
+    if not profiles or set(rows) != set(profiles):
+        fail('DOC_BACKUP_COVERAGE', 'missing or extra recovery profiles')
+    count = 0
+    for name, profile in profiles.items():
+        rules = profile['backup']
+        expected = {}
+        for role, storage in profile.get('storage', {}).items():
+            if role in rules['include']:
+                selected = rules['include'][role]
+                disposition, capture = selected['category'], selected['capture']
+            else:
+                disposition, capture = 'Excluded: ' + rules['exclude'][role], 'None'
+            expected[role] = (storage['target'], disposition, capture)
+        if rows[name] != expected:
+            fail('DOC_BACKUP_DRIFT', name + ': role, target, classification or capture differs')
+        count += len(expected)
+    return count

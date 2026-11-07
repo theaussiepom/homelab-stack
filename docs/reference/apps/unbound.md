@@ -80,7 +80,7 @@ A wildcard listener accepts connections within the declared app network. A port 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -102,7 +102,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -143,7 +143,11 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/proxmox/applications/component_runtime.py).
+
+## Backup coverage
+
+See the [storage classifications and capture requirements](../backup-coverage.md#unbound) and [PBS backup guide](../../backup.md). A declared classification does not prove that a backup is installed or that a restore has succeeded.
 
 ## Declaration records
 
@@ -236,3 +240,25 @@ These are the complete supplied fields in [unbound.yaml](../../../apps/unbound.y
 | <a id="declaration-health-ready-profile"></a>`health.ready.profile` | `"adapter-ready"` |
 | <a id="declaration-monitoring"></a>`monitoring` | `object` |
 | <a id="declaration-monitoring-profile"></a>`monitoring.profile` | `"docker-agent"` |
+| <a id="declaration-backup"></a>`backup` | `object` |
+| <a id="declaration-backup-include"></a>`backup.include` | `object` |
+| <a id="declaration-backup-include-config"></a>`backup.include.config` | `object` |
+| <a id="declaration-backup-include-config-category"></a>`backup.include.config.category` | `"configuration"` |
+| <a id="declaration-backup-include-config-capture"></a>`backup.include.config.capture` | `"files"` |
+| <a id="declaration-backup-include-var"></a>`backup.include.var` | `object` |
+| <a id="declaration-backup-include-var-category"></a>`backup.include.var.category` | `"state"` |
+| <a id="declaration-backup-include-var-capture"></a>`backup.include.var.capture` | `"application-export"` |
+| <a id="declaration-backup-include-control-key"></a>`backup.include.control_key` | `object` |
+| <a id="declaration-backup-include-control-key-category"></a>`backup.include.control_key.category` | `"configuration"` |
+| <a id="declaration-backup-include-control-key-capture"></a>`backup.include.control_key.capture` | `"files"` |
+| <a id="declaration-backup-include-control-cert"></a>`backup.include.control_cert` | `object` |
+| <a id="declaration-backup-include-control-cert-category"></a>`backup.include.control_cert.category` | `"configuration"` |
+| <a id="declaration-backup-include-control-cert-capture"></a>`backup.include.control_cert.capture` | `"files"` |
+| <a id="declaration-backup-include-server-key"></a>`backup.include.server_key` | `object` |
+| <a id="declaration-backup-include-server-key-category"></a>`backup.include.server_key.category` | `"configuration"` |
+| <a id="declaration-backup-include-server-key-capture"></a>`backup.include.server_key.capture` | `"files"` |
+| <a id="declaration-backup-include-server-cert"></a>`backup.include.server_cert` | `object` |
+| <a id="declaration-backup-include-server-cert-category"></a>`backup.include.server_cert.category` | `"configuration"` |
+| <a id="declaration-backup-include-server-cert-capture"></a>`backup.include.server_cert.capture` | `"files"` |
+| <a id="declaration-backup-exclude"></a>`backup.exclude` | `object` |
+| <a id="declaration-backup-exclude-dev"></a>`backup.exclude.dev` | `"transient"` |
