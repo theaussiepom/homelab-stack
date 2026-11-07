@@ -40,11 +40,11 @@ interfaces:
     network: default
 ```
 
-The container listens privately on53. Its profile publishes TCP/UDP to the guest's127.0.0.1:5335. `private` describes the container network; `service` describes the advertised loopback endpoint. A physical NIC does not prove a private network namespace. Unbound's service role deliberately rejects a physical binding.
+The container listens privately on port 53. Its profile publishes TCP/UDP to the guest's 127.0.0.1:5335. `private` describes the container network; `service` describes the advertised loopback endpoint. Selecting a physical NIC does not create a private network namespace. Unbound's service role deliberately rejects a physical binding.
 
 ## A broker has two advertisements, one owned listener
 
-The MQTT profile advertises `backend` and `frontend` endpoints through corresponding physical roles. Both refer to the actual owned MQTT listener. They do not create two independent isolated container sockets. Explorer can save a DNS hostname while targeting the selected backend endpoint; the framework derives its closed Explorer-only hostname alias.
+The MQTT profile advertises `backend` and `frontend` endpoints through corresponding physical roles. Both refer to the actual owned MQTT listener. They do not create two independent isolated container sockets. Explorer can save a DNS hostname while targeting the selected backend endpoint; the framework creates a hostname alias for Explorer alone.
 
 ## Route and health source choices
 

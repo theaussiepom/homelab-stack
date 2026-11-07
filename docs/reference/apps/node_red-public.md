@@ -15,19 +15,19 @@ Start Node-RED with the declared official public image and its standard data dir
 | Owned containers | `node_red` |
 | Multiple instances | Fixed host TCP 1880; use separate guests. |
 
-The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
+This profile runs on Debian LXC on Proxmox. Compilation checks the configuration, and local helper tests check the controller code. Neither check verifies a deployed service.
 
-The complete reusable declaration is [node_red-public.yaml](../../../apps/node_red-public.yaml). Select it in a site app; the profile itself contains no VMID, NIC address, credential or deployment authority. See [Compose a site](../../guides/compose-a-site.md).
+The complete reusable declaration is [node_red-public.yaml](../../../apps/node_red-public.yaml). Select it for an app in your site configuration. Your site supplies the VMID, network-interface address and credentials, and controls permission to deploy. See [Compose a site](../../guides/compose-a-site.md).
 
 ## Application requirements
 
-No retained OIDC strategy or wrapper is selected by this variant. Choose access/authentication policy deliberately before a real exposure; this is not a silent auth downgrade for an existing instance.
+This public-image variant does not install the existing profile’s OpenID Connect (OIDC) sign-in setup or its settings and health-check scripts. Choose access controls and authentication before making the service reachable. Do not use this variant to silently remove authentication from an existing instance.
 
 ## First installation
 
-Can create a new data directory beneath the declared provider volume and start the public image. This variant does not install the retained OIDC wrapper or import existing flows/credentials.
+This profile can create a new data directory beneath the declared provider volume and start the public image. This variant does not install the existing profile’s OpenID Connect sign-in setup or import existing flows and credentials.
 
-Complete creation-policy source: [examples/catalogue/new-automation.yaml](../../../examples/catalogue/new-automation.yaml), app `node_red`. It must pass both resolution and packet generation; it is not proof of a deployed service.
+For a complete example using the creation policy, see [examples/catalogue/new-automation.yaml](../../../examples/catalogue/new-automation.yaml), app `node_red`. The example must resolve and generate deployment files successfully. These checks do not prove that the service has been deployed.
 
 ## Minimal usage
 
@@ -43,7 +43,7 @@ apps:
 
 ### Practical complete example
 
-Use app `node_red` in [examples/catalogue/new-automation.yaml](../../../examples/catalogue/new-automation.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+Use app `node_red` in [examples/catalogue/new-automation.yaml](../../../examples/catalogue/new-automation.yaml). Check the dependencies and inputs that must already exist before using this example. Entries with `retained` require resources that HomeLab already manages; they cannot import another installation.
 
 After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
 
@@ -51,11 +51,11 @@ After [the source-only setup](../../guides/first-configuration.md) defines STACK
 "$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/new-automation.yaml" --check
 ```
 
-Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
+The command should compile every selected guest without reading credentials or contacting a guest, container or device. The integration test also generates each guest’s deployment files and checks its resources, identities, application files and health-check definitions.
 
 ## Interfaces
 
-The [role binding contract](../declaration-records.md#follow-the-selected-field-to-its-effect) resolves each role inside the selected guest. [Interface composition](../../guides/multiple-interfaces.md) shows physical, loopback and private scope choices.
+A role describes a network connection the app needs. Its [binding](../declaration-records.md#follow-the-selected-field-to-its-effect) selects an interface or network inside the app’s guest. [Interface composition](../../guides/multiple-interfaces.md) explains physical interfaces, guest loopback and private app networks.
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
@@ -74,17 +74,17 @@ Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role 
 | --- | --- | --- |
 | `web` | `http` | `web` via `web` |
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
+A wildcard host listener can accept connections through interfaces other than the advertised NIC. An endpoint gives consumers an address and port. It does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
-A role target is an application path; its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects owned guest data. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
 | `data` | Yes | `/data` | directory / writable | Create-only 1000:1000 mode 0700 |
 
-Bind roles to explicit guest volumes/subpaths or supported root data paths. Retained data is verified, not chowned or relocated. An initializer applies only to a newly created leaf beneath a proved provider volume, never an existing directory.
+Bind each storage role to a guest volume and subpath, or to a supported path on the guest’s root filesystem. HomeLab checks existing data without changing its file owner or moving it. Where a profile supports initialization, it creates only a new app subdirectory on a volume whose provider ownership has been verified. It does not initialize an existing directory.
 
 ## Connections, accounts and private inputs
 
@@ -92,24 +92,24 @@ Bind roles to explicit guest volumes/subpaths or supported root data paths. Reta
 | --- | --- | --- | --- | --- |
 | `broker` | `mqtt` | No | `start` | None |
 
-The readiness column lists permitted choices, **not an automatic dependency**. The site selects `readiness` on the connection explicitly. Value links alone do not wait or grant traffic. See [Connect apps](../../guides/connect-apps.md).
+The readiness column lists the ordering options you can choose. Set `readiness` explicitly on the site connection to make one app wait for another. Referencing a value alone creates no wait and permits no network traffic. See [Connect apps](../../guides/connect-apps.md).
 
 No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter owns their [closed typed rules](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
 
-No application property keys are accepted for this adapter. Unknown keys refuse; there is no command/environment/mount override bag.
+This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
 ## Invalid cases
 
 | Invalid change | Intended result |
 | --- | --- |
-| Select the retained authentication strategy/settings wrapper | Refuses the fresh public runtime contract. |
-| Reuse a foreign data directory as an initializer | Refuses ownership/adoption. |
+| Select the existing profile’s authentication setup and settings script | Validation rejects the existing profile’s authentication setup and settings script because this public-image runtime does not support them. |
+| Reuse a foreign data directory as an initializer | Initialization rejects data that HomeLab does not already manage; it cannot adopt the directory. |
 
-The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
 
 ## Software and resource policy
 
@@ -123,23 +123,25 @@ Software selections: [`docker`](../software-and-runtime.md#registration-software
 | --- | --- | --- | --- |
 | `node_red` | 1024 | 1 | 256 |
 
-These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
+These reservations and limits determine whether the workloads fit on a guest. They do not measure how much traffic the service can handle. Guest memory must also leave enough capacity for the operating system’s effective reserve. Security and process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
 ## Later deployments
 
-Updates the same instance with its existing data/flows. It does not substitute the retained OIDC profile or import another installation’s credentials. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+HomeLab updates the same instance with its existing data and flows. It does not substitute the retained OIDC profile or import another installation’s credentials.
+
+Both `fresh` and `retained` can update an instance that HomeLab already manages. Keep `fresh` after creating an instance with that policy; do not change it after each deployment. `retained` requires an existing HomeLab-managed instance and cannot create one.
 
 ### Check and update
 
-Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
+Keep the same app, service and project identities, writable storage paths and credential owners. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Before an ordinary update, HomeLab checks the current ownership records, matching deployment state and preserved private inputs. Selecting a profile cannot clear a HOLD left by an unresolved operation or adopt data that HomeLab does not manage.
 
-Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
+Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
 Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/proxmox/applications/component_runtime.py).
 
 ## Declaration records
 
-These are the complete supplied fields in [node_red-public.yaml](../../../apps/node_red-public.yaml), including named role objects. `object` introduces its following child rows; `{}` is an explicitly empty mapping. Quoted values are strings, and sequences preserve declaration order. These are **profile definition values**, not an override bag for site apps. [Reading declaration records](../declaration-records.md) explains omission, binding, ownership and the compatible types. The tests compare these authored records to the real loaded definition.
+These are the complete supplied fields in [node_red-public.yaml](../../../apps/node_red-public.yaml), including named role objects. An `object` row introduces the fields below it; `{}` means an explicitly empty mapping. Quoted values are strings, and lists preserve declaration order. These are **profile definition values**. Site apps can change only the inputs their contract accepts. [Reading declaration records](../declaration-records.md) explains omission, binding, ownership and the compatible types. The tests compare this table with the loaded profile definition.
 
 | Declaration path | Selected value |
 | --- | --- |

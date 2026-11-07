@@ -2,7 +2,7 @@
 
 # Bitwarden
 
-Run the existing Bitwarden Lite vault against its selected MariaDB database, preserving installation material and numeric data ownership.
+Run the existing Bitwarden Lite vault against its selected MariaDB database, preserving its installation keys and the numeric user and group IDs that own its data.
 
 [Choose](#choose-this-profile) · [Interfaces](#interfaces) · [Listeners](#listeners-and-endpoints) · [Storage](#storage) · [Inputs](#connections-accounts-and-private-inputs) · [Properties](#application-properties) · [Software](#software-and-resource-policy) · [Update](#check-and-update) · [Declared fields](#declaration-records)
 
@@ -13,11 +13,11 @@ Run the existing Bitwarden Lite vault against its selected MariaDB database, pre
 | Site selection | `apps.<instance>.profile: bitwarden` |
 | Adapter | `bitwarden` |
 | Owned containers | `bitwarden` |
-| Multiple instances | Distinct storage/project/service identities are required; same-guest multi-instance operation is not qualified here. |
+| Multiple instances | Each instance needs separate storage, a distinct Compose project and distinct service names. Running multiple instances on one guest has not been verified here. |
 
-The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
+This profile runs on Debian LXC on Proxmox. Compilation checks the configuration, and local helper tests check the controller code. Neither check verifies a deployed service.
 
-The complete reusable declaration is [bitwarden.yaml](../../../apps/bitwarden.yaml). Select it in a site app; the profile itself contains no VMID, NIC address, credential or deployment authority. See [Compose a site](../../guides/compose-a-site.md).
+The complete reusable declaration is [bitwarden.yaml](../../../apps/bitwarden.yaml). Select it for an app in your site configuration. Your site supplies the VMID, network-interface address and credentials, and controls permission to deploy. See [Compose a site](../../guides/compose-a-site.md).
 
 ## First installation
 
@@ -37,7 +37,7 @@ apps:
 
 ### Practical complete example
 
-Use app `vault` in [examples/catalogue/vault.yaml](../../../examples/catalogue/vault.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+Use app `vault` in [examples/catalogue/vault.yaml](../../../examples/catalogue/vault.yaml). Check the dependencies and inputs that must already exist before using this example. Entries with `retained` require resources that HomeLab already manages; they cannot import another installation.
 
 After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
 
@@ -45,11 +45,11 @@ After [the source-only setup](../../guides/first-configuration.md) defines STACK
 "$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/vault.yaml" --check
 ```
 
-Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
+The command should compile every selected guest without reading credentials or contacting a guest, container or device. The integration test also generates each guest’s deployment files and checks its resources, identities, application files and health-check definitions.
 
 ## Interfaces
 
-The [role binding contract](../declaration-records.md#follow-the-selected-field-to-its-effect) resolves each role inside the selected guest. [Interface composition](../../guides/multiple-interfaces.md) shows physical, loopback and private scope choices.
+A role describes a network connection the app needs. Its [binding](../declaration-records.md#follow-the-selected-field-to-its-effect) selects an interface or network inside the app’s guest. [Interface composition](../../guides/multiple-interfaces.md) explains physical interfaces, guest loopback and private app networks.
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
@@ -58,7 +58,7 @@ The [role binding contract](../declaration-records.md#follow-the-selected-field-
 | `management` | No; selected capability can require it | `guest-interface` |
 | `private` | Yes | `app-network` |
 
-A physical role binds `{interface: NIC_ID}`; loopback and app-network use explicit scopes. Roles name requirements, not additional NICs. See [Multiple interfaces](../../guides/multiple-interfaces.md).
+Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback or an app network through its explicit scope. A role does not create another network interface. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
 ## Listeners and endpoints
 
@@ -70,18 +70,18 @@ A physical role binds `{interface: NIC_ID}`; loopback and app-network use explic
 | --- | --- | --- |
 | `web` | `http` | `web` via `web` |
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
+The web listener accepts connections inside the private app network. Its explicit publication makes TCP port 8080 available through the guest interface bound to `web`. The endpoint advertises the resulting address and port; it does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
-A role target is an application path; its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects owned guest data. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
 | `data` | Yes | `/etc/bitwarden` | directory / writable | None |
 | `logs` | Yes | `/var/log/bitwarden` | directory / writable | None |
 
-Bind roles to explicit guest volumes/subpaths or supported root data paths. Retained data is verified, not chowned or relocated. An initializer applies only to a newly created leaf beneath a proved provider volume, never an existing directory.
+Bind each storage role to a guest volume and subpath, or to a supported path on the guest’s root filesystem. HomeLab checks existing data without changing its file owner or moving it. Where a profile supports initialization, it creates only a new app subdirectory on a volume whose provider ownership has been verified. It does not initialize an existing directory.
 
 ## Connections, accounts and private inputs
 
@@ -90,22 +90,22 @@ Bind roles to explicit guest volumes/subpaths or supported root data paths. Reta
 | `database` | `mariadb` | Yes | `configure`, `start` | None |
 | `public` | `https` | No | `start` | None |
 
-The readiness column lists permitted choices, **not an automatic dependency**. The site selects `readiness` on the connection explicitly. Value links alone do not wait or grant traffic. See [Connect apps](../../guides/connect-apps.md).
+The readiness column lists the ordering options you can choose. Set `readiness` explicitly on the site connection to make one app wait for another. Referencing a value alone creates no wait and permits no network traffic. See [Connect apps](../../guides/connect-apps.md).
 
 | App secret role | Requirement |
 | --- | --- |
 | `runtime_environment` | Required |
 
-Secrets remain outside Git. File/environment references are metadata. Private role material cannot rotate implicitly during an ordinary update.
+Keep secret values outside Git. A file or environment reference identifies where to obtain a secret; it does not contain the value. An ordinary update cannot silently replace the secret.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter owns their [closed typed rules](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
 | issuer | Required mapping | protocol is http or https; domain names a site domains entry. This metadata is separate from the HTTPS app origin. |
-| database_name | Required string | Nonempty letters/digits/underscore, matching the sealed runtime environment and selected MariaDB database. |
+| database_name | Required string | Use a nonempty name containing letters, digits or underscores. It must match the sealed runtime environment and selected MariaDB database. |
 | data_uid / data_gid | Required positive integers | 1..2147483647, matching existing numeric data ownership and private environment values. |
 
 ## Invalid cases
@@ -113,9 +113,9 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 | Invalid change | Intended result |
 | --- | --- |
 | Select lifecycle fresh | Refuses: new-vault creation is unsupported. |
-| Supply a floating/local image or an authored environment checksum | Refuses the immutable-image/closed-property contract. |
+| Supply a floating or local image or an authored environment checksum | Validation rejects floating or local images because this profile requires an immutable registry image. It also rejects an authored environment-checksum property, which this adapter does not accept. |
 
-The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
 
 ## Software and resource policy
 
@@ -129,23 +129,23 @@ Software selections: [`docker`](../software-and-runtime.md#registration-software
 | --- | --- | --- | --- |
 | `bitwarden` | 1536 | 1 | 256 |
 
-These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
+These reservations and limits determine whether the workloads fit on a guest. They do not measure how much traffic the service can handle. Guest memory must also leave enough capacity for the operating system’s effective reserve. Security and process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
 ## Later deployments
 
-Maintains an already HomeLab-managed vault, preserving its database, installation keys, data and selected protected runtime environment. Software/image changes follow the normal immutable manifest policy; no vault upgrade or credential rotation is implied. This profile requires `lifecycle: retained`: it updates an already HomeLab-managed instance and refuses creation or import.
+HomeLab maintains the existing vault, preserving its database, installation keys, data and selected protected runtime environment. Software and image changes follow the normal immutable manifest policy; no vault upgrade or credential rotation is implied. This profile requires `lifecycle: retained`: it updates an already HomeLab-managed instance and refuses creation or import.
 
 ### Check and update
 
-Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
+Keep the same app, service and project identities, writable storage paths and credential owners. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Before an ordinary update, HomeLab checks the current ownership records, matching deployment state and preserved private inputs. Selecting a profile cannot clear a HOLD left by an unresolved operation or adopt data that HomeLab does not manage.
 
-Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
+Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
 Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/proxmox/applications/component_runtime.py).
 
 ## Declaration records
 
-These are the complete supplied fields in [bitwarden.yaml](../../../apps/bitwarden.yaml), including named role objects. `object` introduces its following child rows; `{}` is an explicitly empty mapping. Quoted values are strings, and sequences preserve declaration order. These are **profile definition values**, not an override bag for site apps. [Reading declaration records](../declaration-records.md) explains omission, binding, ownership and the compatible types. The tests compare these authored records to the real loaded definition.
+These are the complete supplied fields in [bitwarden.yaml](../../../apps/bitwarden.yaml), including named role objects. An `object` row introduces the fields below it; `{}` means an explicitly empty mapping. Quoted values are strings, and lists preserve declaration order. These are **profile definition values**. Site apps can change only the inputs their contract accepts. [Reading declaration records](../declaration-records.md) explains omission, binding, ownership and the compatible types. The tests compare this table with the loaded profile definition.
 
 | Declaration path | Selected value |
 | --- | --- |

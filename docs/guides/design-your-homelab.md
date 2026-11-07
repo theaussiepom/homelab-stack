@@ -4,7 +4,7 @@
 
 Turn a list of services you want into your own checked configuration for Debian 13 LXC guests on Proxmox. You will choose supported applications, place them on guests, collect your host facts, edit a complete local copy, and inspect what the compiler would prepare. The first result is a valid configuration and a concrete list of deployment prerequisites; these commands do not contact Proxmox or install a service.
 
-You need basic YAML editing, Git, and Python 3.12 or 3.13 with `venv` and pip. You can complete the exercise with synthetic values before you have a Proxmox host. Keep your eventual real configuration in your own private consuming site, separate from this reusable library.
+You need basic YAML editing, Git, and Python 3.12 or 3.13 with `venv` and pip. You can complete the exercise with synthetic values before you have a Proxmox host. Keep your eventual real configuration in your own private site repository, separate from this reusable library.
 
 ## 1. Start with the services you want
 
@@ -13,13 +13,13 @@ Write down the outcome first, then choose the matching [profile](../reference/RE
 | Desired outcome | Supported starting choice | What you must know before selecting it |
 | --- | --- | --- |
 | Learn recursive DNS configuration without existing application data | [Unbound](../reference/apps/unbound.md), `lifecycle: fresh` | Can create its configuration from empty. It publishes only `127.0.0.1:5335` inside its guest; it is not a LAN-facing DNS service. This is the first exercise below. |
-| Run Home Assistant with a new configuration | [Home Assistant public](../reference/apps/homeassistant-public.md), `lifecycle: fresh` | Has a create-only configuration initializer on a declared volume. [Add it below](#7-add-home-assistant-if-you-want-it); no MQTT, database or Node-RED is required. Vendor onboarding and integrations still happen after deployment. |
-| Give LAN clients filtering DNS | [Pi-hole](../reference/apps/pihole.md) with an explicitly selected upstream | Needs prepared Pi-hole configuration; the library does not supply a complete empty-host commissioning path. The [complete local DNS composition](../examples/local-dns.md) teaches an already HomeLab-owned retained installation and same-guest Unbound connection. Do not use that retained example as a fresh-install recipe. |
+| Run Home Assistant with a new configuration | [Home Assistant public](../reference/apps/homeassistant-public.md), `lifecycle: fresh` | Can create its configuration subdirectory on a declared volume, provided the subdirectory does not already exist. [Add it below](#7-add-home-assistant-if-you-want-it); no MQTT, database or Node-RED is required. Vendor onboarding and integrations still happen after deployment. |
+| Give LAN clients filtering DNS | [Pi-hole](../reference/apps/pihole.md) with an explicitly selected upstream | Needs prepared Pi-hole configuration; the library does not provide a complete procedure for a new installation on an empty host. The [complete local DNS composition](../examples/local-dns.md) shows how to configure an installation that HomeLab already manages and connect it to Unbound on the same guest. Do not use that retained example as a fresh-install recipe. |
 | Run a different supported service | Its [catalogue entry](../reference/README.md#complete-registered-catalogue) and complete example | Read **First installation**, required storage/secrets/connections, and **Later deployments** before choosing it. A registered profile can require prepared data, accounts or hardware. |
 
 This library targets supported Debian LXC application profiles. It is not a general VM installer, a Home Assistant OS image installer, or a way to run any arbitrary Compose file. A missing profile or capability needs a separately implemented and tested contract; see [contributing](../contributing.md).
 
-`fresh` permits the profile's supported creation when its resource is absent and remains appropriate for later owned updates. `retained` requires genuine existing HomeLab ownership and refuses creation. Neither imports an unrelated installation. Choose these policies for the actual starting state, not to get past a refusal; see [installation](installation.md#first-installation).
+`fresh` permits the profile's supported creation when its resource is absent and remains appropriate for later updates to the same HomeLab-managed instance. `retained` requires genuine existing HomeLab ownership and refuses creation. Neither imports an unrelated installation. Choose these policies for the actual starting state, not to get past a refusal; see [installation](installation.md#first-installation).
 
 ## 2. Decide which applications share a guest
 
@@ -31,7 +31,7 @@ Begin with one `resolver` guest and one `recursive_dns` instance. The optional H
 | Resolver and Home Assistant separately | Add `home-app` and `home` | Two allocations; HA advertises the second guest's address on port 8123. There is no connection between the apps. |
 | Both on one new guest | Use the [shared-guest variation](#8-try-a-different-supported-layout) | One allocation with the combined resource budget and HA data volume; HA uses that guest's address and DNS remains loopback-only. |
 
-The compiler checks combined memory reservations, sockets, data bindings and identities. Passing those checks is not a measurement of your workload: choose capacity for expected use. The [placement guide](shared-and-separate-guests.md) explains repeatable profiles and fixed sockets. These variations design new instances; they do not migrate an installed app between guests.
+The compiler checks combined memory reservations, sockets, data bindings and identities. Passing those checks is not a measurement of your workload: choose capacity for expected use. The [placement guide](shared-and-separate-guests.md) explains repeatable profiles and fixed listening addresses and ports. These variations design new instances; they do not migrate an installed app between guests.
 
 ## 3. Collect your Proxmox facts
 
@@ -78,7 +78,7 @@ PYTHON="$WORK_ROOT/venv/bin/python"
 
 The revision above quotes this version's workflow; the workflow remains the authority. Keep `STACK_REVISION` with your configuration notes. Do not combine the example with an unrelated framework checkout.
 
-Now create a separate working copy. The directory holds the complete maintained source, including the optional HA leaves; it has no references back into the library's examples directory.
+Now create a separate working copy. The directory holds the complete maintained source, including the optional HA files; it has no references back into the library's examples directory.
 
 ```sh
 SITE_ROOT="$(mktemp -d)"
@@ -88,7 +88,7 @@ printf 'Edit your configuration in %s\n' "$SITE_ROOT"
 "$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$SITE_ROOT/site.yaml" --check
 ```
 
-Expect `All component guests compile offline; no credentials or targets accessed.` before making changes. This checks the copied files, not the library's starter. Keep this directory for the exercise; after review, move the whole directory into your private consuming repository so temporary-directory cleanup cannot remove your authored work.
+Expect `All component guests compile offline; no credentials or targets accessed.` before making changes. This checks the copied files, not the library's starter. Keep this directory for the exercise; after review, move the whole directory into your private site repository so temporary-directory cleanup cannot remove your authored work.
 
 | Copied file | Job in your configuration |
 | --- | --- |
@@ -98,7 +98,7 @@ Expect `All component guests compile offline; no credentials or targets accessed
 | [guests/home-app.yaml](../../examples/personalisation/guests/home-app.yaml) | Optional separate HA guest, resources and provider data volume. It is not selected yet. |
 | [apps/home.yaml](../../examples/personalisation/apps/home.yaml) | Optional fresh public HA instance and config-volume binding. It is not selected yet. |
 
-Every `source:` path is relative to the directory containing `site.yaml`. Each selected leaf is a complete typed file with its own `schema` and `kind`; it is not a partial overlay. Keep the whole directory tree when moving the site. See [source composition](compose-a-site.md#4-keep-source-files-complete) for other supported splits.
+Every `source:` path is relative to the directory containing `site.yaml`. Each selected source file is complete and typed with its own `schema` and `kind`; it is not a partial overlay. Keep the whole directory tree when moving the site. See [source composition](compose-a-site.md#4-keep-source-files-complete) for other supported splits.
 
 ## 5. Put your choices into the source
 
@@ -135,7 +135,7 @@ Compile your edited copy after each coherent change:
 "$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$SITE_ROOT/site.yaml" --check
 ```
 
-Then generate a packet for the guest you chose. The output directory is new on each run because packet writes deliberately refuse an existing output file. If you renamed the guest, change `GUEST` to its site map key.
+Then generate a packet: a JSON file containing the deployment inputs for the guest you chose. The output directory is new on each run because packet writes deliberately refuse an existing output file. If you renamed the guest, change `GUEST` to its site map key.
 
 ```sh
 GUEST=resolver
@@ -166,7 +166,7 @@ PYCODE
 
 Compare the provider node, VMID, hostname, storage, template and NIC values against your worksheet. With the practice edits, the resolver should use node `practice-node`, VMID `810`, pool `practice-pool` and address `198.19.30.10`. Its phases are `preparation`, then `recursive_dns`. Both DNS listeners publish on `127.0.0.1:5335`, not the NIC address; its data bindings are empty. Unedited source instead has VMID `610` and address `198.18.20.10`. Review the policy selections in `site.yaml` as well: the example permits runner SSH, outbound package/image HTTP(S), and outbound recursive TCP/UDP DNS. It does not create upstream network access.
 
-Generated packets contain runtime documents and, when personalised, private path/allocation metadata. Keep them local and inspect them; edit the authored YAML rather than the generated JSON. A successful result proves that your chosen source resolves and lowers with these revisions. It does not prove host capacity, trust files, routing, data ownership or a running service.
+Generated packets contain runtime documents and, when personalised, private path/allocation metadata. Keep them local and inspect them; edit the authored YAML rather than the generated JSON. A successful result proves that your chosen source resolves and generates deployment files with these revisions. It does not prove host capacity, trust files, routing, data ownership or a running service.
 
 ### Fix a refused configuration
 
@@ -183,7 +183,7 @@ The documentation tests exercise the specific invalid-address, interface, capaci
 
 ## 7. Add Home Assistant if you want it
 
-For a fresh Home Assistant configuration, choose `homeassistant-public`. The similarly named `homeassistant` profile has different prepared-input requirements. The public variant creates only the absent config leaf beneath its proved volume; it does not recursively change existing ownership or import an old HA directory. Read its [first installation contract](../reference/apps/homeassistant-public.md#first-installation).
+For a fresh Home Assistant configuration, choose `homeassistant-public`. The similarly named `homeassistant` profile has different prepared-input requirements. The public variant creates a configuration subdirectory only if it is absent and HomeLab has verified ownership of the containing volume. It does not change the file owner of an existing directory tree or import an old HA directory. Read its [first installation contract](../reference/apps/homeassistant-public.md#first-installation).
 
 In `site.yaml`, replace the existing `guests` and `apps` maps with the following two maps; leave all other root fields in place. These are **site map replacements**, not a whole site or additional duplicate YAML keys. Both optional files were copied in step 4.
 
@@ -262,22 +262,22 @@ volumes:
     size_gib: 4
 ```
 
-Run step 6 with `GUEST=resolver`. Expect a single guest packet containing both `recursive_dns` and `home`, 3072 MiB and the config volume. HA's printed `web` address and the browser rule's destination now follow the resolver's primary NIC (`198.19.30.10` for the practice values), while Unbound still publishes loopback port 5335. There is still no connection or readiness edge between the apps. Deployment phase order within the generated packet is not evidence that one application uses the other.
+Run step 6 with `GUEST=resolver`. Expect a single guest packet containing both `recursive_dns` and `home`, 3072 MiB and the config volume. HA's printed `web` address and the browser rule's destination now follow the resolver's primary NIC (`198.19.30.10` for the practice values), while Unbound still publishes loopback port 5335. The apps still have no connection to each other and neither waits for the other to become ready. Deployment phase order within the generated packet is not evidence that one application uses the other.
 
 This verifies a materially different supported source layout. For repeated resolvers with distinct loopback ports and multiple networks, continue with [shared and separate guests](shared-and-separate-guests.md) and the maintained [alternate site](../../examples/site.second.yaml). Each added app needs an independent identity, compatible sockets, sufficient capacity and its own required data/connection bindings.
 
 ## 9. Finish with a deployment preparation list
 
-You now have your own coherent source, its copied dependencies, the selected revision tuple and inspectable packets. If you used real facts, this is a personalised configuration; if you used the practice values, it is a repeatable rehearsal. Preserve the source and review it before completing the following inputs in your private consuming site.
+You now have your own coherent source, its copied dependencies, the selected source revisions and inspectable packets. If you used real facts, this is a personalised configuration; if you used the practice values, it is a repeatable rehearsal. Preserve the source and review it before completing the following inputs in your private site repository.
 
 | Remaining input | Where it belongs | Evidence needed before deployment |
 | --- | --- | --- |
-| Provider trust and SSH host trust | `site.yaml` → `contexts.lab.trust.ca_file`, `.known_hosts` | Actual trusted files on the controller, with verified provider/host identities and required custody. Paths alone prove nothing. |
-| Provider API credential and controller SSH key | `site.yaml` → `secret_sources.api.path`, `secret_sources.ssh.path`; referenced by `contexts.lab.credentials` | Protected files with the required API/SSH rights; do not paste material into YAML or this library. See [secrets](../secrets.md). |
+| Provider trust and SSH host trust | `site.yaml` → `contexts.lab.trust.ca_file`, `.known_hosts` | The actual CA certificate and known-hosts file must exist on the controller with the required file ownership and permissions. Verify that they identify the intended provider and hosts; a path alone does not establish trust. |
+| Provider API credential and controller SSH key | `site.yaml` → `secret_sources.api.path`, `secret_sources.ssh.path`; referenced by `contexts.lab.credentials` | Protected credential files must grant the required API and SSH permissions. Do not paste credential values into YAML or this library. See [secrets](../secrets.md). |
 | Guest login public key and existing protected VMIDs | `site.yaml` → `contexts.lab.ssh_public_keys`, `.protected_guests` | Genuine Ed25519 public key selection and the actual protected allocation list. An empty public-key list is only an offline fixture. |
-| State and backup custody | `site.yaml` → `contexts.lab.paths.state_root`, `.backup_directory`, `.backup_mount`, `.backup_source` | Existing controller-owned state namespace and qualified mounted backup destination/source. These are controller paths, not guest data-volume paths. |
-| Node/template/pool/NIC allocations and allowed traffic | The worksheet fields, `policies.network` and each guest's `network_policy` | Existing node resources; reserved identities; reachable preparation DNS; runner/package/image access; explicit intended client access. Rules do not create router routes or upstream firewall permissions. |
-| Application-specific data, accounts and integrations | The selected profile's storage/secrets/connections/properties | Its **First installation** requirements and, after deployment, vendor onboarding plus actual endpoint/authentication/integration checks. Retained resources additionally require genuine matching ownership records. |
-| Reviewed source selection and execution setup | Your consumer repository's framework/library pins, generated workflows, protected environment, runner and secret forwarding | Follow the selected framework's [deployment prerequisites](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/operations/deployment.md#prerequisites) and its [compiler/workflow commands](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/cli.md). No consumer runner or universal deployment trigger is supplied by this example. |
+| State files and backups | `site.yaml` → `contexts.lab.paths.state_root`, `.backup_directory`, `.backup_mount`, `.backup_source` | The state directory must already be owned by the controller account. Check that the backup mount uses the declared source and that its destination directory meets the required ownership, permissions and access checks. These paths are on the controller, not in a guest data volume. |
+| Node, guest template, storage pool, network interfaces and allowed traffic | The worksheet fields, `policies.network` and each guest's `network_policy` | Check that the node resources exist and the selected identities are reserved. Preparation must be able to reach DNS, the runner must have its required access, and packages and images must be reachable. Declare the intended client access explicitly. Rules do not create router routes or upstream firewall permissions. |
+| Application-specific data, accounts and integrations | The selected profile's storage, secrets, connections and properties | Its **First installation** requirements and, after deployment, vendor onboarding and checks of the actual endpoint, authentication and integrations. Retained resources additionally require genuine matching ownership records. |
+| Reviewed source selection and execution setup | Your deployment repository's exact framework and library revisions, generated workflows, protected environment, runner and forwarded secrets | Follow the selected framework's [deployment prerequisites](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/operations/deployment.md#prerequisites) and its [compiler/workflow commands](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/cli.md). No consumer runner or universal deployment trigger is supplied by this example. |
 
-Continue with [preparation, first installation and service verification](installation.md). Source admission, an authorized protected deployment and real service verification are separate steps. This guide has not performed any of them on your host. Keep `fresh` for later ordinary owned updates and use [images and updates](images-and-updates.md) when changing selected software or defaults.
+Continue with [preparation, first installation and service verification](installation.md). Source admission, an authorized protected deployment and real service verification are separate steps. This guide has not performed any of them on your host. Keep `fresh` for later updates to the same HomeLab-managed instance and use [images and updates](images-and-updates.md) when changing selected software or defaults.

@@ -2,7 +2,7 @@
 
 [Documentation index](../README.md)
 
-These are maintained synthetic source inputs, not installed layouts. Complete examples compile with the selected framework; they do not contain real target acceptance or credential values.
+These maintained examples use synthetic values. They compile with the selected framework, but do not describe an installed site, include real credentials or verify a running service.
 
 | Scenario | Complete source | What it establishes |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ These are maintained synthetic source inputs, not installed layouts. Complete ex
 
 Use the design journey for your own source. Run the standalone and alternate examples directly using [First configuration](../guides/first-configuration.md). The local DNS page defines its source files and commands. Reference pages use clearly labelled app/property fragments and link these complete examples; a fragment alone is not a deployable site.
 
-Source tests also exercise unsupported roles, collisions, unselected dependencies and exact inherited/default behavior. Profile-specific retained data/auth/hardware paths require their stated consumer facts; this index does not claim every listed app has a fresh commissioning tutorial.
+Source tests also exercise unsupported roles, collisions, unselected dependencies and exact inherited/default behavior. Profiles that retain data, authentication or hardware settings require the existing resources listed on their reference pages. Not every app has a tutorial for a new installation.
 
 ## Every profile, including variants
 

@@ -14,25 +14,25 @@ The alternate source declares `local_primary`, `local_backup` and `remote_primar
 
 | Instance | Placement | Publication |
 | --- | --- | --- |
-| local_primary | resolver-east | loopback5335 |
-| local_backup | resolver-east | loopback5336 |
-| remote_primary | resolver-west | loopback5335 on that other guest |
+| local_primary | resolver-east | loopback port 5335 |
+| local_backup | resolver-east | loopback port 5336 |
+| remote_primary | resolver-west | loopback port 5335 on that other guest |
 
-The instance ID, derived or explicit runtime/service/project/network identities and sockets are distinct. `properties.publish_port` changes both guest-loopback TCP/UDP ports while the private container listener remains53. A cosmetic display label is not an identity override.
+The instance ID, derived or explicit runtime/service/project/network identities and sockets are distinct. `properties.publish_port` changes both guest-loopback TCP/UDP ports while the private container listener remains port 53. A cosmetic display label is not an identity override.
 
 ## Share a Compose project explicitly
 
 A guest may declare named `compose_projects`, and retained app identities bind to the selected project and owned service roles. Helpers remain with their app: CloudBeaver owns its auth gateway; Explorer owns its gateway; Authentik owns server/worker/Redis. Shared project membership is not a dependency and does not authorize restarting peers.
 
-The compiler rejects overlapping service/network identities, writable storage namespaces and incompatible publications. Native descriptors also reject fixed unit/config/account collisions. PostgreSQL and MariaDB can pass compatible namespace checks; PostgreSQL and InfluxDB currently conflict on fixed group identity. Budget fit alone is not placement support.
+The compiler rejects overlapping service/network identities, writable storage namespaces and incompatible publications. Native service definitions also reject conflicts between fixed unit names, configuration paths and accounts. PostgreSQL and MariaDB can pass these checks together; PostgreSQL and InfluxDB currently use a conflicting fixed group identity. Having enough memory alone does not establish that two services can share a guest.
 
 ## Know the limits
 
 - Unbound and namespace-aware Cloud/Explorer helpers have focused repeated-instance source/helper tests.
 - Pi-hole has one fixed managed-record sidecar per guest.
-- Zigbee supports one registered serial coordinator and fixed settings/identity leaves per guest.
-- Fixed host listeners, such as HA8123, Node-RED1880 and MQTT1883, prevent an identical co-located listener.
-- Native services keep their supported conventional unit/data/config layouts; there is no multi-cluster relocation knob.
+- Zigbee supports one registered serial coordinator per guest and uses fixed settings and identity files.
+- Fixed host listeners, such as HA on 8123, Node-RED on 1880 and MQTT on 1883, prevent an identical co-located listener.
+- Native services keep their supported conventional unit/data/config layouts; there is no setting for moving multiple clusters between these locations.
 
 Consult each [profile page](../reference/README.md). Distinct writable mounts, credential owners and custody paths remain necessary even where listener placement is valid. Source/helper support is not a claim that every same-guest combination has been deployed.
 

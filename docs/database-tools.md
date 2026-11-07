@@ -4,7 +4,7 @@ The canonical reference is [CloudBeaver](reference/apps/cloudbeaver.md), with th
 
 ## Connections and dedicated administration
 
-See [CloudBeaver requirements](reference/apps/cloudbeaver.md#application-requirements), [the variant](reference/apps/cloudbeaver-mariadb-admin.md#application-requirements) and [Connect apps](guides/connect-apps.md#database-connections). Managed PostgreSQL/MariaDB administration is a deliberate powerful account capability, not metadata-only connection setup or database initialization.
+See [CloudBeaver requirements](reference/apps/cloudbeaver.md#application-requirements), [the variant](reference/apps/cloudbeaver-mariadb-admin.md#application-requirements) and [Connect apps](guides/connect-apps.md#database-connections). Select managed PostgreSQL or MariaDB administration only when you need its powerful account privileges. Listing a database connection alone does not grant those privileges or initialize the database.
 
 ## Saved credentials and retained state
 

@@ -2,11 +2,11 @@
 
 [Documentation index](../README.md) · [Reference index](README.md)
 
-[stack.json](../../stack.json) is the single library index for named software, runtime, health, authentication, monitoring, assets and policy fragments. [images.json](../../images.json) is the image-version/policy catalogue. Profile pages link their selected names; a site is not another registry or version authority.
+[stack.json](../../stack.json) is the single library index for named software, runtime, health, authentication, monitoring, assets and policy fragments. [images.json](../../images.json) is the image-version/policy catalogue. Profile pages link their selected names; a site does not define another registry or version policy.
 
 ## Software selections
 
-A software entry selects exact packages, public signed repository definitions and/or app-local image roles. Guest packages/repositories aggregate without changing order of first selection; conflicting versions refuse. Image roles remain app-scoped, so separate app instances do not overwrite each other's local role name.
+A software entry selects exact packages, public signed repository definitions, app-local image roles, or a combination of these. The resolver combines guest package and repository selections in the order first selected. It rejects conflicting versions. Image roles belong to their app instance, so separate instances can use the same local role name without overwriting each other.
 
 | Selection | Packages | Image role → catalogue ID | Public repository |
 | --- | --- | --- | --- |
@@ -37,20 +37,20 @@ A software entry selects exact packages, public signed repository definitions an
 | <a id="registration-software-node-red-public-images"></a>`software.node_red-public-images` | None | `node_red` → `node_red_public` | None |
 
 
-Repository signing keys come from hash-bound public assets. The three vendor assets remain exact bytes. Native configuration/HBA is rendered by typed framework adapters; arbitrary raw templates are not a configuration escape.
+Repository signing keys come from hash-bound public assets. The three vendor assets remain exact bytes. Framework adapters generate native service configuration and PostgreSQL host-based authentication (HBA) rules from typed inputs. They do not accept arbitrary templates as a way around those inputs.
 
 ## Image policies
 
-- A registry digest renders the literal selected immutable reference with the common `missing` pull policy.
+- A registry digest produces the exact selected immutable image reference. Its `missing` pull policy downloads the image only when it is absent locally.
 - The explicit Music Assistant `latest` selection keeps its floating policy and protected upgrade checks.
-- HA/Node-RED custom archive IDs require concrete site local_id/archive/archive_sha256 bindings. The public zero-valued declarations are unresolved sentinels; no public-image fallback occurs.
+- Home Assistant and Node-RED custom archive selections require the site to supply local_id, archive and archive_sha256. The public zero values are placeholders, and HomeLab does not substitute a public image for them.
 - Public HA/Node-RED variants select separate official image catalogue IDs. They do not replace another instance's custom image or data.
 
 See [Images and updates](../guides/images-and-updates.md). Do not copy checksum/version constants into another site policy or documentation authority; inspect the linked manifests for exact current bytes.
 
 ## Runtime selections
 
-Each app selects named resource/process/security requirements. The following is the complete declared runtime catalogue; values are policy, not load-test results.
+Each app selects named resource limits, process settings and security requirements. The following is the complete declared runtime catalogue; the values define resource and security requirements, not measured performance.
 
 | Runtime | Owned workloads / settings | Guest requirements |
 | --- | --- | --- |
@@ -76,11 +76,11 @@ Each app selects named resource/process/security requirements. The following is 
 | <a id="registration-runtime-profiles-native-influxdb"></a>`runtime_profiles.native-influxdb` | Native `1792MiB` | None |
 
 
-A site may use the closed app.resources.containers resource allocation fields for owned services; this is not a user/capability/command override. The compiler sums container and native memory, applies effective OS reserve and rejects unsupported mixed native namespaces. It does not infer zero native cost or unlimited capacity.
+A site may allocate resources to the app’s services through the accepted `app.resources.containers` fields. These fields do not allow changes to the process user, capabilities or commands. The compiler adds the memory required by containers and native services, reserves memory for the operating system, and rejects native services whose fixed names conflict. Native services count toward the budget, and guest capacity is finite.
 
 ## Health and monitoring
 
-`adapter-ready` is the named `{type:adapter, check:readiness}` health profile. The framework expands each app's bounded checks; profiles do not supply arbitrary shell commands. Actual health/readiness is distinct from user login, SQL/MQTT data flow and service acceptance.
+`adapter-ready` is the named `{type:adapter, check:readiness}` health profile. The framework expands each app's bounded checks; profiles do not supply arbitrary shell commands. A passing health check does not prove that user login, SQL or MQTT data exchange, or other intended service behavior works.
 
 | Monitoring profile | Selected workload types |
 | --- | --- |
@@ -91,7 +91,7 @@ A site may use the closed app.resources.containers resource allocation fields fo
 | <a id="registration-monitoring-profiles-influxdb-agent"></a>`monitoring_profiles.influxdb-agent` | `influxdb` |
 
 
-Template linux and app-specific monitoring selections take effect only through the root selected Zabbix capability. Omission leaves it unselected; `zabbix:` selects the unique configured server, and `{server: ID}` chooses explicitly when needed. Existing monitoring ownership and generated credentials remain separate from arbitrary app password input.
+The template’s Linux monitoring and each app’s monitoring settings take effect only when the site selects Zabbix at its root. Omission leaves it unselected; `zabbix:` selects the unique configured server, and `{server: ID}` chooses explicitly when needed. Monitoring keeps its existing ownership records and generated credentials; an arbitrary app password cannot replace them.
 
 ## Authentication requirements
 
@@ -102,7 +102,7 @@ Template linux and app-specific monitoring selections take effect only through t
 | <a id="registration-authentication-profiles-zabbix-saml"></a>`authentication_profiles.zabbix-saml` | `zabbix-saml` | Optional |
 
 
-These declare requirement types; concrete provider/client/secret metadata belongs to named site policies. A URL does not create a provider, grant authorization or imply a readiness wait.
+These entries declare authentication requirements. Named site policies supply the provider, client and secret references. A URL does not create a provider, grant authorization or imply a readiness wait.
 
 ## Optional network fragments
 
@@ -119,7 +119,7 @@ The library has no automatic access policy. A site explicitly selects each fragm
 | <a id="registration-policies-network-package-image-provider-web-egress"></a>`policies.network.package_image_provider_web_egress` | 1 | None |
 
 
-Across these seven fragments there are 13 ordered rows. Bindings do not union, deduplicate, sort or broaden them. Package download intent does not replace package-signature verification. Named address groups are ordered value reuse, not an inferred grant or dependency. See [Connect apps](../guides/connect-apps.md) and the framework policy reference for exact row syntax.
+These seven fragments contain 13 rules in a defined order. Binding their roles does not combine, deduplicate, sort or broaden the rules. Package download intent does not replace package-signature verification. Named address groups let rules reuse an ordered list of addresses. Selecting a group does not grant access or create a dependency. See [Connect apps](../guides/connect-apps.md) and the framework policy reference for exact row syntax.
 
 ## Health registration and public assets
 
@@ -132,6 +132,6 @@ The loader checks hash-bound assets as public source bytes; they are vendor repo
 | <a id="registration-assets-mariadb-repository-key"></a>`assets.mariadb-repository-key` | [Public asset](../../assets/mariadb/vendor.asc) |
 | <a id="registration-assets-influxdb-repository-key"></a>`assets.influxdb-repository-key` | [Public asset](../../assets/influxdb/vendor.asc) |
 
-All registered names above are reconciled in both directions by [documentation conformance](../testing.md#documentation-conformance). Exact profile/template field values have typed record checks; the shared catalogue check covers registered names, while its procedural explanations and nested shared values retain source/reviewer responsibility.
+The tests check for both missing and extra registered names through [documentation conformance](../testing.md#documentation-conformance). Tests compare exact profile and template field values with their typed records. The shared catalogue check covers registered names; a reviewer must still compare its nested values and procedural explanations with the source.
 
 The compatible loader also accepts a bundle registry, but this library registers no bundles; no fixed guest/application bundle is implied. New registrations must acquire explicit catalogue and pointer records.

@@ -21,36 +21,36 @@ connections:
     readiness: start
 ```
 
-The target endpoint supplies127.0.0.1:5335 from the Unbound profile/instance. `source_interface` selects Pi-hole's already bound role. `readiness:start` explicitly orders the producer before the consumer. Omitting readiness removes that wait; it does not change the target value. An external upstream can be selected without Unbound; readiness requires a managed app target.
+The target endpoint supplies 127.0.0.1:5335 from the selected Unbound instance. `source_interface` selects Pi-hole's already bound role. `readiness:start` explicitly orders the producer before the consumer. Omitting readiness removes that wait; it does not change the target value. An external upstream can be selected without Unbound; readiness requires a managed app target.
 
-See the [source-only local DNS composition](../examples/local-dns.md) for complete declared objects and validation. The framework owns its whole-source connection/exposure reader and path rules; this guide does not introduce a merge language.
+See the [source-only local DNS composition](../examples/local-dns.md) for the complete declarations and validation command. The framework reads complete connection and exposure files using its documented path rules. These files cannot be used as partial overlays.
 
 ## MQTT and a saved hostname
 
 A broker endpoint such as `{app: broker, endpoint: backend}` supplies the runtime target. A connection's hostname can select a named DNS exposure, or a supported named host alias, independently of that address. This preserves a saved hostname without forcing the GUI through a frontend route.
 
-Explorer additionally needs a required broker account/credential and a required existing HTTP outpost; it cannot derive either from the broker's presence. Same-guest managed `mqtt-client` selects deliberately broad all-topic read/write access. An explicit existing credential uses its separate private source and does not create an account. See [Explorer](../reference/apps/mqtt_explorer.md) and [MQTT](../reference/apps/mqtt.md).
+Explorer also requires a broker account or credential and an existing HTTP authentication outpost. Selecting a broker does not supply either prerequisite. Same-guest managed `mqtt-client` selects deliberately broad all-topic read/write access. An explicit existing credential uses its separate private source and does not create an account. See [Explorer](../reference/apps/mqtt_explorer.md) and [MQTT](../reference/apps/mqtt.md).
 
 ## Database connections
 
-HA's recorder/metrics and CloudBeaver's database roles are optional until selected. The site binds physical source roles and named endpoints, then chooses allowed readiness/account/transport fields. Metadata-only Cloud connections let users supply credentials. Managed administration selects a separate explicit account and capability.
+Home Assistant's recorder and metrics roles, and CloudBeaver's database roles, are optional until selected. The site binds each required source role to a physical guest interface, selects the named target endpoint, and chooses the supported readiness, account and transport options. CloudBeaver connections that supply only connection settings let users enter their own credentials. Managed administration selects a separate explicit account and capability.
 
-CloudBeaver PostgreSQL administration requires TLS/SCRAM/channel binding; its MariaDB-admin variant requires the library-owned Connector/J capability and PARSEC verify-full transport. PostgreSQL SUPERUSER and MariaDB global ALL with GRANT are powerful intentional privileges, not consequences of a URL. Read the two [Cloud profile pages](../reference/apps/cloudbeaver.md).
+CloudBeaver PostgreSQL administration requires TLS, SCRAM authentication and channel binding; its MariaDB-admin variant requires the library-owned Connector/J capability and PARSEC verify-full transport. PostgreSQL SUPERUSER and MariaDB global ALL with GRANT are powerful intentional privileges, not consequences of a URL. Read the two [Cloud profile pages](../reference/apps/cloudbeaver.md).
 
 ## Readiness and traffic are different
 
 | Declaration | Meaning |
 | --- | --- |
-| Context DNS endpoint | Value for OS configuration; no inferred wait |
-| Guest readiness stage:preparation | Explicit prerequisite sourced from the guest control interface |
-| Connection readiness:start/configure | One of the profile role's allowed explicit ordering choices |
-| Network policy binding | Explicit traffic intent; selected cross-guest traffic must satisfy source/target admission |
-| Authentication URL | Login metadata; no inferred identity-provider startup wait |
+| Context DNS endpoint | Supplies the DNS value for OS configuration; it does not make deployment wait. |
+| Guest readiness stage:preparation | Checks an explicitly selected prerequisite through the guest’s control interface. |
+| Connection readiness:start/configure | Explicitly makes the consumer wait for a stage supported by the profile’s connection role. |
+| Network policy binding | Declares the intended traffic; selected connections between guests must pass the checks for access at both their source and target. |
+| Authentication URL | Supplies login metadata; it does not make deployment wait for the identity provider to start. |
 
-Cross-guest dependencies produce guest-job needs; same-guest dependencies order app steps. Cycles refuse. Disabling a required producer does not repair a dependency. Policy rows preserve order and comments; address groups preserve their exact ordered members, without union or deduplication.
+When dependent apps run on different guests, the generated guest jobs wait for each other as required. Apps on the same guest run in the required step order. The compiler rejects dependency cycles. Disabling a required producer does not repair a dependency. Policy rows preserve order and comments; address groups preserve their exact ordered members, without union or deduplication.
 
 ## Expose a service separately
 
-A DNS exposure selects endpoint, domain and resolver. It does not create an HTTP/TCP proxy route. An HTTP exposure additionally names ingress, TLS and selected middleware/backend transport. An app origin and a saved broker hostname can refer to that exposure without copying its domain.
+A DNS exposure selects endpoint, domain and resolver. It does not create an HTTP/TCP proxy route. An HTTP exposure additionally names ingress, TLS, and the selected middleware and backend transport. An app origin and a saved broker hostname can refer to that exposure without copying its domain.
 
 Do not publish a private helper listener directly to avoid a required gateway. Choose the app's advertised supported endpoint and preserve its authentication boundary. Actual DNS, TLS and sign-in verification follow separately authorized deployment.

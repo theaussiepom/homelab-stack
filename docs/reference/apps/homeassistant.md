@@ -15,13 +15,13 @@ Run Home Assistant with an explicitly supplied custom image archive and existing
 | Owned containers | `homeassistant` |
 | Multiple instances | Fixed host TCP 8123 prevents two identical listeners on one guest. |
 
-The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
+This profile runs on Debian LXC on Proxmox. Compilation checks the configuration, and local helper tests check the controller code. Neither check verifies a deployed service.
 
-The complete reusable declaration is [homeassistant.yaml](../../../apps/homeassistant.yaml). Select it in a site app; the profile itself contains no VMID, NIC address, credential or deployment authority. See [Compose a site](../../guides/compose-a-site.md).
+The complete reusable declaration is [homeassistant.yaml](../../../apps/homeassistant.yaml). Select it for an app in your site configuration. Your site supplies the VMID, network-interface address and credentials, and controls permission to deploy. See [Compose a site](../../guides/compose-a-site.md).
 
 ## Application requirements
 
-The custom archive needs concrete local_id/archive/archive_sha256 site bindings. Zero-valued public catalogue entries are unresolved sentinels, not usable image identities. The retained mDNS startup capability is explicit; hardware access is not inferred.
+The site must supply `local_id`, `archive` and `archive_sha256` for the custom image. Zero values in the public catalogue are placeholders, not usable image identities. Select the retained multicast DNS (mDNS) startup capability explicitly when required; it does not imply hardware access.
 
 ## First installation
 
@@ -41,7 +41,7 @@ apps:
 
 ### Practical complete example
 
-Use app `homeassistant` in [examples/catalogue/existing-automation.yaml](../../../examples/catalogue/existing-automation.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+Use app `homeassistant` in [examples/catalogue/existing-automation.yaml](../../../examples/catalogue/existing-automation.yaml). Check the dependencies and inputs that must already exist before using this example. Entries with `retained` require resources that HomeLab already manages; they cannot import another installation.
 
 After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
 
@@ -49,11 +49,11 @@ After [the source-only setup](../../guides/first-configuration.md) defines STACK
 "$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/existing-automation.yaml" --check
 ```
 
-Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
+The command should compile every selected guest without reading credentials or contacting a guest, container or device. The integration test also generates each guest’s deployment files and checks its resources, identities, application files and health-check definitions.
 
 ## Interfaces
 
-The [role binding contract](../declaration-records.md#follow-the-selected-field-to-its-effect) resolves each role inside the selected guest. [Interface composition](../../guides/multiple-interfaces.md) shows physical, loopback and private scope choices.
+A role describes a network connection the app needs. Its [binding](../declaration-records.md#follow-the-selected-field-to-its-effect) selects an interface or network inside the app’s guest. [Interface composition](../../guides/multiple-interfaces.md) explains physical interfaces, guest loopback and private app networks.
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
@@ -75,11 +75,11 @@ Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role 
 | --- | --- | --- |
 | `web` | `http` | `web` via `web` |
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
+A wildcard host listener can accept connections through interfaces other than the advertised NIC. An endpoint gives consumers an address and port. It does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
-A role target is an application path; its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects owned guest data. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -88,7 +88,7 @@ A role target is an application path; its [site binding](https://github.com/thea
 | `community` | Conditional / optional | `/hacsfiles` | directory / writable | None |
 | `startup` | Conditional / optional | `/startup` | directory / read-only | None |
 
-Bind roles to explicit guest volumes/subpaths or supported root data paths. Retained data is verified, not chowned or relocated. An initializer applies only to a newly created leaf beneath a proved provider volume, never an existing directory.
+Bind each storage role to a guest volume and subpath, or to a supported path on the guest’s root filesystem. HomeLab checks existing data without changing its file owner or moving it. Where a profile supports initialization, it creates only a new app subdirectory on a volume whose provider ownership has been verified. It does not initialize an existing directory.
 
 ## Connections, accounts and private inputs
 
@@ -98,26 +98,26 @@ Bind roles to explicit guest volumes/subpaths or supported root data paths. Reta
 | `metrics` | `influxdb` | No | `start` | None |
 | `broker` | `mqtt` | No | `start` | None |
 
-The readiness column lists permitted choices, **not an automatic dependency**. The site selects `readiness` on the connection explicitly. Value links alone do not wait or grant traffic. See [Connect apps](../../guides/connect-apps.md).
+The readiness column lists the ordering options you can choose. Set `readiness` explicitly on the site connection to make one app wait for another. Referencing a value alone creates no wait and permits no network traffic. See [Connect apps](../../guides/connect-apps.md).
 
 No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter owns their [closed typed rules](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
-| mdns | Optional mapping | interface and startup are declared role IDs. Retained only; select homeassistant-mdns runtime, a physical Home role and read-only /startup binding. No NET_ADMIN in the base runtime. |
+| mdns | Optional mapping | `interface` and `startup` name declared roles. The interface role must bind to a physical guest interface, and the storage role must be read-only at `/startup`. This capability requires `lifecycle: retained` and the explicitly selected `homeassistant-mdns` runtime. The base runtime does not grant `NET_ADMIN`. |
 
 ## Invalid cases
 
 | Invalid change | Intended result |
 | --- | --- |
-| Select mDNS without its physical role/startup binding and explicit runtime requirement | Refuses the selected capability. |
+| Select mDNS without its physical interface role, startup binding or explicit runtime requirement | Compilation requires a physical interface, a read-only `/startup` binding and the `homeassistant-mdns` runtime. The app must also use `lifecycle: retained`. |
 | Replace the retained archive with the public variant silently | Changes software authority; no fallback is implemented. |
 
-The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
 
 ## Software and resource policy
 
@@ -131,23 +131,25 @@ Software selections: [`docker`](../software-and-runtime.md#registration-software
 | --- | --- | --- | --- |
 | `homeassistant` | 2048 | 2 | 512 |
 
-These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
+These reservations and limits determine whether the workloads fit on a guest. They do not measure how much traffic the service can handle. Guest memory must also leave enough capacity for the operating system’s effective reserve. Security and process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
 ## Later deployments
 
-Maintains the existing configuration and explicit custom archive binding. Preserve selected integrations and optional mDNS/startup requirements; a profile update does not rebuild the archive or replace private configuration. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+HomeLab maintains the existing configuration and explicit custom archive binding. Preserve selected integrations and the optional mDNS capability’s startup requirements; a profile update does not rebuild the archive or replace private configuration.
+
+Both `fresh` and `retained` can update an instance that HomeLab already manages. Keep `fresh` after creating an instance with that policy; do not change it after each deployment. `retained` requires an existing HomeLab-managed instance and cannot create one.
 
 ### Check and update
 
-Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
+Keep the same app, service and project identities, writable storage paths and credential owners. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Before an ordinary update, HomeLab checks the current ownership records, matching deployment state and preserved private inputs. Selecting a profile cannot clear a HOLD left by an unresolved operation or adopt data that HomeLab does not manage.
 
-Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
+Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
 Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/proxmox/applications/component_runtime.py).
 
 ## Declaration records
 
-These are the complete supplied fields in [homeassistant.yaml](../../../apps/homeassistant.yaml), including named role objects. `object` introduces its following child rows; `{}` is an explicitly empty mapping. Quoted values are strings, and sequences preserve declaration order. These are **profile definition values**, not an override bag for site apps. [Reading declaration records](../declaration-records.md) explains omission, binding, ownership and the compatible types. The tests compare these authored records to the real loaded definition.
+These are the complete supplied fields in [homeassistant.yaml](../../../apps/homeassistant.yaml), including named role objects. An `object` row introduces the fields below it; `{}` means an explicitly empty mapping. Quoted values are strings, and lists preserve declaration order. These are **profile definition values**. Site apps can change only the inputs their contract accepts. [Reading declaration records](../declaration-records.md) explains omission, binding, ownership and the compatible types. The tests compare this table with the loaded profile definition.
 
 | Declaration path | Selected value |
 | --- | --- |

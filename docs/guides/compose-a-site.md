@@ -8,13 +8,13 @@ Use this checklist when extending a configuration you already understand. For yo
 
 Select [profiles](../reference/README.md) by lifecycle and integrations. For example, the maintained [alternate site](../../examples/site.second.yaml) selects three `unbound` instances and one `homeassistant-public` instance. It does not select Node-RED, a database, MQTT, identity or ingress.
 
-Before adding a profile, record its required roles, data/credential prerequisites, fixed sockets and resource reservations from its reference page. Then choose a guest that can meet them. A profile being in the catalogue does not mean it can create an empty installation; the [newcomer choices](design-your-homelab.md#1-start-with-the-services-you-want) distinguish fresh Unbound/HA from prepared Pi-hole.
+Before adding a profile, record its required roles, data/credential prerequisites, fixed listening addresses and ports and resource reservations from its reference page. Then choose a guest that can meet them. A profile being in the catalogue does not mean it can create an empty installation; the [newcomer choices](design-your-homelab.md#1-start-with-the-services-you-want) distinguish fresh Unbound/HA from prepared Pi-hole.
 
 A profile is a reusable declaration in this library's `apps/`. A site's `apps` entry is a named instance of that profile. These are different document kinds.
 
 ## 2. Give each guest its facts
 
-A complete guest chooses context, template, lifecycle, persistent VMID/hostname, template file, root storage, named NICs and control interface. `fresh` permits supported creation if absent and remains valid for later owned updates; `retained` requires an already managed guest and refuses creation. App lifecycle is selected independently, so a supported fresh app may be added to an owned guest with free identity, capacity and storage. Neither policy imports foreign data. Optional resource/startup/security fields inherit from the [template](../reference/templates.md). Declare extra volumes or supported root-filesystem data paths explicitly.
+A complete guest chooses context, template, lifecycle, persistent VMID/hostname, template file, root storage, named NICs and control interface. `fresh` permits supported creation if absent and remains valid for later updates to the same HomeLab-managed instance; `retained` requires an already managed guest and refuses creation. App lifecycle is selected independently, so a supported fresh app may be added to an owned guest with unused identities, enough resources and supported storage. Neither policy imports foreign data. Optional resource/startup/security fields inherit from the [template](../reference/templates.md). Declare extra volumes or supported root-filesystem data paths explicitly.
 
 The [alternate HA guest](../../examples/second/guests/home-app.yaml) is a complete example. It needs more memory than the base default because the HA reservation and OS reserve must fit. Its named `apps` volume is not an app profile or a command to import existing data.
 
@@ -41,9 +41,9 @@ storage:
     subpath: homeassistant
 ```
 
-`home-app`, `primary` and `apps` refer to the complete guest above. The writable config initializer belongs to the public profile; it creates only the absent app subdirectory beneath the proved volume. It does not recursively change an existing directory's owner.
+`home-app`, `primary` and `apps` refer to the complete guest above. The public profile can create the app’s configuration subdirectory after verifying that HomeLab owns the volume. The subdirectory must not already exist. This step does not change the file owner of an existing directory tree.
 
-Roles omitted here are optional and unselected. Adding a recorder or broker connection requires its corresponding physical source role, selected endpoint and explicit network policy. It does not appear automatically because another app exists.
+Roles omitted here are optional and unselected. Adding a recorder or broker connection requires its corresponding source role bound to a physical guest interface, selected endpoint and explicit network policy. It does not appear automatically because another app exists.
 
 ## 4. Keep source files complete
 
@@ -58,7 +58,7 @@ apps:
     source: second/apps/home.yaml
 ```
 
-This is the exact shape used by the alternate site. The path is relative to that site's file directory, not the referenced file's directory. The leaf has its own schema/kind and complete body. It is not a partial overlay, template or recursive include.
+This is the exact shape used by the alternate site. The path is relative to that site's file directory, not the referenced file's directory. Each referenced file has its own schema/kind and complete body. It is not a partial overlay, template or recursive include.
 
 The [complete copy step](design-your-homelab.md#4-make-a-complete-configuration-of-your-own) puts every baseline and optional source in your own directory. For another catalogue composition, copy its complete referenced directory tree before editing. Renaming a map key requires updating its consumers; use the [rename checklist](design-your-homelab.md#if-you-want-your-own-names).
 
@@ -67,7 +67,7 @@ The [complete copy step](design-your-homelab.md#4-make-a-complete-configuration-
 - [Interface roles](multiple-interfaces.md) identify the source/destination socket context.
 - [Connections](connect-apps.md) select existing endpoints and optional explicit readiness/account/transport choices.
 - Exposures select managed DNS or HTTP ingress; a broker DNS record does not create a TCP router.
-- Network fragments are separately selected, role-bound access intent. Value references grant nothing.
+- Select network-policy fragments separately and bind their roles to site resources. Referencing an endpoint value does not permit traffic.
 - Root Zabbix is selected only when desired; omission does not enroll agents. `zabbix:` selects the unique configured server, or `{server: APP_ID}` disambiguates it.
 
 ## 6. Validate the whole site

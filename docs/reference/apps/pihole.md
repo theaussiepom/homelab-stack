@@ -13,19 +13,19 @@ Provide DNS filtering and a web UI. Select an upstream resolver explicitly; Unbo
 | Site selection | `apps.<instance>.profile: pihole` |
 | Adapter | `pihole` |
 | Owned containers | `pihole` |
-| Multiple instances | One Pi-hole per guest: the managed-record sidecar is a fixed owned leaf, and DNS/web host sockets must not collide. |
+| Multiple instances | Use one Pi-hole instance per guest. The file tracking HomeLab-managed DNS records has a fixed location, and the DNS and web listeners must not conflict with other listeners. |
 
-The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
+This profile runs on Debian LXC on Proxmox. Compilation checks the configuration, and local helper tests check the controller code. Neither check verifies a deployed service.
 
-The complete reusable declaration is [pihole.yaml](../../../apps/pihole.yaml). Select it in a site app; the profile itself contains no VMID, NIC address, credential or deployment authority. See [Compose a site](../../guides/compose-a-site.md).
+The complete reusable declaration is [pihole.yaml](../../../apps/pihole.yaml). Select it for an app in your site configuration. Your site supplies the VMID, network-interface address and credentials, and controls permission to deploy. See [Compose a site](../../guides/compose-a-site.md).
 
 ## Application requirements
 
-The optional upstream interface role becomes necessary when binding the required upstream connection. A same-guest Unbound target uses guest-loopback; a remote target uses a physical role. Context DNS is a value and does not create that connection or a wait.
+The optional upstream interface role becomes necessary when binding the required upstream connection. A same-guest Unbound target uses guest-loopback; a remote target uses a physical role. The context’s DNS setting supplies an address; it does not create the upstream connection or make Pi-hole wait for it.
 
 ## First installation
 
-Requires a prepared Pi-hole configuration directory and explicit upstream. This profile does not generate a complete new Pi-hole configuration or adopt arbitrary existing data. The practical example therefore uses an already HomeLab-managed installation.
+You need a prepared Pi-hole configuration directory and an explicitly selected upstream resolver. This profile does not generate a complete new Pi-hole configuration or adopt arbitrary existing data. The practical example therefore uses an already HomeLab-managed installation.
 
 ## Minimal usage
 
@@ -41,7 +41,7 @@ apps:
 
 ### Practical complete example
 
-Use app `filtering` in [examples/catalogue/local-dns/site.yaml](../../../examples/catalogue/local-dns/site.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+Use app `filtering` in [examples/catalogue/local-dns/site.yaml](../../../examples/catalogue/local-dns/site.yaml). Check the dependencies and inputs that must already exist before using this example. Entries with `retained` require resources that HomeLab already manages; they cannot import another installation.
 
 After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
 
@@ -49,18 +49,18 @@ After [the source-only setup](../../guides/first-configuration.md) defines STACK
 "$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/local-dns/site.yaml" --check
 ```
 
-Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
+The command should compile every selected guest without reading credentials or contacting a guest, container or device. The integration test also generates each guest’s deployment files and checks its resources, identities, application files and health-check definitions.
 
 ## Interfaces
 
-The [role binding contract](../declaration-records.md#follow-the-selected-field-to-its-effect) resolves each role inside the selected guest. [Interface composition](../../guides/multiple-interfaces.md) shows physical, loopback and private scope choices.
+A role describes a network connection the app needs. Its [binding](../declaration-records.md#follow-the-selected-field-to-its-effect) selects an interface or network inside the app’s guest. [Interface composition](../../guides/multiple-interfaces.md) explains physical interfaces, guest loopback and private app networks.
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
 | `service` | Yes | `guest-interface` |
 | `upstream` | No; selected capability can require it | `guest-interface`, `guest-loopback` |
 
-A physical role binds `{interface: NIC_ID}`; loopback and app-network use explicit scopes. Roles name requirements, not additional NICs. See [Multiple interfaces](../../guides/multiple-interfaces.md).
+Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback or an app network through its explicit scope. A role does not create another network interface. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
 ## Listeners and endpoints
 
@@ -76,18 +76,18 @@ A physical role binds `{interface: NIC_ID}`; loopback and app-network use explic
 | `dns_tcp` | `tcp` | `dns_tcp` via `service` |
 | `web` | `http` | `web` via `service` |
 
-A wildcard host listener can cover more than the advertised NIC. An endpoint is a value; it is not a firewall rule, HTTPS route or readiness wait.
+A wildcard host listener can accept connections through interfaces other than the advertised NIC. An endpoint gives consumers an address and port. It does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
-A role target is an application path; its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects owned guest data. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
 | `config` | Yes | `/etc/pihole` | directory / writable | None |
 | `database` | Conditional / optional | `/ftl-db` | directory / writable | None |
 
-Bind roles to explicit guest volumes/subpaths or supported root data paths. Retained data is verified, not chowned or relocated. An initializer applies only to a newly created leaf beneath a proved provider volume, never an existing directory.
+Bind each storage role to a guest volume and subpath, or to a supported path on the guest’s root filesystem. HomeLab checks existing data without changing its file owner or moving it. Where a profile supports initialization, it creates only a new app subdirectory on a volume whose provider ownership has been verified. It does not initialize an existing directory.
 
 ## Connections, accounts and private inputs
 
@@ -95,15 +95,15 @@ Bind roles to explicit guest volumes/subpaths or supported root data paths. Reta
 | --- | --- | --- | --- | --- |
 | `upstream` | `dns` | Yes | `start` | None |
 
-The readiness column lists permitted choices, **not an automatic dependency**. The site selects `readiness` on the connection explicitly. Value links alone do not wait or grant traffic. See [Connect apps](../../guides/connect-apps.md).
+The readiness column lists the ordering options you can choose. Set `readiness` explicitly on the site connection to make one app wait for another. Referencing a value alone creates no wait and permits no network traffic. See [Connect apps](../../guides/connect-apps.md).
 
 No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter owns their [closed typed rules](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
 
-No application property keys are accepted for this adapter. Unknown keys refuse; there is no command/environment/mount override bag.
+This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
 ## Invalid cases
 
@@ -112,7 +112,7 @@ No application property keys are accepted for this adapter. Unknown keys refuse;
 | Omit the upstream connection | Refuses the required connection. |
 | Use a physical source role for a same-guest loopback upstream | Refuses the connection-scope relationship. |
 
-The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
 
 ## Software and resource policy
 
@@ -126,23 +126,25 @@ Software selections: [`docker`](../software-and-runtime.md#registration-software
 | --- | --- | --- | --- |
 | `pihole` | 256 | 1 | 128 |
 
-These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
+These reservations and limits determine whether the workloads fit on a guest. They do not measure how much traffic the service can handle. Guest memory must also leave enough capacity for the operating system’s effective reserve. Security and process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
 ## Later deployments
 
-Updates the explicit upstream and owned managed DNS records while preserving the configuration and unrelated records. Record retirement is limited to names proved by the prior owned payload, not general DNS cleanup. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+HomeLab updates the selected upstream and the DNS records it manages, while preserving the configuration and unrelated records. It can remove a record only when the previous deployment payload proves that it managed that name. This is not a general DNS cleanup procedure.
+
+Both `fresh` and `retained` can update an instance that HomeLab already manages. Keep `fresh` after creating an instance with that policy; do not change it after each deployment. `retained` requires an existing HomeLab-managed instance and cannot create one.
 
 ### Check and update
 
-Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
+Keep the same app, service and project identities, writable storage paths and credential owners. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Before an ordinary update, HomeLab checks the current ownership records, matching deployment state and preserved private inputs. Selecting a profile cannot clear a HOLD left by an unresolved operation or adopt data that HomeLab does not manage.
 
-Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
+Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
 Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/proxmox/applications/component_runtime.py).
 
 ## Declaration records
 
-These are the complete supplied fields in [pihole.yaml](../../../apps/pihole.yaml), including named role objects. `object` introduces its following child rows; `{}` is an explicitly empty mapping. Quoted values are strings, and sequences preserve declaration order. These are **profile definition values**, not an override bag for site apps. [Reading declaration records](../declaration-records.md) explains omission, binding, ownership and the compatible types. The tests compare these authored records to the real loaded definition.
+These are the complete supplied fields in [pihole.yaml](../../../apps/pihole.yaml), including named role objects. An `object` row introduces the fields below it; `{}` means an explicitly empty mapping. Quoted values are strings, and lists preserve declaration order. These are **profile definition values**. Site apps can change only the inputs their contract accepts. [Reading declaration records](../declaration-records.md) explains omission, binding, ownership and the compatible types. The tests compare this table with the loaded profile definition.
 
 | Declaration path | Selected value |
 | --- | --- |

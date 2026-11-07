@@ -20,7 +20,7 @@ You need basic Git, YAML and networking knowledge, plus Python 3.12 or 3.13 with
 
 ## Select compatible source
 
-Begin in a clean Git checkout of this library at a reviewed, published commit. Use the documentation at that same revision. A consumer records its immutable library selection; this library's [phase workflow](../.github/workflows/phase.yml) contains the sole authoritative framework selection. Do not combine unrelated tips of branches or substitute an unreviewed `main`.
+Begin in a clean Git checkout of this library at a reviewed, published commit. Use the documentation at that same revision. A site records the exact library commit it uses; this library's [phase workflow](../.github/workflows/phase.yml) contains the sole authoritative framework selection. Do not combine unrelated tips of branches or substitute an unreviewed `main`.
 
 Both tutorials define every shell variable, fetch the selected published framework revision and install its hash-locked dependencies into a new isolated environment. The stated framework revision must match this version's phase workflow; the manifest remains authoritative. Reuse the setup in the same shell when moving between the two tutorials.
 
@@ -32,6 +32,6 @@ The [installation journey](guides/installation.md) gives each stage an observabl
 
 ### Know the boundary before deploying
 
-The first tutorial is source-only. Moving to deployment requires a real consuming site with qualified provider/trust/SSH inputs, infrastructure/state and recovery prerequisites, supported lifecycle/data bindings, a protected runner/workflow, selected secrets and current source review. Those facts cannot be supplied by the synthetic example.
+The first tutorial is source-only. Moving to deployment requires a real site with checked provider identity, trust and SSH access; prepared infrastructure, state and recovery storage; supported lifecycle and data settings; a protected runner and workflow; required secrets; and a current review of the source. Those facts cannot be supplied by the synthetic example.
 
-OpenTofu owns infrastructure/state. Ansible owns configuration/services. A successful workflow is followed by actual endpoint, authentication and integration verification. Source publication does not grant target access, a merge, an account privilege, a retry or hold removal.
+OpenTofu manages infrastructure and its state records. Ansible configures guests and services. A successful workflow is followed by actual endpoint, authentication and integration verification. Source publication does not grant target access, a merge, an account privilege, a retry or hold removal.

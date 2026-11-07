@@ -8,7 +8,7 @@ Choose a supported service in [Design your homelab](guides/design-your-homelab.m
 
 ## Bind a connection
 
-[Connect apps](guides/connect-apps.md) explains value references, explicit readiness, accounts, transport and separately selected access policy. [Multiple interfaces](guides/multiple-interfaces.md) explains the NIC/role/listener/endpoint chain.
+[Connect apps](guides/connect-apps.md) explains value references, explicit readiness, accounts, transport and separately selected access policy. [Multiple interfaces](guides/multiple-interfaces.md) explains how guest interfaces, app roles, listeners and endpoints connect.
 
 ## Add a reusable profile
 
@@ -16,4 +16,4 @@ Choose a supported service in [Design your homelab](guides/design-your-homelab.m
 
 ## Generate the selected composition
 
-Follow [Design your homelab](guides/design-your-homelab.md#6-check-the-configuration-and-inspect-its-result) to compile and inspect your edited copy, or [First configuration](guides/first-configuration.md) for the unchanged example. [Testing](testing.md) contains the complete library gates. The consumer generates from its own site; the starter is not an installed graph.
+Follow [Design your homelab](guides/design-your-homelab.md#6-check-the-configuration-and-inspect-its-result) to compile and inspect your edited copy, or [First configuration](guides/first-configuration.md) for the unchanged example. [Testing](testing.md) contains the complete library gates. Generate the deployment files from your own site configuration. The starter describes a synthetic example, not your installed services.

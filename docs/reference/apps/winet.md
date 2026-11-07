@@ -13,19 +13,19 @@ Run the independent WiNet poller with explicit inverter, MQTT and private option
 | Site selection | `apps.<instance>.profile: winet` |
 | Adapter | `winet` |
 | Owned containers | `winet` |
-| Multiple instances | Independent of Zigbee; same-guest duplicate WiNet operation is not qualified here. |
+| Multiple instances | WiNet runs independently of Zigbee. This page does not establish that two WiNet instances can operate on the same guest. |
 
-The platform is Debian LXC on Proxmox. Compile/render and local helper tests are source/controller evidence; deployed-service verification is separate.
+This profile runs on Debian LXC on Proxmox. Compilation checks the configuration, and local helper tests check the controller code. Neither check verifies a deployed service.
 
-The complete reusable declaration is [winet.yaml](../../../apps/winet.yaml). Select it in a site app; the profile itself contains no VMID, NIC address, credential or deployment authority. See [Compose a site](../../guides/compose-a-site.md).
+The complete reusable declaration is [winet.yaml](../../../apps/winet.yaml). Select it for an app in your site configuration. Your site supplies the VMID, network-interface address and credentials, and controls permission to deploy. See [Compose a site](../../guides/compose-a-site.md).
 
 ## Application requirements
 
-Private options are supplied by the selected options role and validated against inverter/MQTT metadata. Existing inverter and broker credentials stay inside that protected record; neither is copied into Git.
+Private options are supplied by the selected options role and validated against the inverter and MQTT metadata. Existing inverter and broker credentials stay inside that protected record; neither is copied into Git.
 
 ## First installation
 
-Requires an already configured inverter and valid protected vendor options/credentials. The profile can reconcile its container, but does not commission an inverter or generate those credentials. The example uses an existing managed service.
+You need an already configured inverter and valid vendor options and credentials stored in the protected record. The profile can update its container, but does not configure the inverter or generate those credentials. The example uses a service that HomeLab already manages.
 
 ## Minimal usage
 
@@ -41,7 +41,7 @@ apps:
 
 ### Practical complete example
 
-Use app `telemetry` in [examples/catalogue/messaging-radio.yaml](../../../examples/catalogue/messaging-radio.yaml). Read every selected dependency and prepared-input requirement in that file. Retained entries require already HomeLab-managed resources; the source cannot import an arbitrary installation.
+Use app `telemetry` in [examples/catalogue/messaging-radio.yaml](../../../examples/catalogue/messaging-radio.yaml). Check the dependencies and inputs that must already exist before using this example. Entries with `retained` require resources that HomeLab already manages; they cannot import another installation.
 
 After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
 
@@ -49,11 +49,11 @@ After [the source-only setup](../../guides/first-configuration.md) defines STACK
 "$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/messaging-radio.yaml" --check
 ```
 
-Expected: all selected component guests compile offline. No credential contents, guest, container or device is contacted. The maintained integration also lowers every selected packet, including resources, identity, generated files and health contracts.
+The command should compile every selected guest without reading credentials or contacting a guest, container or device. The integration test also generates each guest’s deployment files and checks its resources, identities, application files and health-check definitions.
 
 ## Interfaces
 
-The [role binding contract](../declaration-records.md#follow-the-selected-field-to-its-effect) resolves each role inside the selected guest. [Interface composition](../../guides/multiple-interfaces.md) shows physical, loopback and private scope choices.
+A role describes a network connection the app needs. Its [binding](../declaration-records.md#follow-the-selected-field-to-its-effect) selects an interface or network inside the app’s guest. [Interface composition](../../guides/multiple-interfaces.md) explains physical interfaces, guest loopback and private app networks.
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
@@ -70,9 +70,9 @@ No endpoint is advertised.
 
 ## Storage
 
-A role target is an application path; its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects owned guest data. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
-No app storage role is declared. Generated private runtime files retain their separate owned paths.
+No app storage role is declared. HomeLab keeps generated private runtime files in their separately managed paths.
 
 ## Connections, accounts and private inputs
 
@@ -81,30 +81,30 @@ No app storage role is declared. Generated private runtime files retain their se
 | `broker` | `mqtt` | Yes | `start` | None |
 | `inverter` | `https` | Yes | None | None |
 
-The readiness column lists permitted choices, **not an automatic dependency**. The site selects `readiness` on the connection explicitly. Value links alone do not wait or grant traffic. See [Connect apps](../../guides/connect-apps.md).
+The readiness column lists the ordering options you can choose. Set `readiness` explicitly on the site connection to make one app wait for another. Referencing a value alone creates no wait and permits no network traffic. See [Connect apps](../../guides/connect-apps.md).
 
 | App secret role | Requirement |
 | --- | --- |
 | `options` | Required |
 
-Secrets remain outside Git. File/environment references are metadata. Private role material cannot rotate implicitly during an ordinary update.
+Keep secret values outside Git. A file or environment reference identifies where to obtain a secret; it does not contain the value. An ordinary update cannot silently replace the secret.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter owns their [closed typed rules](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
-| mqtt_prefix | Required string | 1..128 characters: initial letter/digit followed by letters/digits/slash/underscore/hyphen. |
+| mqtt_prefix | Required string | Use 1..128 characters. The first must be a letter or digit; later characters may also be a slash, underscore or hyphen. |
 
 ## Invalid cases
 
 | Invalid change | Intended result |
 | --- | --- |
 | Omit the protected options role | Refuses the selected private input. |
-| Use a non-443/non-HTTPS inverter or malformed discovery prefix | Refuses the finite endpoint/property contract. |
+| Use a non-443/non-HTTPS inverter or malformed discovery prefix | Validation rejects an inverter endpoint unless it uses HTTPS on port 443, and rejects a discovery prefix that does not meet the mqtt_prefix character rules. |
 
-The owning framework validates these contracts; the library does not implement another validator. [Tests](../../testing.md) distinguish source integration from target acceptance.
+The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
 
 ## Software and resource policy
 
@@ -118,23 +118,25 @@ Software selections: [`docker`](../software-and-runtime.md#registration-software
 | --- | --- | --- | --- |
 | `winet` | 256 | 1 | 128 |
 
-These are admission reservations/limits, not measured load capacity. Guest memory must also leave the effective OS reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
+These reservations and limits determine whether the workloads fit on a guest. They do not measure how much traffic the service can handle. Guest memory must also leave enough capacity for the operating system’s effective reserve. Security and process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
 ## Later deployments
 
-Reconciles the same service against its existing inverter/options owner and broker relationship. It does not reconfigure the physical inverter, replace vendor credentials or commission another device. Both `fresh` and `retained` support ordinary owned updates. Keep `fresh` on an instance created through that policy; it is not a per-deployment toggle. `retained` refuses creation and requires an already HomeLab-managed instance.
+HomeLab updates the same service while preserving the existing inverter, private options record and broker connection. It does not reconfigure the physical inverter, replace vendor credentials or commission another device.
+
+Both `fresh` and `retained` can update an instance that HomeLab already manages. Keep `fresh` after creating an instance with that policy; do not change it after each deployment. `retained` requires an existing HomeLab-managed instance and cannot create one.
 
 ### Check and update
 
-Keep stable app/service/project, writable storage and credential identities. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Ordinary updates require genuine current receipts, matching state and sealed private material; a profile choice does not release a HOLD or adopt data.
+Keep the same app, service and project identities, writable storage paths and credential owners. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Before an ordinary update, HomeLab checks the current ownership records, matching deployment state and preserved private inputs. Selecting a profile cannot clear a HOLD left by an unresolved operation or adopt data that HomeLab does not manage.
 
-Use the fully defined commands in [Start here](../../start-here.md), then the [library test gate](../../testing.md). After separately authorized deployment, verify the actual selected endpoint, authentication and integration; source success is not a service check.
+Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
 Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/proxmox/applications/component_runtime.py).
 
 ## Declaration records
 
-These are the complete supplied fields in [winet.yaml](../../../apps/winet.yaml), including named role objects. `object` introduces its following child rows; `{}` is an explicitly empty mapping. Quoted values are strings, and sequences preserve declaration order. These are **profile definition values**, not an override bag for site apps. [Reading declaration records](../declaration-records.md) explains omission, binding, ownership and the compatible types. The tests compare these authored records to the real loaded definition.
+These are the complete supplied fields in [winet.yaml](../../../apps/winet.yaml), including named role objects. An `object` row introduces the fields below it; `{}` means an explicitly empty mapping. Quoted values are strings, and lists preserve declaration order. These are **profile definition values**. Site apps can change only the inputs their contract accepts. [Reading declaration records](../declaration-records.md) explains omission, binding, ownership and the compatible types. The tests compare this table with the loaded profile definition.
 
 | Declaration path | Selected value |
 | --- | --- |

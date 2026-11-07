@@ -1,43 +1,13 @@
 # Secrets, data and configuration
 
-Keep secret values outside every Git repository, including private Git. Reusable
-profiles declare closed named roles and conditional capability requirements.
-Sites bind those roles to supported file/environment sources or explicitly
-selected generated account custody. The framework owns validation and protected
-materialization; the library does not read secrets or implement another input
-engine.
+Keep secret values outside every Git repository, including private Git. Profiles declare a fixed set of secret roles and state when each is required. Sites connect those roles to supported file or environment sources, or explicitly select generated account records. The framework validates these inputs and prepares them in protected storage. The library does not read secrets or provide a second input engine.
 
-Reusable workflow edges declare named scalar secret slots explicitly. Each app
-phase receives only its selected slots, while common provider/SSH credentials use
-their existing separate stage. No whole-secret JSON wrapper, inherited secret bag
-or caller-name presence replaces value/ownership validation. Environment bindings
-and workflow-secret aliases are source metadata, not secret values or evidence
-that a value exists on a runner.
+Every reusable workflow call must explicitly declare the named scalar secret slots it accepts. Each app phase receives only its selected slots; provider and SSH credentials continue to use their separate stage. Passing a JSON object containing all secrets, inheriting every secret, or merely declaring a caller name cannot replace checks of the values and their owners. Environment bindings and workflow-secret aliases identify inputs. They neither contain the secret values nor prove that the runner has them.
 
-Existing controller-private inputs remain owned by their original parser:
-Bitwarden environment, PegaProx database key, MQTT probe JSON, WiNet options and
-selected authentication material. An optional role does not waive a capability's
-required input. Zabbix's root feature retains its existing generated credential
-record; it is not a new required environment password. Do not invent another
-secret merely to bypass a custody check.
+The framework continues to validate each existing private controller file with the parser for its format: Bitwarden environment, PegaProx database key, MQTT probe JSON, WiNet options and selected authentication inputs. An optional role does not waive a capability's required input. Zabbix's root feature retains its existing generated credential record; it is not a new required environment password. Supplying a different secret cannot bypass the checks that connect the original credential to its recorded owner.
 
-Bitwarden's instance properties are `issuer`, `database_name`, `data_uid` and
-`data_gid`. Its software selection owns the immutable image, while the existing
-`runtime_environment` role owns the private environment source. The framework
-checks the environment's endpoint, database, account, installation and data-owner
-values and seals exact input bytes in the protected app payload. Those continuity
-checks remain required across source reorganizations and ordinary updates.
+Bitwarden's instance properties are `issuer`, `database_name`, `data_uid` and `data_gid`. Its software selection owns the immutable image, while the existing `runtime_environment` role owns the private environment source. The framework checks the environment's endpoint, database, account, installation and data-owner values and seals exact input bytes in the protected app payload. Those continuity checks remain required across source reorganizations and ordinary updates.
 
-Managed MQTT/DB accounts have separate explicit owners and credential identities.
-Their protected create-once record is reused unchanged; collision, drift and
-foreign ownership refuse. Explorer's saved profile and CloudBeaver's managed
-native datasource contain plaintext passwords at rest and remain private. No
-encryption-at-rest guarantee is claimed. See [Explorer](reference/apps/mqtt_explorer.md) and
-[database administration](reference/apps/cloudbeaver.md#application-requirements).
+Managed MQTT and database accounts have explicit owners and credential identities. HomeLab creates each protected credential record once and reuses it unchanged. It rejects collisions, unexpected changes and records owned by another installation. Explorer’s saved profile and CloudBeaver’s managed native datasource store passwords as plaintext and must remain private; neither promises encryption at rest. See [Explorer](reference/apps/mqtt_explorer.md) and [database administration](reference/apps/cloudbeaver.md#application-requirements).
 
-Application data, private archives, HA/Node-RED credentials, Zigbee network keys,
-radio backups and historical commissioning records remain consumer-owned. The
-source does not retrieve or restore them. Retained paths, modes, ownership, holds and required
-prerequisites must be preserved before an update. Music's floating image policy
-also requires its protected pre-upgrade data copy and resolved-image record;
-ordinary deployment does not reset providers or accounts.
+Application data, private archives, HA/Node-RED credentials, Zigbee network keys, radio backups and historical commissioning records remain consumer-owned. The source does not retrieve or restore them. Retained paths, modes, ownership, holds and required prerequisites must be preserved before an update. Music's floating image policy also requires its protected pre-upgrade data copy and resolved-image record; ordinary deployment does not reset providers or accounts.

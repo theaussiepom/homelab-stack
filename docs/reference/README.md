@@ -8,12 +8,12 @@ A selection ID names a reusable application recipe, not a complete installed ser
 
 | Outcome | Profiles and important choice |
 | --- | --- |
-| Resolve and filter DNS | [Unbound](apps/unbound.md) can start from empty and publishes guest-loopback DNS only. [Pi-hole](apps/pihole.md) needs prepared configuration and its selected upstream binding. The [complete DNS walkthrough](../examples/local-dns.md) uses genuine retained-ownership prerequisites; it is not a fresh LAN DNS installation. |
-| Home automation | [Home Assistant public](apps/homeassistant-public.md) and [Node-RED public](apps/node_red-public.md) select public images and create-only configuration. The [Home Assistant](apps/homeassistant.md) and [Node-RED](apps/node_red.md) retained variants have different archive and authentication requirements. |
-| Messaging, radio and telemetry | [MQTT](apps/mqtt.md) owns the prepared broker; [MQTT Explorer](apps/mqtt_explorer.md) is a separately selected authenticated browser. [Zigbee2MQTT](apps/zigbee2mqtt.md) and [WiNet](apps/winet.md) need their own hardware/network and broker inputs. |
+| Resolve and filter DNS | [Unbound](apps/unbound.md) can start from empty and publishes guest-loopback DNS only. [Pi-hole](apps/pihole.md) needs prepared configuration and its selected upstream binding. The [complete DNS walkthrough](../examples/local-dns.md) requires an existing matching HomeLab-managed guest and apps; it cannot install new LAN DNS services. |
+| Home automation | [Home Assistant public](apps/homeassistant-public.md) and [Node-RED public](apps/node_red-public.md) select public images and can create a new configuration directory without adopting an existing one. The [Home Assistant](apps/homeassistant.md) and [Node-RED](apps/node_red.md) retained variants have different archive and authentication requirements. |
+| Messaging, radio and telemetry | [MQTT](apps/mqtt.md) owns the prepared broker; [MQTT Explorer](apps/mqtt_explorer.md) is a separately selected authenticated browser. [Zigbee2MQTT](apps/zigbee2mqtt.md) and [WiNet](apps/winet.md) need their own hardware or network inputs and a broker connection. |
 | Databases and administration | [PostgreSQL](apps/postgresql.md), [MariaDB](apps/mariadb.md) and [InfluxDB](apps/influxdb.md) are native profiles. [CloudBeaver](apps/cloudbeaver.md) and its [MariaDB-admin variant](apps/cloudbeaver-mariadb-admin.md) differ in administrator capability; a connection value alone does not grant it. |
 | Identity, edge and monitoring | [Authentik](apps/authentik.md), [Traefik](apps/traefik.md) and [Zabbix](apps/zabbix.md) own distinct services. Selecting one does not automatically publish or enroll every app. |
-| Other services | [Bitwarden](apps/bitwarden.md), [Music Assistant](apps/music_assistant.md) and [PegaProx](apps/pegaprox.md) have their own prepared-input and integration boundaries. |
+| Other services | [Bitwarden](apps/bitwarden.md), [Music Assistant](apps/music_assistant.md) and [PegaProx](apps/pegaprox.md) each require specific existing files, credentials or companion services; their profile pages explain what must already be prepared. |
 
 ## Complete registered catalogue
 
@@ -45,7 +45,7 @@ A selection ID names a reusable application recipe, not a complete installed ser
 ## Shared declarations
 
 - [Guest templates](templates.md): exact [base](templates/base.md) and [Docker](templates/docker.md) defaults and inheritance.
-- [Software and runtime](software-and-runtime.md): named package/image, process/security, health, authentication and monitoring choices.
+- [Software and runtime](software-and-runtime.md): named packages, images, process and security settings, health checks, authentication and monitoring choices.
 - [Declaration records](declaration-records.md): field notation, selected values and the framework's typed owners.
 - [Composition](../guides/compose-a-site.md): apply a choice to concrete site-owned identity and allocations.
 - [Examples](../examples/README.md): complete maintained sources and source-only evidence.
