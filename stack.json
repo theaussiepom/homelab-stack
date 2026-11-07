@@ -231,6 +231,18 @@
       "images": {
         "node_red": "node_red_public"
       }
+    },
+    "pbs-client": {
+      "packages": [
+        "proxmox-backup-client=4.2.8-1"
+      ],
+      "repositories": [
+        {
+          "name": "pbs-client",
+          "source": "Types: deb\nURIs: http://download.proxmox.com/debian/pbs-client\nSuites: trixie\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/pbs-client.asc\n",
+          "key_asset": "proxmox-backup-repository-key"
+        }
+      ]
     }
   },
   "runtime_profiles": {
@@ -477,6 +489,11 @@
       "type": "raw-utf8",
       "source": "assets/influxdb/vendor.asc",
       "sha256": "40557e261cdbdccac91a2dde474cbf101ef672661e64b211b711cc0b904d5dac"
+    },
+    "proxmox-backup-repository-key": {
+      "type": "raw-utf8",
+      "source": "assets/proxmox-backup/vendor.asc",
+      "sha256": "ce59d08e88e5b00dd1740f5ecf09509138fa9962fa1d27518d955b91d1161240"
     }
   },
   "health_profiles": {
@@ -554,6 +571,11 @@
       "profiles": [
         "influxdb"
       ]
+    }
+  },
+  "backup_profiles": {
+    "pbs-client": {
+      "source": "backup/pbs-client.yaml"
     }
   }
 }

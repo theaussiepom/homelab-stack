@@ -19,3 +19,5 @@
 - Read docs/README.md for guides/reference and docs/testing.md for checks.
 - Keep profile docs, maintained examples and tests aligned with public contracts.
 - Use docs/templates/application-profile.md for profile documentation; keep complete examples and lifecycle/update behavior tested.
+
+- Classify every app storage role in [the recovery catalogue](docs/reference/backup-coverage.md). Reuse bound paths; native producers belong upstream. Keep operational examples complete and tested; private sites supply PBS destinations, keys, pause permissions and live qualification.

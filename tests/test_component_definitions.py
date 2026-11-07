@@ -20,6 +20,7 @@ import component_foundations
 import component_properties
 import component_sources
 import component_types
+import component_backup
 # Do not let imports of the selected framework change stack discovery precedence.
 sys.path[:0] = [str(ROOT / 'tests'), str(ROOT)]
 
@@ -36,9 +37,11 @@ class ProfileDefinitionTests(unittest.TestCase):
         owner = component_adapters.adapter(expected)
         with mock.patch.object(component_types, 'adapter', return_value=owner) as contract, \
              mock.patch.object(component_foundations, 'validate') as foundations, \
-             mock.patch.object(component_properties, 'validate') as properties:
+             mock.patch.object(component_properties, 'validate') as properties, \
+             mock.patch.object(component_backup, 'application') as backup:
             component_types.profile(value)
         contract.assert_called_once_with(expected)
+        backup.assert_called_once_with(value['backup'], value.get('storage', {}))
         selected = foundations if expected in component_foundations.OWNED else properties
         selected.assert_called_once_with(expected, value.get('properties', {}), partial=True)
         self.assertEqual(value['health']['ready']['profile'], 'adapter-ready')
@@ -275,7 +278,7 @@ class SharedDefinitionTests(unittest.TestCase):
 
     def test_public_vendor_assets_keep_exact_declared_bytes(self):
         index = json.loads((ROOT / 'stack.json').read_text())
-        self.assertEqual(set(index['assets']), {'postgresql-repository-key', 'mariadb-repository-key', 'influxdb-repository-key'})
+        self.assertEqual(set(index['assets']), {'postgresql-repository-key', 'mariadb-repository-key', 'influxdb-repository-key', 'proxmox-backup-repository-key'})
         for name, value in index['assets'].items():
             with self.subTest(asset=name):
                 raw = (ROOT / value['source']).read_bytes()

@@ -60,3 +60,13 @@ monitoring:
 secrets:
   probe:
     required: false
+backup:
+  include:
+    config:
+      category: configuration
+      capture: files
+    data:
+      category: state
+      capture: application-export
+  exclude:
+    log: transient

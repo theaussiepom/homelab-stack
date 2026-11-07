@@ -36,3 +36,9 @@ health:
     profile: adapter-ready
 monitoring:
   profile: influxdb-agent
+backup:
+  include:
+    data:
+      category: database
+      capture: database-export
+  exclude: {}

@@ -57,3 +57,10 @@ secrets:
     required: true
 monitoring:
   profile: docker-agent
+backup:
+  include:
+    config:
+      category: state
+      capture: application-export
+  exclude:
+    logs: transient

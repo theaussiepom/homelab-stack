@@ -67,3 +67,16 @@ secrets:
     required: false
 monitoring:
   profile: docker-agent
+backup:
+  include:
+    data:
+      category: state
+      capture: application-export
+    config:
+      category: state
+      capture: application-export
+    settings:
+      category: configuration
+      capture: files
+  exclude:
+    healthcheck: rebuildable
