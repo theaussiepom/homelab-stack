@@ -2,17 +2,18 @@
 
 [Documentation index](../README.md)
 
-These are maintained synthetic source inputs, not installed layouts. Complete examples compile with the selected framework; they do not contain real target acceptance or credential values.
+These maintained examples use synthetic values. They compile with the selected framework, but do not describe an installed site, include real credentials or verify a running service.
 
 | Scenario | Complete source | What it establishes |
 | --- | --- | --- |
+| Design and personalise your own site | [Design your homelab](../guides/design-your-homelab.md), [complete copy](../../examples/personalisation/) | A self-contained fresh resolver source, exact fact-to-field edits, optional fresh HA and separate/shared guest layouts |
 | Standalone recursive resolver | [site.example.yaml](../../site.example.yaml), [guest](../../examples/minimal/guests/resolver.yaml), [app](../../examples/minimal/apps/recursive_dns.yaml) | One Unbound without Pi-hole; base defaults; loopback publication; explicit policy |
 | Different placement and repeated apps | [site.second.yaml](../../examples/site.second.yaml), [guest/app leaves](../../examples/second/) | Three guests, repeated resolvers with distinct publications, HA without Node-RED or unselected integrations |
 | Connect filtering and recursive DNS | [Local DNS worked source](local-dns.md) | Complete synthetic retained composition, named connection/exposure and explicit same-guest readiness; no data adoption/initialization claim |
 
-Run the first two directly using [First configuration](../guides/first-configuration.md). The local DNS page defines its source files and commands. Reference pages use clearly labelled app/property fragments and link these complete examples; a fragment alone is not a deployable site.
+Use the design journey for your own source. Run the standalone and alternate examples directly using [First configuration](../guides/first-configuration.md). The local DNS page defines its source files and commands. Reference pages use clearly labelled app/property fragments and link these complete examples; a fragment alone is not a deployable site.
 
-Source tests also exercise unsupported roles, collisions, unselected dependencies and exact inherited/default behavior. Profile-specific retained data/auth/hardware paths require their stated consumer facts; this index does not claim every listed app has a fresh commissioning tutorial.
+Source tests also exercise unsupported roles, collisions, unselected dependencies and exact inherited/default behavior. Profiles that retain data, authentication or hardware settings require the existing resources listed on their reference pages. Not every app has a tutorial for a new installation.
 
 ## Every profile, including variants
 
@@ -20,4 +21,4 @@ The [complete profile-composition index](../../examples/catalogue/README.md) map
 
 ## PBS client preparation
 
-[`site.backup.example.yaml`](../../site.backup.example.yaml) is a complete synthetic resolver site selecting the root backup feature. It compiles client software, coverage and the PBS agent step without a server or schedule. See [the guide](../backup.md).
+[`site.backup.example.yaml`](../../site.backup.example.yaml) is a complete synthetic resolver site selecting the root backup feature. It compiles the client software, recovery inventory, PBS agent step and a fully bound operational schedule without contacting a server. Deployment requires the real protected inputs; compilation does not run a backup. See [the guide](../backup.md).

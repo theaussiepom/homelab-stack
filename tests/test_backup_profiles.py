@@ -7,6 +7,7 @@ import sys
 import tempfile
 import yaml
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 FRAMEWORK = Path(os.environ.get('HOMELAB_FRAMEWORK', ROOT.parent/'homelab')).resolve()
@@ -20,6 +21,12 @@ import component_workflows
 class BackupProfileTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls): cls.library, cls.sources = component_sources.library(ROOT)
+
+    def setUp(self):
+        for target in ('subprocess.run', 'subprocess.check_output', 'socket.create_connection'):
+            boundary = patch(target, side_effect=AssertionError('Backup source tests cannot execute processes or contact targets'))
+            boundary.start()
+            self.addCleanup(boundary.stop)
 
     def test_client_package_repository_and_key_are_one_authoritative_definition(self):
         self.assertEqual(self.library['backup_profiles']['pbs-client']['software'], ['pbs-client'])

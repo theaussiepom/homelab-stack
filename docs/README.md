@@ -1,38 +1,41 @@
-# Application library documentation
+# HomeLab Stack documentation
 
-Start with a small source-only result, then look up the profile and binding you need. This library supports Debian LXC on Proxmox; runtime and hardware support remains adapter-specific.
+[Project overview](../README.md)
 
-## Learn
+Start with the services you want and turn them into your own Proxmox configuration. The supported base is Debian 13 LXC; each application profile states its creation, data and hardware requirements. You can work offline before completing the host and deployment prerequisites.
 
-1. [Start here](start-here.md): prerequisites, version selection and reader paths.
-2. [First configuration](guides/first-configuration.md): compile the complete synthetic resolver example without a host.
-3. [Concepts](concepts.md): library, site, guest, app and the source-to-service path.
-4. [Glossary](glossary.md): short definitions used in the guides.
+## Learn and reach a first service
 
-## Do a task
+1. [Design your homelab](guides/design-your-homelab.md) takes you through service choice, guest layout, a Proxmox facts worksheet, a complete source copy, personalisation and compiler-result checks. Add optional Home Assistant and try sharing or separating guests.
+2. [Preparation, installation and service verification](guides/installation.md) carries that configuration through the distinct site-owned deployment and acceptance stages.
+3. [Images and updates](guides/images-and-updates.md) explains later changes to an installation already managed by HomeLab.
 
-- [Compose a site](guides/compose-a-site.md)
-- [Share or separate guests](guides/shared-and-separate-guests.md)
-- [Bind multiple interfaces](guides/multiple-interfaces.md)
-- [Connect apps and select readiness](guides/connect-apps.md)
-- [Choose images and update safely](guides/images-and-updates.md)
-- [Configure PBS backups](backup.md) and review [application recovery coverage](reference/backup-coverage.md)
-- [Keep secrets and data owned](secrets.md)
+[Start here](start-here.md) helps choose another route. [First configuration](guides/first-configuration.md) is a shorter compiler exercise using the unchanged maintained resolver, useful when you want to inspect the tools first. [Concepts](concepts.md) and the [glossary](glossary.md) explain terms as you need them.
 
-## Look something up
+## Choose and look up
 
-- [Profile catalogue](reference/README.md): every registered ordinary profile and variant.
-- [Guest templates](reference/templates.md): exact defaults and partial overrides.
-- [Software and runtime](reference/software-and-runtime.md): package/image roles, security, budgets, health, monitoring and optional policy fragments.
-- [Complete examples](examples/README.md): maintained source files and what they test.
+- [Application catalogue](reference/README.md): profiles grouped by decision, with variants and their complete examples.
+- [Guest templates](reference/templates.md): choose defaults, then inspect exact [Docker](reference/templates/docker.md) or [base](reference/templates/base.md) records.
+- [Software and runtime](reference/software-and-runtime.md): packages, images, process security, resource budgets checked before deployment, health, monitoring and reusable policy fragments.
+- [Declaration records](reference/declaration-records.md): how the selected values relate to site inputs and compatible framework types.
+- [Complete examples](examples/README.md): canonical sources, instance IDs and evidence boundaries.
 
-The [framework configuration guide](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/README.md) owns the language and deployment API. Library pages explain which of those capabilities each profile selects.
+## Compose and maintain
 
-## Maintain and contribute
+Once you have a complete starting source, use [Compose a site](guides/compose-a-site.md) as the checklist for adding another application, then the specific relationship you need:
 
-- [Testing](testing.md): fully defined commands and existing gates.
-- [Contributing](contributing.md): create/register a profile and keep docs/examples/tests together.
-- [Troubleshooting](troubleshooting.md): binding, image, ownership, workflow and service failures.
-- [Public source boundary](public-boundary.md): what belongs in this repository.
+| Decision | Guide |
+| --- | --- |
+| Share capacity or isolate conflicting sockets | [Shared and separate guests](guides/shared-and-separate-guests.md) |
+| Bind an app role to a guest NIC or private scope | [Multiple interfaces](guides/multiple-interfaces.md) |
+| Select values, explicit readiness and credentials | [Connect apps](guides/connect-apps.md) |
+| Preserve private material and data ownership | [Secrets](secrets.md) |
+| Review changed images, defaults or installed inputs | [Images and updates](guides/images-and-updates.md) |
+| Configure backups and check what recovery needs | [PBS backups](backup.md) and [application recovery coverage](reference/backup-coverage.md) |
+| Understand a source or operation refusal | [Troubleshooting](troubleshooting.md) |
 
-Older entry pages remain navigation pointers: [composition](composition.md), [database tools](database-tools.md), [MQTT Explorer](mqtt-explorer.md), [public images](public-images.md) and [update checks](adoption.md).
+## Extend and review
+
+[Contributing](contributing.md) connects registration, the [documentation standard](contributing/documentation-standard.md), [profile template](templates/application-profile.md), [guest-template template](templates/guest-template.md), [tests and conformance scope](testing.md), and the [public boundary](public-boundary.md). Checking the declaration catalogue does not cover every deployment rule or verify behavior on a running target.
+
+Existing entry routes remain usable: [composition](composition.md), [database tools](database-tools.md), [MQTT Explorer](mqtt-explorer.md), [public images](public-images.md) and [adoption](adoption.md).

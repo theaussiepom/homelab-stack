@@ -1,43 +1,35 @@
 # Configure PBS backups
 
-[Documentation index](README.md) · [Application coverage](reference/backup-coverage.md) ·
-[Software selection](reference/software-and-runtime.md)
+[Documentation index](README.md) · [PBS client profile](reference/backup-profiles.md) · [Application coverage](reference/backup-coverage.md) · [Software selection](reference/software-and-runtime.md)
 
-Add the bare `backup` property at site root to prepare the PBS client in every
-guest. It is a presence-based feature, like root monitoring; do not write
-`backup: true`. Apps retain their independent profiles and placement.
+HomeLab can prepare the Proxmox Backup Client in your guests and, with an explicitly configured job, install a coordinated backup schedule. The library supplies the client software and classifies application data. Your site supplies the existing PBS destination, protected credentials, network access and permission to pause selected services. Source compilation does not run a backup or prove that an application can be restored.
+
+## Select client preparation
+
+Add the bare `backup` property at site root. This is a **site-root fragment**, not a complete site:
 
 ```yaml
 backup:
 ```
 
-The library registers one `pbs-client` backup profile. An explicit equivalent is
-`backup: {profile: pbs-client}`. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/backup.md) owns validation,
-compilation, coordinated capture, phase execution and the language contract. This library owns the
-client package/repository definition and each app's recovery classification.
+This library registers one [pbs-client profile](reference/backup-profiles.md). `backup: null`, `backup: {}` and `backup: {profile: pbs-client}` select the same profile. The property’s presence enables client preparation; `backup: true` and `backup: false` are rejected. Omitting the root property adds no client phase and leaves existing provider volume defaults unchanged. Apps keep their independently selected profiles and placement.
+
+Bare profile selection installs no timer and assumes no destination, credential or permission to interrupt a service. Add `backup.job` only when its inputs are prepared. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/backup.md) defines validation, generated deployment inputs, coordinated capture and execution. The library owns its client package and repository selection and each app’s recovery classification.
 
 ## Run the complete offline example
 
-Use the `FRAMEWORK`, `STACK` and `PYTHON` paths from
-[First configuration](guides/first-configuration.md):
+Use the `FRAMEWORK`, `STACK` and `PYTHON` paths from [First configuration](guides/first-configuration.md):
 
 ```sh
 "$PYTHON" "$FRAMEWORK/blueprints/compile.py" \
   --stack "$STACK" --site "$STACK/site.backup.example.yaml" --check
 ```
 
-This complete synthetic resolver source includes a fully bound operational job:
-PBS endpoint, file-secret references, UTC schedule, explicit transfer policy and
-a dedicated staging volume. Offline compilation requires no PBS server and opens
-no secret files. It proves composition, not a backup or deployment.
-The existing `site.example.yaml` omits the feature and preserves its previous
-deployment behavior. The default `site.example.yaml` installs no schedule; deploying the separate
-backup example would require supplying its real private prerequisites first.
+The [complete synthetic resolver site](../site.backup.example.yaml) includes an operational job with a PBS endpoint, file-secret references, UTC schedule, explicit transfer policy and dedicated staging volume. Offline compilation requires no PBS server and opens no secret files. It checks the composition and generated deployment inputs; it does not install a schedule or execute a backup. The default `site.example.yaml` omits backup entirely and keeps its previous deployment behavior. Deploying the separate backup example requires replacing its invented inputs with the real, reviewed prerequisites.
 
 ## Protect managed volumes explicitly
 
-With root backup selected, include each authoritative managed volume by property
-presence. The following is a **guest volume fragment**, not a site:
+With root backup selected, add `backup:` to each managed volume that contains authoritative application data. The following is a **guest volume fragment**, not a site:
 
 ```yaml
 volumes:
@@ -54,128 +46,105 @@ volumes:
     size_gib: 2
 ```
 
-Native full-guest backup includes `application` and excludes `cache`. App storage
-bindings reuse these paths; profiles never repeat the site's filesystem roots.
-An app's authoritative role cannot use an unmarked managed volume when this
-feature is selected. Transient material sharing a protected volume can still be
-part of the full native volume backup; the selected-recovery catalogue is a
-different, narrower tier. Use separate volumes when exclusion matters to size.
+The generated native full-guest backup flags include `application` and exclude `cache`. A volume marker also accepts null or an empty object, but not a Boolean. App bindings reuse the declared paths; profiles do not repeat the site’s filesystem roots. With root backup selected, an authoritative app role cannot use an unmarked managed volume. This also applies to a native database’s engine volume, whose coherent database export is a separate requirement.
+
+Data excluded from selected application recovery may still be copied by a full native volume backup if it shares a protected volume. Use separate volumes when that exclusion matters to backup size. A root-filesystem path does not create another provider mount or a separate native backup flag.
 
 ## What each deployment does
 
-`Prepare` installs `proxmox-backup-client=4.2.8-1` from the official Debian Trixie
-client-only repository using its digest-pinned public signing asset. A separate
-`PBS agent` step records `/etc/homelab-backup/coverage.json` as root-only
-configuration and checks the client binary. PBS uses a command-line client;
-this does not require an always-running guest daemon.
+`Prepare` installs the exact client version selected by [the shared software definition](reference/software-and-runtime.md#registration-software-pbs-client). The separate `PBS agent` step records `/etc/homelab-backup/coverage.json` as root-only configuration and checks the client binary. PBS uses a command-line client; no always-running guest daemon is required.
 
-The client-only repository uses Proxmox's documented HTTP APT endpoint.
-Its signed release metadata and package hashes are verified against the
-digest-pinned official Trixie keyring, and the client version is exact. This
-authenticates package contents; it does not encrypt package-download traffic.
-The keyring retains the vendor's two published archive keys. No `trusted=yes`,
-insecure APT option or disabled certificate check is used. See the vendor's
-[client repository and SecureApt guidance](https://pbs.proxmox.com/docs/installation.html#proxmox-backup-client-only-repository).
+The client-only repository uses Proxmox’s documented HTTP APT endpoint. APT verifies signed release metadata and package hashes against the official Trixie keyring, whose bytes are checked against the library’s recorded digest. This authenticates package contents without encrypting package-download traffic. The keyring retains the vendor’s two published archive keys. HomeLab uses no `trusted=yes`, insecure APT option or disabled certificate check. See the vendor’s [client repository and SecureApt guidance](https://pbs.proxmox.com/docs/installation.html#proxmox-backup-client-only-repository).
 
-The coverage record includes the guest identity, configuration paths, each
-bound storage role, individually owned runtime files, related database
-endpoints and native full-volume inclusion flags. Every library storage role
-has an explicit include or exclusion disposition. The compiler refuses missing
-classifications; optional unbound roles need no invented host path.
+The coverage record identifies the guest, configuration paths, bound storage roles, individually managed runtime files, related database endpoints and native full-volume inclusion flags. Every library storage role has an explicit inclusion or exclusion. The compiler rejects missing classifications; an optional role that is not bound produces no invented host path.
 
-With root monitoring also selected, the framework adds the Zabbix agent's
-configuration, existing PSK and successful ownership receipt to each guest's
-inventory. Downloaded package caches are reproducible. Controller credentials
-and failed-operation records still require separate protected custody.
+When root monitoring is also selected, the framework adds each guest’s Zabbix agent configuration, existing pre-shared key and successful ownership receipt. Downloaded package caches can be rebuilt. Controller credentials and failed-operation records still need separate protected recovery storage.
 
 ## Database and application consistency
 
-Database guests still have settings to protect: PostgreSQL's `/etc/postgresql`,
-MariaDB's `/etc/mysql` and InfluxDB's `/etc/influxdb`. Their live engine directories
-are catalogued as requiring `database-export`, with `include: false` for selected
-file capture. The [coverage guide](reference/backup-coverage.md#native-databases)
-defines the required native recovery sets. Full-guest backups are additional
-protection, not a substitute for these exports.
+Native database settings need protection alongside data: PostgreSQL uses `/etc/postgresql`, MariaDB `/etc/mysql` and InfluxDB `/etc/influxdb`. The framework’s native adapters supply these settings paths; profiles do not repeat them. Live engine directories are classified as `database-export` and recorded with `include: false` for selected file capture. The [native database recovery guide](reference/backup-coverage.md#native-databases) describes the required recovery sets. Full-guest backups provide additional protection and do not replace coherent database exports.
 
-With `backup.job`, PostgreSQL uses installed-major `pg_dumpall` with globals,
-MariaDB uses an all-database logical dump under an explicitly selected read lock,
-and Influx uses its native full backup with a selected private operator token.
-The native settings paths come from the framework's owning native adapter; profiles
-do not repeat them.
+With `backup.job`, PostgreSQL uses its installed major version’s `pg_dumpall`, including globals. MariaDB dumps all databases under an explicitly selected read lock. InfluxDB uses its native full backup with a selected private operator token. A database connection from an app identifies the related database; it does not itself perform a backup.
 
-An `application-export` role uses a coherent stop/capture/start window, requiring
-its app in `job.capture.pause`. That permission covers only the app's existing
-Compose services, including owned sidecars. Every member preflights before any
-app pauses; native exports and app files are captured while all selected writers
-are quiescent. Services resume before encrypted upload. No radio/NVM command,
-container recreation, playback or synthetic device action forms part of capture.
-A common recovery-set manifest binds exact related database/file generations.
-This is a coordinated window, not a distributed transaction or verified restore.
+An `application-export` role requires the app in `job.capture.pause`. This explicitly permits stopping and restarting only that app’s existing Compose services, including supporting containers. Every member completes its checks before any app pauses. All selected writers pause while native exports and app files are captured, and services resume before encrypted upload. Capture does not recreate containers, issue radio or non-volatile-memory commands, play media or send synthetic device commands.
+
+A common recovery-set manifest records the exact related database and file generations. This establishes a coordinated capture window, not a distributed transaction or a verified restore. Writers outside the declared apps still need consideration when testing recovery.
 
 ## First installation and later deployments
 
-Selecting the feature adds client software and the named step to the existing
-guest job. It does not change job names, scheduling dependencies, app identities,
-service data or credentials. Ordinary holds, input integrity and source review
-remain enforced. A repeat deployment reuses the sealed preparation payload;
-changed coverage becomes a new desired input generation.
+Selecting backup adds client software and the named step to each enabled guest’s existing deployment job. It does not rename jobs, add dependencies between apps, change app identities or replace service data or credentials. Existing holds, protected-input checks and source review still apply. Repeat deployments reuse the protected preparation payload; changed coverage produces a new input generation.
 
-Configured but disabled guests remain represented in source coverage. They do
-not execute CD, and skipping them is not retirement. Removing a commissioned `job`, changing its stable group/member identity or
-omitting an existing protected member refuses; explicit retirement is separate.
-No ordinary update deletes history or downgrades recurring protection.
+Guests disabled for deployment remain in the source coverage and operational group. They do not run deployment steps, and skipping them does not retire their protection. Ordinary deployment rejects removal of a commissioned job, changes to its stable group or member identity, or omission of an existing protected member. Retirement requires a separate explicit procedure; this contract provides no automatic retirement executor. An ordinary update does not delete backup history or reduce an existing schedule to preparation only.
 
 ## Bind an operational job
 
-Follow the complete [synthetic job](../site.backup.example.yaml) and its
-[dedicated-volume guest](../examples/backup/guests/resolver.yaml). The framework
-reference documents every nested `job` field; this library does not add a second
-schema. Reuse an existing external endpoint, guest interface, volume and
-file-secret source rather than repeating IPs, paths or credentials.
+Follow the [complete synthetic job](../site.backup.example.yaml) and its [dedicated-volume guest](../examples/backup/guests/resolver.yaml). The framework documents [every nested job field](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/backup.md#operational-job). Reuse existing external endpoints, guest interfaces, volumes and file-secret sources instead of repeating addresses, paths or credentials.
 
-- Select one client entry per configured guest, including CD-disabled members.
-  Each uses a unique scoped PBS token identity and existing encryption key.
-- Select a dedicated staging volume without `backup:` and without app bindings.
-  Its capacity is at least four times the per-generation byte limit. Append a
-  new slot after existing volumes on owned updates; do not reorder/resize old
-  storage. Source guards refuse foreign/nonempty mount preimages.
-- Select the intended backup interface and an explicit network policy for the
-  PBS endpoint. Runtime route admission rejects management-path fallback.
-- Grant service pauses only to required apps; list every MariaDB producer in
-  `database_lock` and every Influx producer/token reference in `influx_tokens`.
-  Database consumers still use existing connections; backup adds no CD DAG edge.
-- Schedule UTC `hourly`, `daily` or `HH:MM`, with bounded jitter, file count,
-  bytes and duration. One controller timer coordinates all members under the
-  existing CD locks. It reads their actual completed deployed generations;
-  an app skipped in the latest CD does not lose protection.
+- Select one client for every configured guest, including members disabled for deployment. Each needs its own scoped PBS token identity and existing encryption key.
+- Select a dedicated staging volume with no app bindings and no `backup:` marker. Its capacity must be at least four times the per-generation byte limit. On an existing HomeLab-managed guest, append a new slot after the existing volumes; do not reorder or resize existing storage. Checks before applying the change reject a foreign mount, symlink or nonempty staging path.
+- Select the backup interface and declare network access to the PBS endpoint. Before capture, the runtime checks that the route uses the selected device and source address; it rejects fallback to the management path.
+- Permit pauses only for required apps. List every MariaDB producer in `database_lock` and each InfluxDB producer and token reference in `influx_tokens`. Existing database connections supply recovery associations without adding deployment dependencies.
+- Choose UTC `hourly`, `daily` or `HH:MM` scheduling, with limits on jitter, file count, bytes and duration. One controller timer coordinates all members under the existing deployment locks. It reads each member’s actually completed deployment; skipping an app in the latest deployment does not remove its protection.
 
-CD installs the sealed worker inputs and schedule, but does not execute a backup.
-The scheduled cycle captures native exports and declared files, uploads with
-client encryption, restores the exact archive into private temporary readback,
-and compares the complete artifact hashes. Every member must succeed before the
-root recovery set is complete. Failed payloads, pending records, controller holds
-and prior successes are preserved; no automatic recovery or remote pruning is
-installed. Successful temporary copies are released only after exact readback.
+## Operational job example
+
+This is the complete **site-root backup fragment** from the [canonical operational site](../site.backup.example.yaml). It still needs that site’s endpoint, file-secret sources, network policy and guest staging volume. The documentation checks compare this excerpt with the maintained source.
+
+```yaml
+backup:
+  job:
+    name: example-recovery
+    destination:
+      endpoint:
+        external: pbs
+      datastore: recovery
+      namespace: guests
+      fingerprint: ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab
+    schedule:
+      calendar: '02:00'
+      jitter_seconds: 300
+    clients:
+      resolver:
+        auth_id: resolver@pbs!backup
+        password: pbs-password
+        encryption_key: pbs-key
+        staging_volume: backup-stage
+        interface: primary
+    capture:
+      pause: []
+      database_lock: []
+      influx_tokens: {}
+    limits:
+      max_bytes: 33554432
+      max_files: 10000
+      timeout_seconds: 300
+```
+
+Deployment installs the protected worker inputs and controller schedule; it does not execute a backup. A scheduled cycle captures native exports and declared files, uploads with client encryption, downloads and decrypts the exact archive into a private temporary directory, and compares every artifact hash. The root recovery set succeeds only after every member completes those checks. Successful temporary copies are removed only after exact readback verification.
+
+After the controller accepts every member’s deployment records, a worker’s failed check before capture leaves evidence under that run’s UUID without opening a capture window. A later scheduled run may try those checks again with a new UUID. Earlier lock or deployment-record checks can stop the run before its UUID directory exists.
+
+Once a capture window opens, a failed run keeps any remaining controller holds. Pending markers and recovery files still present on failed members remain for investigation. Members that have already verified their archives may have released their temporary copies and local pending markers before the group fails. No automatic recovery, replay or clearing of remaining holds and markers is installed. The client does not prune remote snapshots, earlier failures or the last successful recovery generation. Follow the framework’s [execution and failure rules](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/backup.md#coordinated-execution-and-failure-behavior).
+
+## Invalid cases
+
+These source checks start from the complete example or the volume fragment above. Root-level selection errors have no more specific field path in their diagnostic; do not infer one.
+
+| Invalid input | Diagnostic | Supported correction |
+| --- | --- | --- |
+| Root `backup: true` or `backup: false` | `component.fields` | Use a bare, null or empty selection to prepare the client; omit the root field when no backup feature is selected. Removing an existing operational job still requires the separate retirement procedure. |
+| Root `backup: {profile: missing}` | `component.backup-profile-selection` | Select a registered backup profile, or omit `profile` when the library has exactly one. |
+| `backup: true` on the fragment’s `application` volume | `component.backup-presence` at `guests.resolver.volumes.application` | Use bare `backup:` or an empty object to include the volume. |
+| Add `backup:` to the operational job’s staging volume | `component.backup-staging-volume` | Keep staging dedicated, unprotected by native volume backup and unbound by apps. |
+
+Correct the source and rerun the offline check. These refusals do not inspect real credentials, mount contents or PBS access.
 
 ## Later site integration and actual qualification
 
-This public implementation does not create the NAS-hosted PBS VM, datastore,
-namespace, account, key, native PVE full-guest schedule or server retention,
-verification/prune/GC/offsite job. Those need concrete private allocations and
-permissions when that phase is requested. Guest tokens need upload/readback for
-their own namespace, not datastore administration or pruning.
+This implementation does not create the NAS-hosted PBS VM, datastore, namespace, account, encryption key, native Proxmox full-guest schedule or server maintenance jobs for retention, verification, pruning, garbage collection or offsite copies. Those require the site’s actual allocations and permissions. Guest tokens need permission to upload and read back their own namespace’s archives, not to administer the datastore or prune history.
 
-Before declaring protection, verify a real scheduled cycle on the intended
-network, native database content, related application/database manifests, archive
-readback and an isolated service restore. Keep encryption keys independently
-recoverable. Offsite recovery requires a complete consistent datastore and its
-keys; copying namespace folders alone is insufficient.
+Before declaring protection, verify a real scheduled cycle on the intended network, native database contents, related application and database manifests, full archive readback and an isolated service restore. Keep encryption keys independently recoverable. Offsite recovery needs a complete consistent datastore and its keys; copying namespace folders alone is insufficient.
 
-New profiles follow [Contributing](contributing.md) and classify every storage
-role in the [profile template](templates/application-profile.md). Extend a native
-capture recipe in its owning framework adapter when needed; never put arbitrary
-commands in a reusable profile. Test component failures directly, mock collaborators
-in app/guest units, and retain focused real compiler/packet integrations.
+New profiles follow [Contributing](contributing.md) and classify every storage role using the [profile template](templates/application-profile.md). Extend a native capture implementation in its owning framework adapter when needed; reusable profiles cannot supply arbitrary commands. Test component failures directly, mock collaborators in app and guest unit tests, and retain focused integration tests using the real compiler and generated packets.
 
-Product references: [PBS client usage](https://pbs.proxmox.com/docs/backup-client.html)
-and [official client repository](https://pbs.proxmox.com/docs/installation.html#proxmox-backup-client-only-repository).
+Product references: [PBS client usage](https://pbs.proxmox.com/docs/backup-client.html) and [official client repository](https://pbs.proxmox.com/docs/installation.html#proxmox-backup-client-only-repository).

@@ -2,59 +2,27 @@
 
 [Documentation index](../README.md) · [Reference index](README.md)
 
-A template provides a complete resource/startup/security default declaration. A site selects it with `guests.<id>.template`, then supplies provider identity, interfaces, storage and lifecycle. A template does not allocate a VMID, address or volume and does not impose an app set.
+Choose a template for reusable guest defaults. A site still supplies the provider context, lifecycle policy, VMID, hostname, template image and root storage. It also declares network interfaces, selects the control interface, and binds app data and Compose projects where needed. Templates allocate none of those values and select no app bundle.
 
-## Registered templates
+## Choose a template
 
-| Template | Source | CPU cores | Memory MiB | Root GiB | OS reserve MiB |
-| --- | --- | --- | --- | --- | --- |
-| `base` | [base.yaml](../../templates/base.yaml) | 1 | 1024 | 4 | 256 |
-| `docker` | [docker.yaml](../../templates/docker.yaml) | 1 | 1024 | 8 | 256 |
-
-Both templates use the following explicit startup/security defaults:
-
-| Block | Property | Value |
+| Selection | Intended use | Complete default records |
 | --- | --- | --- |
-| startup | started | `true` |
-| startup | start_on_boot | `true` |
-| startup | boot_order | `20` |
-| security | unprivileged | `true` |
-| security | protection | `true` |
-| security | nesting | `true` |
-| security | keyctl | `false` |
+| `base` | Minimal guest defaults; selected apps contribute their own software and runtime requirements | [Base](templates/base.md) |
+| `docker` | Guest explicitly selects Docker software and container-host runtime before apps are added | [Docker](templates/docker.md) |
 
-| Template | Software | Runtime | Monitoring |
-| --- | --- | --- | --- |
-| `base` | None | None | `linux-agent` |
-| `docker` | `docker` | `container-host` | `linux-agent` |
+A container app can select Docker through its profile even on `base`, as the [standalone resolver](../../site.example.yaml) demonstrates. Template selection is separate from application lifecycle or ownership.
 
+## Override and change effects
 
-`base` does not itself select Docker packages. A container app can select the required Docker software/runtime through its profile, as the minimal Unbound example does. `docker` selects the named Docker software and container-host requirements directly. Native apps still need their own package/runtime selections.
+The resolver copies the template's `resources`, `startup` and `security` maps, then replaces **direct keys** supplied by the guest. An absent or empty partial map inherits; null is not an empty map. Guest software and runtime sequences append to template selections; an empty list adds nothing and does not remove inherited selections. Guest monitoring replaces the whole reference mapping; omission inherits, while an empty mapping or null does not disable monitoring.
 
-## Override only what changes
+A template change reaches every inheriting guest. An explicit guest field remains authoritative for that field. Compare resolved output before adopting a library change. See the [Docker partial override](templates/docker.md#partial-override) for a checked example and [composition guide](../guides/compose-a-site.md#2-give-each-guest-its-facts) for complete surrounding inputs.
 
-This is a **partial guest fragment**:
+The runtime reserves at least 256 MiB for the operating system. Selected apps, including PegaProx, can require a higher reserve. The memory reserved for native services and containers must fit in the capacity left over. These values are deployment requirements, not measurements of service capacity.
 
-```yaml
-resources:
-  memory_mib: 3072
-```
+## Installation and later changes
 
-It replaces only memory. CPU, root size and reserve inherit from the selected template. The complete [HA example guest](../../examples/second/guests/home-app.yaml) shows the surrounding identity/interfaces/storage. The framework applies template defaults followed by explicit guest fields; it does not merge arbitrary source overlays.
+A template has no independent installation or service health operation. The guest and its apps follow the selected [lifecycle](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/lifecycle.md). `fresh` is a supported creation policy retained for later updates to the same HomeLab-managed instance; `retained` requires genuine HomeLab ownership and refuses creation.
 
-| Resource | Complete template | Guest override | Syntax constraint |
-| --- | --- | --- | --- |
-| cpu_cores | Required | Optional | Integer 1..2147483647 |
-| memory_mib | Required | Optional | Integer 256..2147483647 MiB |
-| root_gib | Required | Optional | Integer 4..2147483647 GiB |
-| os_reserve_mib | Required | Optional | Integer 0..2147483647 and less than memory_mib |
-
-The effective runtime reserve has a 256 MiB floor and is raised by any selected runtime requirement. PegaProx currently requires 512 MiB. Native plus container memory reservations must fit after that reserve. These are admission policies, not measured capacity; syntactic bounds do not mean a host can supply those resources.
-
-## Startup, security and update effects
-
-`started` and `start_on_boot` are booleans; boot_order is an integer 0..2147483647. Security fields are explicit booleans; unprivileged and protection must remain true. Selected runtime requirements must be compatible with the guest security choices. In particular, HA's retained mDNS NET_ADMIN capability is an explicit app runtime selection, not a privilege inherited by every Docker guest.
-
-Changing CPU/memory/startup affects desired infrastructure. The supported provider plan determines actual interruption. Shrink/move/protection/identity changes are not universally supported replacements. Preserve current NIC slots/MACs, data/volume identity, accounts, state and holds. Read [Images and updates](../guides/images-and-updates.md) before modifying an installed guest.
-
-Templates are source defaults, not ownership evidence. A retained guest still requires a genuine current component success and matching backend. A fresh guest cannot adopt an existing backend or data tree.
+Changing CPU, memory or startup settings changes the declared infrastructure. Depending on the supported provider operation, a change may interrupt the guest or make it temporarily unreachable. The [saved-plan guard](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/proxmox/applications/plan_policy.py) requires an active planned guest and refuses changes to the existing disk block, including root growth and shrink. Accepted scalar syntax does not authorize replacement, data relocation, protection removal or adoption. Read [updates](../guides/images-and-updates.md) and [installation verification](../guides/installation.md) before operating.

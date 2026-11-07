@@ -4,4 +4,4 @@ The canonical [MQTT Explorer profile reference](reference/apps/mqtt_explorer.md)
 
 ## Saved account and profile
 
-Read [Explorer requirements](reference/apps/mqtt_explorer.md#application-requirements) and [Connect apps](guides/connect-apps.md#mqtt-and-a-saved-hostname). Managed all-topic access and explicit existing credentials are separate choices; neither reuses the broker probe. The saved profile contains a plaintext password in protected app data. Updating the GUI does not implicitly recreate the broker or rotate credentials.
+Read [Explorer requirements](reference/apps/mqtt_explorer.md#application-requirements) and [Connect apps](guides/connect-apps.md#mqtt-and-a-saved-hostname). You can select a managed account with read/write access to all topics, or supply an existing credential. Neither choice reuses the broker’s health-check credential. The saved profile contains a plaintext password in protected app data. Updating the GUI does not implicitly recreate the broker or rotate credentials.

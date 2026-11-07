@@ -1,0 +1,12 @@
+schema: homelab-components-v1
+kind: app
+profile: homeassistant-public
+guest: home-app
+lifecycle: fresh
+interfaces:
+  web:
+    interface: primary
+storage:
+  config:
+    volume: apps
+    subpath: homeassistant

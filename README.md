@@ -1,36 +1,34 @@
-# HomeLab application library
+# HomeLab Stack
 
-Compose independent applications into Debian LXC guests on Proxmox. Choose a profile, give each app a stable identity, and bind its networks, storage and integrations in a site. The shared framework compiles that source and drives OpenTofu infrastructure and Ansible configuration through protected CD.
+Describe the services you want on Proxmox, choose supported application profiles, and build your own configuration for Debian 13 LXC guests. This library supplies reusable application recipes and guest defaults. You choose the applications, which guests they share, and your host, network and storage allocations.
 
-You can run a standalone resolver, place several apps together, or separate them across guests. There is no fixed guest list and no mandatory Home Assistant/Node-RED, Pi-hole/Unbound or MQTT/Explorer bundle.
+**New here? [Design your homelab](docs/guides/design-your-homelab.md)** walks from desired services to a complete editable configuration: collect your Proxmox facts, check a fresh recursive resolver, optionally add Home Assistant, and compare separate or shared guests. You finish with inspected compiler output and the exact remaining deployment inputs. The resolver starts on guest loopback; the guide explains the additional inputs that must already be prepared for LAN filtering DNS.
 
-## Start here
-
-- **New to the project:** [Start here](docs/start-here.md), then [compile your first configuration](docs/guides/first-configuration.md). The tutorial needs no Proxmox host, Docker daemon or credentials.
-- **Choose an app:** [Browse all 21 profiles](docs/reference/README.md), including explicit public-image and MariaDB-admin variants.
-- **Build a site:** [Compose a site](docs/guides/compose-a-site.md), [bind interfaces](docs/guides/multiple-interfaces.md), and [connect apps](docs/guides/connect-apps.md).
-- **Maintain or extend it:** [Images and updates](docs/guides/images-and-updates.md), [contributing](docs/contributing.md), [tests](docs/testing.md), and [troubleshooting](docs/troubleshooting.md).
-
-The [documentation index](docs/README.md) links the full guide and reference suite.
-
-## What is in the library?
-
-Home Assistant, Node-RED, Bitwarden, CloudBeaver, Pi-hole, Unbound, Authentik, InfluxDB, Traefik, MariaDB, Zabbix, Mosquitto, MQTT Explorer, Music Assistant, PegaProx, PostgreSQL, Zigbee2MQTT and WiNet. Supporting containers stay with their owning app. Profile pages state fresh/update limits; a listed product is not a promise of unrestricted first-install or hardware support.
-
-| Source | Owns |
+| Your next decision | Start here |
 | --- | --- |
-| [stack.json](stack.json) | Profile/template registration, named software, runtime, health and policy declarations |
-| [apps/](apps/) | Complete reusable app profiles |
-| [templates/](templates/) | Guest defaults |
-| [images.json](images.json) | Authoritative image selections and policies |
-| [assets/](assets/) | Hash-bound public vendor material |
-| [site.example.yaml](site.example.yaml) | Small standalone Unbound source example |
-| [examples/site.second.yaml](examples/site.second.yaml) | Different placement, repeated resolvers and independent HA |
+| Create your first personalised configuration | [Design your homelab](docs/guides/design-your-homelab.md) |
+| Try the compiler before designing a site | [Compile an offline resolver](docs/guides/first-configuration.md) |
+| Choose a profile or variant | [Application catalogue](docs/reference/README.md) |
+| Join profiles into a site | [Composition workflow](docs/guides/compose-a-site.md) |
+| Prepare or maintain an installation | [Preparation, installation and service verification](docs/guides/installation.md), then [updates](docs/guides/images-and-updates.md) |
+| Extend the reusable library | [Contributor workflow](docs/contributing.md) |
 
-The library owns reusable choices. A consuming site owns actual allocations, trust, credentials, identities and access policy. The framework owns validation, rendering and deployment capabilities. See [the model](docs/concepts.md) and [working agreement](AGENTS.md).
+The [documentation index](docs/README.md) connects these journeys to the complete reference and examples.
 
-## What a successful source check means
+Supporting containers stay with their owning app; choosing one profile does not choose unrelated applications. The supported catalogue has explicit creation, data and integration requirements. Arbitrary VM operating systems and unregistered Compose applications are outside this library's application path.
 
-A successful compiler check proves the selected declarations can be resolved. It does not create a guest, load private credentials, change firewall/routing policy or verify a running service. The examples use synthetic addresses and are intentionally unsuitable for real deployment admission.
+## Three owners
 
-Ordinary updates preserve current receipts, state, private material and data ownership. Unsupported initialization, identity conflicts and unresolved holds refuse. Deployment and service verification belong to the consuming site's separately authorized protected CD path.
+| Owner | Responsibility |
+| --- | --- |
+| This library | Supplies [application profiles](docs/reference/README.md), [guest defaults](docs/reference/templates.md), [shared software and runtime choices](docs/reference/software-and-runtime.md), and complete examples with invented inputs. |
+| [HomeLab framework](https://github.com/theaussiepom/homelab) | Defines the accepted configuration fields, resolves references, generates deployment inputs, and provides the supported tools for creating infrastructure and configuring services. |
+| Your site configuration and deployment procedure | Supply real allocations, trusted host identities and credentials. You establish ownership of existing data and control the protected continuous deployment (CD) workflow and permission to operate it. |
+
+The [library index](stack.json) and [image catalogue](images.json) remain authoritative. The [phase workflow](.github/workflows/phase.yml) selects the compatible framework; a newer framework checkout is not automatically compatible.
+
+## Know what has been established
+
+The selected framework resolves the offline examples and generates their deployment files. They use synthetic inputs and need no host, Docker daemon or credential values. This establishes that the configuration works with those source revisions. It does not prove installation or service availability.
+
+Profiles state what first installation needs and what later deployments preserve or refuse. Your site controls protected continuous deployment (CD) and the checks that verify endpoints, authentication, persistence and integrations. See the [working agreement](AGENTS.md) for contribution boundaries.

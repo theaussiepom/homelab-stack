@@ -1,6 +1,6 @@
 # Complete profile compositions
 
-These are synthetic source-only compositions, not an implicit installation layout. Each canonical YAML body is maintained once and passes the real library resolver and packet lowerer. Existing resources/credentials are references, not supplied data or deployment authority. Retained entries require an already HomeLab-managed installation.
+These complete example configurations use invented inputs. You can check them offline and generate deployment files with the selected framework. Each YAML example is maintained in one place. References to existing resources and credentials do not supply their data or grant permission to deploy. Entries marked retained require an existing HomeLab-managed installation; the examples do not prescribe one fixed installation layout.
 
 | Profile | Complete source | App instance |
 | --- | --- | --- |
@@ -26,6 +26,6 @@ These are synthetic source-only compositions, not an implicit installation layou
 | [node_red-public](../../docs/reference/apps/node_red-public.md) | [new-automation.yaml](new-automation.yaml) | `node_red` |
 | [cloudbeaver-mariadb-admin](../../docs/reference/apps/cloudbeaver-mariadb-admin.md) | [database-guis.yaml](database-guis.yaml) | `administration` |
 
-For a supported new instance, the public automation, no-bind Unbound, new database GUI/workspace and native creation-policy sources use `fresh`. Keep that policy for later owned deployments. The other practical sources deliberately show retained prerequisites; they are not import or new-data commissioning procedures.
+The public automation examples, Unbound without a storage mount, new database GUI workspaces and supported native database examples use `fresh` to permit creation of a new instance. Keep that policy for later deployments to the same HomeLab-managed instance. The other examples require existing HomeLab-managed resources. They cannot import another installation or prepare new application data.
 
 Start with [the source environment](../../docs/guides/first-configuration.md) and select one actual file with `compile.py --check`; validation never runs its native actions. Each profile page explains the selected fields, first-use prerequisites, later deployment effects and refusals.

@@ -1,0 +1,38 @@
+# Read a declaration record
+
+[Reference index](README.md) · [Conformance scope](../testing.md#documentation-conformance) · [Composition](../guides/compose-a-site.md)
+
+Every registered app profile, guest template and backup profile has an exact **Declaration records** section. It lists every field in the definition loaded by the library. The surrounding sections explain placement, bindings, lifecycle and the requirements that actually apply. A declaration's selected value is not a promise that every site instance can override it.
+
+## Notation and coverage
+
+`interfaces.backend.required` is the `required` field of the selected profile's named `backend` role. Dynamic role names are declaration identities, not new framework field types. `object` introduces a nonempty mapping whose children have their own records; `{}` means an explicitly empty mapping. JSON-formatted cells for scalar values and sequences preserve actual types: `false` is a boolean, `50` an integer, and `"50"` a string. Sequence order is preserved. Definition markers `schema` and `kind` are shown by the source document; the loader removes them before typed definition validation.
+
+These tables cover the fields supplied by app profiles, guest templates and backup profiles. The test-local map links each registered definition to its source and document; it does not repeat field lists. The checker derives fields from the real loaded definition and independently reads the authored table, comparing the two in both directions. They do **not** enumerate every optional field accepted by the framework, every procedural conditional rule, or every application property. The selected framework's [library grammar](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/library.md), [supporting types](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/supporting-types.md) and [app properties](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/app-properties.md) own that wider surface. New framework conditions still need review.
+
+## Follow the selected field to its effect
+
+| Declaration group | Consumer relationship and canonical owner |
+| --- | --- |
+| `adapter`, `display_name` | The adapter chooses the validation, generated configuration and services for this app. The display label does not rename its persistent resources. See [app instances](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/apps.md). |
+| `interfaces` | Each named role states when it is required and which network scopes it accepts. The site must bind it to an allowed NIC in the app's guest, guest loopback or declared private app network. See [interface composition](../guides/multiple-interfaces.md) and [role types](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/supporting-types.md#profile-interface-listener-and-endpoint-types). |
+| `listeners`, `endpoints` | A listener declares the address, protocol and port where a service accepts connections, the network namespace it uses, and any port published on the guest. An endpoint advertises the resulting address and port. A wildcard host listener may also accept connections through interfaces beyond the advertised NIC. See [connection composition](../guides/connect-apps.md) and [listener types](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/supporting-types.md#profile-interface-listener-and-endpoint-types). |
+| `storage` | Each required or selected optional role binds to a guest volume or supported root-filesystem path, with any subpath confined below it. The target is the container path, not a controller path. Where initialization is supported, it creates a new directory and never adopts an existing one. See [storage bindings](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/storage.md#app-storage-bindings). |
+| `connections` | The role defines the connection type and supported readiness and account choices. The site must declare the connection separately and explicitly select readiness to make one app wait for another. Sharing connection values grants no network access. See [connect apps](../guides/connect-apps.md). |
+| `properties` | The profile supplies default property values, and explicit instance keys replace those direct keys. The selected adapter validates conditional fields and constraints. These objects do not support arbitrary recursive overlays. See [property types](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/app-properties.md). |
+| `secrets`, `authentication` | Metadata names the roles for protected inputs and authentication references. The selected adapter may require more than the profile metadata declares, as [MQTT's file probe](apps/mqtt.md#mqtt-probe) demonstrates. See [secret custody](../secrets.md). |
+| `devices` | The profile declares the device type and whether the role is required. The site must select the actual device and verify access to it. Resolving its source reference does not verify the hardware. See [Zigbee2MQTT](apps/zigbee2mqtt.md). |
+| `software`, `runtime`, `health`, `monitoring` | Names resolve in the [shared catalogue](software-and-runtime.md); the framework combines software and runtime selections according to their type rules. Declaring a health check does not establish that the service has passed it. |
+| App `backup` | Classifies every storage role for coherent capture or an explicit exclusion. The site’s bindings supply actual paths; classification does not install a schedule or prove recovery. See [application recovery coverage](backup-coverage.md). |
+| Backup-profile `type`, `software`, `configuration` | Selects the client implementation, shared software and guest configuration paths. Root selection and an operational job are separate site controls. See [PBS client profile](backup-profiles.md). |
+| Template `resources`, `startup`, `security` | The template supplies complete defaults. A guest can replace direct keys, but the resulting values must still meet runtime requirements and the checks made before deployment. See [templates](templates.md#override-and-change-effects). |
+
+## Omission, null and empty
+
+The validator for each profile type determines what omitting an optional block means. Omission does not imply that null is accepted as a site input. Selecting a capability can make an otherwise optional role mandatory. For example, MQTT's `secrets.probe.required` is false metadata while the adapter's requirement to use a file source is mandatory. Read the profile’s binding requirements before relying on the metadata flag.
+
+A supplied empty mapping or sequence is recorded explicitly. Template empty partial-map inheritance and list appends are documented at [template precedence](templates.md#override-and-change-effects). Site authoring remains a closed typed contract; these records do not add arbitrary environment, command, Compose, mount or configuration passthrough.
+
+## Evidence and review
+
+[Tests](../testing.md#documentation-conformance) compare each typed cell and source path, reject extra, missing or duplicate records, and exercise MQTT and Docker behavior through the real compiler. All registered profiles retain complete examples that resolve and generate deployment files. Native service acceptance, semantic completeness, and the usefulness of explanation remain separate review responsibilities under the [documentation standard](../contributing/documentation-standard.md).

@@ -1,59 +1,49 @@
 # Application backup coverage
 
-[Configure PBS backups](../backup.md) · [Profile catalogue](README.md)
+[Configure PBS backups](../backup.md) · [PBS client profile](backup-profiles.md) · [Profile catalogue](README.md)
 
-These are source recovery requirements, not observations of installed protection.
-Profile roles map to guest volume/root paths through the existing app bindings.
-Only bound optional roles produce paths. Generated runtime leaves are included
-individually; public source/Git alone cannot replace private credentials or keys.
+This catalogue states what each application needs for recovery. It does not report installed protection or a verified restore. App bindings connect profile storage roles to actual guest volumes or root-filesystem paths. Only bound optional roles produce paths. HomeLab lists generated runtime files individually; public source and Git cannot replace private credentials or encryption keys.
 
-- **files**: selected configuration; verify the actual path and ownership at adoption.
-- **application-export**: coherent native/service-aware capture required before upload. A warm directory scan is not enough.
-- **database-export**: a native database producer owns the export; its raw engine directory is excluded from selected file intake.
-- **transient/rebuildable**: explicitly excluded from selected recovery. An exclusion does not delete the original data or exclude a whole full-guest volume.
+- **files** identifies configuration files for capture. Verify the actual path and file ownership when preparing the installation.
+- **application-export** requires consistent application state. An operational job must have permission to pause the app’s existing services before capture; copying a directory while its writers run is insufficient.
+- **database-export** requires the database’s native export procedure. Its live engine directory is excluded from selected file capture.
+- **transient** and **rebuildable** explicitly exclude a role from selected application recovery. Exclusion neither deletes the original data nor excludes an entire volume from native full-guest backup.
 
 ## Native databases
 
 | Producer | Required native recovery set | Configuration retained separately |
 | --- | --- | --- |
-| PostgreSQL | Compatible native backups or logical database exports, roles/globals, extensions, locale/version metadata, keys and actual restored database verification | `/etc/postgresql` |
-| MariaDB | Supported compatible native/logical backups, users/grants/plugins/collations and recovery of the selected schemas/history, including late writes | `/etc/mysql` |
-| InfluxDB | Native backup plus organization/bucket/authentication and version/engine metadata; verify query and write behavior after restore | `/etc/influxdb` |
+| PostgreSQL | Preserve compatible native backups or logical exports, roles and globals, extensions, locale and version metadata, and keys. Verify the actual restored databases. | `/etc/postgresql` |
+| MariaDB | Preserve supported compatible native or logical backups, users, grants, plugins and collations. Verify recovery of the selected schemas and history, including late writes. | `/etc/mysql` |
+| InfluxDB | Preserve a native backup, organization, bucket and authentication information, and version and engine metadata. Verify queries and writes after restore. | `/etc/influxdb` |
 
-Each producer owns its own credentials and consistency boundary. A database
-connection from another app is not a backup producer. A bound root `backup.job` runs the finite native producers and coordinated
-application capture window. Bare `backup:` installs no timer. Actual restore
-qualification and NAS/server maintenance remain part of site integration.
+Each database owns its credentials and the procedure that keeps its export consistent. Another app’s database connection is not a backup producer. A configured root `backup.job` runs the supported native producers and coordinates the application capture window. Bare `backup:` installs no timer. Testing restores and maintaining the NAS and PBS server remain site responsibilities.
 
 ## Application recovery notes
 
 | App | Authoritative recovery material and consistency limits |
 | --- | --- |
-| Home Assistant | Config, `.storage`, auth/fabric/pairing/private state, compatible custom integrations/patches and selected media; recorder recovery is separate when connected. An existing SQLite database needs a supported consistent capture. |
-| Node-RED | Flows, credentials, credential encryption key, settings, modules and persistent context as one usable generation. Preserve private API/OIDC inputs independently where the guest does not retain them. |
-| Bitwarden | `/etc/bitwarden` includes attachments and application protection material. Associate it with the MariaDB generation and required environment/encryption material; database-only recovery is insufficient. Logs are excluded. |
-| Authentik | PostgreSQL generation plus secret key, media, custom templates, certs and compatible Redis state. Stop the owned Redis and Authentik services before capture; a warm Redis directory copy is not coherent. |
-| MQTT | Broker configuration/password/cert material plus retained messages, durable sessions and QoS persistence. Use a broker-supported consistent capture; do not publish synthetic device commands as a backup test. |
-| MQTT Explorer | Saved connection/UI state plus the separately owned broker account. Capturing the GUI is not a broker backup. |
-| Zigbee2MQTT | Keys, devices/groups/database/state plus existing coordinator backups, hardware/firmware identity and backup age. No routine radio/NVM commands, reset or duplicate coordinator activation. |
-| Pi-hole | Teleporter/native export and coherent configuration SQLite/private state. Optional query-history volume is excluded by default; it is not the authoritative configuration export. A Pi-hole configuration capture requires explicit permission to pause its owned services; do not assume DNS can be interrupted. |
-| Unbound | Configuration, private control/server keys and trust-anchor state. Device/chroot nodes and cache are reproducible; the mixed runtime `var` role requires a service-aware selection rather than guessing its contents. |
-| Music Assistant | Provider identities, authentication and private app state, including consistent SQLite/native artifacts. A backup test must not issue playback/player commands. |
-| PegaProx | Config, encryption key/accounts and coherent encrypted SQLite/state. Application logs are excluded; database files alone do not restore the key. |
-| CloudBeaver | Workspace, saved connections/private settings and required generated-account custody. Managed database contents belong to their native database producers. |
-| Traefik | ACME account/certificate material, owned static/dynamic configuration and required provider/trust inputs. Preserve renewal/account identity; recompilable public route definitions are a separate rebuild input. |
-| Zabbix | PostgreSQL recovery plus owned runtime configuration, agent PSKs, Proxmox token/trust and required Influx data when selected. No per-guest credential rotation is implied. |
-| WiNet | Owned options/runtime configuration and required inverter/MQTT credentials. This profile declares no separate storage volume; it does not imply the configuration is credential-free. |
+| Home Assistant | Preserve configuration, `.storage`, authentication, fabric and pairing records, other private state, compatible custom integrations and patches, and selected media. Recover an external recorder separately when selected. An existing SQLite database needs consistent capture. |
+| Node-RED | Preserve flows, credentials, the credential-encryption key, settings, modules and persistent context from one usable generation. Keep private API and OpenID Connect inputs independently recoverable when the guest does not retain them. |
+| Bitwarden | `/etc/bitwarden` includes attachments and application protection files. Match it to the MariaDB generation and required environment and encryption files; a database-only copy cannot recover the vault. Logs are excluded. |
+| Authentik | Preserve the matching PostgreSQL generation, secret key, media, custom templates, certificates and compatible Redis state. Stop the app’s Redis and Authentik services before capture; copying a running Redis directory does not preserve a coherent state. |
+| MQTT | Preserve broker configuration, passwords and certificates, retained messages, durable sessions and quality-of-service persistence. Use a capture procedure that keeps the broker’s state consistent; do not publish synthetic device commands as a backup test. |
+| MQTT Explorer | Preserve saved connections and user-interface state, plus the separately managed broker account. Capturing the GUI does not back up the broker. |
+| Zigbee2MQTT | Preserve keys, devices, groups, databases and state, together with existing coordinator backups, hardware and firmware identity, and backup age. Routine capture must not issue radio or non-volatile-memory commands, reset the coordinator or activate a duplicate coordinator. |
+| Pi-hole | Recovery needs Teleporter or native exports and consistently captured configuration, SQLite databases and private state. The optional query-history volume is excluded by default and does not replace configuration recovery. Capturing the configuration requires explicit permission to pause the app’s services; do not assume DNS can be interrupted. |
+| Unbound | Preserve configuration, private control and server keys, and trust-anchor state. Device nodes, chroot nodes and cache can be rebuilt. The mixed runtime `var` role needs capture that accounts for the service’s changing state; do not guess which files matter. |
+| Music Assistant | Preserve provider identities, authentication and private app state, including consistent SQLite or native artifacts. A backup test must not issue playback or player commands. |
+| PegaProx | Preserve configuration, encryption keys, accounts and consistently captured encrypted SQLite data and other state. Application logs are excluded; database files alone cannot restore the key. |
+| CloudBeaver | Preserve the workspace, saved connections, private settings and ownership records for generated accounts. Managed database contents must be backed up by their native database producers. |
+| Traefik | Preserve ACME accounts and certificates, managed static and dynamic configuration, and required provider and trust inputs. Keep the renewal and account identities. Public route definitions that can be regenerated are separate rebuild inputs. |
+| Zabbix | Preserve the PostgreSQL recovery set, managed runtime configuration, agent pre-shared keys, Proxmox token and trust inputs, and required InfluxDB data when selected. Recovery does not imply rotating each guest’s credentials. |
+| WiNet | Preserve managed options and runtime configuration, plus the required inverter and MQTT credentials. This profile has no separate storage volume; it still has protected configuration. |
 
-Database-only copies, one online SQLite export, file integrity and a successful
-PBS upload each prove different things. None alone proves a matched application
-restore. Site integration must establish coherent generations and independently
-recoverable secret/key custody.
+Database-only copies, one SQLite export taken while it is running, file-integrity checks and a successful PBS upload establish different facts. None alone proves that the related application and database can be restored together. Site verification must establish matching generations and independently recoverable credentials and keys. The profile’s capture classification does not claim that every vendor recovery export or service restore has already been performed.
 
 ## Exact profile storage dispositions
 
-Every registered variant is listed below. Paths are application mount targets,
-not site allocations; the compiler derives the real source from each binding.
+Every registered variant is listed below. Paths are application mount targets, not site allocations; the compiler derives the real source from each binding.
 
 ### authentik
 
@@ -241,4 +231,3 @@ No declared storage roles. Preserve the individually owned runtime inputs and th
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |
 | `data` — `/app/data` | state | application-export |
-

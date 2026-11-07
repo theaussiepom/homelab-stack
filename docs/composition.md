@@ -1,14 +1,14 @@
 # Use and extend the library
 
-This entry has moved into the [documentation suite](README.md).
+Start with [Design your homelab](guides/design-your-homelab.md) to turn desired services and Proxmox facts into a complete personalised configuration. The [documentation suite](README.md) connects that journey to component references and advanced operations.
 
 ## Use a profile
 
-Read [Compose a site](guides/compose-a-site.md), then the [profile catalogue](reference/README.md) for exact required and conditional bindings.
+Choose a supported service in [Design your homelab](guides/design-your-homelab.md#1-start-with-the-services-you-want). When extending an existing source, use [Compose a site](guides/compose-a-site.md) and the [profile catalogue](reference/README.md) for exact required and conditional bindings.
 
 ## Bind a connection
 
-[Connect apps](guides/connect-apps.md) explains value references, explicit readiness, accounts, transport and separately selected access policy. [Multiple interfaces](guides/multiple-interfaces.md) explains the NIC/role/listener/endpoint chain.
+[Connect apps](guides/connect-apps.md) explains value references, explicit readiness, accounts, transport and separately selected access policy. [Multiple interfaces](guides/multiple-interfaces.md) explains how guest interfaces, app roles, listeners and endpoints connect.
 
 ## Add a reusable profile
 
@@ -16,4 +16,4 @@ Read [Compose a site](guides/compose-a-site.md), then the [profile catalogue](re
 
 ## Generate the selected composition
 
-Follow [First configuration](guides/first-configuration.md) for fully defined source commands and [Testing](testing.md) for the complete gates. The consumer generates from its own site; the starter is not an installed graph.
+Follow [Design your homelab](guides/design-your-homelab.md#6-check-the-configuration-and-inspect-its-result) to compile and inspect your edited copy, or [First configuration](guides/first-configuration.md) for the unchanged example. [Testing](testing.md) contains the complete library gates. Generate the deployment files from your own site configuration. The starter describes a synthetic example, not your installed services.
