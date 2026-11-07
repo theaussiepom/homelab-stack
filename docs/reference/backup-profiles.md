@@ -2,7 +2,7 @@
 
 [Reference index](README.md) · [Configure PBS backups](../backup.md) · [Application recovery coverage](backup-coverage.md)
 
-The `pbs-client` profile selects the Proxmox Backup Client and lists guest configuration that its recovery inventory must include. It does not create a PBS server, supply credentials or install a schedule on its own. The site chooses the profile and, when ready, supplies an operational job through the [framework backup contract](https://github.com/theaussiepom/homelab/blob/015e202a99037f642671c20ead2acb8eb972a331/docs/reference/backup.md).
+The `pbs-client` profile selects the Proxmox Backup Client and lists guest configuration that its recovery inventory must include. It does not create a PBS server, supply credentials or install a schedule on its own. The site chooses the profile and, when ready, supplies an operational job through the [framework backup contract](https://github.com/theaussiepom/homelab/blob/693c6ce4126ab31d53ee992457bd5c45c1398cea/docs/reference/backup.md).
 
 ## Selection and field meaning
 
@@ -14,7 +14,7 @@ This library registers one backup profile in [stack.json](../../stack.json), usi
 | `software` | Required nonempty list of unique software IDs. The selected definitions must provide exactly one versioned `proxmox-backup-client` package. This profile selects the [shared PBS software definition](software-and-runtime.md#registration-software-pbs-client). |
 | `configuration` | Required named map, which may be empty. Each entry has a required canonical absolute `path` other than `/` and a required `kind` of `file` or `directory`. These are guest recovery paths, not files read during compilation. |
 
-The [configuration records](#declaration-configuration) below select the hostname, hosts file and SSH directory. When root monitoring is also selected, the framework adds its managed Zabbix agent configuration, pre-shared key and ownership receipt. The [framework profile rules](https://github.com/theaussiepom/homelab/blob/015e202a99037f642671c20ead2acb8eb972a331/docs/reference/backup.md#backup-profiles) define those reserved paths and reject conflicting selections.
+The [configuration records](#declaration-configuration) below select the hostname, hosts file and SSH directory. When root monitoring is also selected, the framework adds its managed Zabbix agent configuration, pre-shared key and ownership receipt. The [framework profile rules](https://github.com/theaussiepom/homelab/blob/693c6ce4126ab31d53ee992457bd5c45c1398cea/docs/reference/backup.md#backup-profiles) define those reserved paths and reject conflicting selections.
 
 ## Complete example and deployment effects
 
@@ -22,11 +22,11 @@ The [complete operational site](../../site.backup.example.yaml) and its [guest d
 
 At first deployment, `Prepare` installs the selected client software. The `PBS agent` step records recovery coverage and, if a job is selected, installs its protected worker inputs and controller schedule. It does not execute a backup during deployment. Before enabling an operational job, prepare and review the existing server namespaces, keys, credentials, network access and any permission to pause services.
 
-Later deployments preserve the existing credentials, group and member identities, successful recovery records and unresolved failure holds. Changed coverage becomes a new protected input generation. A previously commissioned operational job cannot be removed or reduced to preparation only through an ordinary update. Follow [later-deployment and retirement rules](https://github.com/theaussiepom/homelab/blob/015e202a99037f642671c20ead2acb8eb972a331/docs/reference/backup.md#later-deployments-and-retirement); this contract provides no automatic retirement executor. Successful source checks do not verify capture, readback or a service restore.
+Later deployments preserve the existing credentials, group and member identities, successful recovery records and unresolved failure holds. Changed coverage becomes a new protected input generation. A previously commissioned operational job cannot be removed or reduced to preparation only through an ordinary update. Follow [later-deployment and retirement rules](https://github.com/theaussiepom/homelab/blob/693c6ce4126ab31d53ee992457bd5c45c1398cea/docs/reference/backup.md#later-deployments-and-retirement); this contract provides no automatic retirement executor. Successful source checks do not verify capture, readback or a service restore.
 
 ## Declaration records
 
-These are all supplied fields in [backup/pbs-client.yaml](../../backup/pbs-client.yaml) after the loader removes `schema` and `kind`. `object` introduces nested fields. These are reusable definition values; the site supplies only the controls allowed by the [backup contract](https://github.com/theaussiepom/homelab/blob/015e202a99037f642671c20ead2acb8eb972a331/docs/reference/backup.md#syntax). [Declaration records](declaration-records.md) explains the notation and source comparison.
+These are all supplied fields in [backup/pbs-client.yaml](../../backup/pbs-client.yaml) after the loader removes `schema` and `kind`. `object` introduces nested fields. These are reusable definition values; the site supplies only the controls allowed by the [backup contract](https://github.com/theaussiepom/homelab/blob/693c6ce4126ab31d53ee992457bd5c45c1398cea/docs/reference/backup.md#syntax). [Declaration records](declaration-records.md) explains the notation and source comparison.
 
 | Declaration path | Selected value |
 | --- | --- |
