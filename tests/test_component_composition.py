@@ -21,7 +21,27 @@ sys.path[:0] = [str(ROOT / 'tests'), str(ROOT)]
 class ComponentCompositionTests(unittest.TestCase):
     def test_complete_cloudflare_example_and_scalar_workflow_binding(self):
         import workflows
-        value = component_sources.site(ROOT / 'examples/catalogue/cloudflare-ingress.yaml')[0]
+        import re, yaml
+        value = component_sources.site(ROOT / 'examples/catalogue/edge-management.yaml')[0]
+        page=(ROOT/'docs/examples/cloudflare-ingress.md').read_text()
+        fragment=yaml.safe_load(re.findall(r'<!-- example: cloudflare-policy -->\n```yaml\n(.*?)```',page,re.S)[0])
+        value['apps']['edge']['secrets'].update(fragment['apps']['edge']['secrets'])
+        value['policies']['middlewares'].update(fragment['policies']['middlewares'])
+        # RFC1918 addresses are test-only prerequisites, never public site allocations.
+        value['policies']['middlewares']['trusted_clients']={'type':'ip-allow-list','ranges':['10.222.0.0/16']}
+        value['policies']['middlewares']['headers']={'type':'default-headers'}
+        value['secret_sources']['edge_origin_token']={'type':'file','path':'/run/example/retained-origin-token'}
+        value['domains']={'manager':'manager.example.invalid'}
+        value['policies']['tls']={'public':{'type':'acme','resolver':'letsencrypt'}}
+        value['exposures']={'manager':{'type':'http','endpoint':{'app':'manager','endpoint':'web'},'domain':'manager',
+            'ingress':{'app':'edge','endpoint':'https'},'tls':'public','middlewares':['cloudflare_public','headers']}}
+        value['policies']['network']['proxy_backend']={'rules':[{'direction':'out','proto':'tcp',
+            'destination':{'endpoint':'backend'},'port':{'endpoint':'backend'},'comment':'Selected proxy backend'}]}
+        value['policies']['network']['proxy_client']={'rules':[{'direction':'in','proto':'tcp','source':{'endpoint':'proxy'},
+            'destination':{'endpoint':'backend'},'port':{'endpoint':'backend'},'comment':'Selected reverse proxy'}]}
+        value['guests']['edge']['network_policy'].append({'policy':'proxy_backend','endpoints':{'backend':{'app':'manager','endpoint':'web'}}})
+        value['guests']['manager']['network_policy'].append({'policy':'proxy_client','endpoints':{
+            'backend':{'app':'manager','endpoint':'web'},'proxy':{'app':'edge','endpoint':'https'}}})
         plan = self.plan(value)
         edge = plan.resolved['apps']['edge']
         self.assertTrue(edge['settings']['cloudflare'])
@@ -29,7 +49,7 @@ class ComponentCompositionTests(unittest.TestCase):
         routes = plan.resolved['routes']['edge']
         self.assertEqual(routes['manager']['middlewares'], ['cloudflare_public', 'headers'])
         runtime = component_lower.runtime_config(plan, 'edge')['applications']['edge']
-        self.assertTrue({'cloudflare.go', 'cloudflare-go.mod', 'cloudflare-LICENSE', 'cloudflare-manifest.yml'} <= set(runtime['runtime_files']['files']))
+        self.assertTrue({'cloudflare-origin-token', 'cloudflare.go', 'cloudflare-go.mod', 'cloudflare-LICENSE', 'cloudflare-manifest.yml'} <= set(runtime['runtime_files']['files']))
         value['secret_sources']['edge_origin_token'] = {'type': 'environment', 'name': 'ORIGIN_TOKEN', 'workflow_secret': 'ORIGIN_EDGE'}
         self.plan(value)
         models = workflows.models(ROOT, site_source=self.source)

@@ -25,4 +25,4 @@ The [complete profile-composition index](../../examples/catalogue/README.md) map
 
 ## Cloudflare ingress
 
-[`cloudflare-ingress.yaml`](../../examples/catalogue/cloudflare-ingress.yaml) is a complete retained example with the framework-owned socket-source gate, protected origin-token reference and explicit backend access. Internal clients remain independently allowlisted. Deploy middleware and internal route restrictions before any later frontend firewall opening; source compilation does not verify Cloudflare, TLS or application acceptance.
+The [Cloudflare policy fragment](cloudflare-ingress.md) extends the complete retained edge-management base with site-owned internal clients and a protected origin-token binding. Its real compiler test supplies those prerequisites and backend permissions. Deploy middleware and internal route restrictions before any later frontend firewall opening; source compilation does not verify Cloudflare, TLS or application acceptance.
