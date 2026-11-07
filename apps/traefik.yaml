@@ -73,6 +73,8 @@ secrets:
     required: false
   proxmox_token:
     required: false
+  cloudflare_origin_token:
+    required: false
 monitoring:
   profile: docker-agent
 backup:

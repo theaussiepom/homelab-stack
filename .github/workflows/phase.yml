@@ -44,6 +44,8 @@ name: Guest phase
         required: false
       traefik_cloudflare_dns_token:
         required: false
+      traefik_cloudflare_origin_token:
+        required: false
       traefik_proxmox_token:
         required: false
       winet_options:
@@ -54,7 +56,7 @@ permissions:
   contents: read
 jobs:
   run:
-    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@0094e1c5fc0b8c461e3a7be98de7fb6203a17b45
+    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@015e202a99037f642671c20ead2acb8eb972a331
     with:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
@@ -74,6 +76,7 @@ jobs:
       node_red_api_token: ${{ secrets.node_red_api_token }}
       pegaprox_database_key: ${{ secrets.pegaprox_database_key }}
       traefik_cloudflare_dns_token: ${{ secrets.traefik_cloudflare_dns_token }}
+      traefik_cloudflare_origin_token: ${{ secrets.traefik_cloudflare_origin_token }}
       traefik_proxmox_token: ${{ secrets.traefik_proxmox_token }}
       winet_options: ${{ secrets.winet_options }}
       zabbix_database_password: ${{ secrets.zabbix_database_password }}

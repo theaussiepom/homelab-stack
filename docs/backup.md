@@ -14,7 +14,7 @@ backup:
 
 This library registers one [pbs-client profile](reference/backup-profiles.md). `backup: null`, `backup: {}` and `backup: {profile: pbs-client}` select the same profile. The property’s presence enables client preparation; `backup: true` and `backup: false` are rejected. Omitting the root property adds no client phase and leaves existing provider volume defaults unchanged. Apps keep their independently selected profiles and placement.
 
-Bare profile selection installs no timer and assumes no destination, credential or permission to interrupt a service. Add `backup.job` only when its inputs are prepared. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/backup.md) defines validation, generated deployment inputs, coordinated capture and execution. The library owns its client package and repository selection and each app’s recovery classification.
+Bare profile selection installs no timer and assumes no destination, credential or permission to interrupt a service. Add `backup.job` only when its inputs are prepared. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/015e202a99037f642671c20ead2acb8eb972a331/docs/reference/backup.md) defines validation, generated deployment inputs, coordinated capture and execution. The library owns its client package and repository selection and each app’s recovery classification.
 
 ## Run the complete offline example
 
@@ -78,7 +78,7 @@ Guests disabled for deployment remain in the source coverage and operational gro
 
 ## Bind an operational job
 
-Follow the [complete synthetic job](../site.backup.example.yaml) and its [dedicated-volume guest](../examples/backup/guests/resolver.yaml). The framework documents [every nested job field](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/backup.md#operational-job). Reuse existing external endpoints, guest interfaces, volumes and file-secret sources instead of repeating addresses, paths or credentials.
+Follow the [complete synthetic job](../site.backup.example.yaml) and its [dedicated-volume guest](../examples/backup/guests/resolver.yaml). The framework documents [every nested job field](https://github.com/theaussiepom/homelab/blob/015e202a99037f642671c20ead2acb8eb972a331/docs/reference/backup.md#operational-job). Reuse existing external endpoints, guest interfaces, volumes and file-secret sources instead of repeating addresses, paths or credentials.
 
 - Select one client for every configured guest, including members disabled for deployment. Each needs its own scoped PBS token identity and existing encryption key.
 - Select a dedicated staging volume with no app bindings and no `backup:` marker. Its capacity must be at least four times the per-generation byte limit. On an existing HomeLab-managed guest, append a new slot after the existing volumes; do not reorder or resize existing storage. Checks before applying the change reject a foreign mount, symlink or nonempty staging path.
@@ -124,7 +124,7 @@ Deployment installs the protected worker inputs and controller schedule; it does
 
 After the controller accepts every member’s deployment records, a worker’s failed check before capture leaves evidence under that run’s UUID without opening a capture window. A later scheduled run may try those checks again with a new UUID. Earlier lock or deployment-record checks can stop the run before its UUID directory exists.
 
-Once a capture window opens, a failed run keeps any remaining controller holds. Pending markers and recovery files still present on failed members remain for investigation. Members that have already verified their archives may have released their temporary copies and local pending markers before the group fails. No automatic recovery, replay or clearing of remaining holds and markers is installed. The client does not prune remote snapshots, earlier failures or the last successful recovery generation. Follow the framework’s [execution and failure rules](https://github.com/theaussiepom/homelab/blob/0094e1c5fc0b8c461e3a7be98de7fb6203a17b45/docs/reference/backup.md#coordinated-execution-and-failure-behavior).
+Once a capture window opens, a failed run keeps any remaining controller holds. Pending markers and recovery files still present on failed members remain for investigation. Members that have already verified their archives may have released their temporary copies and local pending markers before the group fails. No automatic recovery, replay or clearing of remaining holds and markers is installed. The client does not prune remote snapshots, earlier failures or the last successful recovery generation. Follow the framework’s [execution and failure rules](https://github.com/theaussiepom/homelab/blob/015e202a99037f642671c20ead2acb8eb972a331/docs/reference/backup.md#coordinated-execution-and-failure-behavior).
 
 ## Invalid cases
 
