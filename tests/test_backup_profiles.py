@@ -190,5 +190,24 @@ class BackupProfileTests(unittest.TestCase):
                 self.assertEqual(component_workflows.model(planned), component_workflows.model(original))
                 self.assertGreaterEqual(job['staging']['size_bytes'], 4*expected['max_bytes'])
 
+    def test_operational_example_keeps_runtime_storage_qualification_separate_from_compilation(self):
+        """Bind the example's storage ID to the shared runtime floor without a target call."""
+        source, _ = component_sources.site(ROOT/'site.backup.example.yaml')
+        plan = component_plan.resolve(ROOT, ROOT/'site.backup.example.yaml')
+        cfg = json.loads(component_packet.lower_guest(plan, 'resolver')['files']['site.json'])
+        storage_id = cfg['guest']['storage_id']
+        self.assertEqual(storage_id, source['storage'][source['guests']['resolver']['root_storage']]['pool'])
+        self.assertEqual(cfg['app']['backup']['job']['staging']['path'],
+                         source['guests']['resolver']['volumes']['backup-stage']['path'])
+        guide = (ROOT/'docs/backup.md').read_text()
+        self.assertIn('non-shared `zfspool`', guide)
+        self.assertIn('configure.md#prepare-storage-for-an-already-managed-guest', guide)
+        import backup_staging
+        qualified = {'storage': storage_id, 'type': 'zfspool', 'shared': 0, 'pool': 'example-zfs/data'}
+        self.assertEqual(backup_staging.storage([qualified], storage_id),
+                         ('example-zfs/data', '/example-zfs/data'))
+        with self.assertRaisesRegex(ValueError, 'Bind an isolated declared ZFS pool'):
+            backup_staging.storage([{**qualified, 'type': 'lvmthin'}], storage_id)
+
 
 if __name__ == '__main__': unittest.main()
