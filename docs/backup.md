@@ -14,9 +14,9 @@ backup:
 
 This library registers one [pbs-client profile](reference/backup-profiles.md). `backup: null`, `backup: {}` and `backup: {profile: pbs-client}` select the same profile. Root presence selects shared settings but installs nothing on its own; `backup: true` and `backup: false` are rejected. Add the same bare `backup:` marker to each guest you want to enroll. Unenrolled guests keep their existing software and provider volume defaults. Apps keep their independently selected profiles and placement.
 
-Guest enrollment without a job installs no timer and assumes no destination, credential or permission to interrupt a service. Add `backup.job` only when its inputs are prepared. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/67ece252410027df38e2a82d5293149a018fce67/docs/reference/backup.md) defines validation, generated deployment inputs, coordinated capture and execution. The library owns its client package and repository selection and each app’s recovery classification.
+Guest enrollment without a job installs no timer and assumes no destination, credential or permission to interrupt a service. Add `backup.job` only when its inputs are prepared. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd/docs/reference/backup.md) defines validation, generated deployment inputs, coordinated capture and execution. The library owns its client package and repository selection and each app’s recovery classification.
 
-Before deploying, follow the framework’s [complete backup setup guide](https://github.com/theaussiepom/homelab/blob/67ece252410027df38e2a82d5293149a018fce67/docs/backup/README.md). It covers the verified datastore, independent recovery key, management token, first and repeated CD, and isolated restore. The procedures belong to the framework; this page explains this library’s selections.
+Before deploying, follow the framework’s [complete backup setup guide](https://github.com/theaussiepom/homelab/blob/e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd/docs/backup/README.md). It covers the verified datastore, independent recovery key, management token, first and repeated CD, and isolated restore. The procedures belong to the framework; this page explains this library’s selections.
 
 ## Run the complete offline example
 
@@ -80,7 +80,7 @@ This release changes the backup contract. Earlier configurations could enroll gu
 
 Before selecting this release, inventory whether the old configuration was merely compiled or actually commissioned. For an uncommissioned configuration, prepare the new inputs, add the intended guest markers, replace client entries with staging/interface bindings, compile the complete site and inspect the resulting membership before CD. Do not infer absence of live ownership from an empty local checkout.
 
-For an already commissioned legacy job, **retain its working source pins, schedule, client keys, tokens, namespaces, snapshots and protected ownership records**. There is no automatic conversion or supported in-place key import in this release. Do not remove old fields and let CD generate new keys over an existing installation; do not clear records, disable protection or delete old namespaces to satisfy validation. Establish and independently test a separately reviewed environmental handover before upgrading that installation. It must preserve access to old generations and prove replacement backups and recovery before retiring any old schedule. Until that handover exists, remain on the prior supported combination. The [backup setup guide](https://github.com/theaussiepom/homelab/blob/67ece252410027df38e2a82d5293149a018fce67/docs/backup/README.md) describes new managed enrollment, not a legacy migration executor.
+For an already commissioned legacy job, **retain its working source pins, schedule, client keys, tokens, namespaces, snapshots and protected ownership records**. There is no automatic conversion or supported in-place key import in this release. Do not remove old fields and let CD generate new keys over an existing installation; do not clear records, disable protection or delete old namespaces to satisfy validation. Establish and independently test a separately reviewed environmental handover before upgrading that installation. It must preserve access to old generations and prove replacement backups and recovery before retiring any old schedule. Until that handover exists, remain on the prior supported combination. The [backup setup guide](https://github.com/theaussiepom/homelab/blob/e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd/docs/backup/README.md) describes new managed enrollment, not a legacy migration executor.
 
 ### Repeating managed deployments
 
@@ -90,13 +90,32 @@ Enrolled guests disabled for deployment remain in the source coverage and operat
 
 ## Bind an operational job
 
-Follow the [complete synthetic job](../site.backup.example.yaml) and its [dedicated-volume guest](../examples/backup/guests/resolver.yaml). The framework documents [every nested job field](https://github.com/theaussiepom/homelab/blob/67ece252410027df38e2a82d5293149a018fce67/docs/reference/backup.md#operational-job). Reuse existing external endpoints, guest interfaces and volumes instead of repeating addresses or paths. Bind the management token through the protected `backup` Environment and the recovery public PEM through a site-relative file. CD creates and preserves client credentials; do not author per-client token or encryption-key references.
+Follow the [complete synthetic job](../site.backup.example.yaml) and its [dedicated-volume guest](../examples/backup/guests/resolver.yaml). The framework documents [every nested job field](https://github.com/theaussiepom/homelab/blob/e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd/docs/reference/backup.md#operational-job). Reuse existing external endpoints, guest interfaces and volumes instead of repeating addresses or paths. Bind the management token through the protected `backup` Environment and the recovery public PEM through a site-relative file. CD creates and preserves client credentials; do not author per-client token or encryption-key references.
 
 - Select one client for every enrolled guest, including members disabled for deployment. CD derives its stable namespace/account identity, creates its native encryption key once, and verifies saved ownership on subsequent deployments. The management token and recovery private key are never guest inputs.
 - Select a dedicated staging volume with no app bindings and no `backup:` marker. Its capacity must be at least four times the per-generation byte limit. On an existing HomeLab-managed guest, append a new slot after the existing volumes; do not reorder or resize existing storage. Checks before applying the change reject a foreign mount, symlink or nonempty staging path.
 - Select the backup interface and declare network access to the PBS endpoint. Before capture, the runtime checks that the route uses the selected device and source address; it rejects fallback to the management path.
 - Permit pauses only for required apps. List every MariaDB producer in `database_lock` and each InfluxDB producer and token reference in `influx_tokens`. Existing database connections supply recovery associations without adding deployment dependencies.
 - Choose UTC `hourly`, `daily` or `HH:MM` scheduling, with limits on jitter, file count, bytes and duration. One controller timer coordinates all members under the existing deployment locks. It reads each member’s actually completed deployment; skipping an app in the latest deployment does not remove its protection.
+
+## Size clients independently
+
+Keep required defaults in `backup.job.limits`. A client may override `max_bytes`, `max_files` or both; omitted fields inherit those defaults. The phase timeout remains shared and cannot be overridden per client. The [framework field reference](https://github.com/theaussiepom/homelab/blob/e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd/docs/reference/backup.md#backup-client-limits) owns the accepted bounds and the [complete mixed-client example](https://github.com/theaussiepom/homelab/blob/e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd/docs/examples/backup/README.md#size-clients-independently) demonstrates an overriding member alongside an inheriting member.
+
+This is a **replacement `backup.job.clients` fragment** for the [complete operational site](../site.backup.example.yaml). It gives its resolver a 64 MiB byte limit and 20,000-entry limit while keeping the site's shared 300-second timeout. The existing 1 GiB staging volume exceeds four times the new byte limit. Replace only that named map, then rerun the [offline check](#run-the-complete-offline-example); no other site fields or protected inputs need to change for this synthetic variation.
+
+```yaml
+resolver:
+  staging_volume: backup-stage
+  interface: primary
+  limits:
+    max_bytes: 67108864
+    max_files: 20000
+```
+
+Size real limits from complete native database exports, selected-file archives and metadata, with growth allowance. Database-directory usage is not an export measurement. The dedicated staging volume must be at least four times that client's effective byte limit; runtime checks three times the limit free before capture. These checks do not reserve host pool capacity or prune retained history. Follow the [capacity preparation guide](https://github.com/theaussiepom/homelab/blob/e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd/docs/backup/configure.md#size-each-client-and-review-later-changes) before using real values.
+
+For later deployments, changing a root default affects clients inheriting it; removing an override restores inheritance. Enable every affected guest for its matching deployment and complete whole-group Backup activation. A disabled member's previous coverage cannot stand in for changed limits. Capacity edits preserve namespace, token and encryption-key identities and do not authorize cleanup or replay of failed operations. The unchanged canonical site continues to inherit all root limits.
 
 ## Operational job example
 
@@ -138,7 +157,7 @@ Deployment installs the protected worker inputs and controller schedule; it does
 
 After the controller accepts every member’s deployment records, a worker’s failed check before capture leaves evidence under that run’s UUID without opening a capture window. A later scheduled run may try those checks again with a new UUID. Earlier lock or deployment-record checks can stop the run before its UUID directory exists.
 
-Once a capture window opens, a failed run keeps any remaining controller holds. Pending markers and recovery files still present on failed members remain for investigation. Members that have already verified their archives may have released their temporary copies and local pending markers before the group fails. No automatic recovery, replay or clearing of remaining holds and markers is installed. The client does not prune remote snapshots, earlier failures or the last successful recovery generation. Follow the framework’s [execution and failure rules](https://github.com/theaussiepom/homelab/blob/67ece252410027df38e2a82d5293149a018fce67/docs/reference/backup.md#coordinated-execution-and-failure-behavior).
+Once a capture window opens, a failed run keeps any remaining controller holds. Pending markers and recovery files still present on failed members remain for investigation. Members that have already verified their archives may have released their temporary copies and local pending markers before the group fails. No automatic recovery, replay or clearing of remaining holds and markers is installed. The client does not prune remote snapshots, earlier failures or the last successful recovery generation. Follow the framework’s [execution and failure rules](https://github.com/theaussiepom/homelab/blob/e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd/docs/reference/backup.md#coordinated-execution-and-failure-behavior).
 
 ## Invalid cases
 
