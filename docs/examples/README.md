@@ -21,7 +21,7 @@ The [complete profile-composition index](../../examples/catalogue/README.md) map
 
 ## PBS client preparation
 
-[`site.backup.example.yaml`](../../site.backup.example.yaml) is a complete synthetic resolver site selecting the root backup feature. It compiles the client software, recovery inventory, PBS agent step and a fully bound operational schedule without contacting a server. Deployment requires the real protected inputs; compilation does not run a backup. See [the guide](../backup.md).
+[`site.backup.example.yaml`](../../site.backup.example.yaml) is a complete synthetic resolver site selecting shared root backup settings and explicitly enrolling its guest. It compiles the client software, recovery inventory, PBS agent step and a fully bound operational schedule without contacting a server. Deployment requires the real protected inputs; compilation does not run a backup. See [the guide](../backup.md).
 
 ## Cloudflare ingress
 

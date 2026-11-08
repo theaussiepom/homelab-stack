@@ -16,3 +16,5 @@
 - Validate against the library-selected real framework. Report source, integration, hosted enforcement, deployment and service evidence separately.
 
 - Classify every app storage role in [the recovery catalogue](docs/reference/backup-coverage.md). Reuse bound paths; keep native capture implementations in the framework. Keep operational examples complete and tested. Sites supply PBS destinations, keys, service-pause permissions and verification on their targets.
+
+- Keep backup examples aligned with the selected framework’s complete setup guide. Root settings are shared; guest `backup:` enrolls clients. Use synthetic public recovery keys only, and keep native setup, independent key custody and actual restore evidence distinct from compilation.

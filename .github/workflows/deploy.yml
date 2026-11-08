@@ -81,14 +81,25 @@ jobs:
         persist-credentials: false
       name: Get tools
     - name: Prepare config
-      run: "umask 077\nconfig_env=$(mktemp -d \"$RUNNER_TEMP/homelab-config-XXXXXX\")\npython3 -m venv \"$config_env\"\npython3 - \"$config_env/pyyaml.lock\" <<'PYCODE'\nfrom pathlib import Path\nimport re, sys\nlock = Path('framework-source/requirements.lock.txt')\nif lock.is_symlink() or not lock.is_file() or lock.stat().st_size > 1024 * 1024:\n    raise SystemExit('Use the selected framework dependency lock')\nlines = lock.read_text().splitlines()\nstarts = [i for i, line in enumerate(lines) if line.startswith('pyyaml==')]\nif len(starts) != 1:\n    raise SystemExit('Use one exact hash-locked authored config dependency')\nfirst = starts[0]\nblock = [lines[first]]\nfor line in lines[first + 1:]:\n    if not line.startswith('    --hash='): break\n    block.append(line)\nif (not re.fullmatch(r'pyyaml==[0-9]+(?:\\.[0-9]+)+ \\\\', block[0]) or len(block) < 2\n        or any(not re.fullmatch(r'    --hash=sha256:[0-9a-f]{64} \\\\', line) for line in block[1:-1])\n        or not re.fullmatch(r'\
-        \    --hash=sha256:[0-9a-f]{64}', block[-1])):\n    raise SystemExit('Use one exact hash-locked authored config dependency')\nPath(sys.argv[1]).write_text('\\n'.join(block) + '\\n')\nPYCODE\n\"$config_env/bin/python\" -m pip --isolated install --disable-pip-version-check --require-hashes --no-deps -r \"$config_env/pyyaml.lock\"\nprintf 'HOMELAB_CONFIG_PYTHON=%s/bin/python\\n' \"$config_env\" >> \"$GITHUB_ENV\"\n"
+      run: 'umask 077
+
+        config_env=$(mktemp -d "$RUNNER_TEMP/homelab-config-XXXXXX")
+
+        python3 -m venv "$config_env"
+
+        python3 framework-source/blueprints/config_environment.py "$config_env/compiler.lock"
+
+        "$config_env/bin/python" -m pip --isolated install --disable-pip-version-check --require-hashes --no-deps -r "$config_env/compiler.lock"
+
+        printf ''HOMELAB_CONFIG_PYTHON=%s/bin/python\n'' "$config_env" >> "$GITHUB_ENV"
+
+        '
     - name: Check guests
       id: selection
       env:
         DISABLED: ${{ inputs.disabled }}
         EXPECTED_MODEL: '{"dependencies": {"resolver": []}, "guest_order": ["resolver"], "guests": {"resolver": {"name": "example-resolver", "needs": ["selection"], "phases": [{"application": null, "id": "infrastructure", "inputs": {}, "name": "Infrastructure"}, {"application": null, "id": "preparation", "inputs": {}, "name": "Prepare"}, {"application": "recursive_dns", "id": "recursive_dns", "inputs": {}, "name": "Unbound"}], "workflow_secrets": []}}, "monitoring_guest": null}'
-      run: "\"$HOMELAB_CONFIG_PYTHON\" - <<'PYCODE'\nimport json, os, sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path('framework-source/blueprints').resolve()))\nimport compile as compiler\nimport component_workflows\nexpected = json.loads(os.environ['EXPECTED_MODEL'])\ndisabled = component_workflows.disabled_json(os.environ['DISABLED'])\nplan = compiler.resolve_plan(Path('stack-source'), compiler.site_path(Path('.')), disabled)\nactual = component_workflows.model(plan)\nactive = actual['guest_order']\nif not set(active) <= set(expected['guests']):\n    raise SystemExit('Regenerate the selected component workflow before enabling another guest')\nexpected['guest_order'] = active\nexpected['guests'] = {key: expected['guests'][key] for key in active}\nif actual != expected:\n    raise SystemExit('Regenerate the exact selected component workflow graph and scalar bindings')\nPYCODE\n"
+      run: "\"$HOMELAB_CONFIG_PYTHON\" - <<'PYCODE'\nimport json, os, sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path('framework-source/blueprints').resolve()))\nimport compile as compiler\nimport component_workflows\nexpected = json.loads(os.environ['EXPECTED_MODEL'])\ndisabled = component_workflows.disabled_json(os.environ['DISABLED'])\nplan = compiler.resolve_plan(Path('stack-source'), compiler.site_path(Path('.')), disabled)\nactual = component_workflows.model(plan)\nactive = actual['guest_order']\nif not set(active) <= set(expected['guests']):\n    raise SystemExit('Regenerate the selected component workflow before enabling another guest')\nexpected['guest_order'] = active\nexpected['guests'] = {key: expected['guests'][key] for key in active}\nif 'backup' in expected:\n    expected['backup']['needs'] = ['selection', *active]\nif actual != expected:\n    raise SystemExit('Regenerate the exact selected component workflow graph and scalar bindings')\nPYCODE\n"
   resolver:
     name: example-resolver
     needs:

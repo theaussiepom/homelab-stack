@@ -1,5 +1,6 @@
 schema: homelab-components-v1
 kind: guest
+backup:
 context: lab
 template: base
 lifecycle: fresh

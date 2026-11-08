@@ -191,6 +191,11 @@ class DocumentationConformance(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory).resolve() / 'site.json'
             source.write_text(json.dumps(value))
+            backup=value.get('backup')
+            if isinstance(backup,dict) and 'recovery_public_key' in backup:
+                public=source.parent/backup['recovery_public_key']['source']
+                public.parent.mkdir(parents=True)
+                public.write_bytes((ROOT/backup['recovery_public_key']['source']).read_bytes())
             plan = compiler.resolve_plan(ROOT, source, [])
             return plan, compiler.lower_plan(plan)
 
@@ -273,6 +278,9 @@ class DocumentationConformance(unittest.TestCase):
         for value in (selection['backup'], {}, {'profile': 'pbs-client'}):
             changed = copy.deepcopy(source)
             changed['backup'] = value
+            shared, _ = self.source_plan(changed)
+            self.assertNotIn('backup', shared.resolved['guests']['resolver'])
+            changed['guests']['resolver']['backup'] = None
             changed['guests']['resolver'].update(copy.deepcopy(volume))
             plan, packets = self.source_plan(changed)
             cfg = json.loads(packets['resolver']['files']['site.json'])

@@ -106,30 +106,31 @@ class BackupProfileTests(unittest.TestCase):
 
     def test_database_consumers_compile_as_one_complete_backup_group(self):
         source = yaml.safe_load((ROOT/'examples/catalogue/new-database-guis.yaml').read_text())
-        job = yaml.safe_load((ROOT/'site.backup.example.yaml').read_text())['backup']['job']
+        backup = yaml.safe_load((ROOT/'site.backup.example.yaml').read_text())['backup']
+        job = backup['job']
+        source['secret_sources']['pbs-management'] = {'type':'environment','name':'PBS_API_TOKEN'}
         source['external_endpoints']['pbs'] = {'protocol':'https','address':'192.0.2.50','port':8007}
         job['clients'] = {}
         for guest_id, guest in source['guests'].items():
+            guest['backup'] = None
             for volume in guest.get('volumes', {}).values():volume['backup'] = None
             volumes = guest.setdefault('volumes', {})
             volumes['backup-stage'] = {'storage':guest['root_storage'],'slot':max([v['slot'] for v in volumes.values()],default=-1)+1,
                 'path':'/srv/backup-stage','size_gib':1}
-            for role in ('password','key'):
-                source['secret_sources']['pbs-'+role+'-'+guest_id] = {'type':'file','path':'/run/example/pbs-'+role+'-'+guest_id}
-            job['clients'][guest_id] = {'auth_id':guest_id+'@pbs!backup',
-                'password':'pbs-password-'+guest_id,
-                'encryption_key':'pbs-key-'+guest_id,
-                'staging_volume':'backup-stage','interface':'primary'}
+            job['clients'][guest_id] = {'staging_volume':'backup-stage','interface':'primary'}
         source['backup'] = None
         with tempfile.TemporaryDirectory() as temporary:
             path=Path(temporary).resolve()/'site.yaml';path.write_text(yaml.safe_dump(source))
+            public=path.parent/backup['recovery_public_key']['source']
+            public.parent.mkdir(parents=True)
+            public.write_bytes((ROOT/backup['recovery_public_key']['source']).read_bytes())
             planned=component_plan.resolve(ROOT,path)
             inventories=[g['backup'] for g in planned.resolved['guests'].values()]
             job['capture'] = {'pause':[name for inv in inventories for name,app in inv['applications'].items()
                 if any(row.get('capture')=='application-export' for row in app['storage'].values())],
                 'database_lock':[name for name,app in planned.resolved['apps'].items() if app['adapter']=='mariadb'],
                 'influx_tokens':{}}
-            source['backup']={'job':job};path.write_text(yaml.safe_dump(source))
+            source['backup']=backup;path.write_text(yaml.safe_dump(source))
             from component_errors import ComponentError
             with self.assertRaisesRegex(ComponentError,'backup-database-producer'):
                 component_plan.resolve(ROOT,path)
