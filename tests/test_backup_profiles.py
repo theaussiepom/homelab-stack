@@ -1,5 +1,6 @@
 """Library choices and focused PBS composition; type failures belong upstream."""
 import hashlib
+import copy
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,7 @@ import component_plan
 import component_packet
 import component_sources
 import component_workflows
+from documentation_contracts import read_excerpt
 
 
 class BackupProfileTests(unittest.TestCase):
@@ -154,6 +156,38 @@ class BackupProfileTests(unittest.TestCase):
                 packet_associations.extend(row for app in cfg['app']['backup']['applications'].values()
                     for row in app['databases'])
             self.assertEqual({row['type']:row['target']['app'] for row in packet_associations},expected)
+
+    def test_documented_client_capacity_override_changes_only_effective_job_limits(self):
+        source, _ = component_sources.site(ROOT/'site.backup.example.yaml')
+        original = component_plan.resolve(ROOT, ROOT/'site.backup.example.yaml')
+        baseline = component_packet.lower_guest(original, 'resolver')
+        baseline_job = json.loads(baseline['files']['site.json'])['app']['backup']['job']
+        self.assertEqual(baseline_job['limits'], source['backup']['job']['limits'])
+        clients = read_excerpt((ROOT/'docs/backup.md').read_text(),
+                               'Size clients independently', yaml.safe_load)
+        self.assertEqual(set(clients), set(source['backup']['job']['clients']))
+        for inherit_files in (False, True):
+            changed = copy.deepcopy(source)
+            changed['backup']['job']['clients'] = copy.deepcopy(clients)
+            if inherit_files:
+                changed['backup']['job']['clients']['resolver']['limits'].pop('max_files')
+            with self.subTest(inherit_files=inherit_files), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary).resolve()
+                path = root/'site.yaml'
+                path.write_text(yaml.safe_dump(changed, sort_keys=False))
+                public = root/changed['backup']['recovery_public_key']['source']
+                public.parent.mkdir(parents=True)
+                public.write_bytes((ROOT/changed['backup']['recovery_public_key']['source']).read_bytes())
+                planned = component_plan.resolve(ROOT, path)
+                packet = component_packet.lower_guest(planned, 'resolver')
+                job = json.loads(packet['files']['site.json'])['app']['backup']['job']
+                expected = {**source['backup']['job']['limits'],
+                            **changed['backup']['job']['clients']['resolver']['limits']}
+                self.assertEqual(job['limits'], expected)
+                self.assertNotEqual(job['limits'], baseline_job['limits'])
+                self.assertEqual({**job, 'limits': baseline_job['limits']}, baseline_job)
+                self.assertEqual(component_workflows.model(planned), component_workflows.model(original))
+                self.assertGreaterEqual(job['staging']['size_bytes'], 4*expected['max_bytes'])
 
 
 if __name__ == '__main__': unittest.main()
