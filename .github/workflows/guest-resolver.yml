@@ -34,10 +34,10 @@ jobs:
     timeout-minutes: 135
     steps:
     - name: Setup
-      uses: theaussiepom/homelab/.github/actions/guest-setup@d1ac514096cc64f773743e319094b168def6727d
+      uses: theaussiepom/homelab/.github/actions/guest-setup@e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd
       timeout-minutes: 45
     - name: Infrastructure
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d1ac514096cc64f773743e319094b168def6727d
+      uses: theaussiepom/homelab/.github/actions/guest-phase@e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd
       timeout-minutes: 45
       with:
         guest: resolver
@@ -46,7 +46,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: Prepare
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d1ac514096cc64f773743e319094b168def6727d
+      uses: theaussiepom/homelab/.github/actions/guest-phase@e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd
       timeout-minutes: 45
       with:
         guest: resolver
@@ -55,7 +55,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: Unbound
-      uses: theaussiepom/homelab/.github/actions/guest-phase@d1ac514096cc64f773743e319094b168def6727d
+      uses: theaussiepom/homelab/.github/actions/guest-phase@e9f3a1f17b6a23bbdb09943f2d0411d3c5da85cd
       timeout-minutes: 45
       with:
         guest: resolver
