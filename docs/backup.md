@@ -6,15 +6,17 @@ HomeLab can prepare the Proxmox Backup Client in your guests and, with an explic
 
 ## Select client preparation
 
-Add the bare `backup` property at site root. This is a **site-root fragment**, not a complete site:
+Add the bare `backup` property at site root to select shared defaults. This is a **site-root fragment**, not a complete site:
 
 ```yaml
 backup:
 ```
 
-This library registers one [pbs-client profile](reference/backup-profiles.md). `backup: null`, `backup: {}` and `backup: {profile: pbs-client}` select the same profile. The property’s presence enables client preparation; `backup: true` and `backup: false` are rejected. Omitting the root property adds no client phase and leaves existing provider volume defaults unchanged. Apps keep their independently selected profiles and placement.
+This library registers one [pbs-client profile](reference/backup-profiles.md). `backup: null`, `backup: {}` and `backup: {profile: pbs-client}` select the same profile. Root presence selects shared settings but installs nothing on its own; `backup: true` and `backup: false` are rejected. Add the same bare `backup:` marker to each guest you want to enroll. Unenrolled guests keep their existing software and provider volume defaults. Apps keep their independently selected profiles and placement.
 
-Bare profile selection installs no timer and assumes no destination, credential or permission to interrupt a service. Add `backup.job` only when its inputs are prepared. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/015e202a99037f642671c20ead2acb8eb972a331/docs/reference/backup.md) defines validation, generated deployment inputs, coordinated capture and execution. The library owns its client package and repository selection and each app’s recovery classification.
+Guest enrollment without a job installs no timer and assumes no destination, credential or permission to interrupt a service. Add `backup.job` only when its inputs are prepared. The [selected framework backup contract](https://github.com/theaussiepom/homelab/blob/67ece252410027df38e2a82d5293149a018fce67/docs/reference/backup.md) defines validation, generated deployment inputs, coordinated capture and execution. The library owns its client package and repository selection and each app’s recovery classification.
+
+Before deploying, follow the framework’s [complete backup setup guide](https://github.com/theaussiepom/homelab/blob/67ece252410027df38e2a82d5293149a018fce67/docs/backup/README.md). It covers the verified datastore, independent recovery key, management token, first and repeated CD, and isolated restore. The procedures belong to the framework; this page explains this library’s selections.
 
 ## Run the complete offline example
 
@@ -25,11 +27,11 @@ Use the `FRAMEWORK`, `STACK` and `PYTHON` paths from [First configuration](guide
   --stack "$STACK" --site "$STACK/site.backup.example.yaml" --check
 ```
 
-The [complete synthetic resolver site](../site.backup.example.yaml) includes an operational job with a PBS endpoint, file-secret references, UTC schedule, explicit transfer policy and dedicated staging volume. Offline compilation requires no PBS server and opens no secret files. It checks the composition and generated deployment inputs; it does not install a schedule or execute a backup. The default `site.example.yaml` omits backup entirely and keeps its previous deployment behavior. Deploying the separate backup example requires replacing its invented inputs with the real, reviewed prerequisites.
+The [complete synthetic resolver site](../site.backup.example.yaml) includes an operational job with a PBS endpoint, public recovery-key fixture, management-secret reference, UTC schedule, explicit transfer policy and dedicated staging volume. Offline compilation requires no PBS server and opens no secret files. It checks the composition and generated deployment inputs; it does not install a schedule or execute a backup. The default `site.example.yaml` omits backup entirely and keeps its previous deployment behavior. Deploying the separate backup example requires replacing its invented inputs with the real, reviewed prerequisites.
 
 ## Protect managed volumes explicitly
 
-With root backup selected, add `backup:` to each managed volume that contains authoritative application data. The following is a **guest volume fragment**, not a site:
+With shared backup settings selected and the guest enrolled, add `backup:` to each managed volume that contains authoritative application data. The following is a **guest volume fragment**, not a site:
 
 ```yaml
 volumes:
@@ -46,13 +48,13 @@ volumes:
     size_gib: 2
 ```
 
-The generated native full-guest backup flags include `application` and exclude `cache`. A volume marker also accepts null or an empty object, but not a Boolean. App bindings reuse the declared paths; profiles do not repeat the site’s filesystem roots. With root backup selected, an authoritative app role cannot use an unmarked managed volume. This also applies to a native database’s engine volume, whose coherent database export is a separate requirement.
+The generated native full-guest backup flags include `application` and exclude `cache`. A volume marker also accepts null or an empty object, but not a Boolean. App bindings reuse the declared paths; profiles do not repeat the site’s filesystem roots. Within an enrolled guest, an authoritative app role cannot use an unmarked managed volume. This also applies to a native database’s engine volume, whose coherent database export is a separate requirement.
 
 Data excluded from selected application recovery may still be copied by a full native volume backup if it shares a protected volume. Use separate volumes when that exclusion matters to backup size. A root-filesystem path does not create another provider mount or a separate native backup flag.
 
 ## What each deployment does
 
-`Prepare` installs the exact client version selected by [the shared software definition](reference/software-and-runtime.md#registration-software-pbs-client). The separate `PBS agent` step records `/etc/homelab-backup/coverage.json` as root-only configuration and checks the client binary. PBS uses a command-line client; no always-running guest daemon is required.
+For each enrolled guest, `Prepare` installs the exact client version selected by [the shared software definition](reference/software-and-runtime.md#registration-software-pbs-client). The separate `PBS agent` step records `/etc/homelab-backup/coverage.json` as root-only configuration and checks the client binary. PBS uses a command-line client; no always-running guest daemon is required.
 
 The client-only repository uses Proxmox’s documented HTTP APT endpoint. APT verifies signed release metadata and package hashes against the official Trixie keyring, whose bytes are checked against the library’s recorded digest. This authenticates package contents without encrypting package-download traffic. The keyring retains the vendor’s two published archive keys. HomeLab uses no `trusted=yes`, insecure APT option or disabled certificate check. See the vendor’s [client repository and SecureApt guidance](https://pbs.proxmox.com/docs/installation.html#proxmox-backup-client-only-repository).
 
@@ -72,15 +74,25 @@ A common recovery-set manifest records the exact related database and file gener
 
 ## First installation and later deployments
 
-Selecting backup adds client software and the named step to each enabled guest’s existing deployment job. It does not rename jobs, add dependencies between apps, change app identities or replace service data or credentials. Existing holds, protected-input checks and source review still apply. Repeat deployments reuse the protected preparation payload; changed coverage produces a new input generation.
+### Upgrading from manually supplied client credentials
 
-Guests disabled for deployment remain in the source coverage and operational group. They do not run deployment steps, and skipping them does not retire their protection. Ordinary deployment rejects removal of a commissioned job, changes to its stable group or member identity, or omission of an existing protected member. Retirement requires a separate explicit procedure; this contract provides no automatic retirement executor. An ordinary update does not delete backup history or reduce an existing schedule to preparation only.
+This release changes the backup contract. Earlier configurations could enroll guests from root settings and supplied `auth_id`, `password`, `encryption_key` and `key_password` in job clients. The new contract requires guest enrollment markers, a management credential and recovery public key, and rejects those old client credential fields. Updating the framework pin alone is not a supported upgrade for such a site.
+
+Before selecting this release, inventory whether the old configuration was merely compiled or actually commissioned. For an uncommissioned configuration, prepare the new inputs, add the intended guest markers, replace client entries with staging/interface bindings, compile the complete site and inspect the resulting membership before CD. Do not infer absence of live ownership from an empty local checkout.
+
+For an already commissioned legacy job, **retain its working source pins, schedule, client keys, tokens, namespaces, snapshots and protected ownership records**. There is no automatic conversion or supported in-place key import in this release. Do not remove old fields and let CD generate new keys over an existing installation; do not clear records, disable protection or delete old namespaces to satisfy validation. Establish and independently test a separately reviewed environmental handover before upgrading that installation. It must preserve access to old generations and prove replacement backups and recovery before retiring any old schedule. Until that handover exists, remain on the prior supported combination. The [backup setup guide](https://github.com/theaussiepom/homelab/blob/67ece252410027df38e2a82d5293149a018fce67/docs/backup/README.md) describes new managed enrollment, not a legacy migration executor.
+
+### Repeating managed deployments
+
+Guest enrollment adds client software and the named step to that enabled guest’s existing deployment job. Root selection alone does not enroll guests. A separate **Backup** job runs after the selected guest jobs succeed and activates the complete group. It does not rename jobs, add dependencies between apps, change app identities or replace service data or credentials. Existing holds, protected-input checks and source review still apply. Repeat deployments reuse the protected preparation payload; changed coverage produces a new input generation.
+
+Enrolled guests disabled for deployment remain in the source coverage and operational group. They must already have matching successful deployment and backup-activation records; initial or changed backup setup requires the guest to be enabled. They do not run deployment steps, and skipping them does not retire their protection. Ordinary deployment rejects removal of a commissioned job, changes to its stable group or member identity, or omission of an existing protected member. Retirement requires a separate explicit procedure; this contract provides no automatic retirement executor. An ordinary update does not delete backup history or reduce an existing schedule to preparation only.
 
 ## Bind an operational job
 
-Follow the [complete synthetic job](../site.backup.example.yaml) and its [dedicated-volume guest](../examples/backup/guests/resolver.yaml). The framework documents [every nested job field](https://github.com/theaussiepom/homelab/blob/015e202a99037f642671c20ead2acb8eb972a331/docs/reference/backup.md#operational-job). Reuse existing external endpoints, guest interfaces, volumes and file-secret sources instead of repeating addresses, paths or credentials.
+Follow the [complete synthetic job](../site.backup.example.yaml) and its [dedicated-volume guest](../examples/backup/guests/resolver.yaml). The framework documents [every nested job field](https://github.com/theaussiepom/homelab/blob/67ece252410027df38e2a82d5293149a018fce67/docs/reference/backup.md#operational-job). Reuse existing external endpoints, guest interfaces and volumes instead of repeating addresses or paths. Bind the management token through the protected `backup` Environment and the recovery public PEM through a site-relative file. CD creates and preserves client credentials; do not author per-client token or encryption-key references.
 
-- Select one client for every configured guest, including members disabled for deployment. Each needs its own scoped PBS token identity and existing encryption key.
+- Select one client for every enrolled guest, including members disabled for deployment. CD derives its stable namespace/account identity, creates its native encryption key once, and verifies saved ownership on subsequent deployments. The management token and recovery private key are never guest inputs.
 - Select a dedicated staging volume with no app bindings and no `backup:` marker. Its capacity must be at least four times the per-generation byte limit. On an existing HomeLab-managed guest, append a new slot after the existing volumes; do not reorder or resize existing storage. Checks before applying the change reject a foreign mount, symlink or nonempty staging path.
 - Select the backup interface and declare network access to the PBS endpoint. Before capture, the runtime checks that the route uses the selected device and source address; it rejects fallback to the management path.
 - Permit pauses only for required apps. List every MariaDB producer in `database_lock` and each InfluxDB producer and token reference in `influx_tokens`. Existing database connections supply recovery associations without adding deployment dependencies.
@@ -88,10 +100,15 @@ Follow the [complete synthetic job](../site.backup.example.yaml) and its [dedica
 
 ## Operational job example
 
-This is the complete **site-root backup fragment** from the [canonical operational site](../site.backup.example.yaml). It still needs that site’s endpoint, file-secret sources, network policy and guest staging volume. The documentation checks compare this excerpt with the maintained source.
+This is the complete **site-root backup fragment** from the [canonical operational site](../site.backup.example.yaml). It still needs that site’s endpoint, management secret reference, public-key fixture, network policy and enrolled guest staging volume. The public fixture is synthetic and its private key was discarded; replace it with the public key from your verified recovery pair before deployment. The documentation checks compare this excerpt with the maintained source.
 
 ```yaml
 backup:
+  management:
+    credential: pbs-management
+    datastore_path: /mnt/backup/recovery
+  recovery_public_key:
+    source: examples/backup/master-public.pem.fixture
   job:
     name: example-recovery
     destination:
@@ -105,9 +122,6 @@ backup:
       jitter_seconds: 300
     clients:
       resolver:
-        auth_id: resolver@pbs!backup
-        password: pbs-password
-        encryption_key: pbs-key
         staging_volume: backup-stage
         interface: primary
     capture:
@@ -124,7 +138,7 @@ Deployment installs the protected worker inputs and controller schedule; it does
 
 After the controller accepts every member’s deployment records, a worker’s failed check before capture leaves evidence under that run’s UUID without opening a capture window. A later scheduled run may try those checks again with a new UUID. Earlier lock or deployment-record checks can stop the run before its UUID directory exists.
 
-Once a capture window opens, a failed run keeps any remaining controller holds. Pending markers and recovery files still present on failed members remain for investigation. Members that have already verified their archives may have released their temporary copies and local pending markers before the group fails. No automatic recovery, replay or clearing of remaining holds and markers is installed. The client does not prune remote snapshots, earlier failures or the last successful recovery generation. Follow the framework’s [execution and failure rules](https://github.com/theaussiepom/homelab/blob/015e202a99037f642671c20ead2acb8eb972a331/docs/reference/backup.md#coordinated-execution-and-failure-behavior).
+Once a capture window opens, a failed run keeps any remaining controller holds. Pending markers and recovery files still present on failed members remain for investigation. Members that have already verified their archives may have released their temporary copies and local pending markers before the group fails. No automatic recovery, replay or clearing of remaining holds and markers is installed. The client does not prune remote snapshots, earlier failures or the last successful recovery generation. Follow the framework’s [execution and failure rules](https://github.com/theaussiepom/homelab/blob/67ece252410027df38e2a82d5293149a018fce67/docs/reference/backup.md#coordinated-execution-and-failure-behavior).
 
 ## Invalid cases
 
@@ -132,7 +146,7 @@ These source checks start from the complete example or the volume fragment above
 
 | Invalid input | Diagnostic | Supported correction |
 | --- | --- | --- |
-| Root `backup: true` or `backup: false` | `component.fields` | Use a bare, null or empty selection to prepare the client; omit the root field when no backup feature is selected. Removing an existing operational job still requires the separate retirement procedure. |
+| Root `backup: true` or `backup: false` | `component.fields` | Use a bare, null or empty root selection for shared defaults and enroll each guest with its own marker; omit the root field when no backup feature is selected. Removing an existing operational job still requires the separate retirement procedure. |
 | Root `backup: {profile: missing}` | `component.backup-profile-selection` | Select a registered backup profile, or omit `profile` when the library has exactly one. |
 | `backup: true` on the fragment’s `application` volume | `component.backup-presence` at `guests.resolver.volumes.application` | Use bare `backup:` or an empty object to include the volume. |
 | Add `backup:` to the operational job’s staging volume | `component.backup-staging-volume` | Keep staging dedicated, unprotected by native volume backup and unbound by apps. |
@@ -141,7 +155,7 @@ Correct the source and rerun the offline check. These refusals do not inspect re
 
 ## Later site integration and actual qualification
 
-This implementation does not create the NAS-hosted PBS VM, datastore, namespace, account, encryption key, native Proxmox full-guest schedule or server maintenance jobs for retention, verification, pruning, garbage collection or offsite copies. Those require the site’s actual allocations and permissions. Guest tokens need permission to upload and read back their own namespace’s archives, not to administer the datastore or prune history.
+The operator prepares the PBS server, persistent datastore and management credential before CD, following the framework guide. CD checks that datastore and creates owned namespaces, scoped client accounts/tokens and encryption keys. Native Proxmox full-guest schedules and server verification, retention, garbage collection, notifications and offsite copies remain separate setup tasks documented in that guide. Guest tokens need permission to upload and read back their own namespace’s archives, not to administer the datastore or prune history.
 
 Before declaring protection, verify a real scheduled cycle on the intended network, native database contents, related application and database manifests, full archive readback and an isolated service restore. Keep encryption keys independently recoverable. Offsite recovery needs a complete consistent datastore and its keys; copying namespace folders alone is insufficient.
 

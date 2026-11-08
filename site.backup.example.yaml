@@ -23,8 +23,7 @@ contexts:
     dns_servers:
     - external: resolver
 secret_sources:
-  pbs-password: {type: file, path: /run/example/pbs-password}
-  pbs-key: {type: file, path: /run/example/pbs-key}
+  pbs-management: {type: environment, name: PBS_API_TOKEN}
   api:
     type: file
     path: /run/example/api-token
@@ -112,6 +111,11 @@ address_groups:
 
 # Full operational example; paths and identities are synthetic, never credentials.
 backup:
+  management:
+    credential: pbs-management
+    datastore_path: /mnt/backup/recovery
+  recovery_public_key:
+    source: examples/backup/master-public.pem.fixture
   job:
     name: example-recovery
     destination:
@@ -122,9 +126,6 @@ backup:
     schedule: {calendar: '02:00', jitter_seconds: 300}
     clients:
       resolver:
-        auth_id: resolver@pbs!backup
-        password: pbs-password
-        encryption_key: pbs-key
         staging_volume: backup-stage
         interface: primary
     capture: {pause: [], database_lock: [], influx_tokens: {}}
