@@ -158,6 +158,7 @@ class BackupProfileTests(unittest.TestCase):
             self.assertEqual({row['type']:row['target']['app'] for row in packet_associations},expected)
 
     def test_documented_client_capacity_override_changes_only_effective_job_limits(self):
+        """Bind documented capacity overrides and inheritance without changing job identities."""
         source, _ = component_sources.site(ROOT/'site.backup.example.yaml')
         original = component_plan.resolve(ROOT, ROOT/'site.backup.example.yaml')
         baseline = component_packet.lower_guest(original, 'resolver')
