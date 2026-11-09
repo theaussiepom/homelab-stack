@@ -23,7 +23,7 @@ The complete reusable declaration is [traefik.yaml](../../../apps/traefik.yaml).
 
 Although secret roles and properties are structurally conditional, the current supported runtime binds both provider and ACME and requires the proxmox_token role for the provider and the cloudflare_dns_token role for ACME. No Docker socket, arbitrary provider or raw route file override is exposed.
 
-The optional `cloudflare-source` exposure policy adds the framework-owned local middleware and requires `cloudflare_origin_token`. Bind the existing token through a protected secret source; normal CD mounts its bytes as a root-owned read-only file rather than exposing them through Traefik dynamic configuration or API output; its header name and internal allowlist belong to site policy. The plugin checks socket sources, sanitizes visitor headers and bounds address-feed refresh/failure behavior. See the framework [middleware contract](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/policies.md#cloudflare-source-boundary).
+The optional `cloudflare-source` exposure policy adds the framework-owned local middleware and requires `cloudflare_origin_token`. Bind the existing token through a protected secret source; normal CD mounts its bytes as a root-owned read-only file rather than exposing them through Traefik dynamic configuration or API output; its header name and internal allowlist belong to site policy. The plugin checks socket sources, sanitizes visitor headers and bounds address-feed refresh/failure behavior. See the framework [middleware contract](https://github.com/theaussiepom/homelab/blob/6f5e40f50f33c3c3d0e6b06eadb7aa81e78572c7/docs/reference/policies.md#cloudflare-source-boundary).
 
 Deploy route restrictions before opening the ingress frontend firewall in a later deployment. Validate the actual selected Traefik image, internal access, public TLS and visitor identity after CD; source checks alone do not establish service acceptance.
 
@@ -87,7 +87,7 @@ Listeners use the declared interface or network namespace. Endpoints tell consum
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/6f5e40f50f33c3c3d0e6b06eadb7aa81e78572c7/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -113,7 +113,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/6f5e40f50f33c3c3d0e6b06eadb7aa81e78572c7/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -156,7 +156,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/6f5e40f50f33c3c3d0e6b06eadb7aa81e78572c7/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/6f5e40f50f33c3c3d0e6b06eadb7aa81e78572c7/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/6f5e40f50f33c3c3d0e6b06eadb7aa81e78572c7/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/6f5e40f50f33c3c3d0e6b06eadb7aa81e78572c7/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/6f5e40f50f33c3c3d0e6b06eadb7aa81e78572c7/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
