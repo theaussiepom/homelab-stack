@@ -191,6 +191,9 @@ Every registered variant is listed below. Paths are application mount targets, n
 | `settings` — `/runtime-settings.js` | configuration | files |
 | `healthcheck` — `/healthcheck.js` | Excluded: rebuildable | None |
 
+Prepare the excluded health wrapper using the [rebuild source](#node-red-health-wrapper-recovery)
+before recovering this app; its absence from selected capture does not make it optional.
+
 ### node_red-bound
 
 [Application reference](apps/node_red-bound.md) · [Definition](../../apps/node_red-bound.yaml)
@@ -201,6 +204,21 @@ Every registered variant is listed below. Paths are application mount targets, n
 | `config` — `/config` | state | application-export |
 | `settings` — `/runtime-settings.js` | configuration | files |
 | `healthcheck` — `/healthcheck.js` | Excluded: rebuildable | None |
+
+The bound profile also needs the [recoverable health wrapper](#node-red-health-wrapper-recovery)
+before CD can start and check the app.
+
+<a id="node-red-health-wrapper-recovery"></a>
+#### Rebuild the Node-RED health wrapper
+
+The reusable wrapper is versioned as
+[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/6f5e40f50f33c3c3d0e6b06eadb7aa81e78572c7/proxmox/applications/node-red-healthcheck.js).
+Use the same framework revision selected by this Stack. During recovery,
+separately prepare that file at the app's bound `healthcheck` storage source
+before CD. The profile mounts it read-only at `/healthcheck.js`; it reads the
+recovered `/config/settings.js` and uses `NODE_RED_WEB_ADDRESS` when selected.
+If you maintain a different wrapper, keep its version and a separate recoverable
+copy. The public helper cannot reproduce custom behavior that it does not contain.
 
 ### pegaprox
 

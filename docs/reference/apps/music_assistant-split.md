@@ -27,7 +27,15 @@ The web address comes from `web`; the player bind and published address come fro
 
 ## Separate listener behaviour
 
-Before changing an existing installation, separately back up and adjust only the web bind address in retained settings. Leave the stream bind/publish addresses, provider credentials, identity and library untouched. Ordinary CD validates the two selected addresses and refuses a mismatch; it does not rewrite those settings. Selecting this profile does not update an HA Music Assistant integration URL or a player device.
+Before changing an existing installation, separately back up its retained settings.
+For a web-only move, adjust the web bind address and bind the `stream` role to the
+existing player address, leaving the stream bind/publish settings unchanged.
+If streaming also moves, separately set both stream `bind_ip` and `publish_ip`
+to the selected `stream` role address and verify the affected players.
+Ordinary CD refuses either stream address if it differs from that role; it does
+not rewrite these settings. Preserve provider credentials, identity and library.
+Selecting this profile does not update an HA Music Assistant integration URL or
+a player device.
 
 ## First installation
 
