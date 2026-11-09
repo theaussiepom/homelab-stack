@@ -20,19 +20,23 @@ A selection ID names a reusable application recipe, not a complete installed ser
 | Profile | Application | Adapter / variant |
 | --- | --- | --- |
 | [homeassistant](apps/homeassistant.md) | Home Assistant | `homeassistant` |
+| [homeassistant-bound](apps/homeassistant-bound.md) | Home Assistant | `homeassistant` |
 | [node_red](apps/node_red.md) | Node-RED | `node_red` |
+| [node_red-bound](apps/node_red-bound.md) | Node-RED | `node_red` |
 | [bitwarden](apps/bitwarden.md) | Bitwarden | `bitwarden` |
 | [cloudbeaver](apps/cloudbeaver.md) | CloudBeaver | `cloudbeaver` |
 | [pihole](apps/pihole.md) | Pi-hole | `pihole` |
 | [unbound](apps/unbound.md) | Unbound | `unbound` |
 | [authentik](apps/authentik.md) | Authentik | `authentik` |
 | [influxdb](apps/influxdb.md) | InfluxDB | `influxdb` |
+| [influxdb-web](apps/influxdb-web.md) | InfluxDB | `influxdb` |
 | [traefik](apps/traefik.md) | Traefik | `traefik` |
 | [mariadb](apps/mariadb.md) | MariaDB | `mariadb` |
 | [zabbix](apps/zabbix.md) | Zabbix | `zabbix` |
 | [mqtt](apps/mqtt.md) | MQTT | `mqtt` |
 | [mqtt_explorer](apps/mqtt_explorer.md) | MQTT Explorer | `mqtt_explorer` |
 | [music_assistant](apps/music_assistant.md) | Music Assistant | `music_assistant` |
+| [music_assistant-split](apps/music_assistant-split.md) | Music Assistant | `music_assistant` |
 | [pegaprox](apps/pegaprox.md) | PegaProx | `pegaprox` |
 | [postgresql](apps/postgresql.md) | PostgreSQL | `postgresql` |
 | [zigbee2mqtt](apps/zigbee2mqtt.md) | Zigbee2MQTT | `zigbee2mqtt` |

@@ -1,5 +1,9 @@
 """Documentation scenario index; bodies live only in the canonical YAML files."""
 PROFILE_EXAMPLES = {
+ 'node_red-bound': ('examples/catalogue/existing-automation-bound.yaml', 'node_red'),
+ 'homeassistant-bound': ('examples/catalogue/existing-automation-bound.yaml', 'homeassistant'),
+ 'influxdb-web': ('examples/catalogue/native-databases-web.yaml', 'influxdb'),
+ 'music_assistant-split': ('examples/catalogue/music-split.yaml', 'music'),
  'homeassistant': ('examples/catalogue/existing-automation.yaml', 'homeassistant'),
  'node_red': ('examples/catalogue/existing-automation.yaml', 'node_red'),
  'bitwarden': ('examples/catalogue/vault.yaml', 'vault'),

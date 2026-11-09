@@ -1,0 +1,286 @@
+# Complete synthetic source-only example; retained data must already be owned.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+    timezone: Etc/UTC
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+  apps:
+    context: lab
+    cidr: 198.18.40.0/24
+    bridge: vmbr-apps
+    vlan: 240
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  postgresql:
+    context: lab
+    template: base
+    lifecycle: retained
+    identity:
+      vmid: 810
+      hostname: example-postgresql
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 3072
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:0a
+        address:
+          mode: static
+          value: 198.18.20.10
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/postgresql
+      native:
+        path: /var/lib/postgresql
+    compose_projects: {}
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+  mariadb:
+    context: lab
+    template: base
+    lifecycle: retained
+    identity:
+      vmid: 811
+      hostname: example-mariadb
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 3072
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:0b
+        address:
+          mode: static
+          value: 198.18.20.11
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/mariadb
+      native:
+        path: /var/lib/mysql
+    compose_projects: {}
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+  influxdb:
+    context: lab
+    template: base
+    lifecycle: retained
+    identity:
+      vmid: 812
+      hostname: example-influxdb
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 3072
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:0c
+        address:
+          mode: static
+          value: 198.18.20.12
+        default_route: true
+        ipv6: manual
+      apps:
+        network: apps
+        slot: 1
+        mac: 02:00:00:28:01:26
+        address:
+          mode: static
+          value: 198.18.40.26
+        default_route: false
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/influxdb
+      native:
+        path: /var/lib/influxdb
+    compose_projects: {}
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+apps:
+  postgresql:
+    profile: postgresql
+    guest: postgresql
+    lifecycle: retained
+    interfaces:
+      service:
+        interface: primary
+    storage:
+      data:
+        root_path: native
+        subpath: ''
+    identity:
+      phase: postgresql
+      runtime_id: example-postgresql
+      services: {}
+      networks: {}
+  mariadb:
+    profile: mariadb
+    guest: mariadb
+    lifecycle: retained
+    interfaces:
+      service:
+        interface: primary
+    storage:
+      data:
+        root_path: native
+        subpath: ''
+    identity:
+      phase: mariadb
+      runtime_id: example-mariadb
+      services: {}
+      networks: {}
+  influxdb:
+    profile: influxdb-web
+    guest: influxdb
+    lifecycle: retained
+    interfaces:
+      service:
+        interface: primary
+      web:
+        interface: apps
+    storage:
+      data:
+        root_path: native
+        subpath: ''
+    identity:
+      phase: influxdb
+      runtime_id: example-influxdb
+      services: {}
+      networks: {}
+domains: {}
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+identity_providers: {}
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+accounts: {}
+devices: {}
+evidence: {}
+connections: {}
+exposures: {}
+images: {}
+host_aliases: {}
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+  transport: {}
+  tls: {}
+  middlewares: {}
+  authentication: {}

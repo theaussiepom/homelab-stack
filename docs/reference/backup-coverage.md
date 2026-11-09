@@ -103,9 +103,28 @@ Every registered variant is listed below. Paths are application mount targets, n
 | `community` — `/hacsfiles` | state | application-export |
 | `startup` — `/startup` | configuration | files |
 
+### homeassistant-bound
+
+[Application reference](apps/homeassistant-bound.md) · [Definition](../../apps/homeassistant-bound.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `config` — `/config` | state | application-export |
+| `media` — `/media` | state | application-export |
+| `community` — `/hacsfiles` | state | application-export |
+| `startup` — `/startup` | configuration | files |
+
 ### influxdb
 
 [Application reference](apps/influxdb.md) · [Definition](../../apps/influxdb.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `data` — `/var/lib/influxdb` | database | database-export |
+
+### influxdb-web
+
+[Application reference](apps/influxdb-web.md) · [Definition](../../apps/influxdb-web.yaml)
 
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |
@@ -145,6 +164,14 @@ Every registered variant is listed below. Paths are application mount targets, n
 | --- | --- | --- |
 | `data` — `/data` | state | application-export |
 
+### music_assistant-split
+
+[Application reference](apps/music_assistant-split.md) · [Definition](../../apps/music_assistant-split.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `data` — `/data` | state | application-export |
+
 ### node_red-public
 
 [Application reference](apps/node_red-public.md) · [Definition](../../apps/node_red-public.yaml)
@@ -156,6 +183,17 @@ Every registered variant is listed below. Paths are application mount targets, n
 ### node_red
 
 [Application reference](apps/node_red.md) · [Definition](../../apps/node_red.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `data` — `/data` | state | application-export |
+| `config` — `/config` | state | application-export |
+| `settings` — `/runtime-settings.js` | configuration | files |
+| `healthcheck` — `/healthcheck.js` | Excluded: rebuildable | None |
+
+### node_red-bound
+
+[Application reference](apps/node_red-bound.md) · [Definition](../../apps/node_red-bound.yaml)
 
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |

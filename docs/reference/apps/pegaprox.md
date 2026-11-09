@@ -23,6 +23,10 @@ The complete reusable declaration is [pegaprox.yaml](../../../apps/pegaprox.yaml
 
 The selected runtime requires at least 512 MiB OS reserve. The effective guest reserve is max(guest reserve, selected runtime requirement); it is placement policy, not measured load. The management endpoint accepts only private or benchmark address ranges.
 
+## Management and web access
+
+Bind the optional `management` role when the Proxmox API connection needs a different source interface from the published web listener. The site connection selects `source_interface: management`; the API endpoint and credentials remain independently declared. Omitting the role preserves the original single-interface profile behaviour.
+
 ## First installation
 
 You need prepared data, configuration and log directories, the existing database key, and a completed administrator setup. The profile does not create a new application administrator or adopt an unrelated manager. The practical example maintains an already HomeLab-managed instance.
@@ -58,6 +62,7 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
 | `web` | Yes | `guest-interface` |
+| `management` | No | `guest-interface` |
 | `private` | Yes | `app-network` |
 
 Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback or an app network through its explicit scope. A role does not create another network interface. See [Multiple interfaces](../../guides/multiple-interfaces.md).
@@ -76,7 +81,7 @@ A wildcard listener accepts connections within the declared app network. A port 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/b83260bb5dcd427a14e79254fdb144b1b9097b8c/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -101,7 +106,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/b83260bb5dcd427a14e79254fdb144b1b9097b8c/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -143,7 +148,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/b83260bb5dcd427a14e79254fdb144b1b9097b8c/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/b83260bb5dcd427a14e79254fdb144b1b9097b8c/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/b83260bb5dcd427a14e79254fdb144b1b9097b8c/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/b83260bb5dcd427a14e79254fdb144b1b9097b8c/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/b83260bb5dcd427a14e79254fdb144b1b9097b8c/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -164,6 +169,9 @@ These are the complete supplied fields in [pegaprox.yaml](../../../apps/pegaprox
 | <a id="declaration-interfaces-private"></a>`interfaces.private` | `object` |
 | <a id="declaration-interfaces-private-required"></a>`interfaces.private.required` | `true` |
 | <a id="declaration-interfaces-private-accepts"></a>`interfaces.private.accepts` | `["app-network"]` |
+| <a id="declaration-interfaces-management"></a>`interfaces.management` | `object` |
+| <a id="declaration-interfaces-management-required"></a>`interfaces.management.required` | `false` |
+| <a id="declaration-interfaces-management-accepts"></a>`interfaces.management.accepts` | `["guest-interface"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
 | <a id="declaration-listeners-web"></a>`listeners.web` | `object` |
 | <a id="declaration-listeners-web-service"></a>`listeners.web.service` | `"pegaprox"` |
