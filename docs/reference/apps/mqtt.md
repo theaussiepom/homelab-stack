@@ -87,7 +87,7 @@ broker:
     probe: broker_probe
 ```
 
-The guest’s `primary` NIC supplies both endpoint addresses. `backend` and `frontend` advertise the same host TCP listener; they do not create separate sockets. Root path `data` and subpaths within it determine the three mounts. At deployment, the explicit retained identity must match the records proving that HomeLab already manages this broker. See [interface binding](../../guides/multiple-interfaces.md), [storage rules](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/docs/reference/storage.md) and [later deployments](#later-deployments).
+The guest’s `primary` NIC supplies both endpoint addresses. `backend` and `frontend` advertise the same host TCP listener; they do not create separate sockets. Root path `data` and subpaths within it determine the three mounts. At deployment, the explicit retained identity must match the records proving that HomeLab already manages this broker. See [interface binding](../../guides/multiple-interfaces.md), [storage rules](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/docs/reference/storage.md) and [later deployments](#later-deployments).
 
 ## Resolved result
 
@@ -123,7 +123,7 @@ A wildcard host listener can accept connections through interfaces other than th
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Presence | Container target | Kind and access |
 | --- | --- | --- | --- |
@@ -146,11 +146,11 @@ Keep secret values outside Git. A file or environment reference identifies where
 <a id="mqtt-probe"></a>
 ## Probe binding
 
-**Type and reference:** a site identifier string selecting `secret_sources.<name>` in the same complete site. For this adapter the selected source MUST be `{type: file, path: ABSOLUTE_PATH}`; file path syntax is defined by the compatible [secret-source contract](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/docs/reference/identity-and-secrets.md). The source identifies a file on the controller. Resolving the reference does not read the file or create an account.
+**Type and reference:** a site identifier string selecting `secret_sources.<name>` in the same complete site. For this adapter the selected source MUST be `{type: file, path: ABSOLUTE_PATH}`; file path syntax is defined by the compatible [secret-source contract](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/docs/reference/identity-and-secrets.md). The source identifies a file on the controller. Resolving the reference does not read the file or create an account.
 
 **Presence/default:** the MQTT adapter requires this role even though the profile metadata marks it optional. There is no default source or credential. Omitting it produces `component.secret-required`. An environment source is also rejected because this adapter requires a file. Null and empty identifiers fail the reference and type checks. The [diagnostic example](#invalid-cases) demonstrates omission from an otherwise valid source.
 
-**Material and output:** the runtime parser accepts one existing JSON probe record with exactly `username` and `password`, both nonempty strings of at most 65,535 UTF-8 bytes without carriage returns (CR), line feeds (LF) or NUL characters. It prepares private `mqtt-probe.json` owned by UID 0 and GID 0 with mode 0600 under the app's selected runtime directory. No actual values belong in public documentation or source. See [probe parser](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/proxmox/applications/mqtt_runtime.py) and [required probe binding](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/blueprints/component_foundations.py).
+**Material and output:** the runtime parser accepts one existing JSON probe record with exactly `username` and `password`, both nonempty strings of at most 65,535 UTF-8 bytes without carriage returns (CR), line feeds (LF) or NUL characters. It prepares private `mqtt-probe.json` owned by UID 0 and GID 0 with mode 0600 under the app's selected runtime directory. No actual values belong in public documentation or source. See [probe parser](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/proxmox/applications/mqtt_runtime.py) and [required probe binding](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/blueprints/component_foundations.py).
 
 **Lifecycle:** supply a genuinely existing probe account and prepared broker that accepts it. This record is separate from application credentials, GUI credentials and credentials for an identity service. Ordinary updates must preserve the existing private inputs. Changing a source name or path does not authorize credential rotation. Source compilation neither checks credential contents nor proves broker acceptance. The adapter's health definition checks authenticated acceptance and anonymous refusal after actual deployment; this source suite does not perform that target check.
 
@@ -161,7 +161,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 **Type and constraint:** optional string matching `/mosquitto/config/[A-Za-z0-9_.-]{1,100}`; the basename cannot be `.` or `..`. This is a path inside the declared config mount, not a secret-source ID or controller path. Absolute paths elsewhere, nested subdirectories, null and the empty string fail `component.property`. No units, enum or nested object apply.
 
-**Conditional requirement:** when a supported MQTT Explorer connection selects a managed account on this broker, the resolver requires this property and supplies it to the procedure that creates the account; absence then fails `component.broker-binding`. An Explorer connection using an explicit existing credential is a different mode and does not create that managed account. See the compatible [connection/account rules](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/blueprints/component_foundations.py) and [Explorer's choice](mqtt_explorer.md).
+**Conditional requirement:** when a supported MQTT Explorer connection selects a managed account on this broker, the resolver requires this property and supplies it to the procedure that creates the account; absence then fails `component.broker-binding`. An Explorer connection using an explicit existing credential is a different mode and does not create that managed account. See the compatible [connection/account rules](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/blueprints/component_foundations.py) and [Explorer's choice](mqtt_explorer.md).
 
 **Default/resolution:** no default is declared in this profile; omission leaves it absent. The resolver copies direct profile property keys then replaces them with explicit site property keys. This field is scalar, so no recursive merge applies. The MQTT property object rejects unknown fields: `password_file` is its only accepted key at this snapshot. `port: 1884` is not an available override and fails `component.fields`.
 
@@ -177,7 +177,7 @@ This fragment passes the property's value rule; it does not by itself select or 
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -231,7 +231,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 

@@ -52,4 +52,4 @@ A guest's explicit `control_interface` selects its controller address/MAC indepe
 
 Static default_route selects the named network gateway. Static non-default NICs omit gateway; DHCP requires default_route:false and retains its supported gateway:null form. Source-policy routing, where supported, is an explicit separate guest declaration; app publication does not invent it.
 
-Use the framework's [interface and source contracts](https://github.com/theaussiepom/homelab/blob/2eb3c3055a72cf628d6b28f5ad721ddfb240a3fc/docs/reference/README.md) for exact bounds. The [template reference](../reference/templates.md) explains inherited resource/startup/security values; it does not allocate NICs.
+Use the framework's [interface and source contracts](https://github.com/theaussiepom/homelab/blob/26df0cb41901cb8c9ca064d87b6eb34ca54ada74/docs/reference/README.md) for exact bounds. The [template reference](../reference/templates.md) explains inherited resource/startup/security values; it does not allocate NICs.
