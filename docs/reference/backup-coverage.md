@@ -103,9 +103,28 @@ Every registered variant is listed below. Paths are application mount targets, n
 | `community` — `/hacsfiles` | state | application-export |
 | `startup` — `/startup` | configuration | files |
 
+### homeassistant-bound
+
+[Application reference](apps/homeassistant-bound.md) · [Definition](../../apps/homeassistant-bound.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `config` — `/config` | state | application-export |
+| `media` — `/media` | state | application-export |
+| `community` — `/hacsfiles` | state | application-export |
+| `startup` — `/startup` | configuration | files |
+
 ### influxdb
 
 [Application reference](apps/influxdb.md) · [Definition](../../apps/influxdb.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `data` — `/var/lib/influxdb` | database | database-export |
+
+### influxdb-web
+
+[Application reference](apps/influxdb-web.md) · [Definition](../../apps/influxdb-web.yaml)
 
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |
@@ -145,6 +164,14 @@ Every registered variant is listed below. Paths are application mount targets, n
 | --- | --- | --- |
 | `data` — `/data` | state | application-export |
 
+### music_assistant-split
+
+[Application reference](apps/music_assistant-split.md) · [Definition](../../apps/music_assistant-split.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `data` — `/data` | state | application-export |
+
 ### node_red-public
 
 [Application reference](apps/node_red-public.md) · [Definition](../../apps/node_red-public.yaml)
@@ -163,6 +190,35 @@ Every registered variant is listed below. Paths are application mount targets, n
 | `config` — `/config` | state | application-export |
 | `settings` — `/runtime-settings.js` | configuration | files |
 | `healthcheck` — `/healthcheck.js` | Excluded: rebuildable | None |
+
+Prepare the excluded health wrapper using the [rebuild source](#node-red-health-wrapper-recovery)
+before recovering this app; its absence from selected capture does not make it optional.
+
+### node_red-bound
+
+[Application reference](apps/node_red-bound.md) · [Definition](../../apps/node_red-bound.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `data` — `/data` | state | application-export |
+| `config` — `/config` | state | application-export |
+| `settings` — `/runtime-settings.js` | configuration | files |
+| `healthcheck` — `/healthcheck.js` | Excluded: rebuildable | None |
+
+The bound profile also needs the [recoverable health wrapper](#node-red-health-wrapper-recovery)
+before CD can start and check the app.
+
+<a id="node-red-health-wrapper-recovery"></a>
+#### Rebuild the Node-RED health wrapper
+
+The reusable wrapper is versioned as
+[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/33a52d636b48e491f8147e12ff80e610120bec25/proxmox/applications/node-red-healthcheck.js).
+Use the same framework revision selected by this Stack. During recovery,
+separately prepare that file at the app's bound `healthcheck` storage source
+before CD. The profile mounts it read-only at `/healthcheck.js`; it reads the
+recovered `/config/settings.js` and uses `NODE_RED_WEB_ADDRESS` when selected.
+If you maintain a different wrapper, keep its version and a separate recoverable
+copy. The public helper cannot reproduce custom behavior that it does not contain.
 
 ### pegaprox
 
