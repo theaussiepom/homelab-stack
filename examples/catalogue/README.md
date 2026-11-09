@@ -30,6 +30,8 @@ These complete example configurations use invented inputs. You can check them of
 | [node_red-public](../../docs/reference/apps/node_red-public.md) | [new-automation.yaml](new-automation.yaml) | `node_red` |
 | [cloudbeaver-mariadb-admin](../../docs/reference/apps/cloudbeaver-mariadb-admin.md) | [database-guis.yaml](database-guis.yaml) | `administration` |
 
+The separate [fresh InfluxDB web example](new-influxdb-web.yaml) creates the native server and its optional web socket with distinct addresses. It does not initialize an organization, bucket or token, or grant browser access.
+
 The public automation examples, Unbound without a storage mount, new database GUI workspaces and supported native database examples use `fresh` to permit creation of a new instance. Keep that policy for later deployments to the same HomeLab-managed instance. The other examples require existing HomeLab-managed resources. They cannot import another installation or prepare new application data.
 
 Start with [the source environment](../../docs/guides/first-configuration.md) and select one actual file with `compile.py --check`; validation never runs its native actions. Each profile page explains the selected fields, first-use prerequisites, later deployment effects and refusals.

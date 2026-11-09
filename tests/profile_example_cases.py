@@ -27,6 +27,7 @@ PROFILE_EXAMPLES = {
  'cloudbeaver-mariadb-admin': ('examples/catalogue/database-guis.yaml', 'administration'),
 }
 CREATION_EXAMPLES = {
+ 'influxdb-web': ('examples/catalogue/new-influxdb-web.yaml', 'influxdb'),
  'unbound': PROFILE_EXAMPLES['unbound'],
  'homeassistant-public': PROFILE_EXAMPLES['homeassistant-public'],
  'node_red-public': PROFILE_EXAMPLES['node_red-public'],

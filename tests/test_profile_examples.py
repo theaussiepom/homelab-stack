@@ -42,6 +42,21 @@ class ProfileExampleIntegrations(unittest.TestCase):
     def setUpClass(cls):
         cls.examples = compile_examples()
 
+    def test_split_music_allows_only_selected_players_to_its_stream_socket(self):
+        """Check the actual compiled policy for its intended and denied flows."""
+        from component_traffic import Flow, permits
+        plan, _ = self.examples['examples/catalogue/music-split.yaml']
+        rules = plan.resolved['guests']['media']['rules']
+        self.assertTrue(permits(rules, 'in', Flow(
+            '198.18.100.50', '198.18.100.40', 'tcp', 8097), 'net1'))
+        for source, target, protocol, port, interface in (
+                ('198.18.20.50', '198.18.100.40', 'tcp', 8097, 'net1'),
+                ('198.18.100.50', '198.18.20.40', 'tcp', 8097, 'net0'),
+                ('198.18.100.50', '198.18.100.40', 'udp', 8097, 'net1'),
+                ('198.18.100.50', '198.18.100.40', 'tcp', 8095, 'net1')):
+            with self.subTest(source=source, target=target, protocol=protocol, port=port):
+                self.assertFalse(permits(rules, 'in', Flow(source, target, protocol, port), interface))
+
     def test_every_real_profile_and_variant_has_a_complete_resolved_and_lowered_usage(self):
         library, _ = component_sources.library(ROOT)
         self.assertEqual(set(PROFILE_EXAMPLES), set(library['app_profiles']))

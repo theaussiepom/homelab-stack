@@ -25,13 +25,13 @@ The data role selects the directory used by the native service configuration. Or
 
 ## Separate listener behaviour
 
-InfluxDB serves its UI and API on one port. This variant keeps the native database on `service:8086` and adds a local systemd socket proxy on `web:8086`. Both remain the same authenticated server: the frontend is not a read-only API or a second database. Bind existing metrics clients to endpoint `backend`, and only web publication to `web`. The two addresses must differ. The existing systemd-socket-proxyd executable and the HomeLab network-ready gate are required; no Docker engine is added. CD owns only the fixed homelab-influxdb-web.socket/service units, refuses foreign files, starts the socket after networking/database startup and preserves all database configuration/data/credentials. Switching back to the ordinary profile removes only those owned frontend units. Linux traffic forwarded to the same host database address stays local; it is not a new inter-guest database grant.
+InfluxDB serves its UI and API on one port. This variant keeps the native database on `service:8086` and adds a local systemd socket proxy on `web:8086`. Both remain the same authenticated server: the frontend is not a read-only API or a second database. Bind existing metrics clients to endpoint `backend`, and only web publication to `web`. The two addresses must differ. The existing systemd-socket-proxyd executable and the HomeLab network-ready gate are required; no Docker engine is added. The frontend owns only the fixed homelab-influxdb-web.socket/service units, refuses foreign files and starts the socket after networking/database startup. HomeLab also generates `/etc/influxdb/config.toml` from the selected `service` address and data path; changing those bindings changes the native configuration. It preserves database data and credentials. Switching back to the ordinary profile removes only those owned frontend units. Linux traffic forwarded to the same host database address stays local; it is not a new inter-guest database grant.
 
 ## First installation
 
 On a supported new guest, select `lifecycle: fresh` to install and configure the native package. It does not infer an organization, bucket, token or data import. You must separately verify the running installation and its application credentials.
 
-For a complete example using the creation policy, see [examples/catalogue/new-native-databases.yaml](../../../examples/catalogue/new-native-databases.yaml), app `influxdb`. The example must resolve and generate deployment files successfully. These checks do not prove that the service has been deployed.
+For a complete example using the creation policy, see [examples/catalogue/new-influxdb-web.yaml](../../../examples/catalogue/new-influxdb-web.yaml), app `influxdb`. The example must resolve and generate deployment files successfully. These checks do not prove that the service has been deployed.
 
 ## Minimal usage
 
@@ -84,7 +84,7 @@ Listeners use the declared interface or network namespace. Endpoints tell consum
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -100,7 +100,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/app-properties.md).
 
 This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
@@ -135,7 +135,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/f339c99157d8888a1cf8dd9acb655565b3e28b86/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/85868a5a4b430e01943ca44eb83e92c4e36a5050/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 

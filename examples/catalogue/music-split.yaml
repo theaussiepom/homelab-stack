@@ -89,6 +89,15 @@ guests:
       address_groups:
         internet: internet
     - policy: ingress_music_in
+    - policy: music_players_in
+      interfaces:
+        players: players
+      address_groups:
+        players: players
+      endpoints:
+        stream:
+          app: music
+          endpoint: stream
     - policy: connect_music_public
   ingress:
     context: lab
@@ -243,6 +252,9 @@ exposures:
 images: {}
 host_aliases: {}
 address_groups:
+  players:
+    members:
+    - 198.18.100.0/24
   internet:
     members:
     - 0.0.0.0/0
@@ -279,6 +291,18 @@ policies:
         destination:
           address_group: internet
         comment: Recursive DNS
+    music_players_in:
+      rules:
+      - direction: in
+        interface: players
+        source:
+          address_group: players
+        destination:
+          endpoint: stream
+        proto: tcp
+        port:
+          endpoint: stream
+        comment: Selected players to the music stream listener
     ingress_music:
       rules:
       - direction: out
