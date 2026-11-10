@@ -97,6 +97,39 @@ class ComponentCompositionTests(unittest.TestCase):
                 with self.assertRaisesRegex(ComponentError, 'component.traffic-egress'):
                     self.plan(broken)
 
+    def test_pegaprox_management_role_selects_only_its_explicit_api_egress(self):
+        """Check a separate API source through the real profile and policy compiler."""
+        from component_traffic import Flow, permits
+        value = component_sources.site(ROOT / 'examples/catalogue/edge-management.yaml')[0]
+        value['networks']['management'] = {
+            'context': 'lab', 'cidr': '198.18.25.0/24',
+            'bridge': 'vmbr-example', 'vlan': 225}
+        value['guests']['manager']['interfaces']['api'] = {
+            'network': 'management', 'slot': 1, 'mac': '02:00:00:25:01:47',
+            'address': {'mode': 'static', 'value': '198.18.25.71'},
+            'default_route': False, 'ipv6': 'manual'}
+        value['apps']['manager']['interfaces']['management'] = {'interface': 'api'}
+        value['connections']['manager_provider']['source_interface'] = 'management'
+        value['policies']['network']['provider_api']['rules'][0].update(
+            interface='api', source={'interface': 'api'})
+        binding = next(row for row in value['guests']['manager']['network_policy']
+                       if row['policy'] == 'provider_api')
+        binding['interfaces'] = {'api': 'api'}
+        plan = self.plan(value)
+        connection = plan.resolved['apps']['manager']['resolved_connections']['proxmox']
+        self.assertEqual(connection['source_address'], '198.18.25.71')
+        rules = plan.resolved['guests']['manager']['rules']
+        api = [row for row in rules if row['comment'] == 'Selected hypervisor API']
+        self.assertEqual(api, [{'direction': 'out', 'proto': 'tcp', 'interface': 'net1',
+            'source': '198.18.25.71/32', 'destination': '192.0.2.10/32',
+            'port': '8006', 'comment': 'Selected hypervisor API'}])
+        flow = Flow('198.18.25.71', '192.0.2.10', 'tcp', 8006)
+        self.assertTrue(permits(rules, 'out', flow, 'net1'))
+        self.assertFalse(permits(rules, 'out', flow, 'net0'))
+        value['connections']['manager_provider']['source_interface'] = 'web'
+        with self.assertRaisesRegex(ComponentError, 'component.traffic-egress'):
+            self.plan(value)
+
     def test_typed_example_sources_and_inline_bodies_resolve_to_the_same_composition(self):
         for name in ('site.example.yaml', 'examples/site.second.yaml'):
             with self.subTest(site=name):

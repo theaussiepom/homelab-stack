@@ -254,7 +254,8 @@ class SharedDefinitionTests(unittest.TestCase):
         cls.library, cls.sources = component_sources.library(ROOT)
 
     def test_registered_independent_adapters_public_variants_and_no_implicit_guest_graph(self):
-        self.assertEqual(len(self.library['app_profiles']), 21)
+        """Keep every profile independent and the shared catalogue closed."""
+        self.assertEqual(len(self.library['app_profiles']), 25)
         self.assertEqual({v['adapter'] for v in self.library['app_profiles'].values()}, set(component_adapters.ADAPTERS))
         self.assertFalse({'guests', 'default_enabled', 'required_site_bindings'} & set(self.library))
         self.assertEqual(set(self.library['guest_templates']), {'base', 'docker'})

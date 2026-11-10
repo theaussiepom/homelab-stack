@@ -64,6 +64,18 @@
     },
     "cloudbeaver-mariadb-admin": {
       "source": "apps/cloudbeaver-mariadb-admin.yaml"
+    },
+    "music_assistant-split": {
+      "source": "apps/music_assistant-split.yaml"
+    },
+    "influxdb-web": {
+      "source": "apps/influxdb-web.yaml"
+    },
+    "homeassistant-bound": {
+      "source": "apps/homeassistant-bound.yaml"
+    },
+    "node_red-bound": {
+      "source": "apps/node_red-bound.yaml"
     }
   },
   "guest_templates": {

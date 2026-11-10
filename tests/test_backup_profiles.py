@@ -224,6 +224,10 @@ class BackupProfileTests(unittest.TestCase):
         self.assertIn('`NoNewPrivileges`', guide)
         self.assertIn('does not use local `sudo`', guide)
         self.assertIn('root/system-scope namesake is refused', guide)
+        self.assertIn('Preparing the user manager alone does not convert that schedule', guide)
+        self.assertIn('Keep its working source pins and backup protection until that handover is available', guide)
+        self.assertIn('also applies to managed enrollment', guide)
+        self.assertIn("a process with the CD account's UID can alter its own alarm", guide)
         for suffix in ('service', 'timer'):
             path = rendered['unit_directory'].removeprefix('/home/example-cd/')
             path += '/'+rendered['name']+'.'+suffix

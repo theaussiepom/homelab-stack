@@ -1,0 +1,340 @@
+# Complete synthetic source-only example; retained data must already be owned.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+    timezone: Etc/UTC
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+  players:
+    context: lab
+    cidr: 198.18.100.0/24
+    bridge: vmbr-players
+    vlan: 230
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  media:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 840
+      hostname: example-media
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:28
+        address:
+          mode: static
+          value: 198.18.20.40
+        default_route: true
+        ipv6: manual
+      players:
+        network: players
+        slot: 1
+        mac: 02:00:00:64:01:28
+        address:
+          mode: static
+          value: 198.18.100.40
+        default_route: false
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/media
+    compose_projects:
+      music:
+        name: example-music
+        file: compose-music.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_music_in
+    - policy: music_players_in
+      interfaces:
+        players: players
+      address_groups:
+        players: players
+      endpoints:
+        stream:
+          app: music
+          endpoint: stream
+    - policy: connect_music_public
+  ingress:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 1000
+      hostname: example-ingress
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:c8
+        address:
+          mode: static
+          value: 198.18.20.200
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/ingress
+    compose_projects:
+      ingress:
+        name: example-ingress
+        file: compose-ingress.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_music
+    - policy: connect_music_public_incoming
+apps:
+  music:
+    profile: music_assistant-split
+    guest: media
+    lifecycle: retained
+    interfaces:
+      web:
+        interface: primary
+      stream:
+        interface: players
+    storage:
+      data:
+        root_path: data
+        subpath: music/data
+    identity:
+      phase: music
+      runtime_id: example-music
+      services:
+        music_assistant: music_music_assistant
+      networks: {}
+      project: music
+    origin:
+      exposure: music
+  ingress:
+    profile: traefik
+    guest: ingress
+    lifecycle: retained
+    interfaces:
+      frontend:
+        interface: primary
+      management:
+        interface: primary
+    storage:
+      certs:
+        root_path: data
+        subpath: ingress/certs
+    identity:
+      phase: ingress
+      runtime_id: example-ingress
+      services:
+        traefik: ingress_traefik
+      networks: {}
+      runtime_directory: /opt/homelab-app/runtime/ingress
+      project: ingress
+    properties:
+      provider:
+        context: lab
+        token_id: example@pve!reader
+      acme:
+        email: admin@example.invalid
+        resolvers:
+        - external: resolver
+    secrets:
+      cloudflare_dns_token: ingress_cloudflare_dns_token
+      proxmox_token: ingress_proxmox_token
+domains:
+  music: music.example.invalid
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+identity_providers: {}
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+  ingress_cloudflare_dns_token:
+    type: file
+    path: /run/example/ingress_cloudflare_dns_token
+  ingress_proxmox_token:
+    type: file
+    path: /run/example/ingress_proxmox_token
+accounts: {}
+devices: {}
+evidence: {}
+connections:
+  music_public:
+    consumer:
+      app: music
+      connection: public
+    target:
+      app: ingress
+      endpoint: https
+    source_interface: web
+    hostname:
+      domain: music
+exposures:
+  music:
+    type: http
+    endpoint:
+      app: music
+      endpoint: web
+    domain: music
+    ingress:
+      app: ingress
+      endpoint: https
+    tls: public
+images: {}
+host_aliases: {}
+address_groups:
+  players:
+    members:
+    - 198.18.100.0/24
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+    music_players_in:
+      rules:
+      - direction: in
+        interface: players
+        source:
+          address_group: players
+        destination:
+          endpoint: stream
+        proto: tcp
+        port:
+          endpoint: stream
+        comment: Selected players to the music stream listener
+    ingress_music:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.40/32
+        port: '8095'
+        comment: Selected music route backend
+    ingress_music_in:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.200/32
+        port: '8095'
+        comment: Selected music ingress
+    connect_music_public:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.200/32
+        port: '443'
+        comment: Selected music_public relationship
+    connect_music_public_incoming:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.40/32
+        port: '443'
+        comment: Selected music_public client
+  transport: {}
+  tls:
+    public:
+      type: acme
+      resolver: letsencrypt
+  middlewares: {}
+  authentication: {}

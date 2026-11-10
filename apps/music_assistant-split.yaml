@@ -1,0 +1,68 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: music_assistant
+display_name: Music Assistant with separate web and player networks
+interfaces:
+  web:
+    required: true
+    accepts:
+    - guest-interface
+  stream:
+    required: true
+    accepts:
+    - guest-interface
+listeners:
+  web:
+    service: music_assistant
+    namespace: host
+    interface: web
+    bind: interface
+    protocol: tcp
+    port: 8095
+  stream:
+    service: music_assistant
+    namespace: host
+    interface: stream
+    bind: interface
+    protocol: tcp
+    port: 8097
+endpoints:
+  web:
+    listener: web
+    protocol: http
+    via: web
+  stream:
+    listener: stream
+    protocol: http
+    via: stream
+storage:
+  data:
+    target: /data
+    read_only: false
+    required: true
+    kind: directory
+connections:
+  public:
+    type: https
+    required: false
+    readiness:
+    - start
+software:
+- docker
+- curl
+- music_assistant-images
+runtime:
+- container-host
+- music_assistant
+health:
+  ready:
+    profile: adapter-ready
+    source_interface: web
+monitoring:
+  profile: docker-agent
+backup:
+  include:
+    data:
+      category: state
+      capture: application-export
+  exclude: {}

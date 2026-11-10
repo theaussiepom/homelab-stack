@@ -1,0 +1,59 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: influxdb
+display_name: InfluxDB with a separate application web frontend
+interfaces:
+  service:
+    required: true
+    accepts:
+    - guest-interface
+  web:
+    required: true
+    accepts:
+    - guest-interface
+listeners:
+  backend:
+    service: influxdb
+    namespace: host
+    interface: service
+    bind: interface
+    protocol: tcp
+    port: 8086
+  web:
+    service: influxdb
+    namespace: host
+    interface: web
+    bind: interface
+    protocol: tcp
+    port: 8086
+endpoints:
+  backend:
+    listener: backend
+    protocol: http
+    via: service
+  web:
+    listener: web
+    protocol: http
+    via: web
+storage:
+  data:
+    target: /var/lib/influxdb
+    read_only: false
+    required: true
+    kind: directory
+connections: {}
+software:
+- influxdb
+runtime:
+- native-influxdb
+health:
+  ready:
+    profile: adapter-ready
+monitoring:
+  profile: influxdb-agent
+backup:
+  include:
+    data:
+      category: database
+      capture: database-export
+  exclude: {}

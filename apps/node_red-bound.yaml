@@ -1,0 +1,82 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: node_red
+display_name: Node-RED with a bound web listener
+interfaces:
+  web:
+    required: true
+    accepts:
+    - guest-interface
+  broker:
+    required: false
+    accepts:
+    - guest-interface
+listeners:
+  web:
+    service: node_red
+    namespace: host
+    interface: web
+    bind: interface
+    protocol: tcp
+    port: 1880
+endpoints:
+  web:
+    listener: web
+    protocol: http
+    via: web
+storage:
+  data:
+    target: /data
+    read_only: false
+    required: true
+    kind: directory
+  config:
+    target: /config
+    read_only: false
+    required: true
+    kind: directory
+  settings:
+    target: /runtime-settings.js
+    read_only: true
+    required: false
+    kind: file
+  healthcheck:
+    target: /healthcheck.js
+    read_only: true
+    required: false
+    kind: file
+connections:
+  broker:
+    type: mqtt
+    required: false
+    readiness:
+    - start
+software:
+- docker
+- curl
+- node_red-images
+runtime:
+- container-host
+- node_red
+health:
+  ready:
+    profile: adapter-ready
+authentication: node-red-retained-oidc
+secrets:
+  api_token:
+    required: false
+monitoring:
+  profile: docker-agent
+backup:
+  include:
+    data:
+      category: state
+      capture: application-export
+    config:
+      category: state
+      capture: application-export
+    settings:
+      category: configuration
+      capture: files
+  exclude:
+    healthcheck: rebuildable
