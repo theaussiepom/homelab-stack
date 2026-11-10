@@ -209,5 +209,32 @@ class BackupProfileTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Bind an isolated declared ZFS pool'):
             backup_staging.storage([{**qualified, 'type': 'lvmthin'}], storage_id)
 
+    def test_scheduler_guide_matches_the_selected_account_owned_installation(self):
+        """Keep the prerequisite and installed-path explanation bound to the real builder."""
+        plan = component_plan.resolve(ROOT, ROOT/'site.backup.example.yaml')
+        packet = component_packet.lower_guest(plan, 'resolver')
+        schedule = json.loads(packet['files']['backup-group.json'])
+        import backup_controller
+        state = min(row['state_root'] for row in schedule['group']['members'].values())
+        directory = state+'/backup-controller/framework/'+'a'*64+'/proxmox/applications'
+        rendered = backup_controller.units(schedule, directory, 1000, '/home/example-cd')
+        guide = (ROOT/'docs/backup.md').read_text()
+        self.assertIn('configure.md#prepare-the-controllers-persistent-user-manager', guide)
+        self.assertIn('operations.md#find-the-schedule-and-completion-records', guide)
+        self.assertIn('`NoNewPrivileges`', guide)
+        self.assertIn('does not use local `sudo`', guide)
+        self.assertIn('root/system-scope namesake is refused', guide)
+        self.assertIn('Preparing the user manager alone does not convert that schedule', guide)
+        self.assertIn('Keep its working source pins and backup protection until that handover is available', guide)
+        self.assertIn('also applies to managed enrollment', guide)
+        self.assertIn("a process with the CD account's UID can alter its own alarm", guide)
+        for suffix in ('service', 'timer'):
+            path = rendered['unit_directory'].removeprefix('/home/example-cd/')
+            path += '/'+rendered['name']+'.'+suffix
+            self.assertIn(path.replace(schedule['group']['name'], '<job-name>'), guide)
+        self.assertIn(rendered['base'].replace(state, '<state_root>')+'/schedules/', guide)
+        self.assertIn(directory.removesuffix('/applications').replace(state, '<state_root>').replace('a'*64, '<source-hash>')+'/', guide)
+        self.assertIn('account-owned, not root-immutable', guide)
+
 
 if __name__ == '__main__': unittest.main()
