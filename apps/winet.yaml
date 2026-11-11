@@ -3,11 +3,11 @@ kind: app-profile
 adapter: winet
 display_name: WiNet
 interfaces:
-  broker:
+  broker_interface:
     required: true
     accepts:
     - guest-interface
-  inverter:
+  inverter_interface:
     required: true
     accepts:
     - guest-interface

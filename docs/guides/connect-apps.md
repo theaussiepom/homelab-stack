@@ -16,8 +16,8 @@ connections:
       connection: upstream
     target:
       app: recursive_dns
-      endpoint: dns_udp
-    source_interface: upstream
+      endpoint: dns_udp_endpoint
+    source_interface: upstream_interface
     readiness: start
 ```
 
@@ -27,7 +27,7 @@ See the [source-only local DNS composition](../examples/local-dns.md) for the co
 
 ## MQTT and a saved hostname
 
-A broker endpoint such as `{app: broker, endpoint: backend}` supplies the runtime target. A connection's hostname can select a named DNS exposure, or a supported named host alias, independently of that address. This preserves a saved hostname without forcing the GUI through a frontend route.
+A broker endpoint such as `{app: broker, endpoint: backend_endpoint}` supplies the runtime target. A connection's hostname can select a named DNS exposure, or a supported named host alias, independently of that address. This preserves a saved hostname without forcing the GUI through a frontend route.
 
 Explorer also requires a broker account or credential and an existing HTTP authentication outpost. Selecting a broker does not supply either prerequisite. Same-guest managed `mqtt-client` selects deliberately broad all-topic read/write access. An explicit existing credential uses its separate private source and does not create an account. See [Explorer](../reference/apps/mqtt_explorer.md) and [MQTT](../reference/apps/mqtt.md).
 

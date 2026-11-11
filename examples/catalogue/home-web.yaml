@@ -65,8 +65,12 @@ guests:
     network_policy:
     - policy: home_ingress
       endpoints:
-        edge: {app: edge, endpoint: https}
-        home: {app: home, endpoint: web}
+        edge:
+          app: edge
+          endpoint: https_endpoint
+        home:
+          app: home
+          endpoint: web_endpoint
     - policy: deployment
       endpoints:
         runner:
@@ -123,14 +127,14 @@ guests:
       endpoints:
         home:
           app: home
-          endpoint: web
+          endpoint: web_endpoint
 apps:
   home:
     profile: homeassistant
     guest: automation
     lifecycle: fresh
     interfaces:
-      web:
+      web_interface:
         interface: primary
     storage:
       config:
@@ -141,9 +145,9 @@ apps:
     guest: edge
     lifecycle: fresh
     interfaces:
-      frontend:
+      frontend_interface:
         interface: primary
-      management:
+      management_interface:
         interface: primary
     storage:
       certs:
@@ -209,11 +213,11 @@ exposures:
     type: http
     target:
       app: home
-      endpoint: web
+      endpoint: web_endpoint
     domain: home
     ingress:
       app: edge
-      endpoint: https
+      endpoint: https_endpoint
     tls: site_certificate
 images: {}
 host_aliases: {}
@@ -267,9 +271,12 @@ policies:
       rules:
       - direction: in
         proto: tcp
-        source: {endpoint: edge}
-        destination: {endpoint: home}
-        port: {endpoint: home}
+        source:
+          endpoint: edge
+        destination:
+          endpoint: home
+        port:
+          endpoint: home
         comment: Home web from ingress
     home_backend:
       rules:

@@ -23,7 +23,7 @@ The complete reusable declaration is [traefik.yaml](../../../apps/traefik.yaml).
 
 Although secret roles and properties are structurally conditional, the current supported runtime binds both provider and ACME and requires the proxmox_token role for the provider and the cloudflare_dns_token role for ACME. No Docker socket, arbitrary provider or raw route file override is exposed.
 
-The optional `cloudflare-source` exposure policy adds the framework-owned local middleware and requires `cloudflare_origin_token`. Bind the existing token through a protected secret source; normal CD mounts its bytes as a root-owned read-only file rather than exposing them through Traefik dynamic configuration or API output; its header name and internal allowlist belong to site policy. The plugin checks socket sources, sanitizes visitor headers and bounds address-feed refresh/failure behavior. See the framework [middleware contract](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/policies.md#cloudflare-source-boundary).
+The optional `cloudflare-source` exposure policy adds the framework-owned local middleware and requires `cloudflare_origin_token`. Bind the existing token through a protected secret source; normal CD mounts its bytes as a root-owned read-only file rather than exposing them through Traefik dynamic configuration or API output; its header name and internal allowlist belong to site policy. The plugin checks socket sources, sanitizes visitor headers and bounds address-feed refresh/failure behavior. See the framework [middleware contract](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/policies.md#cloudflare-source-boundary).
 
 Deploy route restrictions before opening the ingress frontend firewall in a later deployment. Validate the actual selected Traefik image, internal access, public TLS and visitor identity after CD; source checks alone do not establish service acceptance.
 
@@ -63,10 +63,10 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
-| `frontend` | Yes | `guest-interface` |
-| `management` | No; selected capability can require it | `guest-interface` |
-| `backend` | No; selected capability can require it | `guest-interface` |
-| `metrics` | No; selected capability can require it | `guest-interface` |
+| `frontend_interface` | Yes | `guest-interface` |
+| `management_interface` | No; selected capability can require it | `guest-interface` |
+| `backend_interface` | No; selected capability can require it | `guest-interface` |
+| `metrics_interface` | No; selected capability can require it | `guest-interface` |
 
 Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role names an application requirement; it does not create another NIC. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -74,20 +74,20 @@ Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `http` | `traefik` / `host` | `interface` via `frontend` | `80/tcp` | None; listener remains in its declared namespace |
-| `https` | `traefik` / `host` | `interface` via `frontend` | `443/tcp` | None; listener remains in its declared namespace |
+| `http_listener` | `traefik` / `host` | `interface` via `frontend_interface` | `80/tcp` | None; listener remains in its declared namespace |
+| `https_listener` | `traefik` / `host` | `interface` via `frontend_interface` | `443/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
-| `http` | `http` | `http` via `frontend` |
-| `https` | `https` | `https` via `frontend` |
-| `dashboard` | `internal` | `dashboard` (requires selected internal capability) |
+| `http_endpoint` | `http` | `http_listener` via `frontend_interface` |
+| `https_endpoint` | `https` | `https_listener` via `frontend_interface` |
+| `dashboard_endpoint` | `internal` | `dashboard` (requires selected internal capability) |
 
 Listeners use the declared interface or network namespace. Endpoints tell consumers where to connect; they do not permit traffic or make consumers wait for the service.
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -113,7 +113,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -156,7 +156,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -171,44 +171,44 @@ These are the complete supplied fields in [traefik.yaml](../../../apps/traefik.y
 | <a id="declaration-adapter"></a>`adapter` | `"traefik"` |
 | <a id="declaration-display-name"></a>`display_name` | `"Traefik"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
-| <a id="declaration-interfaces-frontend"></a>`interfaces.frontend` | `object` |
-| <a id="declaration-interfaces-frontend-required"></a>`interfaces.frontend.required` | `true` |
-| <a id="declaration-interfaces-frontend-accepts"></a>`interfaces.frontend.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-management"></a>`interfaces.management` | `object` |
-| <a id="declaration-interfaces-management-required"></a>`interfaces.management.required` | `false` |
-| <a id="declaration-interfaces-management-accepts"></a>`interfaces.management.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-backend"></a>`interfaces.backend` | `object` |
-| <a id="declaration-interfaces-backend-required"></a>`interfaces.backend.required` | `false` |
-| <a id="declaration-interfaces-backend-accepts"></a>`interfaces.backend.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-metrics"></a>`interfaces.metrics` | `object` |
-| <a id="declaration-interfaces-metrics-required"></a>`interfaces.metrics.required` | `false` |
-| <a id="declaration-interfaces-metrics-accepts"></a>`interfaces.metrics.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-frontend-interface"></a>`interfaces.frontend_interface` | `object` |
+| <a id="declaration-interfaces-frontend-interface-required"></a>`interfaces.frontend_interface.required` | `true` |
+| <a id="declaration-interfaces-frontend-interface-accepts"></a>`interfaces.frontend_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-management-interface"></a>`interfaces.management_interface` | `object` |
+| <a id="declaration-interfaces-management-interface-required"></a>`interfaces.management_interface.required` | `false` |
+| <a id="declaration-interfaces-management-interface-accepts"></a>`interfaces.management_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-backend-interface"></a>`interfaces.backend_interface` | `object` |
+| <a id="declaration-interfaces-backend-interface-required"></a>`interfaces.backend_interface.required` | `false` |
+| <a id="declaration-interfaces-backend-interface-accepts"></a>`interfaces.backend_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-metrics-interface"></a>`interfaces.metrics_interface` | `object` |
+| <a id="declaration-interfaces-metrics-interface-required"></a>`interfaces.metrics_interface.required` | `false` |
+| <a id="declaration-interfaces-metrics-interface-accepts"></a>`interfaces.metrics_interface.accepts` | `["guest-interface"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
-| <a id="declaration-listeners-http"></a>`listeners.http` | `object` |
-| <a id="declaration-listeners-http-service"></a>`listeners.http.service` | `"traefik"` |
-| <a id="declaration-listeners-http-namespace"></a>`listeners.http.namespace` | `"host"` |
-| <a id="declaration-listeners-http-interface"></a>`listeners.http.interface` | `"frontend"` |
-| <a id="declaration-listeners-http-bind"></a>`listeners.http.bind` | `"interface"` |
-| <a id="declaration-listeners-http-protocol"></a>`listeners.http.protocol` | `"tcp"` |
-| <a id="declaration-listeners-http-port"></a>`listeners.http.port` | `80` |
-| <a id="declaration-listeners-https"></a>`listeners.https` | `object` |
-| <a id="declaration-listeners-https-service"></a>`listeners.https.service` | `"traefik"` |
-| <a id="declaration-listeners-https-namespace"></a>`listeners.https.namespace` | `"host"` |
-| <a id="declaration-listeners-https-interface"></a>`listeners.https.interface` | `"frontend"` |
-| <a id="declaration-listeners-https-bind"></a>`listeners.https.bind` | `"interface"` |
-| <a id="declaration-listeners-https-protocol"></a>`listeners.https.protocol` | `"tcp"` |
-| <a id="declaration-listeners-https-port"></a>`listeners.https.port` | `443` |
+| <a id="declaration-listeners-http-listener"></a>`listeners.http_listener` | `object` |
+| <a id="declaration-listeners-http-listener-service"></a>`listeners.http_listener.service` | `"traefik"` |
+| <a id="declaration-listeners-http-listener-namespace"></a>`listeners.http_listener.namespace` | `"host"` |
+| <a id="declaration-listeners-http-listener-interface"></a>`listeners.http_listener.interface` | `"frontend_interface"` |
+| <a id="declaration-listeners-http-listener-bind"></a>`listeners.http_listener.bind` | `"interface"` |
+| <a id="declaration-listeners-http-listener-protocol"></a>`listeners.http_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-http-listener-port"></a>`listeners.http_listener.port` | `80` |
+| <a id="declaration-listeners-https-listener"></a>`listeners.https_listener` | `object` |
+| <a id="declaration-listeners-https-listener-service"></a>`listeners.https_listener.service` | `"traefik"` |
+| <a id="declaration-listeners-https-listener-namespace"></a>`listeners.https_listener.namespace` | `"host"` |
+| <a id="declaration-listeners-https-listener-interface"></a>`listeners.https_listener.interface` | `"frontend_interface"` |
+| <a id="declaration-listeners-https-listener-bind"></a>`listeners.https_listener.bind` | `"interface"` |
+| <a id="declaration-listeners-https-listener-protocol"></a>`listeners.https_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-https-listener-port"></a>`listeners.https_listener.port` | `443` |
 | <a id="declaration-endpoints"></a>`endpoints` | `object` |
-| <a id="declaration-endpoints-http"></a>`endpoints.http` | `object` |
-| <a id="declaration-endpoints-http-listener"></a>`endpoints.http.listener` | `"http"` |
-| <a id="declaration-endpoints-http-protocol"></a>`endpoints.http.protocol` | `"http"` |
-| <a id="declaration-endpoints-http-via"></a>`endpoints.http.via` | `"frontend"` |
-| <a id="declaration-endpoints-https"></a>`endpoints.https` | `object` |
-| <a id="declaration-endpoints-https-listener"></a>`endpoints.https.listener` | `"https"` |
-| <a id="declaration-endpoints-https-protocol"></a>`endpoints.https.protocol` | `"https"` |
-| <a id="declaration-endpoints-https-via"></a>`endpoints.https.via` | `"frontend"` |
-| <a id="declaration-endpoints-dashboard"></a>`endpoints.dashboard` | `object` |
-| <a id="declaration-endpoints-dashboard-internal"></a>`endpoints.dashboard.internal` | `"dashboard"` |
+| <a id="declaration-endpoints-http-endpoint"></a>`endpoints.http_endpoint` | `object` |
+| <a id="declaration-endpoints-http-endpoint-listener"></a>`endpoints.http_endpoint.listener` | `"http_listener"` |
+| <a id="declaration-endpoints-http-endpoint-protocol"></a>`endpoints.http_endpoint.protocol` | `"http"` |
+| <a id="declaration-endpoints-http-endpoint-via"></a>`endpoints.http_endpoint.via` | `"frontend_interface"` |
+| <a id="declaration-endpoints-https-endpoint"></a>`endpoints.https_endpoint` | `object` |
+| <a id="declaration-endpoints-https-endpoint-listener"></a>`endpoints.https_endpoint.listener` | `"https_listener"` |
+| <a id="declaration-endpoints-https-endpoint-protocol"></a>`endpoints.https_endpoint.protocol` | `"https"` |
+| <a id="declaration-endpoints-https-endpoint-via"></a>`endpoints.https_endpoint.via` | `"frontend_interface"` |
+| <a id="declaration-endpoints-dashboard-endpoint"></a>`endpoints.dashboard_endpoint` | `object` |
+| <a id="declaration-endpoints-dashboard-endpoint-internal"></a>`endpoints.dashboard_endpoint.internal` | `"dashboard"` |
 | <a id="declaration-properties"></a>`properties` | `object` |
 | <a id="declaration-properties-dashboard"></a>`properties.dashboard` | `false` |
 | <a id="declaration-storage"></a>`storage` | `object` |

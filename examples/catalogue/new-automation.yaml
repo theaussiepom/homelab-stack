@@ -125,7 +125,7 @@ apps:
     guest: homeassistant-public
     lifecycle: fresh
     interfaces:
-      web:
+      web_interface:
         interface: primary
     storage:
       config:
@@ -136,7 +136,7 @@ apps:
     guest: node_red-public
     lifecycle: fresh
     interfaces:
-      web:
+      web_interface:
         interface: primary
     storage:
       data:

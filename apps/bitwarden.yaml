@@ -3,39 +3,39 @@ kind: app-profile
 adapter: bitwarden
 display_name: Bitwarden
 interfaces:
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
-  database:
+  database_interface:
     required: true
     accepts:
     - guest-interface
-  management:
+  management_interface:
     required: false
     accepts:
     - guest-interface
-  private:
+  private_interface:
     required: true
     accepts:
     - app-network
 listeners:
-  web:
+  web_listener:
     service: bitwarden
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 8080
     publish:
       scope: guest-interface
-      interface: web
+      interface: web_interface
       port: 8080
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
+    via: web_interface
 storage:
   data:
     target: /etc/bitwarden

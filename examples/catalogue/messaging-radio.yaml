@@ -251,9 +251,9 @@ apps:
     guest: broker
     lifecycle: retained
     interfaces:
-      backend:
+      backend_interface:
         interface: primary
-      frontend:
+      frontend_interface:
         interface: primary
     storage:
       config:
@@ -280,12 +280,12 @@ apps:
     guest: browser
     lifecycle: fresh
     interfaces:
-      web:
+      web_interface:
         interface: primary
-      private:
+      private_interface:
         scope: app-network
         network: explorer
-      broker:
+      broker_interface:
         interface: primary
     storage:
       data:
@@ -300,9 +300,9 @@ apps:
     guest: ingress
     lifecycle: retained
     interfaces:
-      frontend:
+      frontend_interface:
         interface: primary
-      management:
+      management_interface:
         interface: primary
     storage:
       certs:
@@ -332,9 +332,9 @@ apps:
     guest: telemetry
     lifecycle: retained
     interfaces:
-      broker:
+      broker_interface:
         interface: primary
-      inverter:
+      inverter_interface:
         interface: primary
     storage: {}
     identity:
@@ -354,11 +354,11 @@ apps:
     guest: radio
     lifecycle: retained
     interfaces:
-      web:
+      web_interface:
         interface: primary
-      broker:
+      broker_interface:
         interface: primary
-      private:
+      private_interface:
         scope: app-network
         network: default
     storage:
@@ -444,7 +444,7 @@ connections:
       connection: broker
     target:
       external: existing_broker
-    source_interface: broker
+    source_interface: broker_interface
     hostname:
       domain: broker
     credential:
@@ -456,38 +456,38 @@ connections:
       connection: outpost
     target:
       external: outpost
-    source_interface: web
+    source_interface: web_interface
   telemetry_broker:
     consumer:
       app: telemetry
       connection: broker
     target:
       external: existing_broker
-    source_interface: broker
+    source_interface: broker_interface
   telemetry_inverter:
     consumer:
       app: telemetry
       connection: inverter
     target:
       external: inverter
-    source_interface: inverter
+    source_interface: inverter_interface
   radio_broker:
     consumer:
       app: radio
       connection: broker
     target:
       external: existing_broker
-    source_interface: broker
+    source_interface: broker_interface
 exposures:
   browser:
     type: http
     target:
       app: browser
-      endpoint: web
+      endpoint: web_endpoint
     domain: browser
     ingress:
       app: ingress
-      endpoint: https
+      endpoint: https_endpoint
     tls: public
 images: {}
 host_aliases: {}

@@ -3,46 +3,46 @@ kind: app-profile
 adapter: authentik
 display_name: Authentik
 interfaces:
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
-  private:
+  private_interface:
     required: true
     accepts:
     - app-network
-  postgresql:
+  postgresql_interface:
     required: true
     accepts:
     - guest-interface
-  management:
+  management_interface:
     required: false
     accepts:
     - guest-interface
 listeners:
-  web:
+  web_listener:
     service: server
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 9000
     publish:
       scope: guest-interface
-      interface: web
+      interface: web_interface
       port: 9000
-  redis:
+  redis_listener:
     service: redis
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 6379
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
+    via: web_interface
 storage:
   media:
     target: /media

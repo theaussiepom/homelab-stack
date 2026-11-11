@@ -3,6 +3,6 @@ kind: exposure
 type: dns
 target:
   app: filtering
-  endpoint: web
+  endpoint: web_endpoint
 domain: filtering
 resolver: filtering

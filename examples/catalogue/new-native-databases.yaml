@@ -155,7 +155,7 @@ apps:
     guest: postgresql
     lifecycle: fresh
     interfaces:
-      service:
+      service_interface:
         interface: primary
     storage:
       data:
@@ -166,7 +166,7 @@ apps:
     guest: mariadb
     lifecycle: fresh
     interfaces:
-      service:
+      service_interface:
         interface: primary
     storage:
       data:
@@ -177,7 +177,7 @@ apps:
     guest: influxdb
     lifecycle: fresh
     interfaces:
-      service:
+      service_interface:
         interface: primary
     storage:
       data:

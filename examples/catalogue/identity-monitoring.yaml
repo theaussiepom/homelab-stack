@@ -160,12 +160,12 @@ apps:
     guest: identity
     lifecycle: retained
     interfaces:
-      web:
+      web_interface:
         interface: primary
-      private:
+      private_interface:
         scope: app-network
         network: default
-      postgresql:
+      postgresql_interface:
         interface: primary
     storage:
       media:
@@ -203,13 +203,13 @@ apps:
     guest: monitoring
     lifecycle: retained
     interfaces:
-      web:
+      web_interface:
         interface: primary
-      server:
+      server_interface:
         interface: primary
-      postgresql:
+      postgresql_interface:
         interface: primary
-      private:
+      private_interface:
         scope: app-network
         network: default
     storage: {}
@@ -232,7 +232,7 @@ apps:
     guest: monitoring-storage
     lifecycle: retained
     interfaces:
-      service:
+      service_interface:
         interface: primary
     storage:
       data:
@@ -285,15 +285,15 @@ connections:
       connection: database
     target:
       external: identity_database
-    source_interface: postgresql
+    source_interface: postgresql_interface
   monitoring_database:
     consumer:
       app: monitoring
       connection: database
     target:
       app: monitoring_storage
-      endpoint: backend
-    source_interface: postgresql
+      endpoint: backend_endpoint
+    source_interface: postgresql_interface
 exposures: {}
 images: {}
 host_aliases: {}

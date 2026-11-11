@@ -79,9 +79,9 @@ apps:
     guest: resolver
     lifecycle: retained
     interfaces:
-      service:
+      service_interface:
         scope: guest-loopback
-      private:
+      private_interface:
         scope: app-network
         network: default
     identity:
@@ -108,9 +108,9 @@ apps:
         pihole: filtering
       networks: {}
     interfaces:
-      service:
+      service_interface:
         interface: primary
-      upstream:
+      upstream_interface:
         scope: guest-loopback
     storage:
       config:

@@ -13,7 +13,7 @@ Run the Mosquitto broker using the explicitly bound existing configuration, pers
 | Site selection | `apps.<instance>.profile: mqtt` |
 | Adapter | `mqtt` |
 | Owned containers | `mqtt` |
-| Multiple instances | The [selected listener port](#declaration-listeners-mqtt-port) conflicts with another overlapping broker listener on the same guest. |
+| Multiple instances | The [selected listener port](#declaration-listeners-mqtt-listener-port) conflicts with another overlapping broker listener on the same guest. |
 
 This profile runs on Debian 13 LXC on Proxmox. Compilation checks the configuration, and local helper tests check the controller code. Neither check verifies a deployed service.
 
@@ -61,9 +61,9 @@ broker:
   guest: broker
   lifecycle: retained
   interfaces:
-    backend:
+    backend_interface:
       interface: primary
-    frontend:
+    frontend_interface:
       interface: primary
   storage:
     config:
@@ -87,7 +87,7 @@ broker:
     probe: broker_probe
 ```
 
-The guest’s `primary` NIC supplies both endpoint addresses. `backend` and `frontend` advertise the same host TCP listener; they do not create separate sockets. Root path `data` and subpaths within it determine the three mounts. At deployment, the explicit retained identity must match the records proving that HomeLab already manages this broker. See [interface binding](../../guides/multiple-interfaces.md), [storage rules](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/storage.md) and [later deployments](#later-deployments).
+The guest’s `primary` NIC supplies both endpoint addresses. `backend` and `frontend` advertise the same host TCP listener; they do not create separate sockets. Root path `data` and subpaths within it determine the three mounts. At deployment, the explicit retained identity must match the records proving that HomeLab already manages this broker. See [interface binding](../../guides/multiple-interfaces.md), [storage rules](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/storage.md) and [later deployments](#later-deployments).
 
 ## Resolved result
 
@@ -101,8 +101,8 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
-| `backend` | [Required flag](#declaration-interfaces-backend-required) | [Allowed scopes](#declaration-interfaces-backend-accepts) |
-| `frontend` | [Required flag](#declaration-interfaces-frontend-required) | [Allowed scopes](#declaration-interfaces-frontend-accepts) |
+| `backend_interface` | [Required flag](#declaration-interfaces-backend-interface-required) | [Allowed scopes](#declaration-interfaces-backend-interface-accepts) |
+| `frontend_interface` | [Required flag](#declaration-interfaces-frontend-interface-required) | [Allowed scopes](#declaration-interfaces-frontend-interface-accepts) |
 
 Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role names an application requirement; it does not create another NIC. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -112,18 +112,18 @@ The summary links to the checked declaration cells so listener values have one m
 
 | Listener | Owned socket | Binding | Port and transport |
 | --- | --- | --- | --- |
-| [Broker listener](#declaration-listeners-mqtt) | [Service](#declaration-listeners-mqtt-service) and [namespace](#declaration-listeners-mqtt-namespace) | [Bind choice](#declaration-listeners-mqtt-bind) and [interface role](#declaration-listeners-mqtt-interface) | [Port](#declaration-listeners-mqtt-port) and [protocol](#declaration-listeners-mqtt-protocol) |
+| [Broker listener](#declaration-listeners-mqtt-listener) | [Service](#declaration-listeners-mqtt-listener-service) and [namespace](#declaration-listeners-mqtt-listener-namespace) | [Bind choice](#declaration-listeners-mqtt-listener-bind) and [interface role](#declaration-listeners-mqtt-listener-interface) | [Port](#declaration-listeners-mqtt-listener-port) and [protocol](#declaration-listeners-mqtt-listener-protocol) |
 
 | Endpoint | Protocol | Address and port derivation |
 | --- | --- | --- |
-| `backend` | [Selected protocol](#declaration-endpoints-backend-protocol) | [Listener](#declaration-endpoints-backend-listener) supplies the port; [interface role](#declaration-endpoints-backend-via) supplies the address. |
-| `frontend` | [Selected protocol](#declaration-endpoints-frontend-protocol) | [Listener](#declaration-endpoints-frontend-listener) supplies the port; [interface role](#declaration-endpoints-frontend-via) supplies the address. |
+| `backend_endpoint` | [Selected protocol](#declaration-endpoints-backend-endpoint-protocol) | `mqtt_listener` via `backend_interface` |
+| `frontend_endpoint` | [Selected protocol](#declaration-endpoints-frontend-endpoint-protocol) | `mqtt_listener` via `frontend_interface` |
 
 A wildcard host listener can accept connections through interfaces other than the advertised NIC. An endpoint gives consumers an address and port. It does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Presence | Container target | Kind and access |
 | --- | --- | --- | --- |
@@ -146,11 +146,11 @@ Keep secret values outside Git. A file or environment reference identifies where
 <a id="mqtt-probe"></a>
 ## Probe binding
 
-**Type and reference:** a site identifier string selecting `secret_sources.<name>` in the same complete site. For this adapter the selected source MUST be `{type: file, path: ABSOLUTE_PATH}`; file path syntax is defined by the compatible [secret-source contract](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/identity-and-secrets.md). The source identifies a file on the controller. Resolving the reference does not read the file or create an account.
+**Type and reference:** a site identifier string selecting `secret_sources.<name>` in the same complete site. For this adapter the selected source MUST be `{type: file, path: ABSOLUTE_PATH}`; file path syntax is defined by the compatible [secret-source contract](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/identity-and-secrets.md). The source identifies a file on the controller. Resolving the reference does not read the file or create an account.
 
 **Presence/default:** the MQTT adapter requires this role even though the profile metadata marks it optional. There is no default source or credential. Omitting it produces `component.secret-required`. An environment source is also rejected because this adapter requires a file. Null and empty identifiers fail the reference and type checks. The [diagnostic example](#invalid-cases) demonstrates omission from an otherwise valid source.
 
-**Material and output:** the runtime parser accepts one existing JSON probe record with exactly `username` and `password`, both nonempty strings of at most 65,535 UTF-8 bytes without carriage returns (CR), line feeds (LF) or NUL characters. It prepares private `mqtt-probe.json` owned by UID 0 and GID 0 with mode 0600 under the app's selected runtime directory. No actual values belong in public documentation or source. See [probe parser](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/proxmox/applications/mqtt_runtime.py) and [required probe binding](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/blueprints/component_foundations.py).
+**Material and output:** the runtime parser accepts one existing JSON probe record with exactly `username` and `password`, both nonempty strings of at most 65,535 UTF-8 bytes without carriage returns (CR), line feeds (LF) or NUL characters. It prepares private `mqtt-probe.json` owned by UID 0 and GID 0 with mode 0600 under the app's selected runtime directory. No actual values belong in public documentation or source. See [probe parser](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/proxmox/applications/mqtt_runtime.py) and [required probe binding](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/blueprints/component_foundations.py).
 
 **Lifecycle:** supply a genuinely existing probe account and prepared broker that accepts it. This record is separate from application credentials, GUI credentials and credentials for an identity service. Ordinary updates must preserve the existing private inputs. Changing a source name or path does not authorize credential rotation. Source compilation neither checks credential contents nor proves broker acceptance. The adapter's health definition checks authenticated acceptance and anonymous refusal after actual deployment; this source suite does not perform that target check.
 
@@ -161,7 +161,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 **Type and constraint:** optional string matching `/mosquitto/config/[A-Za-z0-9_.-]{1,100}`; the basename cannot be `.` or `..`. This is a path inside the declared config mount, not a secret-source ID or controller path. Absolute paths elsewhere, nested subdirectories, null and the empty string fail `component.property`. No units, enum or nested object apply.
 
-**Conditional requirement:** when a supported MQTT Explorer connection selects a managed account on this broker, the resolver requires this property and supplies it to the procedure that creates the account; absence then fails `component.broker-binding`. An Explorer connection using an explicit existing credential is a different mode and does not create that managed account. See the compatible [connection/account rules](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/blueprints/component_foundations.py) and [Explorer's choice](mqtt_explorer.md).
+**Conditional requirement:** when a supported MQTT Explorer connection selects a managed account on this broker, the resolver requires this property and supplies it to the procedure that creates the account; absence then fails `component.broker-binding`. An Explorer connection using an explicit existing credential is a different mode and does not create that managed account. See the compatible [connection/account rules](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/blueprints/component_foundations.py) and [Explorer's choice](mqtt_explorer.md).
 
 **Default/resolution:** no default is declared in this profile; omission leaves it absent. The resolver copies direct profile property keys then replaces them with explicit site property keys. This field is scalar, so no recursive merge applies. The MQTT property object rejects unknown fields: `password_file` is its only accepted key at this snapshot. `port: 1884` is not an available override and fails `component.fields`.
 
@@ -177,7 +177,7 @@ This fragment passes the property's value rule; it does not by itself select or 
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -231,7 +231,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -246,29 +246,29 @@ These are the complete supplied fields in [mqtt.yaml](../../../apps/mqtt.yaml), 
 | <a id="declaration-adapter"></a>`adapter` | `"mqtt"` |
 | <a id="declaration-display-name"></a>`display_name` | `"MQTT"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
-| <a id="declaration-interfaces-backend"></a>`interfaces.backend` | `object` |
-| <a id="declaration-interfaces-backend-required"></a>`interfaces.backend.required` | `true` |
-| <a id="declaration-interfaces-backend-accepts"></a>`interfaces.backend.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-frontend"></a>`interfaces.frontend` | `object` |
-| <a id="declaration-interfaces-frontend-required"></a>`interfaces.frontend.required` | `true` |
-| <a id="declaration-interfaces-frontend-accepts"></a>`interfaces.frontend.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-backend-interface"></a>`interfaces.backend_interface` | `object` |
+| <a id="declaration-interfaces-backend-interface-required"></a>`interfaces.backend_interface.required` | `true` |
+| <a id="declaration-interfaces-backend-interface-accepts"></a>`interfaces.backend_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-frontend-interface"></a>`interfaces.frontend_interface` | `object` |
+| <a id="declaration-interfaces-frontend-interface-required"></a>`interfaces.frontend_interface.required` | `true` |
+| <a id="declaration-interfaces-frontend-interface-accepts"></a>`interfaces.frontend_interface.accepts` | `["guest-interface"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
-| <a id="declaration-listeners-mqtt"></a>`listeners.mqtt` | `object` |
-| <a id="declaration-listeners-mqtt-service"></a>`listeners.mqtt.service` | `"mqtt"` |
-| <a id="declaration-listeners-mqtt-namespace"></a>`listeners.mqtt.namespace` | `"host"` |
-| <a id="declaration-listeners-mqtt-interface"></a>`listeners.mqtt.interface` | `"backend"` |
-| <a id="declaration-listeners-mqtt-bind"></a>`listeners.mqtt.bind` | `"wildcard"` |
-| <a id="declaration-listeners-mqtt-protocol"></a>`listeners.mqtt.protocol` | `"tcp"` |
-| <a id="declaration-listeners-mqtt-port"></a>`listeners.mqtt.port` | `1883` |
+| <a id="declaration-listeners-mqtt-listener"></a>`listeners.mqtt_listener` | `object` |
+| <a id="declaration-listeners-mqtt-listener-service"></a>`listeners.mqtt_listener.service` | `"mqtt"` |
+| <a id="declaration-listeners-mqtt-listener-namespace"></a>`listeners.mqtt_listener.namespace` | `"host"` |
+| <a id="declaration-listeners-mqtt-listener-interface"></a>`listeners.mqtt_listener.interface` | `"backend_interface"` |
+| <a id="declaration-listeners-mqtt-listener-bind"></a>`listeners.mqtt_listener.bind` | `"wildcard"` |
+| <a id="declaration-listeners-mqtt-listener-protocol"></a>`listeners.mqtt_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-mqtt-listener-port"></a>`listeners.mqtt_listener.port` | `1883` |
 | <a id="declaration-endpoints"></a>`endpoints` | `object` |
-| <a id="declaration-endpoints-backend"></a>`endpoints.backend` | `object` |
-| <a id="declaration-endpoints-backend-listener"></a>`endpoints.backend.listener` | `"mqtt"` |
-| <a id="declaration-endpoints-backend-protocol"></a>`endpoints.backend.protocol` | `"tcp"` |
-| <a id="declaration-endpoints-backend-via"></a>`endpoints.backend.via` | `"backend"` |
-| <a id="declaration-endpoints-frontend"></a>`endpoints.frontend` | `object` |
-| <a id="declaration-endpoints-frontend-listener"></a>`endpoints.frontend.listener` | `"mqtt"` |
-| <a id="declaration-endpoints-frontend-protocol"></a>`endpoints.frontend.protocol` | `"tcp"` |
-| <a id="declaration-endpoints-frontend-via"></a>`endpoints.frontend.via` | `"frontend"` |
+| <a id="declaration-endpoints-backend-endpoint"></a>`endpoints.backend_endpoint` | `object` |
+| <a id="declaration-endpoints-backend-endpoint-listener"></a>`endpoints.backend_endpoint.listener` | `"mqtt_listener"` |
+| <a id="declaration-endpoints-backend-endpoint-protocol"></a>`endpoints.backend_endpoint.protocol` | `"tcp"` |
+| <a id="declaration-endpoints-backend-endpoint-via"></a>`endpoints.backend_endpoint.via` | `"backend_interface"` |
+| <a id="declaration-endpoints-frontend-endpoint"></a>`endpoints.frontend_endpoint` | `object` |
+| <a id="declaration-endpoints-frontend-endpoint-listener"></a>`endpoints.frontend_endpoint.listener` | `"mqtt_listener"` |
+| <a id="declaration-endpoints-frontend-endpoint-protocol"></a>`endpoints.frontend_endpoint.protocol` | `"tcp"` |
+| <a id="declaration-endpoints-frontend-endpoint-via"></a>`endpoints.frontend_endpoint.via` | `"frontend_interface"` |
 | <a id="declaration-storage"></a>`storage` | `object` |
 | <a id="declaration-storage-config"></a>`storage.config` | `object` |
 | <a id="declaration-storage-config-target"></a>`storage.config.target` | `"/mosquitto/config"` |

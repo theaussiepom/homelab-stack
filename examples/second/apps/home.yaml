@@ -4,7 +4,7 @@ profile: homeassistant
 guest: home-app
 lifecycle: fresh
 interfaces:
-  web:
+  web_interface:
     interface: primary
 storage:
   config:

@@ -25,7 +25,7 @@ class ComponentCompositionTests(unittest.TestCase):
         app = plan.resolved['apps']['home']
         self.assertEqual((app['profile'], app['guest'], app['lifecycle']),
                          ('homeassistant', 'automation', 'fresh'))
-        self.assertEqual(app['interfaces']['web'], {'interface': 'primary'})
+        self.assertEqual(app['interfaces']['web_interface'], {'interface': 'primary'})
         self.assertEqual(value['apps']['home']['storage']['config'],
                          {'volume': 'apps', 'subpath': 'homeassistant'})
         route = plan.resolved['routes']['edge']['home_web']
@@ -128,15 +128,15 @@ class ComponentCompositionTests(unittest.TestCase):
         value['secret_sources']['edge_origin_token']={'type':'file','path':'/run/example/retained-origin-token'}
         value['domains']={'manager':'manager.example.invalid'}
         value['policies']['tls']={'public':{'type':'acme','resolver':'letsencrypt'}}
-        value['exposures']={'manager':{'type':'http','target':{'app':'manager','endpoint':'web'},'domain':'manager',
-            'ingress':{'app':'edge','endpoint':'https'},'tls':'public','middlewares':['cloudflare_public','headers']}}
+        value['exposures']={'manager':{'type':'http','target':{'app':'manager','endpoint':'web_endpoint'},'domain':'manager',
+            'ingress':{'app':'edge','endpoint':'https_endpoint'},'tls':'public','middlewares':['cloudflare_public','headers']}}
         value['policies']['network']['proxy_backend']={'rules':[{'direction':'out','proto':'tcp',
             'destination':{'endpoint':'backend'},'port':{'endpoint':'backend'},'comment':'Selected proxy backend'}]}
         value['policies']['network']['proxy_client']={'rules':[{'direction':'in','proto':'tcp','source':{'endpoint':'proxy'},
             'destination':{'endpoint':'backend'},'port':{'endpoint':'backend'},'comment':'Selected reverse proxy'}]}
-        value['guests']['edge']['network_policy'].append({'policy':'proxy_backend','endpoints':{'backend':{'app':'manager','endpoint':'web'}}})
+        value['guests']['edge']['network_policy'].append({'policy':'proxy_backend','endpoints':{'backend':{'app':'manager','endpoint':'web_endpoint'}}})
         value['guests']['manager']['network_policy'].append({'policy':'proxy_client','endpoints':{
-            'backend':{'app':'manager','endpoint':'web'},'proxy':{'app':'edge','endpoint':'https'}}})
+            'backend':{'app':'manager','endpoint':'web_endpoint'},'proxy':{'app':'edge','endpoint':'https_endpoint'}}})
         plan = self.plan(value)
         edge = plan.resolved['apps']['edge']
         self.assertTrue(edge['settings']['cloudflare'])
@@ -203,8 +203,8 @@ class ComponentCompositionTests(unittest.TestCase):
             'network': 'management', 'slot': 1, 'mac': '02:00:00:25:01:47',
             'address': {'mode': 'static', 'value': '198.18.25.71'},
             'default_route': False, 'ipv6': 'manual'}
-        value['apps']['manager']['interfaces']['management'] = {'interface': 'api'}
-        value['connections']['manager_provider']['source_interface'] = 'management'
+        value['apps']['manager']['interfaces']['management_interface'] = {'interface': 'api'}
+        value['connections']['manager_provider']['source_interface'] = 'management_interface'
         value['policies']['network']['provider_api']['rules'][0].update(
             interface='api', source={'interface': 'api'})
         binding = next(row for row in value['guests']['manager']['network_policy']
@@ -221,7 +221,7 @@ class ComponentCompositionTests(unittest.TestCase):
         flow = Flow('198.18.25.71', '192.0.2.10', 'tcp', 8006)
         self.assertTrue(permits(rules, 'out', flow, 'net1'))
         self.assertFalse(permits(rules, 'out', flow, 'net0'))
-        value['connections']['manager_provider']['source_interface'] = 'web'
+        value['connections']['manager_provider']['source_interface'] = 'web_interface'
         with self.assertRaisesRegex(ComponentError, 'component.traffic-egress'):
             self.plan(value)
 
@@ -295,8 +295,8 @@ class ComponentCompositionTests(unittest.TestCase):
     def test_unbound_loopback_binding_succeeds_and_physical_nic_binding_refuses(self):
         source = self.starter()
         app = self.plan(source).resolved['apps']['recursive_dns']
-        self.assertEqual(app['listeners']['dns_tcp']['publication_address'], '127.0.0.1')
-        source['apps']['recursive_dns']['interfaces']['service'] = {'interface': 'primary'}
+        self.assertEqual(app['listeners']['dns_tcp_listener']['publication_address'], '127.0.0.1')
+        source['apps']['recursive_dns']['interfaces']['service_interface'] = {'interface': 'primary'}
         with self.assertRaises(ValueError): self.plan(source)
 
     def test_repeated_profile_has_distinct_runtime_and_publication_with_cosmetic_labels(self):
@@ -348,10 +348,10 @@ class ComponentCompositionTests(unittest.TestCase):
         source['apps'] = {'pihole': {'profile': 'pihole', 'guest': 'resolver', 'lifecycle': 'retained',
             'identity': {'phase': 'pihole', 'runtime_id': 'pihole', 'project': 'shared',
                          'services': {'pihole': 'pihole'}, 'networks': {}},
-            'interfaces': {'service': {'interface': 'primary'}, 'upstream': {'interface': 'primary'}},
+            'interfaces': {'service_interface': {'interface': 'primary'}, 'upstream_interface': {'interface': 'primary'}},
             'storage': {'config': {'root_path': 'app-data', 'subpath': 'pihole'}}}}
         source['connections'] = {'upstream': {'consumer': {'app': 'pihole', 'connection': 'upstream'},
-            'target': {'external': 'resolver'}, 'source_interface': 'upstream'}}
+            'target': {'external': 'resolver'}, 'source_interface': 'upstream_interface'}}
         return source
 
     def test_pihole_only_uses_an_explicit_external_upstream_and_missing_binding_refuses(self):
@@ -368,8 +368,8 @@ class ComponentCompositionTests(unittest.TestCase):
         source['apps']['unbound'] = {'profile': 'unbound', 'guest': 'resolver', 'lifecycle': 'retained',
             'identity': {'phase': 'unbound', 'runtime_id': 'unbound', 'project': 'shared',
                 'services': {'unbound': 'unbound'}, 'networks': {'default': 'default'}},
-            'interfaces': {'service': {'scope': 'guest-loopback'},
-                           'private': {'scope': 'app-network', 'network': 'default'}},
+            'interfaces': {'service_interface': {'scope': 'guest-loopback'},
+                           'private_interface': {'scope': 'app-network', 'network': 'default'}},
             'storage': {'config': {'root_path': 'app-data', 'subpath': 'unbound'}}}
         selected = {'dev': ('dev', 'rw'), 'var': ('var', 'rw'),
                     'control_key': ('unbound_control.key', 'ro'),
@@ -390,14 +390,14 @@ class ComponentCompositionTests(unittest.TestCase):
 
     def test_independent_pihole_and_unbound_share_project_and_preserve_actual_baseline(self):
         source = self.pihole()
-        source['apps']['pihole']['interfaces']['upstream'] = {'scope': 'guest-loopback'}
+        source['apps']['pihole']['interfaces']['upstream_interface'] = {'scope': 'guest-loopback'}
         source['apps']['unbound'] = {'profile': 'unbound', 'guest': 'resolver', 'lifecycle': 'retained',
             'identity': {'phase': 'unbound', 'runtime_id': 'unbound', 'project': 'shared',
                 'services': {'unbound': 'unbound'}, 'networks': {'default': 'default'}},
-            'interfaces': {'service': {'scope': 'guest-loopback'},
-                           'private': {'scope': 'app-network', 'network': 'default'}},
+            'interfaces': {'service_interface': {'scope': 'guest-loopback'},
+                           'private_interface': {'scope': 'app-network', 'network': 'default'}},
             'storage': {'config': {'root_path': 'app-data', 'subpath': 'unbound'}}}
-        source['connections']['upstream'].update(target={'app': 'unbound', 'endpoint': 'dns_udp'}, readiness='start')
+        source['connections']['upstream'].update(target={'app': 'unbound', 'endpoint': 'dns_udp_endpoint'}, readiness='start')
         document = next(iter(self.compose(source).values()))
         expected = json.loads((ROOT / 'tests/fixtures/dns-compose-baseline.json').read_text())
         self.assertEqual(document, expected)

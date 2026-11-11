@@ -3,29 +3,29 @@ kind: app-profile
 adapter: unbound
 display_name: Unbound
 interfaces:
-  service:
+  service_interface:
     required: true
     accepts:
     - guest-loopback
-  private:
+  private_interface:
     required: true
     accepts:
     - app-network
 listeners:
-  dns_udp:
+  dns_udp_listener:
     service: unbound
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: udp
     port: 53
     publish:
       scope: guest-loopback
       port: 5335
-  dns_tcp:
+  dns_tcp_listener:
     service: unbound
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 53
@@ -33,14 +33,14 @@ listeners:
       scope: guest-loopback
       port: 5335
 endpoints:
-  dns_udp:
-    listener: dns_udp
+  dns_udp_endpoint:
+    listener: dns_udp_listener
     protocol: udp
-    via: service
-  dns_tcp:
-    listener: dns_tcp
+    via: service_interface
+  dns_tcp_endpoint:
+    listener: dns_tcp_listener
     protocol: tcp
-    via: service
+    via: service_interface
 storage:
   config:
     target: /opt/unbound/etc/unbound

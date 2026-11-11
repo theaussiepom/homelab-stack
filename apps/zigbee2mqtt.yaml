@@ -3,35 +3,35 @@ kind: app-profile
 adapter: zigbee2mqtt
 display_name: Zigbee2MQTT
 interfaces:
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
-  broker:
+  broker_interface:
     required: true
     accepts:
     - guest-interface
-  private:
+  private_interface:
     required: true
     accepts:
     - app-network
 listeners:
-  web:
+  web_listener:
     service: zigbee2mqtt
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 8099
     publish:
       scope: guest-interface
-      interface: web
+      interface: web_interface
       port: 8099
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
+    via: web_interface
 storage:
   data:
     target: /app/data

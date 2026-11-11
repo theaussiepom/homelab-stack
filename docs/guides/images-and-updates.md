@@ -52,7 +52,7 @@ Before selecting this library/framework pair, inventory app profiles, image bind
 | `homeassistant-public` | `homeassistant`; keep instance/guest identities, lifecycle, storage subpath and initializer ownership unchanged |
 | `node_red-public` | `node_red`; keep instance/guest identities, lifecycle, storage subpath and initializer ownership unchanged |
 | `homeassistant-bound` or `node_red-bound` | Keep the profile and its custom archive/prepared-input contract; listener isolation is unchanged |
-| HTTP or DNS exposure outer `endpoint` | Rename only the outer field to `target`; preserve the nested named `endpoint` and all frontend/policy references |
+| HTTP or DNS exposure outer `endpoint` | Rename the outer field to `target`; update exported connection names, such as `web_endpoint` and `https_endpoint`, while retaining domains and policy selections |
 
 If a site explicitly appends software registrations, replace `homeassistant-images` / `node_red-images` with `homeassistant-custom-images` / `node_red-custom-images`, and `homeassistant-public-images` / `node_red-public-images` with `homeassistant-upstream-images` / `node_red-upstream-images`. These are still additive selections, not image overrides. Library extensions referring directly to the old official catalogue IDs use `homeassistant_upstream` / `node_red_upstream`; site archive IDs remain `homeassistant` / `node_red`.
 
@@ -76,3 +76,5 @@ Keep the same app, project, service and network identities, NIC slots and MAC ad
 Ordinary source changes cannot implicitly rotate or remove a sealed credential role, even if a source ID is renamed. HomeLab creates managed credentials only once and rejects conflicting existing credentials. Active or pending HOLDs are not released by a new commit. Preserve evidence and follow the owning site's reviewed failure procedure rather than issuing a local helper, manual retry or broad chown.
 
 Profile removal is not a generic data-deletion API. Managed DNS may retire only a genuinely previous owned name with its exact address; unrelated aliases remain. Unsupported relocation or cleanup requires its own contract and authority.
+
+All maintained profiles also distinguish application interface roles, listeners and exported connections by suffix. Follow the [network naming contract](../reference/declaration-records.md#network-names-identify-their-kind) when updating site app role keys and every reference. Guest NIC names, policy-local aliases, runtime service identities, storage and credential names keep their own scope.

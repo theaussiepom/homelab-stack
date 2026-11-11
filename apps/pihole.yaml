@@ -3,50 +3,50 @@ kind: app-profile
 adapter: pihole
 display_name: Pi-hole
 interfaces:
-  service:
+  service_interface:
     required: true
     accepts:
     - guest-interface
-  upstream:
+  upstream_interface:
     required: false
     accepts:
     - guest-interface
     - guest-loopback
 listeners:
-  dns_udp:
+  dns_udp_listener:
     service: pihole
     namespace: host
-    interface: service
+    interface: service_interface
     bind: wildcard
     protocol: udp
     port: 53
-  dns_tcp:
+  dns_tcp_listener:
     service: pihole
     namespace: host
-    interface: service
+    interface: service_interface
     bind: wildcard
     protocol: tcp
     port: 53
-  web:
+  web_listener:
     service: pihole
     namespace: host
-    interface: service
+    interface: service_interface
     bind: wildcard
     protocol: tcp
     port: 80
 endpoints:
-  dns_udp:
-    listener: dns_udp
+  dns_udp_endpoint:
+    listener: dns_udp_listener
     protocol: udp
-    via: service
-  dns_tcp:
-    listener: dns_tcp
+    via: service_interface
+  dns_tcp_endpoint:
+    listener: dns_tcp_listener
     protocol: tcp
-    via: service
-  web:
-    listener: web
+    via: service_interface
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: service
+    via: service_interface
 storage:
   config:
     target: /etc/pihole

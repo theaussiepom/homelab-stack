@@ -57,8 +57,8 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
-| `service` | Yes | `guest-interface` |
-| `upstream` | No; selected capability can require it | `guest-interface`, `guest-loopback` |
+| `service_interface` | Yes | `guest-interface` |
+| `upstream_interface` | No; selected capability can require it | `guest-interface`, `guest-loopback` |
 
 Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback or an app network through its explicit scope. A role does not create another network interface. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -66,21 +66,21 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `dns_udp` | `pihole` / `host` | `wildcard` via `service` | `53/udp` | None; listener remains in its declared namespace |
-| `dns_tcp` | `pihole` / `host` | `wildcard` via `service` | `53/tcp` | None; listener remains in its declared namespace |
-| `web` | `pihole` / `host` | `wildcard` via `service` | `80/tcp` | None; listener remains in its declared namespace |
+| `dns_udp_listener` | `pihole` / `host` | `wildcard` via `service_interface` | `53/udp` | None; listener remains in its declared namespace |
+| `dns_tcp_listener` | `pihole` / `host` | `wildcard` via `service_interface` | `53/tcp` | None; listener remains in its declared namespace |
+| `web_listener` | `pihole` / `host` | `wildcard` via `service_interface` | `80/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
-| `dns_udp` | `udp` | `dns_udp` via `service` |
-| `dns_tcp` | `tcp` | `dns_tcp` via `service` |
-| `web` | `http` | `web` via `service` |
+| `dns_udp_endpoint` | `udp` | `dns_udp_listener` via `service_interface` |
+| `dns_tcp_endpoint` | `tcp` | `dns_tcp_listener` via `service_interface` |
+| `web_endpoint` | `http` | `web_listener` via `service_interface` |
 
 A wildcard host listener can accept connections through interfaces other than the advertised NIC. An endpoint gives consumers an address and port. It does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -101,7 +101,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md).
 
 This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
@@ -140,7 +140,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -155,47 +155,47 @@ These are the complete supplied fields in [pihole.yaml](../../../apps/pihole.yam
 | <a id="declaration-adapter"></a>`adapter` | `"pihole"` |
 | <a id="declaration-display-name"></a>`display_name` | `"Pi-hole"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
-| <a id="declaration-interfaces-service"></a>`interfaces.service` | `object` |
-| <a id="declaration-interfaces-service-required"></a>`interfaces.service.required` | `true` |
-| <a id="declaration-interfaces-service-accepts"></a>`interfaces.service.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-upstream"></a>`interfaces.upstream` | `object` |
-| <a id="declaration-interfaces-upstream-required"></a>`interfaces.upstream.required` | `false` |
-| <a id="declaration-interfaces-upstream-accepts"></a>`interfaces.upstream.accepts` | `["guest-interface", "guest-loopback"]` |
+| <a id="declaration-interfaces-service-interface"></a>`interfaces.service_interface` | `object` |
+| <a id="declaration-interfaces-service-interface-required"></a>`interfaces.service_interface.required` | `true` |
+| <a id="declaration-interfaces-service-interface-accepts"></a>`interfaces.service_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-upstream-interface"></a>`interfaces.upstream_interface` | `object` |
+| <a id="declaration-interfaces-upstream-interface-required"></a>`interfaces.upstream_interface.required` | `false` |
+| <a id="declaration-interfaces-upstream-interface-accepts"></a>`interfaces.upstream_interface.accepts` | `["guest-interface", "guest-loopback"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
-| <a id="declaration-listeners-dns-udp"></a>`listeners.dns_udp` | `object` |
-| <a id="declaration-listeners-dns-udp-service"></a>`listeners.dns_udp.service` | `"pihole"` |
-| <a id="declaration-listeners-dns-udp-namespace"></a>`listeners.dns_udp.namespace` | `"host"` |
-| <a id="declaration-listeners-dns-udp-interface"></a>`listeners.dns_udp.interface` | `"service"` |
-| <a id="declaration-listeners-dns-udp-bind"></a>`listeners.dns_udp.bind` | `"wildcard"` |
-| <a id="declaration-listeners-dns-udp-protocol"></a>`listeners.dns_udp.protocol` | `"udp"` |
-| <a id="declaration-listeners-dns-udp-port"></a>`listeners.dns_udp.port` | `53` |
-| <a id="declaration-listeners-dns-tcp"></a>`listeners.dns_tcp` | `object` |
-| <a id="declaration-listeners-dns-tcp-service"></a>`listeners.dns_tcp.service` | `"pihole"` |
-| <a id="declaration-listeners-dns-tcp-namespace"></a>`listeners.dns_tcp.namespace` | `"host"` |
-| <a id="declaration-listeners-dns-tcp-interface"></a>`listeners.dns_tcp.interface` | `"service"` |
-| <a id="declaration-listeners-dns-tcp-bind"></a>`listeners.dns_tcp.bind` | `"wildcard"` |
-| <a id="declaration-listeners-dns-tcp-protocol"></a>`listeners.dns_tcp.protocol` | `"tcp"` |
-| <a id="declaration-listeners-dns-tcp-port"></a>`listeners.dns_tcp.port` | `53` |
-| <a id="declaration-listeners-web"></a>`listeners.web` | `object` |
-| <a id="declaration-listeners-web-service"></a>`listeners.web.service` | `"pihole"` |
-| <a id="declaration-listeners-web-namespace"></a>`listeners.web.namespace` | `"host"` |
-| <a id="declaration-listeners-web-interface"></a>`listeners.web.interface` | `"service"` |
-| <a id="declaration-listeners-web-bind"></a>`listeners.web.bind` | `"wildcard"` |
-| <a id="declaration-listeners-web-protocol"></a>`listeners.web.protocol` | `"tcp"` |
-| <a id="declaration-listeners-web-port"></a>`listeners.web.port` | `80` |
+| <a id="declaration-listeners-dns-udp-listener"></a>`listeners.dns_udp_listener` | `object` |
+| <a id="declaration-listeners-dns-udp-listener-service"></a>`listeners.dns_udp_listener.service` | `"pihole"` |
+| <a id="declaration-listeners-dns-udp-listener-namespace"></a>`listeners.dns_udp_listener.namespace` | `"host"` |
+| <a id="declaration-listeners-dns-udp-listener-interface"></a>`listeners.dns_udp_listener.interface` | `"service_interface"` |
+| <a id="declaration-listeners-dns-udp-listener-bind"></a>`listeners.dns_udp_listener.bind` | `"wildcard"` |
+| <a id="declaration-listeners-dns-udp-listener-protocol"></a>`listeners.dns_udp_listener.protocol` | `"udp"` |
+| <a id="declaration-listeners-dns-udp-listener-port"></a>`listeners.dns_udp_listener.port` | `53` |
+| <a id="declaration-listeners-dns-tcp-listener"></a>`listeners.dns_tcp_listener` | `object` |
+| <a id="declaration-listeners-dns-tcp-listener-service"></a>`listeners.dns_tcp_listener.service` | `"pihole"` |
+| <a id="declaration-listeners-dns-tcp-listener-namespace"></a>`listeners.dns_tcp_listener.namespace` | `"host"` |
+| <a id="declaration-listeners-dns-tcp-listener-interface"></a>`listeners.dns_tcp_listener.interface` | `"service_interface"` |
+| <a id="declaration-listeners-dns-tcp-listener-bind"></a>`listeners.dns_tcp_listener.bind` | `"wildcard"` |
+| <a id="declaration-listeners-dns-tcp-listener-protocol"></a>`listeners.dns_tcp_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-dns-tcp-listener-port"></a>`listeners.dns_tcp_listener.port` | `53` |
+| <a id="declaration-listeners-web-listener"></a>`listeners.web_listener` | `object` |
+| <a id="declaration-listeners-web-listener-service"></a>`listeners.web_listener.service` | `"pihole"` |
+| <a id="declaration-listeners-web-listener-namespace"></a>`listeners.web_listener.namespace` | `"host"` |
+| <a id="declaration-listeners-web-listener-interface"></a>`listeners.web_listener.interface` | `"service_interface"` |
+| <a id="declaration-listeners-web-listener-bind"></a>`listeners.web_listener.bind` | `"wildcard"` |
+| <a id="declaration-listeners-web-listener-protocol"></a>`listeners.web_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-web-listener-port"></a>`listeners.web_listener.port` | `80` |
 | <a id="declaration-endpoints"></a>`endpoints` | `object` |
-| <a id="declaration-endpoints-dns-udp"></a>`endpoints.dns_udp` | `object` |
-| <a id="declaration-endpoints-dns-udp-listener"></a>`endpoints.dns_udp.listener` | `"dns_udp"` |
-| <a id="declaration-endpoints-dns-udp-protocol"></a>`endpoints.dns_udp.protocol` | `"udp"` |
-| <a id="declaration-endpoints-dns-udp-via"></a>`endpoints.dns_udp.via` | `"service"` |
-| <a id="declaration-endpoints-dns-tcp"></a>`endpoints.dns_tcp` | `object` |
-| <a id="declaration-endpoints-dns-tcp-listener"></a>`endpoints.dns_tcp.listener` | `"dns_tcp"` |
-| <a id="declaration-endpoints-dns-tcp-protocol"></a>`endpoints.dns_tcp.protocol` | `"tcp"` |
-| <a id="declaration-endpoints-dns-tcp-via"></a>`endpoints.dns_tcp.via` | `"service"` |
-| <a id="declaration-endpoints-web"></a>`endpoints.web` | `object` |
-| <a id="declaration-endpoints-web-listener"></a>`endpoints.web.listener` | `"web"` |
-| <a id="declaration-endpoints-web-protocol"></a>`endpoints.web.protocol` | `"http"` |
-| <a id="declaration-endpoints-web-via"></a>`endpoints.web.via` | `"service"` |
+| <a id="declaration-endpoints-dns-udp-endpoint"></a>`endpoints.dns_udp_endpoint` | `object` |
+| <a id="declaration-endpoints-dns-udp-endpoint-listener"></a>`endpoints.dns_udp_endpoint.listener` | `"dns_udp_listener"` |
+| <a id="declaration-endpoints-dns-udp-endpoint-protocol"></a>`endpoints.dns_udp_endpoint.protocol` | `"udp"` |
+| <a id="declaration-endpoints-dns-udp-endpoint-via"></a>`endpoints.dns_udp_endpoint.via` | `"service_interface"` |
+| <a id="declaration-endpoints-dns-tcp-endpoint"></a>`endpoints.dns_tcp_endpoint` | `object` |
+| <a id="declaration-endpoints-dns-tcp-endpoint-listener"></a>`endpoints.dns_tcp_endpoint.listener` | `"dns_tcp_listener"` |
+| <a id="declaration-endpoints-dns-tcp-endpoint-protocol"></a>`endpoints.dns_tcp_endpoint.protocol` | `"tcp"` |
+| <a id="declaration-endpoints-dns-tcp-endpoint-via"></a>`endpoints.dns_tcp_endpoint.via` | `"service_interface"` |
+| <a id="declaration-endpoints-web-endpoint"></a>`endpoints.web_endpoint` | `object` |
+| <a id="declaration-endpoints-web-endpoint-listener"></a>`endpoints.web_endpoint.listener` | `"web_listener"` |
+| <a id="declaration-endpoints-web-endpoint-protocol"></a>`endpoints.web_endpoint.protocol` | `"http"` |
+| <a id="declaration-endpoints-web-endpoint-via"></a>`endpoints.web_endpoint.via` | `"service_interface"` |
 | <a id="declaration-storage"></a>`storage` | `object` |
 | <a id="declaration-storage-config"></a>`storage.config` | `object` |
 | <a id="declaration-storage-config-target"></a>`storage.config.target` | `"/etc/pihole"` |

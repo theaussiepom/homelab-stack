@@ -5,6 +5,6 @@ consumer:
   connection: upstream
 target:
   app: recursive_dns
-  endpoint: dns_udp
-source_interface: upstream
+  endpoint: dns_udp_endpoint
+source_interface: upstream_interface
 readiness: start

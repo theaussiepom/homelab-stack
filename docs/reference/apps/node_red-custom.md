@@ -57,8 +57,8 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
-| `web` | Yes | `guest-interface` |
-| `broker` | No; selected capability can require it | `guest-interface` |
+| `web_interface` | Yes | `guest-interface` |
+| `broker_interface` | No; selected capability can require it | `guest-interface` |
 
 Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback or an app network through its explicit scope. A role does not create another network interface. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -66,17 +66,17 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `web` | `node_red` / `host` | `wildcard` via `web` | `1880/tcp` | None; listener remains in its declared namespace |
+| `web_listener` | `node_red` / `host` | `wildcard` via `web_interface` | `1880/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
-| `web` | `http` | `web` via `web` |
+| `web_endpoint` | `http` | `web_listener` via `web_interface` |
 
 A wildcard host listener can accept connections through interfaces other than the advertised NIC. An endpoint gives consumers an address and port. It does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -105,7 +105,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md).
 
 This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
@@ -142,7 +142,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -157,25 +157,25 @@ These are the complete supplied fields in [node_red-custom.yaml](../../../apps/n
 | <a id="declaration-adapter"></a>`adapter` | `"node_red"` |
 | <a id="declaration-display-name"></a>`display_name` | `"Node-RED"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
-| <a id="declaration-interfaces-web"></a>`interfaces.web` | `object` |
-| <a id="declaration-interfaces-web-required"></a>`interfaces.web.required` | `true` |
-| <a id="declaration-interfaces-web-accepts"></a>`interfaces.web.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-broker"></a>`interfaces.broker` | `object` |
-| <a id="declaration-interfaces-broker-required"></a>`interfaces.broker.required` | `false` |
-| <a id="declaration-interfaces-broker-accepts"></a>`interfaces.broker.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-web-interface"></a>`interfaces.web_interface` | `object` |
+| <a id="declaration-interfaces-web-interface-required"></a>`interfaces.web_interface.required` | `true` |
+| <a id="declaration-interfaces-web-interface-accepts"></a>`interfaces.web_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-broker-interface"></a>`interfaces.broker_interface` | `object` |
+| <a id="declaration-interfaces-broker-interface-required"></a>`interfaces.broker_interface.required` | `false` |
+| <a id="declaration-interfaces-broker-interface-accepts"></a>`interfaces.broker_interface.accepts` | `["guest-interface"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
-| <a id="declaration-listeners-web"></a>`listeners.web` | `object` |
-| <a id="declaration-listeners-web-service"></a>`listeners.web.service` | `"node_red"` |
-| <a id="declaration-listeners-web-namespace"></a>`listeners.web.namespace` | `"host"` |
-| <a id="declaration-listeners-web-interface"></a>`listeners.web.interface` | `"web"` |
-| <a id="declaration-listeners-web-bind"></a>`listeners.web.bind` | `"wildcard"` |
-| <a id="declaration-listeners-web-protocol"></a>`listeners.web.protocol` | `"tcp"` |
-| <a id="declaration-listeners-web-port"></a>`listeners.web.port` | `1880` |
+| <a id="declaration-listeners-web-listener"></a>`listeners.web_listener` | `object` |
+| <a id="declaration-listeners-web-listener-service"></a>`listeners.web_listener.service` | `"node_red"` |
+| <a id="declaration-listeners-web-listener-namespace"></a>`listeners.web_listener.namespace` | `"host"` |
+| <a id="declaration-listeners-web-listener-interface"></a>`listeners.web_listener.interface` | `"web_interface"` |
+| <a id="declaration-listeners-web-listener-bind"></a>`listeners.web_listener.bind` | `"wildcard"` |
+| <a id="declaration-listeners-web-listener-protocol"></a>`listeners.web_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-web-listener-port"></a>`listeners.web_listener.port` | `1880` |
 | <a id="declaration-endpoints"></a>`endpoints` | `object` |
-| <a id="declaration-endpoints-web"></a>`endpoints.web` | `object` |
-| <a id="declaration-endpoints-web-listener"></a>`endpoints.web.listener` | `"web"` |
-| <a id="declaration-endpoints-web-protocol"></a>`endpoints.web.protocol` | `"http"` |
-| <a id="declaration-endpoints-web-via"></a>`endpoints.web.via` | `"web"` |
+| <a id="declaration-endpoints-web-endpoint"></a>`endpoints.web_endpoint` | `object` |
+| <a id="declaration-endpoints-web-endpoint-listener"></a>`endpoints.web_endpoint.listener` | `"web_listener"` |
+| <a id="declaration-endpoints-web-endpoint-protocol"></a>`endpoints.web_endpoint.protocol` | `"http"` |
+| <a id="declaration-endpoints-web-endpoint-via"></a>`endpoints.web_endpoint.via` | `"web_interface"` |
 | <a id="declaration-storage"></a>`storage` | `object` |
 | <a id="declaration-storage-data"></a>`storage.data` | `object` |
 | <a id="declaration-storage-data-target"></a>`storage.data.target` | `"/data"` |

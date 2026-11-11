@@ -3,23 +3,23 @@ kind: app-profile
 adapter: mariadb
 display_name: MariaDB
 interfaces:
-  service:
+  service_interface:
     required: true
     accepts:
     - guest-interface
 listeners:
-  database:
+  database_listener:
     service: mariadb
     namespace: host
-    interface: service
+    interface: service_interface
     bind: interface
     protocol: tcp
     port: 3306
 endpoints:
-  backend:
-    listener: database
+  backend_endpoint:
+    listener: database_listener
     protocol: tcp
-    via: service
+    via: service_interface
 storage:
   data:
     target: /var/lib/mysql

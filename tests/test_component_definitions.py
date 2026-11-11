@@ -49,12 +49,21 @@ class ProfileDefinitionTests(unittest.TestCase):
         self.assertTrue(set(value.get('runtime', [])) <= set(self.library['runtime_profiles']))
         return value
 
+    def test_all_registered_network_contract_names_identify_their_kind(self):
+        for profile, value in self.library['app_profiles'].items():
+            for field, suffix in (('interfaces', '_interface'), ('listeners', '_listener'),
+                                  ('endpoints', '_endpoint')):
+                for name in value.get(field, {}):
+                    with self.subTest(profile=profile, field=field, name=name):
+                        self.assertTrue(name.endswith(suffix))
+                        self.assertGreater(len(name), len(suffix))
+
     def test_homeassistant_integrations_and_mdns_are_optional(self):
         value = self.profile('homeassistant-custom', 'homeassistant')
         self.assertEqual(set(value['connections']), {'recorder', 'metrics', 'broker'})
         self.assertTrue(all(row['required'] is False for row in value['connections'].values()))
         self.assertNotIn('homeassistant-mdns', value['runtime'])
-        self.assertFalse(value['interfaces']['home']['required'])
+        self.assertFalse(value['interfaces']['home_interface']['required'])
         self.assertNotIn('cap_add', self.library['runtime_profiles']['homeassistant']['containers']['homeassistant'])
         self.assertEqual(self.library['runtime_profiles']['homeassistant-mdns']['containers']['homeassistant']['cap_add'], ['NET_ADMIN'])
 
@@ -89,7 +98,7 @@ class ProfileDefinitionTests(unittest.TestCase):
 
     def test_bitwarden_owns_its_private_listener_and_explicit_environment_requirement(self):
         value = self.profile('bitwarden')
-        self.assertEqual(value['listeners']['web']['namespace'], 'app-network')
+        self.assertEqual(value['listeners']['web_listener']['namespace'], 'app-network')
         self.assertEqual(value['storage']['data']['target'], '/etc/bitwarden')
         self.assertTrue(value['connections']['database']['required'])
         self.assertTrue(value['secrets']['runtime_environment']['required'])
@@ -130,14 +139,14 @@ class ProfileDefinitionTests(unittest.TestCase):
         self.assertEqual(value['connections']['upstream']['type'], 'dns')
         self.assertTrue(value['connections']['upstream']['required'])
         self.assertEqual({row['service'] for row in value['listeners'].values()}, {'pihole'})
-        self.assertIn('guest-loopback', value['interfaces']['upstream']['accepts'])
-        self.assertFalse(value['interfaces']['upstream']['required'])
+        self.assertIn('guest-loopback', value['interfaces']['upstream_interface']['accepts'])
+        self.assertFalse(value['interfaces']['upstream_interface']['required'])
         self.assertEqual(value['storage']['database'], {'target': '/ftl-db', 'read_only': False, 'required': False, 'kind': 'directory'})
         self.assertEqual(self.library['runtime_profiles']['pihole']['containers']['pihole']['memory_mib'], 256)
 
     def test_unbound_owns_only_itself_with_optional_fresh_config_and_two_protocols(self):
         value = self.profile('unbound')
-        self.assertEqual(value['interfaces']['service']['accepts'], ['guest-loopback'])
+        self.assertEqual(value['interfaces']['service_interface']['accepts'], ['guest-loopback'])
         self.assertEqual(value['properties'], {'publish_port': 5335})
         self.assertFalse(value['storage']['config']['required'])
         self.assertEqual(value['connections'], {})
@@ -171,7 +180,7 @@ class ProfileDefinitionTests(unittest.TestCase):
     def test_traefik_dashboard_is_internal_and_off_unless_explicitly_selected(self):
         value = self.profile('traefik')
         self.assertEqual(value['properties'], {'dashboard': False})
-        self.assertEqual(value['endpoints']['dashboard'], {'internal': 'dashboard'})
+        self.assertEqual(value['endpoints']['dashboard_endpoint'], {'internal': 'dashboard'})
         self.assertNotIn(8080, {row['port'] for row in value['listeners'].values()})
         self.assertTrue(all(row['required'] is False for row in value['secrets'].values()))
 
@@ -187,17 +196,17 @@ class ProfileDefinitionTests(unittest.TestCase):
         self.assertEqual(value['authentication'], 'zabbix-saml')
         self.assertFalse(self.library['authentication_profiles']['zabbix-saml']['required'])
         self.assertFalse(value['secrets']['database_password']['required'])
-        self.assertEqual(value['listeners']['web']['service'], value['listeners']['local_web']['service'])
-        self.assertEqual(value['listeners']['web']['port'], value['listeners']['local_web']['port'])
-        self.assertEqual(value['listeners']['local_web']['publish'], {'scope': 'guest-loopback', 'port': 8081})
+        self.assertEqual(value['listeners']['web_listener']['service'], value['listeners']['local_web_listener']['service'])
+        self.assertEqual(value['listeners']['web_listener']['port'], value['listeners']['local_web_listener']['port'])
+        self.assertEqual(value['listeners']['local_web_listener']['publish'], {'scope': 'guest-loopback', 'port': 8081})
         self.assertEqual(value['connections']['metrics'], {'type': 'influxdb', 'required': False})
 
     def test_mqtt_native_listener_is_not_a_gui_dependency_or_new_auth_manager(self):
         value = self.profile('mqtt')
         self.assertEqual({row['service'] for row in value['listeners'].values()}, {'mqtt'})
         self.assertEqual(value['connections'], {})
-        self.assertEqual(value['listeners']['mqtt']['bind'], 'wildcard')
-        self.assertEqual(value['listeners']['mqtt']['port'], 1883)
+        self.assertEqual(value['listeners']['mqtt_listener']['bind'], 'wildcard')
+        self.assertEqual(value['listeners']['mqtt_listener']['port'], 1883)
         self.assertNotIn('password_file', value.get('properties', {}))
         self.assertEqual(value['secrets'], {'probe': {'required': False}})
 
@@ -213,9 +222,9 @@ class ProfileDefinitionTests(unittest.TestCase):
 
     def test_music_listener_and_health_source_use_the_same_explicit_player_role(self):
         value = self.profile('music_assistant')
-        self.assertEqual({row['interface'] for row in value['listeners'].values()}, {'web'})
+        self.assertEqual({row['interface'] for row in value['listeners'].values()}, {'web_interface'})
         self.assertEqual({row['port'] for row in value['listeners'].values()}, {8095, 8097})
-        self.assertEqual(value['health']['ready']['source_interface'], 'web')
+        self.assertEqual(value['health']['ready']['source_interface'], 'web_interface')
         self.assertEqual(value['storage']['data']['target'], '/data')
         self.assertNotIn('automation', value['connections'])
 

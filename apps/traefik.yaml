@@ -3,47 +3,47 @@ kind: app-profile
 adapter: traefik
 display_name: Traefik
 interfaces:
-  frontend:
+  frontend_interface:
     required: true
     accepts:
     - guest-interface
-  management:
+  management_interface:
     required: false
     accepts:
     - guest-interface
-  backend:
+  backend_interface:
     required: false
     accepts:
     - guest-interface
-  metrics:
+  metrics_interface:
     required: false
     accepts:
     - guest-interface
 listeners:
-  http:
+  http_listener:
     service: traefik
     namespace: host
-    interface: frontend
+    interface: frontend_interface
     bind: interface
     protocol: tcp
     port: 80
-  https:
+  https_listener:
     service: traefik
     namespace: host
-    interface: frontend
+    interface: frontend_interface
     bind: interface
     protocol: tcp
     port: 443
 endpoints:
-  http:
-    listener: http
+  http_endpoint:
+    listener: http_listener
     protocol: http
-    via: frontend
-  https:
-    listener: https
+    via: frontend_interface
+  https_endpoint:
+    listener: https_listener
     protocol: https
-    via: frontend
-  dashboard:
+    via: frontend_interface
+  dashboard_endpoint:
     internal: dashboard
 properties:
   dashboard: false

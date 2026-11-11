@@ -3,34 +3,34 @@ kind: app-profile
 adapter: music_assistant
 display_name: Music Assistant
 interfaces:
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
 listeners:
-  web:
+  web_listener:
     service: music_assistant
     namespace: host
-    interface: web
+    interface: web_interface
     bind: interface
     protocol: tcp
     port: 8095
-  stream:
+  stream_listener:
     service: music_assistant
     namespace: host
-    interface: web
+    interface: web_interface
     bind: interface
     protocol: tcp
     port: 8097
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
-  stream:
-    listener: stream
+    via: web_interface
+  stream_endpoint:
+    listener: stream_listener
     protocol: http
-    via: web
+    via: web_interface
 storage:
   data:
     target: /data
@@ -53,7 +53,7 @@ runtime:
 health:
   ready:
     profile: adapter-ready
-    source_interface: web
+    source_interface: web_interface
 monitoring:
   profile: docker-agent
 backup:

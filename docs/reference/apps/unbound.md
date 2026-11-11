@@ -21,7 +21,7 @@ The complete reusable declaration is [unbound.yaml](../../../apps/unbound.yaml).
 
 ## Application requirements
 
-The `service` role accepts guest-loopback only. A physical NIC binding is rejected; it does not expose Unbound on the LAN. For a new installation, HomeLab sizes the configuration from the app’s declared memory and CPU budget, not the host’s memory.
+The `service_interface` role accepts guest-loopback only. A physical NIC binding is rejected; it does not expose Unbound on the LAN. For a new installation, HomeLab sizes the configuration from the app’s declared memory and CPU budget, not the host’s memory.
 
 ## First installation
 
@@ -59,8 +59,8 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
-| `service` | Yes | `guest-loopback` |
-| `private` | Yes | `app-network` |
+| `service_interface` | Yes | `guest-loopback` |
+| `private_interface` | Yes | `app-network` |
 
 Bind `service` to `{scope: guest-loopback}` and `private` to `{scope: app-network, network: default}`. This profile does not accept a physical NIC for either role. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -68,19 +68,19 @@ Bind `service` to `{scope: guest-loopback}` and `private` to `{scope: app-networ
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `dns_udp` | `unbound` / `app-network` | `wildcard` via `private` | `53/udp` | `guest-loopback` 5335 |
-| `dns_tcp` | `unbound` / `app-network` | `wildcard` via `private` | `53/tcp` | `guest-loopback` 5335 |
+| `dns_udp_listener` | `unbound` / `app-network` | `wildcard` via `private_interface` | `53/udp` | `guest-loopback` 5335 |
+| `dns_tcp_listener` | `unbound` / `app-network` | `wildcard` via `private_interface` | `53/tcp` | `guest-loopback` 5335 |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
-| `dns_udp` | `udp` | `dns_udp` via `service` |
-| `dns_tcp` | `tcp` | `dns_tcp` via `service` |
+| `dns_udp_endpoint` | `udp` | `dns_udp_listener` via `service_interface` |
+| `dns_tcp_endpoint` | `tcp` | `dns_tcp_listener` via `service_interface` |
 
 A wildcard listener accepts connections within the declared app network. A port becomes available on the guest only when explicitly published. Endpoints do not permit network traffic or make another app wait for this service.
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -102,7 +102,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -143,7 +143,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -158,42 +158,42 @@ These are the complete supplied fields in [unbound.yaml](../../../apps/unbound.y
 | <a id="declaration-adapter"></a>`adapter` | `"unbound"` |
 | <a id="declaration-display-name"></a>`display_name` | `"Unbound"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
-| <a id="declaration-interfaces-service"></a>`interfaces.service` | `object` |
-| <a id="declaration-interfaces-service-required"></a>`interfaces.service.required` | `true` |
-| <a id="declaration-interfaces-service-accepts"></a>`interfaces.service.accepts` | `["guest-loopback"]` |
-| <a id="declaration-interfaces-private"></a>`interfaces.private` | `object` |
-| <a id="declaration-interfaces-private-required"></a>`interfaces.private.required` | `true` |
-| <a id="declaration-interfaces-private-accepts"></a>`interfaces.private.accepts` | `["app-network"]` |
+| <a id="declaration-interfaces-service-interface"></a>`interfaces.service_interface` | `object` |
+| <a id="declaration-interfaces-service-interface-required"></a>`interfaces.service_interface.required` | `true` |
+| <a id="declaration-interfaces-service-interface-accepts"></a>`interfaces.service_interface.accepts` | `["guest-loopback"]` |
+| <a id="declaration-interfaces-private-interface"></a>`interfaces.private_interface` | `object` |
+| <a id="declaration-interfaces-private-interface-required"></a>`interfaces.private_interface.required` | `true` |
+| <a id="declaration-interfaces-private-interface-accepts"></a>`interfaces.private_interface.accepts` | `["app-network"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
-| <a id="declaration-listeners-dns-udp"></a>`listeners.dns_udp` | `object` |
-| <a id="declaration-listeners-dns-udp-service"></a>`listeners.dns_udp.service` | `"unbound"` |
-| <a id="declaration-listeners-dns-udp-namespace"></a>`listeners.dns_udp.namespace` | `"app-network"` |
-| <a id="declaration-listeners-dns-udp-interface"></a>`listeners.dns_udp.interface` | `"private"` |
-| <a id="declaration-listeners-dns-udp-bind"></a>`listeners.dns_udp.bind` | `"wildcard"` |
-| <a id="declaration-listeners-dns-udp-protocol"></a>`listeners.dns_udp.protocol` | `"udp"` |
-| <a id="declaration-listeners-dns-udp-port"></a>`listeners.dns_udp.port` | `53` |
-| <a id="declaration-listeners-dns-udp-publish"></a>`listeners.dns_udp.publish` | `object` |
-| <a id="declaration-listeners-dns-udp-publish-scope"></a>`listeners.dns_udp.publish.scope` | `"guest-loopback"` |
-| <a id="declaration-listeners-dns-udp-publish-port"></a>`listeners.dns_udp.publish.port` | `5335` |
-| <a id="declaration-listeners-dns-tcp"></a>`listeners.dns_tcp` | `object` |
-| <a id="declaration-listeners-dns-tcp-service"></a>`listeners.dns_tcp.service` | `"unbound"` |
-| <a id="declaration-listeners-dns-tcp-namespace"></a>`listeners.dns_tcp.namespace` | `"app-network"` |
-| <a id="declaration-listeners-dns-tcp-interface"></a>`listeners.dns_tcp.interface` | `"private"` |
-| <a id="declaration-listeners-dns-tcp-bind"></a>`listeners.dns_tcp.bind` | `"wildcard"` |
-| <a id="declaration-listeners-dns-tcp-protocol"></a>`listeners.dns_tcp.protocol` | `"tcp"` |
-| <a id="declaration-listeners-dns-tcp-port"></a>`listeners.dns_tcp.port` | `53` |
-| <a id="declaration-listeners-dns-tcp-publish"></a>`listeners.dns_tcp.publish` | `object` |
-| <a id="declaration-listeners-dns-tcp-publish-scope"></a>`listeners.dns_tcp.publish.scope` | `"guest-loopback"` |
-| <a id="declaration-listeners-dns-tcp-publish-port"></a>`listeners.dns_tcp.publish.port` | `5335` |
+| <a id="declaration-listeners-dns-udp-listener"></a>`listeners.dns_udp_listener` | `object` |
+| <a id="declaration-listeners-dns-udp-listener-service"></a>`listeners.dns_udp_listener.service` | `"unbound"` |
+| <a id="declaration-listeners-dns-udp-listener-namespace"></a>`listeners.dns_udp_listener.namespace` | `"app-network"` |
+| <a id="declaration-listeners-dns-udp-listener-interface"></a>`listeners.dns_udp_listener.interface` | `"private_interface"` |
+| <a id="declaration-listeners-dns-udp-listener-bind"></a>`listeners.dns_udp_listener.bind` | `"wildcard"` |
+| <a id="declaration-listeners-dns-udp-listener-protocol"></a>`listeners.dns_udp_listener.protocol` | `"udp"` |
+| <a id="declaration-listeners-dns-udp-listener-port"></a>`listeners.dns_udp_listener.port` | `53` |
+| <a id="declaration-listeners-dns-udp-listener-publish"></a>`listeners.dns_udp_listener.publish` | `object` |
+| <a id="declaration-listeners-dns-udp-listener-publish-scope"></a>`listeners.dns_udp_listener.publish.scope` | `"guest-loopback"` |
+| <a id="declaration-listeners-dns-udp-listener-publish-port"></a>`listeners.dns_udp_listener.publish.port` | `5335` |
+| <a id="declaration-listeners-dns-tcp-listener"></a>`listeners.dns_tcp_listener` | `object` |
+| <a id="declaration-listeners-dns-tcp-listener-service"></a>`listeners.dns_tcp_listener.service` | `"unbound"` |
+| <a id="declaration-listeners-dns-tcp-listener-namespace"></a>`listeners.dns_tcp_listener.namespace` | `"app-network"` |
+| <a id="declaration-listeners-dns-tcp-listener-interface"></a>`listeners.dns_tcp_listener.interface` | `"private_interface"` |
+| <a id="declaration-listeners-dns-tcp-listener-bind"></a>`listeners.dns_tcp_listener.bind` | `"wildcard"` |
+| <a id="declaration-listeners-dns-tcp-listener-protocol"></a>`listeners.dns_tcp_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-dns-tcp-listener-port"></a>`listeners.dns_tcp_listener.port` | `53` |
+| <a id="declaration-listeners-dns-tcp-listener-publish"></a>`listeners.dns_tcp_listener.publish` | `object` |
+| <a id="declaration-listeners-dns-tcp-listener-publish-scope"></a>`listeners.dns_tcp_listener.publish.scope` | `"guest-loopback"` |
+| <a id="declaration-listeners-dns-tcp-listener-publish-port"></a>`listeners.dns_tcp_listener.publish.port` | `5335` |
 | <a id="declaration-endpoints"></a>`endpoints` | `object` |
-| <a id="declaration-endpoints-dns-udp"></a>`endpoints.dns_udp` | `object` |
-| <a id="declaration-endpoints-dns-udp-listener"></a>`endpoints.dns_udp.listener` | `"dns_udp"` |
-| <a id="declaration-endpoints-dns-udp-protocol"></a>`endpoints.dns_udp.protocol` | `"udp"` |
-| <a id="declaration-endpoints-dns-udp-via"></a>`endpoints.dns_udp.via` | `"service"` |
-| <a id="declaration-endpoints-dns-tcp"></a>`endpoints.dns_tcp` | `object` |
-| <a id="declaration-endpoints-dns-tcp-listener"></a>`endpoints.dns_tcp.listener` | `"dns_tcp"` |
-| <a id="declaration-endpoints-dns-tcp-protocol"></a>`endpoints.dns_tcp.protocol` | `"tcp"` |
-| <a id="declaration-endpoints-dns-tcp-via"></a>`endpoints.dns_tcp.via` | `"service"` |
+| <a id="declaration-endpoints-dns-udp-endpoint"></a>`endpoints.dns_udp_endpoint` | `object` |
+| <a id="declaration-endpoints-dns-udp-endpoint-listener"></a>`endpoints.dns_udp_endpoint.listener` | `"dns_udp_listener"` |
+| <a id="declaration-endpoints-dns-udp-endpoint-protocol"></a>`endpoints.dns_udp_endpoint.protocol` | `"udp"` |
+| <a id="declaration-endpoints-dns-udp-endpoint-via"></a>`endpoints.dns_udp_endpoint.via` | `"service_interface"` |
+| <a id="declaration-endpoints-dns-tcp-endpoint"></a>`endpoints.dns_tcp_endpoint` | `object` |
+| <a id="declaration-endpoints-dns-tcp-endpoint-listener"></a>`endpoints.dns_tcp_endpoint.listener` | `"dns_tcp_listener"` |
+| <a id="declaration-endpoints-dns-tcp-endpoint-protocol"></a>`endpoints.dns_tcp_endpoint.protocol` | `"tcp"` |
+| <a id="declaration-endpoints-dns-tcp-endpoint-via"></a>`endpoints.dns_tcp_endpoint.via` | `"service_interface"` |
 | <a id="declaration-storage"></a>`storage` | `object` |
 | <a id="declaration-storage-config"></a>`storage.config` | `object` |
 | <a id="declaration-storage-config-target"></a>`storage.config.target` | `"/opt/unbound/etc/unbound"` |

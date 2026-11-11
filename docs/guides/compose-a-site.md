@@ -33,7 +33,7 @@ profile: homeassistant
 guest: home-app
 lifecycle: fresh
 interfaces:
-  web:
+  web_interface:
     interface: primary
 storage:
   config:
@@ -86,10 +86,10 @@ For a missing reusable profile, follow [Contributing](../contributing.md) and it
 
 ## Follow a web connection through the configuration
 
-The complete [Home Assistant HTTPS example](../../examples/catalogue/home-web.yaml) selects app instance `home`, profile `homeassistant`, guest `automation`, and `lifecycle: fresh`. It binds `interfaces.web` to that guest's `primary` NIC and `storage.config` to volume `apps`, subpath `homeassistant`.
+The complete [Home Assistant HTTPS example](../../examples/catalogue/home-web.yaml) selects app instance `home`, profile `homeassistant`, guest `automation`, and `lifecycle: fresh`. It binds `interfaces.web_interface` to that guest's `primary` NIC and `storage.config` to volume `apps`, subpath `homeassistant`.
 
-The profile declares the `web` interface role, a TCP/8123 listener and the named `web` endpoint with `protocol: http` and `via: web`. The guest supplies the address. `exposures.home_web.target: {app: home, endpoint: web}` selects that resulting HTTP connection. `ingress: {app: edge, endpoint: https}` and `tls: site_certificate` select the frontend and named certificate policy. The example declares the required network rules separately.
+The profile declares `web_interface`, TCP/8123 listener `web_listener`, and exported connection `web_endpoint` with `protocol: http`, `listener: web_listener` and `via: web_interface`. The guest supplies the address. `exposures.home_web.target: {app: home, endpoint: web_endpoint}` selects that resulting HTTP connection. `ingress: {app: edge, endpoint: https_endpoint}` and `tls: site_certificate` select the frontend and named certificate policy. The example declares the required network rules separately.
 
-`home` is your instance name; `homeassistant` chooses the installation recipe. The app role `web`, the guest NIC `primary` and the exported endpoint `web` have different jobs even when a profile reuses a label. Changing the guest address updates the resolved backend through the reference. Selecting an endpoint does not change the profile's wildcard listener, grant general access or establish service readiness. See the framework's [instance contract](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/apps.md#instance-interface-role-and-exported-endpoint) and [exposure contract](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/exposures.md).
+`home` is your instance name; `homeassistant` chooses the installation recipe. The app role `web_interface`, guest NIC `primary`, listener `web_listener` and exported connection `web_endpoint` have distinct names and jobs. Changing the guest address updates the resolved backend through the reference. Selecting an endpoint does not change the profile's wildcard listener, grant general access or establish service readiness. See the framework's [instance contract](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/apps.md#instance-interface-role-and-exported-endpoint) and [exposure contract](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/exposures.md).
 
 Compile this complete example using the same selected framework as the other examples. It uses synthetic values, reads no credentials and contacts no targets. Compilation does not verify DNS, certificates, Home Assistant onboarding or service availability.

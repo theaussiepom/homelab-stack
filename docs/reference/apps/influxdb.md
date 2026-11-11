@@ -59,7 +59,7 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
-| `service` | Yes | `guest-interface` |
+| `service_interface` | Yes | `guest-interface` |
 
 Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role names an application requirement; it does not create another NIC. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -67,17 +67,17 @@ Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `web` | `influxdb` / `host` | `interface` via `service` | `8086/tcp` | None; listener remains in its declared namespace |
+| `web_listener` | `influxdb` / `host` | `interface` via `service_interface` | `8086/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
-| `web` | `http` | `web` via `service` |
+| `web_endpoint` | `http` | `web_listener` via `service_interface` |
 
 Listeners use the declared interface or network namespace. Endpoints tell consumers where to connect; they do not permit traffic or make consumers wait for the service.
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -93,7 +93,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md).
 
 This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
@@ -128,7 +128,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -143,22 +143,22 @@ These are the complete supplied fields in [influxdb.yaml](../../../apps/influxdb
 | <a id="declaration-adapter"></a>`adapter` | `"influxdb"` |
 | <a id="declaration-display-name"></a>`display_name` | `"InfluxDB"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
-| <a id="declaration-interfaces-service"></a>`interfaces.service` | `object` |
-| <a id="declaration-interfaces-service-required"></a>`interfaces.service.required` | `true` |
-| <a id="declaration-interfaces-service-accepts"></a>`interfaces.service.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-service-interface"></a>`interfaces.service_interface` | `object` |
+| <a id="declaration-interfaces-service-interface-required"></a>`interfaces.service_interface.required` | `true` |
+| <a id="declaration-interfaces-service-interface-accepts"></a>`interfaces.service_interface.accepts` | `["guest-interface"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
-| <a id="declaration-listeners-web"></a>`listeners.web` | `object` |
-| <a id="declaration-listeners-web-service"></a>`listeners.web.service` | `"influxdb"` |
-| <a id="declaration-listeners-web-namespace"></a>`listeners.web.namespace` | `"host"` |
-| <a id="declaration-listeners-web-interface"></a>`listeners.web.interface` | `"service"` |
-| <a id="declaration-listeners-web-bind"></a>`listeners.web.bind` | `"interface"` |
-| <a id="declaration-listeners-web-protocol"></a>`listeners.web.protocol` | `"tcp"` |
-| <a id="declaration-listeners-web-port"></a>`listeners.web.port` | `8086` |
+| <a id="declaration-listeners-web-listener"></a>`listeners.web_listener` | `object` |
+| <a id="declaration-listeners-web-listener-service"></a>`listeners.web_listener.service` | `"influxdb"` |
+| <a id="declaration-listeners-web-listener-namespace"></a>`listeners.web_listener.namespace` | `"host"` |
+| <a id="declaration-listeners-web-listener-interface"></a>`listeners.web_listener.interface` | `"service_interface"` |
+| <a id="declaration-listeners-web-listener-bind"></a>`listeners.web_listener.bind` | `"interface"` |
+| <a id="declaration-listeners-web-listener-protocol"></a>`listeners.web_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-web-listener-port"></a>`listeners.web_listener.port` | `8086` |
 | <a id="declaration-endpoints"></a>`endpoints` | `object` |
-| <a id="declaration-endpoints-web"></a>`endpoints.web` | `object` |
-| <a id="declaration-endpoints-web-listener"></a>`endpoints.web.listener` | `"web"` |
-| <a id="declaration-endpoints-web-protocol"></a>`endpoints.web.protocol` | `"http"` |
-| <a id="declaration-endpoints-web-via"></a>`endpoints.web.via` | `"service"` |
+| <a id="declaration-endpoints-web-endpoint"></a>`endpoints.web_endpoint` | `object` |
+| <a id="declaration-endpoints-web-endpoint-listener"></a>`endpoints.web_endpoint.listener` | `"web_listener"` |
+| <a id="declaration-endpoints-web-endpoint-protocol"></a>`endpoints.web_endpoint.protocol` | `"http"` |
+| <a id="declaration-endpoints-web-endpoint-via"></a>`endpoints.web_endpoint.via` | `"service_interface"` |
 | <a id="declaration-storage"></a>`storage` | `object` |
 | <a id="declaration-storage-data"></a>`storage.data` | `object` |
 | <a id="declaration-storage-data-target"></a>`storage.data.target` | `"/var/lib/influxdb"` |

@@ -123,9 +123,9 @@ apps:
     guest: edge
     lifecycle: retained
     interfaces:
-      frontend:
+      frontend_interface:
         interface: primary
-      management:
+      management_interface:
         interface: primary
     storage:
       certs:
@@ -155,9 +155,9 @@ apps:
     guest: manager
     lifecycle: retained
     interfaces:
-      web:
+      web_interface:
         interface: primary
-      private:
+      private_interface:
         scope: app-network
         network: default
     storage:
@@ -181,7 +181,7 @@ apps:
     properties:
       trusted_proxy:
         app: edge
-        interface: management
+        interface: management_interface
 domains: {}
 external_endpoints:
   proxmox:
@@ -223,7 +223,7 @@ connections:
       connection: proxmox
     target:
       external: proxmox
-    source_interface: web
+    source_interface: web_interface
 exposures: {}
 images: {}
 host_aliases: {}

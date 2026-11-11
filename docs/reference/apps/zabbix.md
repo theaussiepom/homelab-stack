@@ -57,12 +57,12 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
-| `web` | Yes | `guest-interface` |
-| `server` | Yes | `guest-interface` |
-| `postgresql` | Yes | `guest-interface` |
-| `metrics` | No; selected capability can require it | `guest-interface` |
-| `management` | No; selected capability can require it | `guest-interface` |
-| `private` | Yes | `app-network` |
+| `web_interface` | Yes | `guest-interface` |
+| `server_interface` | Yes | `guest-interface` |
+| `postgresql_interface` | Yes | `guest-interface` |
+| `metrics_interface` | No; selected capability can require it | `guest-interface` |
+| `management_interface` | No; selected capability can require it | `guest-interface` |
+| `private_interface` | Yes | `app-network` |
 
 Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback or an app network through its explicit scope. A role does not create another network interface. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -70,20 +70,20 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `server` | `zabbix_server` / `app-network` | `wildcard` via `private` | `10051/tcp` | `guest-interface` 10051 via `server` |
-| `web` | `zabbix_web` / `app-network` | `wildcard` via `private` | `8080/tcp` | `guest-interface` 8080 via `web` |
-| `local_web` | `zabbix_web` / `app-network` | `wildcard` via `private` | `8080/tcp` | `guest-loopback` 8081 |
+| `server_listener` | `zabbix_server` / `app-network` | `wildcard` via `private_interface` | `10051/tcp` | `guest-interface` 10051 via `server` |
+| `web_listener` | `zabbix_web` / `app-network` | `wildcard` via `private_interface` | `8080/tcp` | `guest-interface` 8080 via `web` |
+| `local_web_listener` | `zabbix_web` / `app-network` | `wildcard` via `private_interface` | `8080/tcp` | `guest-loopback` 8081 |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
-| `web` | `http` | `web` via `web` |
-| `server` | `tcp` | `server` via `server` |
+| `web_endpoint` | `http` | `web_listener` via `web_interface` |
+| `server_endpoint` | `tcp` | `server_listener` via `server_interface` |
 
 A wildcard listener accepts connections within the declared app network. A port becomes available on the guest only when explicitly published. Endpoints do not permit network traffic or make another app wait for this service.
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 No app storage role is declared. Generated private runtime files retain their separate owned paths.
 
@@ -108,7 +108,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -151,7 +151,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/219361b5df94abbfb0976a1865c0b739633e2645/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/ca61bfa96b848dd881239dcafdfa38985b5a70b9/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -166,66 +166,66 @@ These are the complete supplied fields in [zabbix.yaml](../../../apps/zabbix.yam
 | <a id="declaration-adapter"></a>`adapter` | `"zabbix"` |
 | <a id="declaration-display-name"></a>`display_name` | `"Zabbix"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
-| <a id="declaration-interfaces-web"></a>`interfaces.web` | `object` |
-| <a id="declaration-interfaces-web-required"></a>`interfaces.web.required` | `true` |
-| <a id="declaration-interfaces-web-accepts"></a>`interfaces.web.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-server"></a>`interfaces.server` | `object` |
-| <a id="declaration-interfaces-server-required"></a>`interfaces.server.required` | `true` |
-| <a id="declaration-interfaces-server-accepts"></a>`interfaces.server.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-postgresql"></a>`interfaces.postgresql` | `object` |
-| <a id="declaration-interfaces-postgresql-required"></a>`interfaces.postgresql.required` | `true` |
-| <a id="declaration-interfaces-postgresql-accepts"></a>`interfaces.postgresql.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-metrics"></a>`interfaces.metrics` | `object` |
-| <a id="declaration-interfaces-metrics-required"></a>`interfaces.metrics.required` | `false` |
-| <a id="declaration-interfaces-metrics-accepts"></a>`interfaces.metrics.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-management"></a>`interfaces.management` | `object` |
-| <a id="declaration-interfaces-management-required"></a>`interfaces.management.required` | `false` |
-| <a id="declaration-interfaces-management-accepts"></a>`interfaces.management.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-private"></a>`interfaces.private` | `object` |
-| <a id="declaration-interfaces-private-required"></a>`interfaces.private.required` | `true` |
-| <a id="declaration-interfaces-private-accepts"></a>`interfaces.private.accepts` | `["app-network"]` |
+| <a id="declaration-interfaces-web-interface"></a>`interfaces.web_interface` | `object` |
+| <a id="declaration-interfaces-web-interface-required"></a>`interfaces.web_interface.required` | `true` |
+| <a id="declaration-interfaces-web-interface-accepts"></a>`interfaces.web_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-server-interface"></a>`interfaces.server_interface` | `object` |
+| <a id="declaration-interfaces-server-interface-required"></a>`interfaces.server_interface.required` | `true` |
+| <a id="declaration-interfaces-server-interface-accepts"></a>`interfaces.server_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-postgresql-interface"></a>`interfaces.postgresql_interface` | `object` |
+| <a id="declaration-interfaces-postgresql-interface-required"></a>`interfaces.postgresql_interface.required` | `true` |
+| <a id="declaration-interfaces-postgresql-interface-accepts"></a>`interfaces.postgresql_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-metrics-interface"></a>`interfaces.metrics_interface` | `object` |
+| <a id="declaration-interfaces-metrics-interface-required"></a>`interfaces.metrics_interface.required` | `false` |
+| <a id="declaration-interfaces-metrics-interface-accepts"></a>`interfaces.metrics_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-management-interface"></a>`interfaces.management_interface` | `object` |
+| <a id="declaration-interfaces-management-interface-required"></a>`interfaces.management_interface.required` | `false` |
+| <a id="declaration-interfaces-management-interface-accepts"></a>`interfaces.management_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-private-interface"></a>`interfaces.private_interface` | `object` |
+| <a id="declaration-interfaces-private-interface-required"></a>`interfaces.private_interface.required` | `true` |
+| <a id="declaration-interfaces-private-interface-accepts"></a>`interfaces.private_interface.accepts` | `["app-network"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
-| <a id="declaration-listeners-server"></a>`listeners.server` | `object` |
-| <a id="declaration-listeners-server-service"></a>`listeners.server.service` | `"zabbix_server"` |
-| <a id="declaration-listeners-server-namespace"></a>`listeners.server.namespace` | `"app-network"` |
-| <a id="declaration-listeners-server-interface"></a>`listeners.server.interface` | `"private"` |
-| <a id="declaration-listeners-server-bind"></a>`listeners.server.bind` | `"wildcard"` |
-| <a id="declaration-listeners-server-protocol"></a>`listeners.server.protocol` | `"tcp"` |
-| <a id="declaration-listeners-server-port"></a>`listeners.server.port` | `10051` |
-| <a id="declaration-listeners-server-publish"></a>`listeners.server.publish` | `object` |
-| <a id="declaration-listeners-server-publish-scope"></a>`listeners.server.publish.scope` | `"guest-interface"` |
-| <a id="declaration-listeners-server-publish-interface"></a>`listeners.server.publish.interface` | `"server"` |
-| <a id="declaration-listeners-server-publish-port"></a>`listeners.server.publish.port` | `10051` |
-| <a id="declaration-listeners-web"></a>`listeners.web` | `object` |
-| <a id="declaration-listeners-web-service"></a>`listeners.web.service` | `"zabbix_web"` |
-| <a id="declaration-listeners-web-namespace"></a>`listeners.web.namespace` | `"app-network"` |
-| <a id="declaration-listeners-web-interface"></a>`listeners.web.interface` | `"private"` |
-| <a id="declaration-listeners-web-bind"></a>`listeners.web.bind` | `"wildcard"` |
-| <a id="declaration-listeners-web-protocol"></a>`listeners.web.protocol` | `"tcp"` |
-| <a id="declaration-listeners-web-port"></a>`listeners.web.port` | `8080` |
-| <a id="declaration-listeners-web-publish"></a>`listeners.web.publish` | `object` |
-| <a id="declaration-listeners-web-publish-scope"></a>`listeners.web.publish.scope` | `"guest-interface"` |
-| <a id="declaration-listeners-web-publish-interface"></a>`listeners.web.publish.interface` | `"web"` |
-| <a id="declaration-listeners-web-publish-port"></a>`listeners.web.publish.port` | `8080` |
-| <a id="declaration-listeners-local-web"></a>`listeners.local_web` | `object` |
-| <a id="declaration-listeners-local-web-service"></a>`listeners.local_web.service` | `"zabbix_web"` |
-| <a id="declaration-listeners-local-web-namespace"></a>`listeners.local_web.namespace` | `"app-network"` |
-| <a id="declaration-listeners-local-web-interface"></a>`listeners.local_web.interface` | `"private"` |
-| <a id="declaration-listeners-local-web-bind"></a>`listeners.local_web.bind` | `"wildcard"` |
-| <a id="declaration-listeners-local-web-protocol"></a>`listeners.local_web.protocol` | `"tcp"` |
-| <a id="declaration-listeners-local-web-port"></a>`listeners.local_web.port` | `8080` |
-| <a id="declaration-listeners-local-web-publish"></a>`listeners.local_web.publish` | `object` |
-| <a id="declaration-listeners-local-web-publish-scope"></a>`listeners.local_web.publish.scope` | `"guest-loopback"` |
-| <a id="declaration-listeners-local-web-publish-port"></a>`listeners.local_web.publish.port` | `8081` |
+| <a id="declaration-listeners-server-listener"></a>`listeners.server_listener` | `object` |
+| <a id="declaration-listeners-server-listener-service"></a>`listeners.server_listener.service` | `"zabbix_server"` |
+| <a id="declaration-listeners-server-listener-namespace"></a>`listeners.server_listener.namespace` | `"app-network"` |
+| <a id="declaration-listeners-server-listener-interface"></a>`listeners.server_listener.interface` | `"private_interface"` |
+| <a id="declaration-listeners-server-listener-bind"></a>`listeners.server_listener.bind` | `"wildcard"` |
+| <a id="declaration-listeners-server-listener-protocol"></a>`listeners.server_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-server-listener-port"></a>`listeners.server_listener.port` | `10051` |
+| <a id="declaration-listeners-server-listener-publish"></a>`listeners.server_listener.publish` | `object` |
+| <a id="declaration-listeners-server-listener-publish-scope"></a>`listeners.server_listener.publish.scope` | `"guest-interface"` |
+| <a id="declaration-listeners-server-listener-publish-interface"></a>`listeners.server_listener.publish.interface` | `"server_interface"` |
+| <a id="declaration-listeners-server-listener-publish-port"></a>`listeners.server_listener.publish.port` | `10051` |
+| <a id="declaration-listeners-web-listener"></a>`listeners.web_listener` | `object` |
+| <a id="declaration-listeners-web-listener-service"></a>`listeners.web_listener.service` | `"zabbix_web"` |
+| <a id="declaration-listeners-web-listener-namespace"></a>`listeners.web_listener.namespace` | `"app-network"` |
+| <a id="declaration-listeners-web-listener-interface"></a>`listeners.web_listener.interface` | `"private_interface"` |
+| <a id="declaration-listeners-web-listener-bind"></a>`listeners.web_listener.bind` | `"wildcard"` |
+| <a id="declaration-listeners-web-listener-protocol"></a>`listeners.web_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-web-listener-port"></a>`listeners.web_listener.port` | `8080` |
+| <a id="declaration-listeners-web-listener-publish"></a>`listeners.web_listener.publish` | `object` |
+| <a id="declaration-listeners-web-listener-publish-scope"></a>`listeners.web_listener.publish.scope` | `"guest-interface"` |
+| <a id="declaration-listeners-web-listener-publish-interface"></a>`listeners.web_listener.publish.interface` | `"web_interface"` |
+| <a id="declaration-listeners-web-listener-publish-port"></a>`listeners.web_listener.publish.port` | `8080` |
+| <a id="declaration-listeners-local-web-listener"></a>`listeners.local_web_listener` | `object` |
+| <a id="declaration-listeners-local-web-listener-service"></a>`listeners.local_web_listener.service` | `"zabbix_web"` |
+| <a id="declaration-listeners-local-web-listener-namespace"></a>`listeners.local_web_listener.namespace` | `"app-network"` |
+| <a id="declaration-listeners-local-web-listener-interface"></a>`listeners.local_web_listener.interface` | `"private_interface"` |
+| <a id="declaration-listeners-local-web-listener-bind"></a>`listeners.local_web_listener.bind` | `"wildcard"` |
+| <a id="declaration-listeners-local-web-listener-protocol"></a>`listeners.local_web_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-local-web-listener-port"></a>`listeners.local_web_listener.port` | `8080` |
+| <a id="declaration-listeners-local-web-listener-publish"></a>`listeners.local_web_listener.publish` | `object` |
+| <a id="declaration-listeners-local-web-listener-publish-scope"></a>`listeners.local_web_listener.publish.scope` | `"guest-loopback"` |
+| <a id="declaration-listeners-local-web-listener-publish-port"></a>`listeners.local_web_listener.publish.port` | `8081` |
 | <a id="declaration-endpoints"></a>`endpoints` | `object` |
-| <a id="declaration-endpoints-web"></a>`endpoints.web` | `object` |
-| <a id="declaration-endpoints-web-listener"></a>`endpoints.web.listener` | `"web"` |
-| <a id="declaration-endpoints-web-protocol"></a>`endpoints.web.protocol` | `"http"` |
-| <a id="declaration-endpoints-web-via"></a>`endpoints.web.via` | `"web"` |
-| <a id="declaration-endpoints-server"></a>`endpoints.server` | `object` |
-| <a id="declaration-endpoints-server-listener"></a>`endpoints.server.listener` | `"server"` |
-| <a id="declaration-endpoints-server-protocol"></a>`endpoints.server.protocol` | `"tcp"` |
-| <a id="declaration-endpoints-server-via"></a>`endpoints.server.via` | `"server"` |
+| <a id="declaration-endpoints-web-endpoint"></a>`endpoints.web_endpoint` | `object` |
+| <a id="declaration-endpoints-web-endpoint-listener"></a>`endpoints.web_endpoint.listener` | `"web_listener"` |
+| <a id="declaration-endpoints-web-endpoint-protocol"></a>`endpoints.web_endpoint.protocol` | `"http"` |
+| <a id="declaration-endpoints-web-endpoint-via"></a>`endpoints.web_endpoint.via` | `"web_interface"` |
+| <a id="declaration-endpoints-server-endpoint"></a>`endpoints.server_endpoint` | `object` |
+| <a id="declaration-endpoints-server-endpoint-listener"></a>`endpoints.server_endpoint.listener` | `"server_listener"` |
+| <a id="declaration-endpoints-server-endpoint-protocol"></a>`endpoints.server_endpoint.protocol` | `"tcp"` |
+| <a id="declaration-endpoints-server-endpoint-via"></a>`endpoints.server_endpoint.via` | `"server_interface"` |
 | <a id="declaration-storage"></a>`storage` | `{}` |
 | <a id="declaration-connections"></a>`connections` | `object` |
 | <a id="declaration-connections-database"></a>`connections.database` | `object` |
