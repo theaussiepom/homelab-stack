@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scan authored history and the checkout using the selected framework's guard."""
+"""Scan both branch histories and the checkout using the selected framework's guard."""
 
 import argparse
 import importlib.util
@@ -11,11 +11,14 @@ BATCH_COMMITS = 100
 BATCH_SECONDS = 180
 
 
-def scan(root, safety, scanner, head="HEAD"):
+def scan(root, safety, scanner, head="HEAD", base=None):
     head = safety.resolve(root, head)
     if safety.git(root, "rev-parse", "--is-shallow-repository").decode().strip() != "false":
         raise ValueError("Fetch complete history before scanning a shallow repository")
-    revisions = safety.git(root, "rev-list", "--reverse", head).decode().splitlines()
+    revisions = ["rev-list", "--reverse", head]
+    if base:
+        revisions.append(safety.resolve(root, base))
+    revisions = safety.git(root, *revisions).decode().splitlines()
     trees = {}
     for offset in range(0, len(revisions), BATCH_COMMITS):
         started = time.monotonic()
@@ -45,12 +48,13 @@ def main():
     parser.add_argument("--framework", type=Path, required=True)
     parser.add_argument("--scanner", type=Path, required=True)
     parser.add_argument("--head", default="HEAD", help="Authored history head; the checkout tree is also scanned")
+    parser.add_argument("--base", help="Target history head; all reachable commits on both sides are scanned")
     args = parser.parse_args()
     source = args.framework.resolve() / ".github/scripts/source_safety.py"
     spec = importlib.util.spec_from_file_location("selected_source_safety", source)
     safety = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(safety)
-    print(json.dumps(scan(args.root.resolve(), safety, args.scanner.resolve(), args.head)))
+    print(json.dumps(scan(args.root.resolve(), safety, args.scanner.resolve(), args.head, args.base)))
 
 
 if __name__ == "__main__":

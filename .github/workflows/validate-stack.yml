@@ -59,4 +59,5 @@ jobs:
       - name: Scan source and complete history
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: python3 .github/scripts/check_history.py --framework framework-source --scanner "$RUNNER_TEMP/homelab-source-tools/gitleaks" --head "$HEAD_SHA"
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+        run: python3 .github/scripts/check_history.py --framework framework-source --scanner "$RUNNER_TEMP/homelab-source-tools/gitleaks" --head "$HEAD_SHA" --base "$BASE_SHA"
