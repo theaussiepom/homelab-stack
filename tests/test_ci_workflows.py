@@ -166,6 +166,8 @@ for name in json.loads(sys.argv[2]):
         source = documents["validate-stack.yml"]["jobs"]["source"]
         self.assertNotIn("permissions", source)
         self.assertEqual(source["steps"][0]["with"]["fetch-depth"], "0")
+        self.assertEqual(source["steps"][0]["with"]["ref"],
+                         "${{ github.event.pull_request.head.sha || github.sha }}")
         commands = "\n".join(step.get("run", "") for step in source["steps"])
         self.assertIn("blueprints/workflows.py --stack . --site site.example.yaml --check", commands)
         self.assertIn("blueprints/compile.py --stack . --site site.example.yaml --check", commands)
