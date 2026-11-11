@@ -116,6 +116,9 @@ backup:
     datastore_path: /mnt/backup/recovery
   recovery_public_key:
     source: examples/backup/master-public.pem.fixture
+  defaults:
+    staging_volume: backup-stage
+    interface: primary
   job:
     name: example-recovery
     destination:
@@ -124,9 +127,5 @@ backup:
       namespace: guests
       fingerprint: ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab:ab
     schedule: {calendar: '02:00', jitter_seconds: 300}
-    clients:
-      resolver:
-        staging_volume: backup-stage
-        interface: primary
     capture: {pause: [], database_lock: [], influx_tokens: {}}
     limits: {max_bytes: 33554432, max_files: 10000, timeout_seconds: 300}
