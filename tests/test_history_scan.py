@@ -133,3 +133,76 @@ class FullHistoryTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Fetch complete history", result.stderr)
         self.assertNotIn('"status": "passed"', result.stdout)
+
+    def pr_checkout(self, directory, *, private_merge=False, forged_ancestor=False):
+        """Build authored commits plus a platform-style merge without changing this checkout."""
+        repository = Path(directory) / "pull-request"
+        repository.mkdir()
+
+        def git(*args, data=None, platform_identity=False):
+            environment = dict(self.environment)
+            if platform_identity:
+                environment["GIT_AUTHOR_EMAIL"] = safety.OWN_EMAIL
+            return subprocess.check_output(
+                ["git", "-C", str(repository), *args], input=data, text=True,
+                env=environment,
+            ).strip()
+
+        git("init", "-q")
+        blob = git("hash-object", "-w", "--stdin", data="Public source fixture\n")
+        authored_tree = git("mktree", data=f"100644 blob {blob}\tfixture.txt\n")
+        ancestor = git("commit-tree", authored_tree, data="Authored ancestor\n",
+                       platform_identity=forged_ancestor)
+        authored = git("commit-tree", authored_tree, "-p", ancestor, data="Authored head\n")
+        leaf = ".env" if private_merge else "merge-only.txt"
+        merged_tree = git("mktree", data=(
+            f"100644 blob {blob}\tfixture.txt\n100644 blob {blob}\t{leaf}\n"
+        ))
+        merge = git("commit-tree", merged_tree, "-p", ancestor, "-p", authored,
+                    data="Platform merge\n", platform_identity=True)
+        git("update-ref", "HEAD", merge)
+        return repository, authored, merge
+
+    def pr_scan(self, repository, *arguments):
+        scanner = os.environ.get("GITLEAKS_BIN") or subprocess.check_output(
+            ["git", "-C", str(ROOT), "config", "--get", "hooks.gitleaksPath"], text=True,
+        ).strip()
+        return subprocess.run(
+            [sys.executable, str(SCRIPT), "--root", str(repository),
+             "--framework", str(FRAMEWORK), "--scanner", scanner, *arguments],
+            capture_output=True, text=True, timeout=60,
+        )
+
+    def test_pr_head_checks_all_authored_history_and_the_distinct_merged_tree(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repository, authored, merge = self.pr_checkout(directory)
+            before = self.pr_scan(repository)
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("maintainer_identity_mismatch", before.stderr)
+            with self.assertRaisesRegex(safety.guard.Blocked, "maintainer_identity_mismatch"):
+                safety.check_identity(repository, merge)
+            after = self.pr_scan(repository, "--head", authored)
+            self.assertEqual(after.returncode, 0, after.stderr)
+            self.assertEqual(json.loads(after.stdout), {
+                "status": "passed", "commits_checked": 2, "unique_trees_checked": 2,
+                "head_files": 2, "batches": 1,
+            })
+
+    def test_pr_head_keeps_merged_tree_private_path_refusal(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repository, authored, _ = self.pr_checkout(directory, private_merge=True)
+            result = self.pr_scan(repository, "--head", authored)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("private_file_path", result.stderr)
+        self.assertNotIn('"status": "passed"', result.stdout)
+
+    def test_pr_head_keeps_authored_ancestor_identity_and_invalid_ref_refusals(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repository, authored, _ = self.pr_checkout(directory, forged_ancestor=True)
+            for head, reason in ((authored, "maintainer_identity_mismatch"),
+                                 ("refs/pull/25/head", "invalid_revision")):
+                with self.subTest(reason=reason):
+                    result = self.pr_scan(repository, "--head", head)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn(reason, result.stderr)
+                    self.assertNotIn('"status": "passed"', result.stdout)

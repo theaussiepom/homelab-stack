@@ -171,7 +171,10 @@ for name in json.loads(sys.argv[2]):
         self.assertIn("blueprints/compile.py --stack . --site examples/site.second.yaml --check", commands)
         self.assertIn("--suite stack --stack . --fail-under 100", commands)
         self.assertIn('--output "$RUNNER_TEMP/stack-coverage"', commands)
-        self.assertIn('.github/scripts/check_history.py --framework framework-source --scanner "$RUNNER_TEMP/homelab-source-tools/gitleaks"', commands)
+        scan = next(step for step in source["steps"] if step["name"] == "Scan source and complete history")
+        self.assertEqual(scan["env"], {"HEAD_SHA": "${{ github.event.pull_request.head.sha || github.sha }}"})
+        self.assertEqual(scan["run"], 'python3 .github/scripts/check_history.py --framework framework-source --scanner "$RUNNER_TEMP/homelab-source-tools/gitleaks" --head "$HEAD_SHA"')
+        self.assertNotIn("ref", source["steps"][0]["with"])
         self.assertIn(".github/workflows/phase.yml", commands)
         self.assertIn("--require-hashes", commands)
         security = documents["scan-python-security.yml"]["jobs"]["analyze"]

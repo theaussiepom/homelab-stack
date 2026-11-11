@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scan all reachable history using the selected framework's unchanged tree guard."""
+"""Scan authored history and the checkout using the selected framework's guard."""
 
 import argparse
 import importlib.util
@@ -11,8 +11,8 @@ BATCH_COMMITS = 100
 BATCH_SECONDS = 180
 
 
-def scan(root, safety, scanner):
-    head = safety.resolve(root, "HEAD")
+def scan(root, safety, scanner, head="HEAD"):
+    head = safety.resolve(root, head)
     if safety.git(root, "rev-parse", "--is-shallow-repository").decode().strip() != "false":
         raise ValueError("Fetch complete history before scanning a shallow repository")
     revisions = safety.git(root, "rev-list", "--reverse", head).decode().splitlines()
@@ -26,7 +26,10 @@ def scan(root, safety, scanner):
             tree = safety.git(root, "rev-parse", revision + "^{tree}").decode().strip()
             if tree not in trees:
                 trees[tree] = safety.scan_tree(root, revision, scanner)
-    head_tree = safety.git(root, "rev-parse", head + "^{tree}").decode().strip()
+    checkout = safety.resolve(root, "HEAD")
+    head_tree = safety.git(root, "rev-parse", checkout + "^{tree}").decode().strip()
+    if head_tree not in trees:
+        trees[head_tree] = safety.scan_tree(root, checkout, scanner)
     return {
         "status": "passed",
         "commits_checked": len(revisions),
@@ -41,12 +44,13 @@ def main():
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--framework", type=Path, required=True)
     parser.add_argument("--scanner", type=Path, required=True)
+    parser.add_argument("--head", default="HEAD", help="Authored history head; the checkout tree is also scanned")
     args = parser.parse_args()
     source = args.framework.resolve() / ".github/scripts/source_safety.py"
     spec = importlib.util.spec_from_file_location("selected_source_safety", source)
     safety = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(safety)
-    print(json.dumps(scan(args.root.resolve(), safety, args.scanner.resolve())))
+    print(json.dumps(scan(args.root.resolve(), safety, args.scanner.resolve(), args.head)))
 
 
 if __name__ == "__main__":
