@@ -38,6 +38,26 @@ def compile_examples():
 
 
 class ProfileExampleIntegrations(unittest.TestCase):
+    def test_radio_watchdog_compiles_only_the_selected_environment_setting(self):
+        path = 'examples/catalogue/messaging-radio.yaml'
+        selected, packets = self.examples[path]
+        self.assertEqual(selected.resolved['apps']['radio']['properties']['watchdog'], 'default')
+        current = json.loads(packets['radio']['files']['compose-radio.yml'])
+        self.assertEqual(current['services']['radio_zigbee2mqtt']['environment'].pop('Z2M_WATCHDOG'), 'default')
+        source, _ = component_sources.site(ROOT / path)
+        self.assertEqual(source['apps']['radio']['properties'].pop('watchdog'), 'default')
+        with tempfile.TemporaryDirectory() as tmp:
+            omitted = Path(tmp).resolve() / 'site.json'
+            omitted.write_text(json.dumps(source))
+            with patch('subprocess.run', side_effect=no_native), \
+                 patch('subprocess.check_output', side_effect=no_native), \
+                 patch('socket.create_connection', side_effect=no_native):
+                baseline = compiler.lower_plan(compiler.resolve_plan(ROOT, omitted, []))
+        self.assertEqual(current, json.loads(baseline['radio']['files']['compose-radio.yml']))
+        for guest in packets:
+            if guest != 'radio':
+                self.assertEqual(packets[guest], baseline[guest])
+
     @classmethod
     def setUpClass(cls):
         cls.examples = compile_examples()

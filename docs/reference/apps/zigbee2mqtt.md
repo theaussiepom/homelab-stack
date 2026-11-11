@@ -77,7 +77,7 @@ The web listener accepts connections inside the private app network. Its explici
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/7ec351f64bb4e3f1e007b9476327d14a9c5b5a8f/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/3528963004157bebb7e54dc207917879ce565441/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -101,12 +101,15 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/7ec351f64bb4e3f1e007b9476327d14a9c5b5a8f/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/3528963004157bebb7e54dc207917879ce565441/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
 | adapter | Required string | Lowercase safe adapter ID `[a-z][a-z0-9_-]{0,62}`. |
 | mqtt_base_topic | Required string | Use 1..128 characters. The first must be a letter or digit; later characters may also be a slash, underscore or hyphen. |
+| watchdog | Optional string; omitted by this profile | Only `default` is supported. Sets `Z2M_WATCHDOG=default`; omission leaves it unset. Null, Booleans and custom delays are rejected. |
+
+The complete radio example selects `watchdog: default`. The [built-in watchdog](https://www.zigbee2mqtt.io/guide/installation/15_watchdog.html) retries recognized soft failures after 1, 5, 15, 30 and 60 minutes and eventually exits after repeated failed recovery. It requires an initial successful start and respects deliberate stops and configuration errors. A protected CD update can recreate the service to apply this environment setting while preserving its image, coordinator, data, Zigbee identity and MQTT configuration. Enabling it does not establish that a serial fault is fixed; compilation does not test runtime recovery.
 
 ## Invalid cases
 
@@ -141,7 +144,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/7ec351f64bb4e3f1e007b9476327d14a9c5b5a8f/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/7ec351f64bb4e3f1e007b9476327d14a9c5b5a8f/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/7ec351f64bb4e3f1e007b9476327d14a9c5b5a8f/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/7ec351f64bb4e3f1e007b9476327d14a9c5b5a8f/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/7ec351f64bb4e3f1e007b9476327d14a9c5b5a8f/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/3528963004157bebb7e54dc207917879ce565441/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/3528963004157bebb7e54dc207917879ce565441/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/3528963004157bebb7e54dc207917879ce565441/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/3528963004157bebb7e54dc207917879ce565441/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/3528963004157bebb7e54dc207917879ce565441/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
