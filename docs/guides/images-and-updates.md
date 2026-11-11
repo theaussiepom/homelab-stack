@@ -8,20 +8,55 @@ Image versions and policies belong to [images.json](../../images.json); package,
 
 | Need | Profile / policy |
 | --- | --- |
-| Existing custom Home Assistant image and configuration | Select homeassistant and explicitly bind its versioned image archive. |
-| New standard Home Assistant image and configuration | Select homeassistant-public with the declared official image digest. |
-| Existing Node-RED custom nodes, settings and OpenID Connect sign-in | Select node_red with its explicit archive and existing settings and health-check scripts. |
-| New standard Node-RED data | Select node_red-public. It does not install the existing profile's OpenID Connect sign-in setup or silently replace that setup. |
+| Existing custom Home Assistant image and configuration | Select `homeassistant-custom` and explicitly bind its versioned image archive. |
+| New standard Home Assistant image and configuration | Select homeassistant with the declared official image digest. |
+| Existing Node-RED custom nodes, settings and OpenID Connect sign-in | Select `node_red-custom` with its explicit archive and existing settings and health-check scripts. |
+| New standard Node-RED data | Select node_red. It does not install the existing profile's OpenID Connect sign-in setup or silently replace that setup. |
 | Existing Bitwarden vault | Use the exact official image digest. The `missing` policy pulls it only when it is absent locally. |
 | Existing Music Assistant | Use its explicitly floating latest policy. Before an update, HomeLab checks the protected data copy and the exact image resolved from that selection. |
 
-Public variants are different software choices, not fallbacks. Choosing a public variant does not prove that an existing custom archive, palette, configuration or credential store is compatible.
+Standard and custom profiles select different installation contracts. Choosing a standard profile does not prove that an existing custom archive, palette, configuration or credential store is compatible.
 
 ## Use a versioned custom archive
 
-The Home Assistant and Node-RED catalogue entries require the site to supply local_id, archive and archive_sha256 through the supported images binding. The public zero values are placeholders; `--admit` refuses them. Keep the archive’s exact bytes and private path within your protected deployment setup. Do not copy an archive or a real local identity into this public repository.
+Select `homeassistant-custom` or `node_red-custom` explicitly, then bind the existing catalogue ID under root `images`. This fragment uses synthetic archive identities; replace them within the protected consuming site:
+
+```yaml
+apps:
+  home:
+    profile: homeassistant-custom
+    # Keep this instance's guest, lifecycle, identity and prepared storage bindings.
+images:
+  homeassistant:
+    local_id: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    archive: /var/lib/homelab-inputs/private-images/homeassistant.tar
+    archive_sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+```
+
+This is a selection fragment, not a complete site. The [existing automation example](../../examples/catalogue/existing-automation.yaml) supplies all required bindings. For Node-RED the archive catalogue ID is `node_red`, and its custom profile additionally requires the prepared config/settings/health-check and retained OIDC inputs described in [its reference](../reference/apps/node_red-custom.md). Changing only an image is not a way to remove those requirements.
+
+The `images` map replaces only a declared custom archive record with another `{local_id, archive, archive_sha256}` record. It cannot replace an official registry image or choose a different software bundle. `software` appends to a profile and rejects conflicting image roles; it is not an override. Custom archive placeholders contain zero values and fail deployment admission. Unused site image bindings fail compilation with `component.image-binding-unused`, so leaving an old archive binding behind cannot silently select upstream software.
+
+The standard profiles' directory initializers are separate from image policy and only support new subdirectories on verified owned volumes. Custom profiles require prepared paths and do not gain an initializer from an archive binding. Neither image choice creates an exposure or changes a listener binding. Do not add arbitrary environment, image or command fields to work around these contracts.
 
 There is no automatic registry substitution. Conversely, normal immutable Bitwarden uses its official digest literally; there is no local-ID mapper, duplicate instance image checksum or migration startup flag.
+
+## Migrate an existing consumer
+
+Before selecting this library/framework pair, inventory app profiles, image bindings and exposure source files:
+
+| Previous selection | Preserve the same installation with |
+| --- | --- |
+| `homeassistant` with a custom archive | `homeassistant-custom`; keep `images.homeassistant` and all prepared storage, runtime, identity and credential inputs |
+| `node_red` with custom nodes and OIDC | `node_red-custom`; keep `images.node_red`, config/settings/health-check, authentication and private inputs |
+| `homeassistant-public` | `homeassistant`; keep instance/guest identities, lifecycle, storage subpath and initializer ownership unchanged |
+| `node_red-public` | `node_red`; keep instance/guest identities, lifecycle, storage subpath and initializer ownership unchanged |
+| `homeassistant-bound` or `node_red-bound` | Keep the profile and its custom archive/prepared-input contract; listener isolation is unchanged |
+| HTTP or DNS exposure outer `endpoint` | Rename only the outer field to `target`; preserve the nested named `endpoint` and all frontend/policy references |
+
+The removed `*-public` definitions have no aliases. Existing custom consumers must make an explicit profile migration; the standard names now select official immutable upstream images. Keep custom archive catalogue IDs unchanged. An ordinary update still requires genuine prior receipts, sealed payloads, matching source/backend generations, unchanged persistent ownership and protected private inputs. A new initializer or a different storage shape is an ownership change, not permission to adopt old data. Switching from a custom installation to upstream needs its own compatibility and data plan; this naming migration does not perform it.
+
+Pin the compatible published pair together and inspect changed routes, records and app packets. Unchanged instance names keep their runtime namespace; renaming an app to follow a profile name would change identity. These source changes do not update a consumer's pins or deploy anything.
 
 ## Understand an ordinary update
 

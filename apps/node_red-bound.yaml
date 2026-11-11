@@ -54,7 +54,7 @@ connections:
 software:
 - docker
 - curl
-- node_red-images
+- node_red-custom-images
 runtime:
 - container-host
 - node_red

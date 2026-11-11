@@ -451,7 +451,7 @@ connections:
 exposures:
   cloud:
     type: http
-    endpoint:
+    target:
       app: cloud
       endpoint: web
     domain: cloud
@@ -461,7 +461,7 @@ exposures:
     tls: public
   administration:
     type: http
-    endpoint:
+    target:
       app: administration
       endpoint: web
     domain: administration

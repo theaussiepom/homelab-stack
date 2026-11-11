@@ -19,6 +19,101 @@ sys.path[:0] = [str(ROOT / 'tests'), str(ROOT)]
 
 
 class ComponentCompositionTests(unittest.TestCase):
+    def test_standard_home_web_resolves_profile_role_endpoint_and_changed_guest_address(self):
+        value = component_sources.site(ROOT / 'examples/catalogue/home-web.yaml')[0]
+        plan = self.plan(value)
+        app = plan.resolved['apps']['home']
+        self.assertEqual((app['profile'], app['guest'], app['lifecycle']),
+                         ('homeassistant', 'automation', 'fresh'))
+        self.assertEqual(app['interfaces']['web'], {'interface': 'primary'})
+        self.assertEqual(value['apps']['home']['storage']['config'],
+                         {'volume': 'apps', 'subpath': 'homeassistant'})
+        route = plan.resolved['routes']['edge']['home_web']
+        address = value['guests']['automation']['interfaces']['primary']['address']['value']
+        self.assertEqual((route['target']['app'], route['target']['protocol'],
+                          route['target']['port'], route['target']['address']),
+                         ('home', 'http', 8123, address))
+        runtime = component_lower.runtime_config(plan, 'automation')['applications']['home']
+        self.assertEqual(runtime['storage_paths']['config']['initialize'],
+                         {'type': 'directory', 'uid': 0, 'gid': 0, 'mode': '0700'})
+        image = app['software_selection']['images']['homeassistant']
+        self.assertTrue(image['image'].startswith('ghcr.io/home-assistant/home-assistant@sha256:'))
+        self.assertNotIn('archive', image)
+        rendered = render.compositions(component_lower.runtime_config(plan, 'edge'))
+        self.assertTrue(rendered)
+        value['guests']['automation']['interfaces']['primary']['address']['value'] = '198.18.20.79'
+        later = self.plan(value)
+        self.assertEqual(later.resolved['routes']['edge']['home_web']['target']['address'], '198.18.20.79')
+        self.assertEqual(later.resolved['apps']['home']['identity'], app['identity'])
+        self.assertEqual(later.resolved['app_dependencies'], plan.resolved['app_dependencies'])
+        self.assertEqual(later.resolved['routes']['edge']['home_web']['tls'], 'site_certificate')
+        for change in ('outer-endpoint', 'unknown-endpoint', 'missing-endpoint', 'upstream-override',
+                       'conflicting-software', 'retired-profile', 'unused-custom-binding'):
+            broken = copy.deepcopy(value)
+            if change == 'outer-endpoint':
+                row = broken['exposures']['home_web']; row['endpoint'] = row.pop('target')
+                code = 'component.fields'
+            elif change == 'unknown-endpoint':
+                broken['exposures']['home_web']['target']['endpoint'] = 'unknown'
+                code = 'component.invalid'
+            elif change == 'missing-endpoint':
+                del broken['exposures']['home_web']['target']['endpoint']
+                code = 'component.fields'
+            elif change == 'upstream-override':
+                broken['images'] = {'homeassistant_upstream': {
+                    'local_id': 'sha256:' + 'a' * 64, 'archive': '/example/custom.tar',
+                    'archive_sha256': 'b' * 64}}
+                code = 'component.image-binding'
+            elif change == 'conflicting-software':
+                broken['apps']['home']['software'] = ['homeassistant-custom-images']
+                code = 'component.software-conflict'
+            elif change == 'retired-profile':
+                broken['apps']['home']['profile'] = 'homeassistant-public'
+                code = 'component.invalid'
+            else:
+                broken['images'] = {'homeassistant': {
+                    'local_id': 'sha256:' + 'a' * 64, 'archive': '/example/custom.tar',
+                    'archive_sha256': 'b' * 64}}
+                code = 'component.image-binding-unused'
+            with self.subTest(change=change), self.assertRaisesRegex(ComponentError, code):
+                self.plan(broken)
+
+    def test_explicit_custom_profiles_preserve_archive_data_authentication_and_runtime(self):
+        value = component_sources.site(ROOT / 'examples/catalogue/existing-automation.yaml')[0]
+        import re, yaml
+        page = (ROOT / 'docs/guides/images-and-updates.md').read_text()
+        fragment = yaml.safe_load(re.findall(r'```yaml\n(.*?)```', page, re.S)[0])
+        self.assertEqual(fragment['apps']['home']['profile'], 'homeassistant-custom')
+        value['images'] = {name: {'local_id': 'sha256:' + character * 64,
+            'archive': '/example/' + name + '.tar', 'archive_sha256': 'c' * 64}
+            for name, character in (('homeassistant', 'a'), ('node_red', 'b'))}
+        value['images']['homeassistant'] = fragment['images']['homeassistant']
+        before = self.plan(value)
+        for name in ('homeassistant', 'node_red'):
+            app = before.resolved['apps'][name]
+            self.assertEqual(app['profile'], name + '-custom')
+            selected = app['software_selection']['images'][name]
+            self.assertEqual(selected['archive'], value['images'][name]['archive'])
+            self.assertEqual(selected['archive_sha256'], value['images'][name]['archive_sha256'])
+            self.assertTrue(selected['image'].startswith('sha256:'))
+            runtime = component_lower.runtime_config(before, app['guest'])['applications'][name]
+            self.assertTrue(all('initialize' not in row for row in runtime['storage_paths'].values()))
+        node = before.resolved['apps']['node_red']
+        node_runtime = component_lower.runtime_config(before, node['guest'])['applications']['node_red']
+        self.assertTrue({'data', 'config', 'settings', 'healthcheck'} <= set(node_runtime['storage_paths']))
+        self.assertIn('authentication_resolved', node)
+        value['apps']['homeassistant']['display_name'] = 'Another descriptive label'
+        later = self.plan(value)
+        for name in ('homeassistant', 'node_red'):
+            first = before.resolved['apps'][name]; second = later.resolved['apps'][name]
+            for field in ('identity', 'lifecycle', 'storage_paths', 'software_selection',
+                          'secret_bindings', 'authentication_resolved'):
+                self.assertEqual(first.get(field), second.get(field))
+            old_runtime = component_lower.runtime_config(before, first['guest'])['applications'][name]
+            new_runtime = component_lower.runtime_config(later, second['guest'])['applications'][name]
+            self.assertEqual(old_runtime['identity'], new_runtime['identity'])
+            self.assertEqual(old_runtime['storage_paths'], new_runtime['storage_paths'])
+
     def test_complete_cloudflare_example_and_scalar_workflow_binding(self):
         import workflows
         import re, yaml
@@ -33,7 +128,7 @@ class ComponentCompositionTests(unittest.TestCase):
         value['secret_sources']['edge_origin_token']={'type':'file','path':'/run/example/retained-origin-token'}
         value['domains']={'manager':'manager.example.invalid'}
         value['policies']['tls']={'public':{'type':'acme','resolver':'letsencrypt'}}
-        value['exposures']={'manager':{'type':'http','endpoint':{'app':'manager','endpoint':'web'},'domain':'manager',
+        value['exposures']={'manager':{'type':'http','target':{'app':'manager','endpoint':'web'},'domain':'manager',
             'ingress':{'app':'edge','endpoint':'https'},'tls':'public','middlewares':['cloudflare_public','headers']}}
         value['policies']['network']['proxy_backend']={'rules':[{'direction':'out','proto':'tcp',
             'destination':{'endpoint':'backend'},'port':{'endpoint':'backend'},'comment':'Selected proxy backend'}]}

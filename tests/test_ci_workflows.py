@@ -31,6 +31,8 @@ class CiWorkflowTests(unittest.TestCase):
         # This existing harness remains collected if a documentation module is
         # deleted or emptied. Keep control facts in their source, not here.
         required = [
+            'test_component_composition.ComponentCompositionTests.test_standard_home_web_resolves_profile_role_endpoint_and_changed_guest_address',
+            'test_component_composition.ComponentCompositionTests.test_explicit_custom_profiles_preserve_archive_data_authentication_and_runtime',
             'test_documentation_examples.DocumentationConformance',
             'test_documentation_examples.DocumentationConformance.test_backup_recovery_catalogue_matches_every_loaded_role_and_capture',
             'test_documentation_examples.DocumentationConformance.test_backup_preparation_and_volume_fragments_follow_presence_controls',

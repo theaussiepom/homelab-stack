@@ -1,7 +1,7 @@
 schema: homelab-components-v1
 kind: exposure
 type: dns
-endpoint:
+target:
   app: filtering
   endpoint: web
 domain: filtering

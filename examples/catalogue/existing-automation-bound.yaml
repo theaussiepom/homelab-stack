@@ -277,7 +277,7 @@ connections: {}
 exposures:
   node_red:
     type: http
-    endpoint:
+    target:
       app: node_red
       endpoint: web
     domain: node_red

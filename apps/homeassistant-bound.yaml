@@ -76,7 +76,7 @@ connections:
 software:
 - docker
 - curl
-- homeassistant-images
+- homeassistant-custom-images
 runtime:
 - container-host
 - homeassistant

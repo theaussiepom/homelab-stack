@@ -216,7 +216,7 @@ connections:
 exposures:
   music:
     type: http
-    endpoint:
+    target:
       app: music
       endpoint: web
     domain: music

@@ -481,7 +481,7 @@ connections:
 exposures:
   browser:
     type: http
-    endpoint:
+    target:
       app: browser
       endpoint: web
     domain: browser

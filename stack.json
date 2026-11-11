@@ -56,12 +56,6 @@
     "winet": {
       "source": "apps/winet.yaml"
     },
-    "homeassistant-public": {
-      "source": "apps/homeassistant-public.yaml"
-    },
-    "node_red-public": {
-      "source": "apps/node_red-public.yaml"
-    },
     "cloudbeaver-mariadb-admin": {
       "source": "apps/cloudbeaver-mariadb-admin.yaml"
     },
@@ -76,6 +70,12 @@
     },
     "node_red-bound": {
       "source": "apps/node_red-bound.yaml"
+    },
+    "homeassistant-custom": {
+      "source": "apps/homeassistant-custom.yaml"
+    },
+    "node_red-custom": {
+      "source": "apps/node_red-custom.yaml"
     }
   },
   "guest_templates": {
@@ -154,12 +154,12 @@
         }
       ]
     },
-    "homeassistant-images": {
+    "homeassistant-custom-images": {
       "images": {
         "homeassistant": "homeassistant"
       }
     },
-    "node_red-images": {
+    "node_red-custom-images": {
       "images": {
         "node_red": "node_red"
       }
@@ -234,14 +234,14 @@
         "winet": "winet"
       }
     },
-    "homeassistant-public-images": {
+    "homeassistant-upstream-images": {
       "images": {
-        "homeassistant": "homeassistant_public"
+        "homeassistant": "homeassistant_upstream"
       }
     },
-    "node_red-public-images": {
+    "node_red-upstream-images": {
       "images": {
-        "node_red": "node_red_public"
+        "node_red": "node_red_upstream"
       }
     },
     "pbs-client": {

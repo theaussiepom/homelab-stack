@@ -121,7 +121,7 @@ guests:
         size_gib: 4
 apps:
   homeassistant:
-    profile: homeassistant-public
+    profile: homeassistant
     guest: homeassistant-public
     lifecycle: fresh
     interfaces:
@@ -132,7 +132,7 @@ apps:
         volume: apps
         subpath: homeassistant-public
   node_red:
-    profile: node_red-public
+    profile: node_red
     guest: node_red-public
     lifecycle: fresh
     interfaces:

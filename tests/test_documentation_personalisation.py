@@ -172,7 +172,7 @@ class PersonalisationWalkthrough(unittest.TestCase):
         self.assertFalse(any(row['comment'] == 'Home Assistant from selected browser'
                              for row in resolver['guest']['rules']))
         app = plan.resolved['apps']['home']
-        self.assertEqual(app['profile'], 'homeassistant-public')
+        self.assertEqual(app['profile'], 'homeassistant')
         self.assertEqual(app['role_addresses']['web'], '198.19.30.11')
         self.assertEqual(app['resolved_connections'], {})
         self.assertEqual(plan.resolved['app_dependencies']['home'], [])

@@ -26,7 +26,7 @@ Exact codes and nested property paths come from the selected framework. This tab
 - [Pi-hole](reference/apps/pihole.md): check the required upstream role and target. Changes to existing managed DNS records must match the exact records owned by the previous deployment.
 - [CloudBeaver](reference/apps/cloudbeaver.md): publish only the gateway. Check the HomeLab-managed workspace, OpenID Connect authentication, and selected database and driver capabilities.
 - [Explorer](reference/apps/mqtt_explorer.md): check the existing authentication outpost, selected broker target and alias, managed account or existing credential, and ownership of the saved profile.
-- [Node-RED](reference/apps/node_red.md): choose the correct public or custom-image variant. The existing-installation profile requires its settings and health-check scripts and authentication setup.
+- [Node-RED](reference/apps/node_red-custom.md): choose the correct public or custom-image variant. The existing-installation profile requires its settings and health-check scripts and authentication setup.
 - [Bitwarden](reference/apps/bitwarden.md): check the immutable official image and preserve the existing private environment, database and installation ownership.
 - [Zigbee](reference/apps/zigbee2mqtt.md): check the registered coordinator and the records preserving the existing network identity; never initialize a coordinator to make health pass.
 

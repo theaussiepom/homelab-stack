@@ -249,7 +249,7 @@ connections:
 exposures:
   vault:
     type: http
-    endpoint:
+    target:
       app: vault
       endpoint: web
     domain: vault

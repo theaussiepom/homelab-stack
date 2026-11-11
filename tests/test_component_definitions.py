@@ -50,7 +50,7 @@ class ProfileDefinitionTests(unittest.TestCase):
         return value
 
     def test_homeassistant_integrations_and_mdns_are_optional(self):
-        value = self.profile('homeassistant')
+        value = self.profile('homeassistant-custom', 'homeassistant')
         self.assertEqual(set(value['connections']), {'recorder', 'metrics', 'broker'})
         self.assertTrue(all(row['required'] is False for row in value['connections'].values()))
         self.assertNotIn('homeassistant-mdns', value['runtime'])
@@ -59,17 +59,17 @@ class ProfileDefinitionTests(unittest.TestCase):
         self.assertEqual(self.library['runtime_profiles']['homeassistant-mdns']['containers']['homeassistant']['cap_add'], ['NET_ADMIN'])
 
     def test_public_homeassistant_selects_explicit_public_software_only(self):
-        value = self.profile('homeassistant-public', 'homeassistant')
-        self.assertIn('homeassistant-public-images', value['software'])
-        self.assertNotIn('homeassistant-images', value['software'])
+        value = self.profile('homeassistant', 'homeassistant')
+        self.assertIn('homeassistant-upstream-images', value['software'])
+        self.assertNotIn('homeassistant-custom-images', value['software'])
         self.assertFalse(value['storage']['startup']['required'])
         self.assertEqual(value['storage']['config']['initialize'],
                          {'type': 'directory', 'uid': 0, 'gid': 0, 'mode': '0700'})
-        self.assertNotIn('initialize', self.library['app_profiles']['homeassistant']['storage']['config'])
+        self.assertNotIn('initialize', self.library['app_profiles']['homeassistant-custom']['storage']['config'])
         self.assertTrue(all(row['required'] is False for row in value['connections'].values()))
 
     def test_retained_node_red_owns_settings_wrapper_and_optional_api_capability(self):
-        value = self.profile('node_red')
+        value = self.profile('node_red-custom', 'node_red')
         self.assertEqual(value['authentication'], 'node-red-retained-oidc')
         self.assertTrue(value['storage']['config']['required'])
         self.assertTrue(value['storage']['settings']['read_only'])
@@ -77,15 +77,15 @@ class ProfileDefinitionTests(unittest.TestCase):
         self.assertFalse(value['connections']['broker']['required'])
 
     def test_public_node_red_has_data_without_retained_oidc_or_config_wrapper(self):
-        value = self.profile('node_red-public', 'node_red')
+        value = self.profile('node_red', 'node_red')
         self.assertEqual(set(value['storage']), {'data'})
         self.assertNotIn('authentication', value)
         self.assertNotIn('secrets', value)
-        self.assertIn('node_red-public-images', value['software'])
-        self.assertNotIn('node_red-images', value['software'])
+        self.assertIn('node_red-upstream-images', value['software'])
+        self.assertNotIn('node_red-custom-images', value['software'])
         self.assertEqual(value['storage']['data']['initialize'],
                          {'type': 'directory', 'uid': 1000, 'gid': 1000, 'mode': '0700'})
-        self.assertTrue(all('initialize' not in row for row in self.library['app_profiles']['node_red']['storage'].values()))
+        self.assertTrue(all('initialize' not in row for row in self.library['app_profiles']['node_red-custom']['storage'].values()))
 
     def test_bitwarden_owns_its_private_listener_and_explicit_environment_requirement(self):
         value = self.profile('bitwarden')

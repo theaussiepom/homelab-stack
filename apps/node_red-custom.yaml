@@ -30,11 +30,21 @@ storage:
     read_only: false
     required: true
     kind: directory
-    initialize:
-      type: directory
-      uid: 1000
-      gid: 1000
-      mode: '0700'
+  config:
+    target: /config
+    read_only: false
+    required: true
+    kind: directory
+  settings:
+    target: /runtime-settings.js
+    read_only: true
+    required: false
+    kind: file
+  healthcheck:
+    target: /healthcheck.js
+    read_only: true
+    required: false
+    kind: file
 connections:
   broker:
     type: mqtt
@@ -44,13 +54,17 @@ connections:
 software:
 - docker
 - curl
-- node_red-public-images
+- node_red-custom-images
 runtime:
 - container-host
 - node_red
 health:
   ready:
     profile: adapter-ready
+authentication: node-red-retained-oidc
+secrets:
+  api_token:
+    required: false
 monitoring:
   profile: docker-agent
 backup:
@@ -58,4 +72,11 @@ backup:
     data:
       category: state
       capture: application-export
-  exclude: {}
+    config:
+      category: state
+      capture: application-export
+    settings:
+      category: configuration
+      capture: files
+  exclude:
+    healthcheck: rebuildable

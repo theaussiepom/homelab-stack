@@ -42,6 +42,11 @@ storage:
     read_only: false
     required: true
     kind: directory
+    initialize:
+      type: directory
+      uid: 0
+      gid: 0
+      mode: '0700'
   media:
     target: /media
     read_only: false
@@ -76,7 +81,7 @@ connections:
 software:
 - docker
 - curl
-- homeassistant-images
+- homeassistant-upstream-images
 runtime:
 - container-host
 - homeassistant

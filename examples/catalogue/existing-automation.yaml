@@ -156,7 +156,7 @@ guests:
     - policy: ingress_node_red
 apps:
   homeassistant:
-    profile: homeassistant
+    profile: homeassistant-custom
     guest: homeassistant
     lifecycle: retained
     interfaces:
@@ -174,7 +174,7 @@ apps:
       networks: {}
       project: homeassistant
   node_red:
-    profile: node_red
+    profile: node_red-custom
     guest: node-red
     lifecycle: retained
     interfaces:
@@ -277,7 +277,7 @@ connections: {}
 exposures:
   node_red:
     type: http
-    endpoint:
+    target:
       app: node_red
       endpoint: web
     domain: node_red
