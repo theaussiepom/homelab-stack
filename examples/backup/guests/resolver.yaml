@@ -1,5 +1,6 @@
 schema: homelab-components-v1
 kind: guest
+# Enroll this guest; the operational site supplies shared client bindings.
 backup:
 context: lab
 template: base
