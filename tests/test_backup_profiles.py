@@ -92,13 +92,20 @@ class BackupProfileTests(unittest.TestCase):
             packet = component_packet.lower_guest(prepared, guest)
             cfg = json.loads(packet['files']['site.json'])
             self.assertEqual(cfg['deployment']['phases'][-1], 'pbs-agent')
-            self.assertEqual(component_workflows.model(prepared)['guests'][guest]['phases'][-1]['name'], 'PBS agent')
+            self.assertEqual(component_workflows.model(prepared)['guests'][guest]['phases'][-1]['name'], 'Backup')
             job = cfg['app']['backup']['job']
             self.assertEqual(job['destination']['backup_id'], 'guest-610')
             self.assertEqual(job['schedule']['calendar'], '02:00')
             self.assertFalse(cfg['guest']['volumes']['backup-stage']['backup'])
             self.assertEqual(job['staging']['path'], cfg['guest']['volumes']['backup-stage']['path'])
             self.assertIn('backup-group.json', packet['files'])
+            self.assertIn('backup-management.json', packet['files'])
+            graph=component_workflows.model(prepared)
+            self.assertEqual(graph['backup']['needs'],['selection'])
+            self.assertIn('_backup',graph['guests'][guest]['needs'])
+            self.assertEqual(graph['guests'][guest]['phases'][-1]['inputs'],
+                {'PBS_API_TOKEN':{'environment':'PBS_API_TOKEN','workflow_secret':'PBS_API_TOKEN'}})
+            self.assertTrue(all('PBS_API_TOKEN' not in phase['inputs'] for phase in graph['guests'][guest]['phases'][:-1]))
             self.assertEqual(set(job['group']), {'name', 'member'})
             import backup_agent
             backup_agent.configuration(cfg)
