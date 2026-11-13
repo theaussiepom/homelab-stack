@@ -3,57 +3,57 @@ kind: app-profile
 adapter: zabbix
 display_name: Zabbix
 interfaces:
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
-  server:
+  server_interface:
     required: true
     accepts:
     - guest-interface
-  postgresql:
+  postgresql_interface:
     required: true
     accepts:
     - guest-interface
-  metrics:
+  metrics_interface:
     required: false
     accepts:
     - guest-interface
-  management:
+  management_interface:
     required: false
     accepts:
     - guest-interface
-  private:
+  private_interface:
     required: true
     accepts:
     - app-network
 listeners:
-  server:
+  server_listener:
     service: zabbix_server
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 10051
     publish:
       scope: guest-interface
-      interface: server
+      interface: server_interface
       port: 10051
-  web:
+  web_listener:
     service: zabbix_web
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 8080
     publish:
       scope: guest-interface
-      interface: web
+      interface: web_interface
       port: 8080
-  local_web:
+  local_web_listener:
     service: zabbix_web
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 8080
@@ -61,14 +61,14 @@ listeners:
       scope: guest-loopback
       port: 8081
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
-  server:
-    listener: server
+    via: web_interface
+  server_endpoint:
+    listener: server_listener
     protocol: tcp
-    via: server
+    via: server_interface
 storage: {}
 connections:
   database:

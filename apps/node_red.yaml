@@ -3,48 +3,38 @@ kind: app-profile
 adapter: node_red
 display_name: Node-RED
 interfaces:
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
-  broker:
+  broker_interface:
     required: false
     accepts:
     - guest-interface
 listeners:
-  web:
+  web_listener:
     service: node_red
     namespace: host
-    interface: web
+    interface: web_interface
     bind: wildcard
     protocol: tcp
     port: 1880
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
+    via: web_interface
 storage:
   data:
     target: /data
     read_only: false
     required: true
     kind: directory
-  config:
-    target: /config
-    read_only: false
-    required: true
-    kind: directory
-  settings:
-    target: /runtime-settings.js
-    read_only: true
-    required: false
-    kind: file
-  healthcheck:
-    target: /healthcheck.js
-    read_only: true
-    required: false
-    kind: file
+    initialize:
+      type: directory
+      uid: 1000
+      gid: 1000
+      mode: '0700'
 connections:
   broker:
     type: mqtt
@@ -54,17 +44,13 @@ connections:
 software:
 - docker
 - curl
-- node_red-images
+- node_red-upstream-images
 runtime:
 - container-host
 - node_red
 health:
   ready:
     profile: adapter-ready
-authentication: node-red-retained-oidc
-secrets:
-  api_token:
-    required: false
 monitoring:
   profile: docker-agent
 backup:
@@ -72,11 +58,4 @@ backup:
     data:
       category: state
       capture: application-export
-    config:
-      category: state
-      capture: application-export
-    settings:
-      category: configuration
-      capture: files
-  exclude:
-    healthcheck: rebuildable
+  exclude: {}

@@ -6,7 +6,7 @@ Use this checklist when extending a configuration you already understand. For yo
 
 ## 1. Choose independent apps
 
-Select [profiles](../reference/README.md) by lifecycle and integrations. For example, the maintained [alternate site](../../examples/site.second.yaml) selects three `unbound` instances and one `homeassistant-public` instance. It does not select Node-RED, a database, MQTT, identity or ingress.
+Select [profiles](../reference/README.md) by lifecycle and integrations. For example, the maintained [alternate site](../../examples/site.second.yaml) selects three `unbound` instances and one `homeassistant` instance. It does not select Node-RED, a database, MQTT, identity or ingress.
 
 Before adding a profile, record its required roles, data/credential prerequisites, fixed listening addresses and ports and resource reservations from its reference page. Then choose a guest that can meet them. A profile being in the catalogue does not mean it can create an empty installation; the [newcomer choices](design-your-homelab.md#1-start-with-the-services-you-want) distinguish fresh Unbound/HA from prepared Pi-hole.
 
@@ -29,11 +29,11 @@ The complete [HA instance](../../examples/second/apps/home.yaml) is:
 ```yaml
 schema: homelab-components-v1
 kind: app
-profile: homeassistant-public
+profile: homeassistant
 guest: home-app
 lifecycle: fresh
 interfaces:
-  web:
+  web_interface:
     interface: primary
 storage:
   config:
@@ -83,3 +83,13 @@ Compilation checks the combined identities, budgets, listeners, storage and grap
 Inspect the actual packet using [the result checkpoint](design-your-homelab.md#6-check-the-configuration-and-inspect-its-result): compare allocations, sockets, data paths and selected apps against your intended outcome. Then complete the [remaining deployment inputs](design-your-homelab.md#9-finish-with-a-deployment-preparation-list).
 
 For a missing reusable profile, follow [Contributing](../contributing.md) and its [profile documentation template](../templates/application-profile.md). Do not invent private configuration engines or publish untested fragments as complete sites.
+
+## Follow a web connection through the configuration
+
+The complete [Home Assistant HTTPS example](../../examples/catalogue/home-web.yaml) selects app instance `home`, profile `homeassistant`, guest `automation`, and `lifecycle: fresh`. It binds `interfaces.web_interface` to that guest's `primary` NIC and `storage.config` to volume `apps`, subpath `homeassistant`.
+
+The profile declares `web_interface`, TCP/8123 listener `web_listener`, and exported connection `web_endpoint` with `protocol: http`, `listener: web_listener` and `via: web_interface`. The guest supplies the address. `exposures.home_web.target: {app: home, endpoint: web_endpoint}` selects that resulting HTTP connection. `ingress: {app: edge, endpoint: https_endpoint}` and `tls: site_certificate` select the frontend and named certificate policy. The example declares the required network rules separately.
+
+`home` is your instance name; `homeassistant` chooses the installation recipe. The app role `web_interface`, guest NIC `primary`, listener `web_listener` and exported connection `web_endpoint` have distinct names and jobs. Changing the guest address updates the resolved backend through the reference. Selecting an endpoint does not change the profile's wildcard listener, grant general access or establish service readiness. See the framework's [instance contract](https://github.com/theaussiepom/homelab/blob/be1ab443b5f2841e200b01af67c705870d4f2505/docs/reference/apps.md#instance-interface-role-and-exported-endpoint) and [exposure contract](https://github.com/theaussiepom/homelab/blob/be1ab443b5f2841e200b01af67c705870d4f2505/docs/reference/exposures.md).
+
+Compile this complete example using the same selected framework as the other examples. It uses synthetic values, reads no credentials and contacts no targets. Compilation does not verify DNS, certificates, Home Assistant onboarding or service availability.

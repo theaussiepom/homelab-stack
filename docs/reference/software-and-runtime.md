@@ -18,8 +18,8 @@ A software entry selects exact packages, public signed repository definitions, a
 | <a id="registration-software-postgresql"></a>`software.postgresql` | `postgresql-16=16.10-1.pgdg13+1`<br>`postgresql-client-16=16.10-1.pgdg13+1`<br>`libpq5=16.10-1.pgdg13+1` | None | `postgresql` |
 | <a id="registration-software-mariadb"></a>`software.mariadb` | `mariadb-server=1:12.3.3+maria~deb13`<br>`mariadb-client=1:12.3.3+maria~deb13` | None | `mariadb` |
 | <a id="registration-software-influxdb"></a>`software.influxdb` | `influxdb2=2.7.12-1`<br>`influxdb2-cli=2.7.5-1` | None | `influxdata` |
-| <a id="registration-software-homeassistant-images"></a>`software.homeassistant-images` | None | `homeassistant` → `homeassistant` | None |
-| <a id="registration-software-node-red-images"></a>`software.node_red-images` | None | `node_red` → `node_red` | None |
+| <a id="registration-software-homeassistant-custom-images"></a>`software.homeassistant-custom-images` | None | `homeassistant` → `homeassistant` | None |
+| <a id="registration-software-node-red-custom-images"></a>`software.node_red-custom-images` | None | `node_red` → `node_red` | None |
 | <a id="registration-software-bitwarden-images"></a>`software.bitwarden-images` | None | `bitwarden` → `bitwarden` | None |
 | <a id="registration-software-cloudbeaver-images"></a>`software.cloudbeaver-images` | None | `cloudbeaver` → `cloudbeaver`, `auth_gateway` → `auth_gateway` | None |
 | <a id="registration-software-pihole-images"></a>`software.pihole-images` | None | `pihole` → `pihole` | None |
@@ -33,8 +33,8 @@ A software entry selects exact packages, public signed repository definitions, a
 | <a id="registration-software-pegaprox-images"></a>`software.pegaprox-images` | None | `pegaprox` → `pegaprox` | None |
 | <a id="registration-software-zigbee2mqtt-images"></a>`software.zigbee2mqtt-images` | None | `zigbee2mqtt` → `zigbee2mqtt` | None |
 | <a id="registration-software-winet-images"></a>`software.winet-images` | None | `winet` → `winet` | None |
-| <a id="registration-software-homeassistant-public-images"></a>`software.homeassistant-public-images` | None | `homeassistant` → `homeassistant_public` | None |
-| <a id="registration-software-node-red-public-images"></a>`software.node_red-public-images` | None | `node_red` → `node_red_public` | None |
+| <a id="registration-software-homeassistant-upstream-images"></a>`software.homeassistant-upstream-images` | None | `homeassistant` → `homeassistant_upstream` | None |
+| <a id="registration-software-node-red-upstream-images"></a>`software.node_red-upstream-images` | None | `node_red` → `node_red_upstream` | None |
 | <a id="registration-software-pbs-client"></a>`software.pbs-client` | `proxmox-backup-client=4.2.8-1` | None | `pbs-client` |
 
 

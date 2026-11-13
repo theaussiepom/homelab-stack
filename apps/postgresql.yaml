@@ -3,23 +3,23 @@ kind: app-profile
 adapter: postgresql
 display_name: PostgreSQL
 interfaces:
-  service:
+  service_interface:
     required: true
     accepts:
     - guest-interface
 listeners:
-  database:
+  database_listener:
     service: postgresql
     namespace: host
-    interface: service
+    interface: service_interface
     bind: interface
     protocol: tcp
     port: 5432
 endpoints:
-  backend:
-    listener: database
+  backend_endpoint:
+    listener: database_listener
     protocol: tcp
-    via: service
+    via: service_interface
 storage:
   data:
     target: /var/lib/postgresql

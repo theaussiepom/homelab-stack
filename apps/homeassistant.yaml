@@ -3,45 +3,50 @@ kind: app-profile
 adapter: homeassistant
 display_name: Home Assistant
 interfaces:
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
-  home:
+  home_interface:
     required: false
     accepts:
     - guest-interface
-  database:
+  database_interface:
     required: false
     accepts:
     - guest-interface
-  metrics:
+  metrics_interface:
     required: false
     accepts:
     - guest-interface
-  broker:
+  broker_interface:
     required: false
     accepts:
     - guest-interface
 listeners:
-  web:
+  web_listener:
     service: homeassistant
     namespace: host
-    interface: web
+    interface: web_interface
     bind: wildcard
     protocol: tcp
     port: 8123
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
+    via: web_interface
 storage:
   config:
     target: /config
     read_only: false
     required: true
     kind: directory
+    initialize:
+      type: directory
+      uid: 0
+      gid: 0
+      mode: '0700'
   media:
     target: /media
     read_only: false
@@ -76,7 +81,7 @@ connections:
 software:
 - docker
 - curl
-- homeassistant-images
+- homeassistant-upstream-images
 runtime:
 - container-host
 - homeassistant

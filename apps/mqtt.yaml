@@ -3,31 +3,31 @@ kind: app-profile
 adapter: mqtt
 display_name: MQTT
 interfaces:
-  backend:
+  backend_interface:
     required: true
     accepts:
     - guest-interface
-  frontend:
+  frontend_interface:
     required: true
     accepts:
     - guest-interface
 listeners:
-  mqtt:
+  mqtt_listener:
     service: mqtt
     namespace: host
-    interface: backend
+    interface: backend_interface
     bind: wildcard
     protocol: tcp
     port: 1883
 endpoints:
-  backend:
-    listener: mqtt
+  backend_endpoint:
+    listener: mqtt_listener
     protocol: tcp
-    via: backend
-  frontend:
-    listener: mqtt
+    via: backend_interface
+  frontend_endpoint:
+    listener: mqtt_listener
     protocol: tcp
-    via: frontend
+    via: frontend_interface
 storage:
   config:
     target: /mosquitto/config

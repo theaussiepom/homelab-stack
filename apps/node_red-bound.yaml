@@ -3,27 +3,27 @@ kind: app-profile
 adapter: node_red
 display_name: Node-RED with a bound web listener
 interfaces:
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
-  broker:
+  broker_interface:
     required: false
     accepts:
     - guest-interface
 listeners:
-  web:
+  web_listener:
     service: node_red
     namespace: host
-    interface: web
+    interface: web_interface
     bind: interface
     protocol: tcp
     port: 1880
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
+    via: web_interface
 storage:
   data:
     target: /data
@@ -54,7 +54,7 @@ connections:
 software:
 - docker
 - curl
-- node_red-images
+- node_red-custom-images
 runtime:
 - container-host
 - node_red

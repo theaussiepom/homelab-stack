@@ -124,11 +124,11 @@ apps:
     guest: vault
     lifecycle: retained
     interfaces:
-      web:
+      web_interface:
         interface: primary
-      database:
+      database_interface:
         interface: primary
-      private:
+      private_interface:
         scope: app-network
         network: default
     storage:
@@ -162,9 +162,9 @@ apps:
     guest: ingress
     lifecycle: retained
     interfaces:
-      frontend:
+      frontend_interface:
         interface: primary
-      management:
+      management_interface:
         interface: primary
     storage:
       certs:
@@ -235,8 +235,8 @@ connections:
       connection: public
     target:
       app: ingress
-      endpoint: https
-    source_interface: web
+      endpoint: https_endpoint
+    source_interface: web_interface
     hostname:
       domain: vault
   vault_database:
@@ -245,17 +245,17 @@ connections:
       connection: database
     target:
       external: vault_database
-    source_interface: database
+    source_interface: database_interface
 exposures:
   vault:
     type: http
-    endpoint:
+    target:
       app: vault
-      endpoint: web
+      endpoint: web_endpoint
     domain: vault
     ingress:
       app: ingress
-      endpoint: https
+      endpoint: https_endpoint
     tls: public
 images: {}
 host_aliases: {}

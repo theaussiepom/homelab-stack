@@ -3,50 +3,50 @@ kind: app-profile
 adapter: cloudbeaver
 display_name: CloudBeaver
 interfaces:
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
-  private:
+  private_interface:
     required: true
     accepts:
     - app-network
-  postgresql:
+  postgresql_interface:
     required: false
     accepts:
     - guest-interface
-  mariadb:
+  mariadb_interface:
     required: false
     accepts:
     - guest-interface
-  management:
+  management_interface:
     required: false
     accepts:
     - guest-interface
 listeners:
-  web:
+  web_listener:
     service: auth_gateway
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 4180
     publish:
       scope: guest-interface
-      interface: web
+      interface: web_interface
       port: 80
-  community:
+  community_listener:
     service: cloudbeaver
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 8978
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
+    via: web_interface
 storage:
   workspace:
     target: /opt/cloudbeaver/workspace

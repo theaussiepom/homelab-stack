@@ -19,7 +19,7 @@ The [HA example](../../examples/second/apps/home.yaml) binds:
 
 ```yaml
 interfaces:
-  web:
+  web_interface:
     interface: primary
 ```
 
@@ -33,9 +33,9 @@ The [standalone Unbound instance](../../examples/minimal/apps/recursive_dns.yaml
 
 ```yaml
 interfaces:
-  service:
+  service_interface:
     scope: guest-loopback
-  private:
+  private_interface:
     scope: app-network
     network: default
 ```
@@ -52,6 +52,6 @@ A guest's explicit `control_interface` selects its controller address/MAC indepe
 
 Static default_route selects the named network gateway. Static non-default NICs omit gateway; DHCP requires default_route:false and retains its supported gateway:null form. Source-policy routing, where supported, is an explicit separate guest declaration; app publication does not invent it.
 
-For an explicitly selected `source_policy_route`, preparation maintains the guest-local helper and boot service, which checks the selected NIC before applying the reply policy. Correct entries stay unchanged; conflicting reserved entries refuse. This does not restart Docker or applications. An infrastructure NIC change may still require a provider-managed guest reboot. See the [source reply routing contract](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/guests.md#source-reply-routing), then verify actual reply routing after an authorized deployment or reboot.
+For an explicitly selected `source_policy_route`, preparation maintains the guest-local helper and boot service, which checks the selected NIC before applying the reply policy. Correct entries stay unchanged; conflicting reserved entries refuse. This does not restart Docker or applications. An infrastructure NIC change may still require a provider-managed guest reboot. See the [source reply routing contract](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/guests.md#source-reply-routing), then verify actual reply routing after an authorized deployment or reboot.
 
-Use the framework's [interface and source contracts](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/README.md) for exact bounds. The [template reference](../reference/templates.md) explains inherited resource/startup/security values; it does not allocate NICs.
+Use the framework's [interface and source contracts](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/README.md) for exact bounds. The [template reference](../reference/templates.md) explains inherited resource/startup/security values; it does not allocate NICs.

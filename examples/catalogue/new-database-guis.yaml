@@ -253,12 +253,12 @@ apps:
     guest: cloud
     lifecycle: fresh
     interfaces:
-      web:
+      web_interface:
         interface: primary
-      private:
+      private_interface:
         scope: app-network
         network: database_tools
-      postgresql:
+      postgresql_interface:
         interface: primary
     storage:
       workspace:
@@ -287,9 +287,9 @@ apps:
     guest: ingress
     lifecycle: retained
     interfaces:
-      frontend:
+      frontend_interface:
         interface: primary
-      management:
+      management_interface:
         interface: primary
     storage:
       certs:
@@ -319,7 +319,7 @@ apps:
     guest: existing-postgres
     lifecycle: retained
     interfaces:
-      service:
+      service_interface:
         interface: primary
     storage:
       data:
@@ -335,12 +335,12 @@ apps:
     guest: administration
     lifecycle: fresh
     interfaces:
-      web:
+      web_interface:
         interface: primary
-      private:
+      private_interface:
         scope: app-network
         network: database_tools
-      mariadb:
+      mariadb_interface:
         interface: primary
     storage:
       workspace:
@@ -365,7 +365,7 @@ apps:
     guest: existing-maria
     lifecycle: retained
     interfaces:
-      service:
+      service_interface:
         interface: primary
     storage:
       data:
@@ -441,7 +441,7 @@ accounts:
     owner: cloud
     target:
       app: postgres_database
-      endpoint: backend
+      endpoint: backend_endpoint
     principal: example_admin
     credential: postgres_admin
     access: server-administration
@@ -451,7 +451,7 @@ accounts:
     owner: administration
     target:
       app: database
-      endpoint: backend
+      endpoint: backend_endpoint
     principal: example_admin
     credential: database_admin
     access: server-administration
@@ -465,8 +465,8 @@ connections:
       connection: public
     target:
       app: ingress
-      endpoint: https
-    source_interface: web
+      endpoint: https_endpoint
+    source_interface: web_interface
     hostname:
       domain: cloud
   browse:
@@ -475,15 +475,15 @@ connections:
       connection: postgresql
     target:
       external: postgres
-    source_interface: postgresql
+    source_interface: postgresql_interface
   postgres_administration:
     consumer:
       app: cloud
       connection: postgresql-admin
     target:
       app: postgres_database
-      endpoint: backend
-    source_interface: postgresql
+      endpoint: backend_endpoint
+    source_interface: postgresql_interface
     account: postgres_admin
   administration_public:
     consumer:
@@ -491,8 +491,8 @@ connections:
       connection: public
     target:
       app: ingress
-      endpoint: https
-    source_interface: web
+      endpoint: https_endpoint
+    source_interface: web_interface
     hostname:
       domain: administration
   administration:
@@ -501,29 +501,29 @@ connections:
       connection: mariadb-admin
     target:
       app: database
-      endpoint: backend
-    source_interface: mariadb
+      endpoint: backend_endpoint
+    source_interface: mariadb_interface
     account: database_admin
 exposures:
   cloud:
     type: http
-    endpoint:
+    target:
       app: cloud
-      endpoint: web
+      endpoint: web_endpoint
     domain: cloud
     ingress:
       app: ingress
-      endpoint: https
+      endpoint: https_endpoint
     tls: public
   administration:
     type: http
-    endpoint:
+    target:
       app: administration
-      endpoint: web
+      endpoint: web_endpoint
     domain: administration
     ingress:
       app: ingress
-      endpoint: https
+      endpoint: https_endpoint
     tls: public
 images: {}
 host_aliases: {}

@@ -72,7 +72,7 @@ class DocumentationExamples(unittest.TestCase):
         raw = leaf.read_text()
         value = compiler.read(leaf)
         cases = [('missing endpoint', lambda v: v['target'].update(endpoint='missing'), 'component.invalid'),
-                 ('physical loopback source', lambda v: v.update(source_interface='service'),
+                 ('physical loopback source', lambda v: v.update(source_interface='service_interface'),
                   'component.connection-target-scope')]
         for name, mutate, code in cases:
             changed = copy.deepcopy(value)
@@ -208,10 +208,10 @@ class DocumentationConformance(unittest.TestCase):
         plan, packets = self.source_plan(source)
         broker = plan.resolved['apps']['broker']
         self.assertIn(broker['guest'], packets)
-        for endpoint in ('backend', 'frontend'):
-            self.assertEqual(plan.resolved['endpoints']['app/broker/' + endpoint]['port'], profile['listeners']['mqtt']['port'])
+        for role, endpoint in (('backend_interface', 'backend_endpoint'), ('frontend_interface', 'frontend_endpoint')):
+            self.assertEqual(plan.resolved['endpoints']['app/broker/' + endpoint]['port'], profile['listeners']['mqtt_listener']['port'])
             self.assertEqual(plan.resolved['endpoints']['app/broker/' + endpoint]['address'],
-                             broker['role_addresses'][endpoint])
+                             broker['role_addresses'][role])
         for change in ('missing', 'environment'):
             changed = copy.deepcopy(source)
             if change == 'missing':

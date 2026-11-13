@@ -81,9 +81,9 @@ Every registered variant is listed below. Paths are application mount targets, n
 | --- | --- | --- |
 | `workspace` — `/opt/cloudbeaver/workspace` | state | application-export |
 
-### homeassistant-public
+### homeassistant
 
-[Application reference](apps/homeassistant-public.md) · [Definition](../../apps/homeassistant-public.yaml)
+[Application reference](apps/homeassistant.md) · [Definition](../../apps/homeassistant.yaml)
 
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |
@@ -92,9 +92,9 @@ Every registered variant is listed below. Paths are application mount targets, n
 | `community` — `/hacsfiles` | state | application-export |
 | `startup` — `/startup` | configuration | files |
 
-### homeassistant
+### homeassistant-custom
 
-[Application reference](apps/homeassistant.md) · [Definition](../../apps/homeassistant.yaml)
+[Application reference](apps/homeassistant-custom.md) · [Definition](../../apps/homeassistant-custom.yaml)
 
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |
@@ -172,17 +172,17 @@ Every registered variant is listed below. Paths are application mount targets, n
 | --- | --- | --- |
 | `data` — `/data` | state | application-export |
 
-### node_red-public
+### node_red
 
-[Application reference](apps/node_red-public.md) · [Definition](../../apps/node_red-public.yaml)
+[Application reference](apps/node_red.md) · [Definition](../../apps/node_red.yaml)
 
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |
 | `data` — `/data` | state | application-export |
 
-### node_red
+### node_red-custom
 
-[Application reference](apps/node_red.md) · [Definition](../../apps/node_red.yaml)
+[Application reference](apps/node_red-custom.md) · [Definition](../../apps/node_red-custom.yaml)
 
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |
@@ -212,7 +212,7 @@ before CD can start and check the app.
 #### Rebuild the Node-RED health wrapper
 
 The reusable wrapper is versioned as
-[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/proxmox/applications/node-red-healthcheck.js).
+[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/proxmox/applications/node-red-healthcheck.js).
 Use the same framework revision selected by this Stack. During recovery,
 separately prepare that file at the app's bound `healthcheck` storage source
 before CD. The profile mounts it read-only at `/healthcheck.js`; it reads the
@@ -232,6 +232,15 @@ copy. The public helper cannot reproduce custom behavior that it does not contai
 ### pihole
 
 [Application reference](apps/pihole.md) · [Definition](../../apps/pihole.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `config` — `/etc/pihole` | state | application-export |
+| `database` — `/ftl-db` | Excluded: transient | None |
+
+### pihole-web
+
+[Application reference](apps/pihole-web.md) · [Definition](../../apps/pihole-web.yaml)
 
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |

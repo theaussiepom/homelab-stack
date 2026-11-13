@@ -38,9 +38,83 @@ def compile_examples():
 
 
 class ProfileExampleIntegrations(unittest.TestCase):
+    def test_radio_watchdog_compiles_only_the_selected_environment_setting(self):
+        path = 'examples/catalogue/messaging-radio.yaml'
+        selected, packets = self.examples[path]
+        self.assertEqual(selected.resolved['apps']['radio']['properties']['watchdog'], 'default')
+        current = json.loads(packets['radio']['files']['compose-radio.yml'])
+        self.assertEqual(current['services']['radio_zigbee2mqtt']['environment'].pop('Z2M_WATCHDOG'), 'default')
+        source, _ = component_sources.site(ROOT / path)
+        self.assertEqual(source['apps']['radio']['properties'].pop('watchdog'), 'default')
+        with tempfile.TemporaryDirectory() as tmp:
+            omitted = Path(tmp).resolve() / 'site.json'
+            omitted.write_text(json.dumps(source))
+            with patch('subprocess.run', side_effect=no_native), \
+                 patch('subprocess.check_output', side_effect=no_native), \
+                 patch('socket.create_connection', side_effect=no_native):
+                baseline = compiler.lower_plan(compiler.resolve_plan(ROOT, omitted, []))
+        self.assertEqual(current, json.loads(baseline['radio']['files']['compose-radio.yml']))
+        for guest in packets:
+            if guest != 'radio':
+                self.assertEqual(packets[guest], baseline[guest])
+
     @classmethod
     def setUpClass(cls):
         cls.examples = compile_examples()
+
+    def test_split_pihole_preserves_dns_and_the_complete_existing_service(self):
+        import render
+        plan, _ = self.examples['examples/catalogue/local-dns-web/site.yaml']
+        source, _ = component_sources.site(ROOT / 'examples/catalogue/local-dns-web/site.yaml')
+        source['apps']['filtering']['profile'] = 'pihole'
+        source['apps']['filtering']['interfaces'].pop('web_interface')
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp).resolve() / 'site.json'
+            path.write_text(json.dumps(source))
+            original = compiler.resolve_plan(ROOT, path, [])
+        for name in ('dns_udp_endpoint', 'dns_tcp_endpoint'):
+            self.assertEqual(plan.resolved['endpoints']['app/filtering/' + name],
+                             original.resolved['endpoints']['app/filtering/' + name])
+        self.assertEqual(plan.resolved['endpoints']['app/filtering/web_endpoint']['address'],
+                         '198.18.30.10')
+        self.assertEqual(component_lower.provider_config(plan, 'resolver'),
+                         component_lower.provider_config(original, 'resolver'))
+        current_runtime = component_lower.runtime_config(plan, 'resolver')
+        original_runtime = component_lower.runtime_config(original, 'resolver')
+        current = render.compositions(current_runtime)
+        previous = render.compositions(original_runtime)
+        service = current['example-dns']['services']['filtering']
+        self.assertEqual(service['environment'].pop('FTLCONF_webserver_port'), '198.18.30.10:80')
+        self.assertEqual(current, previous)
+        self.assertEqual(plan.resolved['apps']['filtering']['resolved_connections'],
+                         original.resolved['apps']['filtering']['resolved_connections'])
+
+    def test_split_pihole_requires_its_explicit_web_role(self):
+        self.invalid_source('examples/catalogue/local-dns-web/site.yaml',
+            lambda value: value['apps']['filtering']['interfaces'].pop('web_interface'),
+            ComponentError, 'component.invalid')
+
+    def test_music_https_probe_uses_the_declared_stream_source_and_keeps_its_assertions(self):
+        import component_checks
+        old, _ = self.examples['examples/catalogue/music-split.yaml']
+        source, _ = component_sources.site(ROOT / 'examples/catalogue/music-split.yaml')
+        source['connections']['music_public']['source_interface'] = 'stream_interface'
+        source['policies']['network']['connect_music_public_incoming']['rules'][0]['source'] = '198.18.100.40/32'
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp).resolve() / 'site.json'
+            path.write_text(json.dumps(source))
+            with patch('subprocess.run', side_effect=no_native), \
+                 patch('subprocess.check_output', side_effect=no_native), \
+                 patch('socket.create_connection', side_effect=no_native):
+                selected = compiler.resolve_plan(ROOT, path, [])
+                compiler.lower_plan(selected)
+        def checks(plan):
+            app = component_lower.runtime_config(plan, 'media')['applications']['music']
+            return component_checks._music_assistant(app, '/opt/homelab-app/compose.yml')
+        original = checks(old); actual = checks(selected)
+        expected = copy.deepcopy(original)
+        argv = expected[1]['argv']; argv[argv.index('--interface') + 1] = '198.18.100.40'
+        self.assertEqual(actual, expected)
 
     def test_split_music_allows_only_selected_players_to_its_stream_socket(self):
         """Check the actual compiled policy for its intended and denied flows."""

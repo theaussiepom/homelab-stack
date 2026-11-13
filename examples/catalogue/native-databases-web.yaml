@@ -169,7 +169,7 @@ apps:
     guest: postgresql
     lifecycle: retained
     interfaces:
-      service:
+      service_interface:
         interface: primary
     storage:
       data:
@@ -185,7 +185,7 @@ apps:
     guest: mariadb
     lifecycle: retained
     interfaces:
-      service:
+      service_interface:
         interface: primary
     storage:
       data:
@@ -201,9 +201,9 @@ apps:
     guest: influxdb
     lifecycle: retained
     interfaces:
-      service:
+      service_interface:
         interface: primary
-      web:
+      web_interface:
         interface: apps
     storage:
       data:

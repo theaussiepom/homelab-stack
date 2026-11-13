@@ -4,9 +4,9 @@ profile: unbound
 guest: resolver-east
 lifecycle: fresh
 interfaces:
-  service:
+  service_interface:
     scope: guest-loopback
-  private:
+  private_interface:
     scope: app-network
     network: default
 display_name: Primary DNS

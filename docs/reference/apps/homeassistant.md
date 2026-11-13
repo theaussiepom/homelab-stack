@@ -1,8 +1,8 @@
 [Documentation](../../README.md) / [Reference](../README.md)
 
-# Home Assistant
+# Home Assistant — `homeassistant`
 
-Run Home Assistant with an explicitly supplied custom image archive and existing configuration. Recorder, metrics and MQTT are independent optional integrations.
+Start Home Assistant with the declared official public image and a new configuration directory. It runs independently of the other application profiles.
 
 [Choose](#choose-this-profile) · [Interfaces](#interfaces) · [Listeners](#listeners-and-endpoints) · [Storage](#storage) · [Inputs](#connections-accounts-and-private-inputs) · [Properties](#application-properties) · [Software](#software-and-resource-policy) · [Update](#check-and-update) · [Declared fields](#declaration-records)
 
@@ -13,40 +13,44 @@ Run Home Assistant with an explicitly supplied custom image archive and existing
 | Site selection | `apps.<instance>.profile: homeassistant` |
 | Adapter | `homeassistant` |
 | Owned containers | `homeassistant` |
-| Multiple instances | Fixed host TCP 8123 prevents two identical listeners on one guest. |
+| Multiple instances | Fixed host TCP 8123; put another instance on another guest. |
 
 This profile runs on Debian LXC on Proxmox. Compilation checks the configuration, and local helper tests check the controller code. Neither check verifies a deployed service.
 
 The complete reusable declaration is [homeassistant.yaml](../../../apps/homeassistant.yaml). Select it for an app in your site configuration. Your site supplies the VMID, network-interface address and credentials, and controls permission to deploy. See [Compose a site](../../guides/compose-a-site.md).
 
+For prepared custom software, choose [`homeassistant-custom`](homeassistant-custom.md). See [consumer migration](../../guides/images-and-updates.md#migrate-an-existing-consumer) before changing an existing selection.
+
 ## Application requirements
 
-The site must supply `local_id`, `archive` and `archive_sha256` for the custom image. Zero values in the public catalogue are placeholders, not usable image identities. Select the retained multicast DNS (mDNS) startup capability explicitly when required; it does not imply hardware access.
+The configuration initializer creates the app’s subdirectory only when it is absent. You must supply a nonempty subpath on a volume whose provider ownership has been verified. The initializer does not change the file owner of an existing directory tree or adopt a directory that HomeLab does not manage. Optional integrations do not make Node-RED, databases, MQTT, identity or ingress mandatory.
 
 ## First installation
 
-This selection requires the declared custom archive and prepared Home Assistant configuration. It does not build that archive or provide a brand-new custom installation. For the supported public-image creation path, choose [homeassistant-public](homeassistant-public.md).
+This profile can create a new configuration directory beneath the declared provider volume and start the public image. Home Assistant onboarding and household integrations are separate user setup, not supplied configuration.
+
+For a complete example using the creation policy, see [examples/catalogue/new-automation.yaml](../../../examples/catalogue/new-automation.yaml), app `homeassistant`. The example must resolve and generate deployment files successfully. These checks do not prove that the service has been deployed.
 
 ## Minimal usage
 
-The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/existing-automation.yaml).
+The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/new-automation.yaml).
 
 ```yaml
 apps:
   homeassistant:
     profile: homeassistant
-    guest: homeassistant
-    lifecycle: retained
+    guest: homeassistant-public
+    lifecycle: fresh
 ```
 
 ### Practical complete example
 
-Use app `homeassistant` in [examples/catalogue/existing-automation.yaml](../../../examples/catalogue/existing-automation.yaml). Check the dependencies and inputs that must already exist before using this example. Entries with `retained` require resources that HomeLab already manages; they cannot import another installation.
+Use app `homeassistant` in [examples/catalogue/new-automation.yaml](../../../examples/catalogue/new-automation.yaml). Check the dependencies and inputs that must already exist before using this example. Entries with `retained` require resources that HomeLab already manages; they cannot import another installation.
 
 After [the source-only setup](../../guides/first-configuration.md) defines STACK, FRAMEWORK and PYTHON:
 
 ```sh
-"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/existing-automation.yaml" --check
+"$PYTHON" "$FRAMEWORK/blueprints/compile.py" --stack "$STACK" --site "$STACK/examples/catalogue/new-automation.yaml" --check
 ```
 
 The command should compile every selected guest without reading credentials or contacting a guest, container or device. The integration test also generates each guest’s deployment files and checks its resources, identities, application files and health-check definitions.
@@ -57,11 +61,11 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
-| `web` | Yes | `guest-interface` |
-| `home` | No; selected capability can require it | `guest-interface` |
-| `database` | No; selected capability can require it | `guest-interface` |
-| `metrics` | No; selected capability can require it | `guest-interface` |
-| `broker` | No; selected capability can require it | `guest-interface` |
+| `web_interface` | Yes | `guest-interface` |
+| `home_interface` | No; selected capability can require it | `guest-interface` |
+| `database_interface` | No; selected capability can require it | `guest-interface` |
+| `metrics_interface` | No; selected capability can require it | `guest-interface` |
+| `broker_interface` | No; selected capability can require it | `guest-interface` |
 
 Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role names an application requirement; it does not create another NIC. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -69,21 +73,21 @@ Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `web` | `homeassistant` / `host` | `wildcard` via `web` | `8123/tcp` | None; listener remains in its declared namespace |
+| `web_listener` | `homeassistant` / `host` | `wildcard` via `web_interface` | `8123/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
-| `web` | `http` | `web` via `web` |
+| `web_endpoint` | `http` | `web_listener` via `web_interface` |
 
 A wildcard host listener can accept connections through interfaces other than the advertised NIC. An endpoint gives consumers an address and port. It does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
-| `config` | Yes | `/config` | directory / writable | None |
+| `config` | Yes | `/config` | directory / writable | Create-only 0:0 mode 0700 |
 | `media` | Conditional / optional | `/media` | directory / writable | None |
 | `community` | Conditional / optional | `/hacsfiles` | directory / writable | None |
 | `startup` | Conditional / optional | `/startup` | directory / read-only | None |
@@ -104,7 +108,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -114,18 +118,18 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 | Invalid change | Intended result |
 | --- | --- |
-| Select mDNS without its physical interface role, startup binding or explicit runtime requirement | Compilation requires a physical interface, a read-only `/startup` binding and the `homeassistant-mdns` runtime. The app must also use `lifecycle: retained`. |
-| Replace the retained archive with the public variant silently | Changes software authority; no fallback is implemented. |
+| Use a pre-existing foreign configuration directory as fresh initialization | Initialization rejects an existing unmanaged directory instead of taking it over or changing its Unix owner. |
+| Select mDNS with `lifecycle: fresh`, or omit its required runtime, interface or startup binding | Compilation rejects the selection. Use `lifecycle: retained` with the required bindings and mDNS runtime; this profile’s base runtime does not grant `NET_ADMIN`. |
 
 The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
 
 ## Software and resource policy
 
-Software selections: [`docker`](../software-and-runtime.md#registration-software-docker), [`curl`](../software-and-runtime.md#registration-software-curl), [`homeassistant-images`](../software-and-runtime.md#registration-software-homeassistant-images). Runtime selections: [`container-host`](../software-and-runtime.md#registration-runtime-profiles-container-host), [`homeassistant`](../software-and-runtime.md#registration-runtime-profiles-homeassistant).
+Software selections: [`docker`](../software-and-runtime.md#registration-software-docker), [`curl`](../software-and-runtime.md#registration-software-curl), [`homeassistant-upstream-images`](../software-and-runtime.md#registration-software-homeassistant-upstream-images). Runtime selections: [`container-host`](../software-and-runtime.md#registration-runtime-profiles-container-host), [`homeassistant`](../software-and-runtime.md#registration-runtime-profiles-homeassistant).
 
 | Image role | Authoritative catalogue ID | Selection policy |
 | --- | --- | --- |
-| `homeassistant` | `homeassistant` | Versioned local archive; concrete site binding required |
+| `homeassistant` | `homeassistant_upstream` | Immutable registry digest |
 
 | Owned service | Memory MiB | CPU limit | PID limit |
 | --- | --- | --- | --- |
@@ -135,7 +139,7 @@ These reservations and limits determine whether the workloads fit on a guest. Th
 
 ## Later deployments
 
-HomeLab maintains the existing configuration and explicit custom archive binding. Preserve selected integrations and the optional mDNS capability’s startup requirements; a profile update does not rebuild the archive or replace private configuration.
+HomeLab updates the same instance with its existing configuration directory. The initializer does not run again against existing data; household settings and onboarding choices remain in that HomeLab-managed configuration.
 
 Both `fresh` and `retained` can update an instance that HomeLab already manages. Keep `fresh` after creating an instance with that policy; do not change it after each deployment. `retained` requires an existing HomeLab-managed instance and cannot create one.
 
@@ -145,7 +149,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -160,40 +164,45 @@ These are the complete supplied fields in [homeassistant.yaml](../../../apps/hom
 | <a id="declaration-adapter"></a>`adapter` | `"homeassistant"` |
 | <a id="declaration-display-name"></a>`display_name` | `"Home Assistant"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
-| <a id="declaration-interfaces-web"></a>`interfaces.web` | `object` |
-| <a id="declaration-interfaces-web-required"></a>`interfaces.web.required` | `true` |
-| <a id="declaration-interfaces-web-accepts"></a>`interfaces.web.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-home"></a>`interfaces.home` | `object` |
-| <a id="declaration-interfaces-home-required"></a>`interfaces.home.required` | `false` |
-| <a id="declaration-interfaces-home-accepts"></a>`interfaces.home.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-database"></a>`interfaces.database` | `object` |
-| <a id="declaration-interfaces-database-required"></a>`interfaces.database.required` | `false` |
-| <a id="declaration-interfaces-database-accepts"></a>`interfaces.database.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-metrics"></a>`interfaces.metrics` | `object` |
-| <a id="declaration-interfaces-metrics-required"></a>`interfaces.metrics.required` | `false` |
-| <a id="declaration-interfaces-metrics-accepts"></a>`interfaces.metrics.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-broker"></a>`interfaces.broker` | `object` |
-| <a id="declaration-interfaces-broker-required"></a>`interfaces.broker.required` | `false` |
-| <a id="declaration-interfaces-broker-accepts"></a>`interfaces.broker.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-web-interface"></a>`interfaces.web_interface` | `object` |
+| <a id="declaration-interfaces-web-interface-required"></a>`interfaces.web_interface.required` | `true` |
+| <a id="declaration-interfaces-web-interface-accepts"></a>`interfaces.web_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-home-interface"></a>`interfaces.home_interface` | `object` |
+| <a id="declaration-interfaces-home-interface-required"></a>`interfaces.home_interface.required` | `false` |
+| <a id="declaration-interfaces-home-interface-accepts"></a>`interfaces.home_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-database-interface"></a>`interfaces.database_interface` | `object` |
+| <a id="declaration-interfaces-database-interface-required"></a>`interfaces.database_interface.required` | `false` |
+| <a id="declaration-interfaces-database-interface-accepts"></a>`interfaces.database_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-metrics-interface"></a>`interfaces.metrics_interface` | `object` |
+| <a id="declaration-interfaces-metrics-interface-required"></a>`interfaces.metrics_interface.required` | `false` |
+| <a id="declaration-interfaces-metrics-interface-accepts"></a>`interfaces.metrics_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-broker-interface"></a>`interfaces.broker_interface` | `object` |
+| <a id="declaration-interfaces-broker-interface-required"></a>`interfaces.broker_interface.required` | `false` |
+| <a id="declaration-interfaces-broker-interface-accepts"></a>`interfaces.broker_interface.accepts` | `["guest-interface"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
-| <a id="declaration-listeners-web"></a>`listeners.web` | `object` |
-| <a id="declaration-listeners-web-service"></a>`listeners.web.service` | `"homeassistant"` |
-| <a id="declaration-listeners-web-namespace"></a>`listeners.web.namespace` | `"host"` |
-| <a id="declaration-listeners-web-interface"></a>`listeners.web.interface` | `"web"` |
-| <a id="declaration-listeners-web-bind"></a>`listeners.web.bind` | `"wildcard"` |
-| <a id="declaration-listeners-web-protocol"></a>`listeners.web.protocol` | `"tcp"` |
-| <a id="declaration-listeners-web-port"></a>`listeners.web.port` | `8123` |
+| <a id="declaration-listeners-web-listener"></a>`listeners.web_listener` | `object` |
+| <a id="declaration-listeners-web-listener-service"></a>`listeners.web_listener.service` | `"homeassistant"` |
+| <a id="declaration-listeners-web-listener-namespace"></a>`listeners.web_listener.namespace` | `"host"` |
+| <a id="declaration-listeners-web-listener-interface"></a>`listeners.web_listener.interface` | `"web_interface"` |
+| <a id="declaration-listeners-web-listener-bind"></a>`listeners.web_listener.bind` | `"wildcard"` |
+| <a id="declaration-listeners-web-listener-protocol"></a>`listeners.web_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-web-listener-port"></a>`listeners.web_listener.port` | `8123` |
 | <a id="declaration-endpoints"></a>`endpoints` | `object` |
-| <a id="declaration-endpoints-web"></a>`endpoints.web` | `object` |
-| <a id="declaration-endpoints-web-listener"></a>`endpoints.web.listener` | `"web"` |
-| <a id="declaration-endpoints-web-protocol"></a>`endpoints.web.protocol` | `"http"` |
-| <a id="declaration-endpoints-web-via"></a>`endpoints.web.via` | `"web"` |
+| <a id="declaration-endpoints-web-endpoint"></a>`endpoints.web_endpoint` | `object` |
+| <a id="declaration-endpoints-web-endpoint-listener"></a>`endpoints.web_endpoint.listener` | `"web_listener"` |
+| <a id="declaration-endpoints-web-endpoint-protocol"></a>`endpoints.web_endpoint.protocol` | `"http"` |
+| <a id="declaration-endpoints-web-endpoint-via"></a>`endpoints.web_endpoint.via` | `"web_interface"` |
 | <a id="declaration-storage"></a>`storage` | `object` |
 | <a id="declaration-storage-config"></a>`storage.config` | `object` |
 | <a id="declaration-storage-config-target"></a>`storage.config.target` | `"/config"` |
 | <a id="declaration-storage-config-read-only"></a>`storage.config.read_only` | `false` |
 | <a id="declaration-storage-config-required"></a>`storage.config.required` | `true` |
 | <a id="declaration-storage-config-kind"></a>`storage.config.kind` | `"directory"` |
+| <a id="declaration-storage-config-initialize"></a>`storage.config.initialize` | `object` |
+| <a id="declaration-storage-config-initialize-type"></a>`storage.config.initialize.type` | `"directory"` |
+| <a id="declaration-storage-config-initialize-uid"></a>`storage.config.initialize.uid` | `0` |
+| <a id="declaration-storage-config-initialize-gid"></a>`storage.config.initialize.gid` | `0` |
+| <a id="declaration-storage-config-initialize-mode"></a>`storage.config.initialize.mode` | `"0700"` |
 | <a id="declaration-storage-media"></a>`storage.media` | `object` |
 | <a id="declaration-storage-media-target"></a>`storage.media.target` | `"/media"` |
 | <a id="declaration-storage-media-read-only"></a>`storage.media.read_only` | `false` |
@@ -222,7 +231,7 @@ These are the complete supplied fields in [homeassistant.yaml](../../../apps/hom
 | <a id="declaration-connections-broker-type"></a>`connections.broker.type` | `"mqtt"` |
 | <a id="declaration-connections-broker-required"></a>`connections.broker.required` | `false` |
 | <a id="declaration-connections-broker-readiness"></a>`connections.broker.readiness` | `["start"]` |
-| <a id="declaration-software"></a>`software` | `["docker", "curl", "homeassistant-images"]` |
+| <a id="declaration-software"></a>`software` | `["docker", "curl", "homeassistant-upstream-images"]` |
 | <a id="declaration-runtime"></a>`runtime` | `["container-host", "homeassistant"]` |
 | <a id="declaration-health"></a>`health` | `object` |
 | <a id="declaration-health-ready"></a>`health.ready` | `object` |

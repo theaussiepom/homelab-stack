@@ -172,14 +172,14 @@ class PersonalisationWalkthrough(unittest.TestCase):
         self.assertFalse(any(row['comment'] == 'Home Assistant from selected browser'
                              for row in resolver['guest']['rules']))
         app = plan.resolved['apps']['home']
-        self.assertEqual(app['profile'], 'homeassistant-public')
-        self.assertEqual(app['role_addresses']['web'], '198.19.30.11')
+        self.assertEqual(app['profile'], 'homeassistant')
+        self.assertEqual(app['role_addresses']['web_interface'], '198.19.30.11')
         self.assertEqual(app['resolved_connections'], {})
         self.assertEqual(plan.resolved['app_dependencies']['home'], [])
         output = self.work / 'home-app.json'
         self.cli('--guest', 'home-app', '--output', str(output))
         text = self.inspect(output)
-        self.assertIn("Role addresses: {'web': '198.19.30.11'}", text)
+        self.assertIn("Role addresses: {'web_interface': '198.19.30.11'}", text)
         self.assertIn('/srv/example/apps/homeassistant', text)
         self.assertIn('Home Assistant from selected browser', text)
         self.assertIn('8123', text)
@@ -198,7 +198,7 @@ class PersonalisationWalkthrough(unittest.TestCase):
         self.assertEqual(config['guest']['memory_mib'], 3072)
         self.assertEqual(config['guest']['volumes']['apps'], {'path': '/srv/example/apps', 'size_gib': 4})
         self.assert_browser(config, '198.19.30.10')
-        self.assertEqual(runtime['applications']['home']['role_addresses']['web'], '198.19.30.10')
+        self.assertEqual(runtime['applications']['home']['role_addresses']['web_interface'], '198.19.30.10')
         self.assertEqual(plan.resolved['app_dependencies'], {'recursive_dns': [], 'home': []})
         for listener in runtime['applications']['recursive_dns']['listeners'].values():
             self.assertEqual(listener['publication_address'], '127.0.0.1')
@@ -227,7 +227,7 @@ class PersonalisationWalkthrough(unittest.TestCase):
         cases = [
             ('guests/resolver.yaml', ('interfaces', 'primary', 'address', 'value'),
              '198.19.30.10', 'component.invalid', ()),
-            ('apps/recursive_dns.yaml', ('interfaces', 'service'),
+            ('apps/recursive_dns.yaml', ('interfaces', 'service_interface'),
              {'interface': 'primary'}, 'component.invalid', ()),
             ('guests/home-app.yaml', ('resources', 'memory_mib'),
              1024, 'component.memory-budget', ()),

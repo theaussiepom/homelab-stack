@@ -29,7 +29,7 @@ This retained profile requires the maintained settings and health wrappers to su
 
 ## First installation
 
-This profile updates an existing installation only. Supply its custom image archive, settings and health-check scripts, and configured OpenID Connect sign-in before deployment. It does not create a new public Node-RED installation. Choose [node_red-public](node_red-public.md) for the supported new public-image path.
+This profile updates an existing installation only. Supply its custom image archive, settings and health-check scripts, and configured OpenID Connect sign-in before deployment. It does not create a new public Node-RED installation. Choose [node_red](node_red.md) for the supported new public-image path.
 
 ## Minimal usage
 
@@ -61,8 +61,8 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
-| `web` | Yes | `guest-interface` |
-| `broker` | No; selected capability can require it | `guest-interface` |
+| `web_interface` | Yes | `guest-interface` |
+| `broker_interface` | No; selected capability can require it | `guest-interface` |
 
 Bind each role to a guest NIC with `{interface: NIC_ID}`. This profile accepts only `guest-interface`; loopback and app-network scopes are not supported. A role does not create another network interface. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -70,17 +70,17 @@ Bind each role to a guest NIC with `{interface: NIC_ID}`. This profile accepts o
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `web` | `node_red` / `host` | `interface` via `web` | `1880/tcp` | None; listener remains in its declared namespace |
+| `web_listener` | `node_red` / `host` | `interface` via `web_interface` | `1880/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
-| `web` | `http` | `web` via `web` |
+| `web_endpoint` | `http` | `web_listener` via `web_interface` |
 
 This variant binds its web listener to the selected interface; actual socket checks refuse a wildcard or another interface. An endpoint gives consumers an address and port. It does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -109,7 +109,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/app-properties.md).
 
 This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
@@ -124,7 +124,7 @@ The framework validates these requirements. [Testing guide](../../testing.md) ex
 
 ## Software and resource policy
 
-Software selections: [`docker`](../software-and-runtime.md#registration-software-docker), [`curl`](../software-and-runtime.md#registration-software-curl), [`node_red-images`](../software-and-runtime.md#registration-software-node-red-images). Runtime selections: [`container-host`](../software-and-runtime.md#registration-runtime-profiles-container-host), [`node_red`](../software-and-runtime.md#registration-runtime-profiles-node-red).
+Software selections: [`docker`](../software-and-runtime.md#registration-software-docker), [`curl`](../software-and-runtime.md#registration-software-curl), [`node_red-custom-images`](../software-and-runtime.md#registration-software-node-red-custom-images). Runtime selections: [`container-host`](../software-and-runtime.md#registration-runtime-profiles-container-host), [`node_red`](../software-and-runtime.md#registration-runtime-profiles-node-red).
 
 | Image role | Authoritative catalogue ID | Selection policy |
 | --- | --- | --- |
@@ -146,7 +146,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -161,25 +161,25 @@ Complete values from [node_red-bound.yaml](../../../apps/node_red-bound.yaml). [
 | <a id="declaration-adapter"></a>`adapter` | `"node_red"` |
 | <a id="declaration-display-name"></a>`display_name` | `"Node-RED with a bound web listener"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
-| <a id="declaration-interfaces-web"></a>`interfaces.web` | `object` |
-| <a id="declaration-interfaces-web-required"></a>`interfaces.web.required` | `true` |
-| <a id="declaration-interfaces-web-accepts"></a>`interfaces.web.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-broker"></a>`interfaces.broker` | `object` |
-| <a id="declaration-interfaces-broker-required"></a>`interfaces.broker.required` | `false` |
-| <a id="declaration-interfaces-broker-accepts"></a>`interfaces.broker.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-web-interface"></a>`interfaces.web_interface` | `object` |
+| <a id="declaration-interfaces-web-interface-required"></a>`interfaces.web_interface.required` | `true` |
+| <a id="declaration-interfaces-web-interface-accepts"></a>`interfaces.web_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-broker-interface"></a>`interfaces.broker_interface` | `object` |
+| <a id="declaration-interfaces-broker-interface-required"></a>`interfaces.broker_interface.required` | `false` |
+| <a id="declaration-interfaces-broker-interface-accepts"></a>`interfaces.broker_interface.accepts` | `["guest-interface"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
-| <a id="declaration-listeners-web"></a>`listeners.web` | `object` |
-| <a id="declaration-listeners-web-service"></a>`listeners.web.service` | `"node_red"` |
-| <a id="declaration-listeners-web-namespace"></a>`listeners.web.namespace` | `"host"` |
-| <a id="declaration-listeners-web-interface"></a>`listeners.web.interface` | `"web"` |
-| <a id="declaration-listeners-web-bind"></a>`listeners.web.bind` | `"interface"` |
-| <a id="declaration-listeners-web-protocol"></a>`listeners.web.protocol` | `"tcp"` |
-| <a id="declaration-listeners-web-port"></a>`listeners.web.port` | `1880` |
+| <a id="declaration-listeners-web-listener"></a>`listeners.web_listener` | `object` |
+| <a id="declaration-listeners-web-listener-service"></a>`listeners.web_listener.service` | `"node_red"` |
+| <a id="declaration-listeners-web-listener-namespace"></a>`listeners.web_listener.namespace` | `"host"` |
+| <a id="declaration-listeners-web-listener-interface"></a>`listeners.web_listener.interface` | `"web_interface"` |
+| <a id="declaration-listeners-web-listener-bind"></a>`listeners.web_listener.bind` | `"interface"` |
+| <a id="declaration-listeners-web-listener-protocol"></a>`listeners.web_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-web-listener-port"></a>`listeners.web_listener.port` | `1880` |
 | <a id="declaration-endpoints"></a>`endpoints` | `object` |
-| <a id="declaration-endpoints-web"></a>`endpoints.web` | `object` |
-| <a id="declaration-endpoints-web-listener"></a>`endpoints.web.listener` | `"web"` |
-| <a id="declaration-endpoints-web-protocol"></a>`endpoints.web.protocol` | `"http"` |
-| <a id="declaration-endpoints-web-via"></a>`endpoints.web.via` | `"web"` |
+| <a id="declaration-endpoints-web-endpoint"></a>`endpoints.web_endpoint` | `object` |
+| <a id="declaration-endpoints-web-endpoint-listener"></a>`endpoints.web_endpoint.listener` | `"web_listener"` |
+| <a id="declaration-endpoints-web-endpoint-protocol"></a>`endpoints.web_endpoint.protocol` | `"http"` |
+| <a id="declaration-endpoints-web-endpoint-via"></a>`endpoints.web_endpoint.via` | `"web_interface"` |
 | <a id="declaration-storage"></a>`storage` | `object` |
 | <a id="declaration-storage-data"></a>`storage.data` | `object` |
 | <a id="declaration-storage-data-target"></a>`storage.data.target` | `"/data"` |
@@ -206,7 +206,7 @@ Complete values from [node_red-bound.yaml](../../../apps/node_red-bound.yaml). [
 | <a id="declaration-connections-broker-type"></a>`connections.broker.type` | `"mqtt"` |
 | <a id="declaration-connections-broker-required"></a>`connections.broker.required` | `false` |
 | <a id="declaration-connections-broker-readiness"></a>`connections.broker.readiness` | `["start"]` |
-| <a id="declaration-software"></a>`software` | `["docker", "curl", "node_red-images"]` |
+| <a id="declaration-software"></a>`software` | `["docker", "curl", "node_red-custom-images"]` |
 | <a id="declaration-runtime"></a>`runtime` | `["container-host", "node_red"]` |
 | <a id="declaration-health"></a>`health` | `object` |
 | <a id="declaration-health-ready"></a>`health.ready` | `object` |

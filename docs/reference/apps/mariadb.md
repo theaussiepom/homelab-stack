@@ -59,7 +59,7 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
-| `service` | Yes | `guest-interface` |
+| `service_interface` | Yes | `guest-interface` |
 
 Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role names an application requirement; it does not create another NIC. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -67,17 +67,17 @@ Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `database` | `mariadb` / `host` | `interface` via `service` | `3306/tcp` | None; listener remains in its declared namespace |
+| `database_listener` | `mariadb` / `host` | `interface` via `service_interface` | `3306/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
-| `backend` | `tcp` | `database` via `service` |
+| `backend_endpoint` | `tcp` | `database_listener` via `service_interface` |
 
 Listeners use the declared interface or network namespace. Endpoints tell consumers where to connect; they do not permit traffic or make consumers wait for the service.
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -93,7 +93,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/app-properties.md).
 
 This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
@@ -128,7 +128,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -143,22 +143,22 @@ These are the complete supplied fields in [mariadb.yaml](../../../apps/mariadb.y
 | <a id="declaration-adapter"></a>`adapter` | `"mariadb"` |
 | <a id="declaration-display-name"></a>`display_name` | `"MariaDB"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
-| <a id="declaration-interfaces-service"></a>`interfaces.service` | `object` |
-| <a id="declaration-interfaces-service-required"></a>`interfaces.service.required` | `true` |
-| <a id="declaration-interfaces-service-accepts"></a>`interfaces.service.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-service-interface"></a>`interfaces.service_interface` | `object` |
+| <a id="declaration-interfaces-service-interface-required"></a>`interfaces.service_interface.required` | `true` |
+| <a id="declaration-interfaces-service-interface-accepts"></a>`interfaces.service_interface.accepts` | `["guest-interface"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
-| <a id="declaration-listeners-database"></a>`listeners.database` | `object` |
-| <a id="declaration-listeners-database-service"></a>`listeners.database.service` | `"mariadb"` |
-| <a id="declaration-listeners-database-namespace"></a>`listeners.database.namespace` | `"host"` |
-| <a id="declaration-listeners-database-interface"></a>`listeners.database.interface` | `"service"` |
-| <a id="declaration-listeners-database-bind"></a>`listeners.database.bind` | `"interface"` |
-| <a id="declaration-listeners-database-protocol"></a>`listeners.database.protocol` | `"tcp"` |
-| <a id="declaration-listeners-database-port"></a>`listeners.database.port` | `3306` |
+| <a id="declaration-listeners-database-listener"></a>`listeners.database_listener` | `object` |
+| <a id="declaration-listeners-database-listener-service"></a>`listeners.database_listener.service` | `"mariadb"` |
+| <a id="declaration-listeners-database-listener-namespace"></a>`listeners.database_listener.namespace` | `"host"` |
+| <a id="declaration-listeners-database-listener-interface"></a>`listeners.database_listener.interface` | `"service_interface"` |
+| <a id="declaration-listeners-database-listener-bind"></a>`listeners.database_listener.bind` | `"interface"` |
+| <a id="declaration-listeners-database-listener-protocol"></a>`listeners.database_listener.protocol` | `"tcp"` |
+| <a id="declaration-listeners-database-listener-port"></a>`listeners.database_listener.port` | `3306` |
 | <a id="declaration-endpoints"></a>`endpoints` | `object` |
-| <a id="declaration-endpoints-backend"></a>`endpoints.backend` | `object` |
-| <a id="declaration-endpoints-backend-listener"></a>`endpoints.backend.listener` | `"database"` |
-| <a id="declaration-endpoints-backend-protocol"></a>`endpoints.backend.protocol` | `"tcp"` |
-| <a id="declaration-endpoints-backend-via"></a>`endpoints.backend.via` | `"service"` |
+| <a id="declaration-endpoints-backend-endpoint"></a>`endpoints.backend_endpoint` | `object` |
+| <a id="declaration-endpoints-backend-endpoint-listener"></a>`endpoints.backend_endpoint.listener` | `"database_listener"` |
+| <a id="declaration-endpoints-backend-endpoint-protocol"></a>`endpoints.backend_endpoint.protocol` | `"tcp"` |
+| <a id="declaration-endpoints-backend-endpoint-via"></a>`endpoints.backend_endpoint.via` | `"service_interface"` |
 | <a id="declaration-storage"></a>`storage` | `object` |
 | <a id="declaration-storage-data"></a>`storage.data` | `object` |
 | <a id="declaration-storage-data-target"></a>`storage.data.target` | `"/var/lib/mysql"` |

@@ -3,42 +3,42 @@ kind: app-profile
 adapter: mqtt_explorer
 display_name: MQTT Explorer
 interfaces:
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
-  private:
+  private_interface:
     required: true
     accepts:
     - app-network
-  broker:
+  broker_interface:
     required: true
     accepts:
     - guest-interface
 listeners:
-  web:
+  web_listener:
     service: explorer_gateway
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 4180
     publish:
       scope: guest-interface
-      interface: web
+      interface: web_interface
       port: 80
-  explorer:
+  explorer_listener:
     service: mqtt_explorer
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 3000
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
+    via: web_interface
 storage:
   data:
     target: /app/data

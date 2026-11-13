@@ -3,23 +3,23 @@ kind: app-profile
 adapter: influxdb
 display_name: InfluxDB
 interfaces:
-  service:
+  service_interface:
     required: true
     accepts:
     - guest-interface
 listeners:
-  web:
+  web_listener:
     service: influxdb
     namespace: host
-    interface: service
+    interface: service_interface
     bind: interface
     protocol: tcp
     port: 8086
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: service
+    via: service_interface
 storage:
   data:
     target: /var/lib/influxdb

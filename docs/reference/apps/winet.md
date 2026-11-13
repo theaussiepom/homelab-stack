@@ -57,8 +57,8 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 
 | Role | Required in profile | Accepted binding scopes |
 | --- | --- | --- |
-| `broker` | Yes | `guest-interface` |
-| `inverter` | Yes | `guest-interface` |
+| `broker_interface` | Yes | `guest-interface` |
+| `inverter_interface` | Yes | `guest-interface` |
 
 Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role names an application requirement; it does not create another NIC. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -70,7 +70,7 @@ No endpoint is advertised.
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 No app storage role is declared. HomeLab keeps generated private runtime files in their separately managed paths.
 
@@ -91,7 +91,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -132,7 +132,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/71d029358400c5431f971c9e68fba211cebc38fb/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -147,12 +147,12 @@ These are the complete supplied fields in [winet.yaml](../../../apps/winet.yaml)
 | <a id="declaration-adapter"></a>`adapter` | `"winet"` |
 | <a id="declaration-display-name"></a>`display_name` | `"WiNet"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
-| <a id="declaration-interfaces-broker"></a>`interfaces.broker` | `object` |
-| <a id="declaration-interfaces-broker-required"></a>`interfaces.broker.required` | `true` |
-| <a id="declaration-interfaces-broker-accepts"></a>`interfaces.broker.accepts` | `["guest-interface"]` |
-| <a id="declaration-interfaces-inverter"></a>`interfaces.inverter` | `object` |
-| <a id="declaration-interfaces-inverter-required"></a>`interfaces.inverter.required` | `true` |
-| <a id="declaration-interfaces-inverter-accepts"></a>`interfaces.inverter.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-broker-interface"></a>`interfaces.broker_interface` | `object` |
+| <a id="declaration-interfaces-broker-interface-required"></a>`interfaces.broker_interface.required` | `true` |
+| <a id="declaration-interfaces-broker-interface-accepts"></a>`interfaces.broker_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-inverter-interface"></a>`interfaces.inverter_interface` | `object` |
+| <a id="declaration-interfaces-inverter-interface-required"></a>`interfaces.inverter_interface.required` | `true` |
+| <a id="declaration-interfaces-inverter-interface-accepts"></a>`interfaces.inverter_interface.accepts` | `["guest-interface"]` |
 | <a id="declaration-listeners"></a>`listeners` | `{}` |
 | <a id="declaration-endpoints"></a>`endpoints` | `{}` |
 | <a id="declaration-storage"></a>`storage` | `{}` |

@@ -9,7 +9,7 @@ A selection ID names a reusable application recipe, not a complete installed ser
 | Outcome | Profiles and important choice |
 | --- | --- |
 | Resolve and filter DNS | [Unbound](apps/unbound.md) can start from empty and publishes guest-loopback DNS only. [Pi-hole](apps/pihole.md) needs prepared configuration and its selected upstream binding. The [complete DNS walkthrough](../examples/local-dns.md) requires an existing matching HomeLab-managed guest and apps; it cannot install new LAN DNS services. |
-| Home automation | [Home Assistant public](apps/homeassistant-public.md) and [Node-RED public](apps/node_red-public.md) select public images and can create a new configuration directory without adopting an existing one. The [Home Assistant](apps/homeassistant.md) and [Node-RED](apps/node_red.md) retained variants have different archive and authentication requirements. |
+| Home automation | [Home Assistant](apps/homeassistant.md) and [Node-RED](apps/node_red.md) select public images and can create a new configuration directory without adopting an existing one. The [Home Assistant custom](apps/homeassistant-custom.md) and [Node-RED custom](apps/node_red-custom.md) profiles have different archive and authentication requirements. |
 | Messaging, radio and telemetry | [MQTT](apps/mqtt.md) owns the prepared broker; [MQTT Explorer](apps/mqtt_explorer.md) is a separately selected authenticated browser. [Zigbee2MQTT](apps/zigbee2mqtt.md) and [WiNet](apps/winet.md) need their own hardware or network inputs and a broker connection. |
 | Databases and administration | [PostgreSQL](apps/postgresql.md), [MariaDB](apps/mariadb.md) and [InfluxDB](apps/influxdb.md) are native profiles. [CloudBeaver](apps/cloudbeaver.md) and its [MariaDB-admin variant](apps/cloudbeaver-mariadb-admin.md) differ in administrator capability; a connection value alone does not grant it. |
 | Identity, edge and monitoring | [Authentik](apps/authentik.md), [Traefik](apps/traefik.md) and [Zabbix](apps/zabbix.md) own distinct services. Selecting one does not automatically publish or enroll every app. |
@@ -19,13 +19,14 @@ A selection ID names a reusable application recipe, not a complete installed ser
 
 | Profile | Application | Adapter / variant |
 | --- | --- | --- |
-| [homeassistant](apps/homeassistant.md) | Home Assistant | `homeassistant` |
+| [homeassistant-custom](apps/homeassistant-custom.md) | Home Assistant | `homeassistant` |
 | [homeassistant-bound](apps/homeassistant-bound.md) | Home Assistant | `homeassistant` |
-| [node_red](apps/node_red.md) | Node-RED | `node_red` |
+| [node_red-custom](apps/node_red-custom.md) | Node-RED | `node_red` |
 | [node_red-bound](apps/node_red-bound.md) | Node-RED | `node_red` |
 | [bitwarden](apps/bitwarden.md) | Bitwarden | `bitwarden` |
 | [cloudbeaver](apps/cloudbeaver.md) | CloudBeaver | `cloudbeaver` |
 | [pihole](apps/pihole.md) | Pi-hole | `pihole` |
+| [pihole-web](apps/pihole-web.md) | Pi-hole with a separate web interface | `pihole` |
 | [unbound](apps/unbound.md) | Unbound | `unbound` |
 | [authentik](apps/authentik.md) | Authentik | `authentik` |
 | [influxdb](apps/influxdb.md) | InfluxDB | `influxdb` |
@@ -41,8 +42,8 @@ A selection ID names a reusable application recipe, not a complete installed ser
 | [postgresql](apps/postgresql.md) | PostgreSQL | `postgresql` |
 | [zigbee2mqtt](apps/zigbee2mqtt.md) | Zigbee2MQTT | `zigbee2mqtt` |
 | [winet](apps/winet.md) | WiNet | `winet` |
-| [homeassistant-public](apps/homeassistant-public.md) | Home Assistant | `homeassistant` |
-| [node_red-public](apps/node_red-public.md) | Node-RED | `node_red` |
+| [homeassistant](apps/homeassistant.md) | Home Assistant | `homeassistant` |
+| [node_red](apps/node_red.md) | Node-RED | `node_red` |
 | [cloudbeaver-mariadb-admin](apps/cloudbeaver-mariadb-admin.md) | CloudBeaver | `cloudbeaver` |
 
 

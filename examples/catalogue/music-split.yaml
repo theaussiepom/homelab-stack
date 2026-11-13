@@ -97,7 +97,7 @@ guests:
       endpoints:
         stream:
           app: music
-          endpoint: stream
+          endpoint: stream_endpoint
     - policy: connect_music_public
   ingress:
     context: lab
@@ -146,9 +146,9 @@ apps:
     guest: media
     lifecycle: retained
     interfaces:
-      web:
+      web_interface:
         interface: primary
-      stream:
+      stream_interface:
         interface: players
     storage:
       data:
@@ -168,9 +168,9 @@ apps:
     guest: ingress
     lifecycle: retained
     interfaces:
-      frontend:
+      frontend_interface:
         interface: primary
-      management:
+      management_interface:
         interface: primary
     storage:
       certs:
@@ -234,20 +234,20 @@ connections:
       connection: public
     target:
       app: ingress
-      endpoint: https
-    source_interface: web
+      endpoint: https_endpoint
+    source_interface: web_interface
     hostname:
       domain: music
 exposures:
   music:
     type: http
-    endpoint:
+    target:
       app: music
-      endpoint: web
+      endpoint: web_endpoint
     domain: music
     ingress:
       app: ingress
-      endpoint: https
+      endpoint: https_endpoint
     tls: public
 images: {}
 host_aliases: {}

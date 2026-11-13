@@ -19,6 +19,101 @@ sys.path[:0] = [str(ROOT / 'tests'), str(ROOT)]
 
 
 class ComponentCompositionTests(unittest.TestCase):
+    def test_standard_home_web_resolves_profile_role_endpoint_and_changed_guest_address(self):
+        value = component_sources.site(ROOT / 'examples/catalogue/home-web.yaml')[0]
+        plan = self.plan(value)
+        app = plan.resolved['apps']['home']
+        self.assertEqual((app['profile'], app['guest'], app['lifecycle']),
+                         ('homeassistant', 'automation', 'fresh'))
+        self.assertEqual(app['interfaces']['web_interface'], {'interface': 'primary'})
+        self.assertEqual(value['apps']['home']['storage']['config'],
+                         {'volume': 'apps', 'subpath': 'homeassistant'})
+        route = plan.resolved['routes']['edge']['home_web']
+        address = value['guests']['automation']['interfaces']['primary']['address']['value']
+        self.assertEqual((route['target']['app'], route['target']['protocol'],
+                          route['target']['port'], route['target']['address']),
+                         ('home', 'http', 8123, address))
+        runtime = component_lower.runtime_config(plan, 'automation')['applications']['home']
+        self.assertEqual(runtime['storage_paths']['config']['initialize'],
+                         {'type': 'directory', 'uid': 0, 'gid': 0, 'mode': '0700'})
+        image = app['software_selection']['images']['homeassistant']
+        self.assertTrue(image['image'].startswith('ghcr.io/home-assistant/home-assistant@sha256:'))
+        self.assertNotIn('archive', image)
+        rendered = render.compositions(component_lower.runtime_config(plan, 'edge'))
+        self.assertTrue(rendered)
+        value['guests']['automation']['interfaces']['primary']['address']['value'] = '198.18.20.79'
+        later = self.plan(value)
+        self.assertEqual(later.resolved['routes']['edge']['home_web']['target']['address'], '198.18.20.79')
+        self.assertEqual(later.resolved['apps']['home']['identity'], app['identity'])
+        self.assertEqual(later.resolved['app_dependencies'], plan.resolved['app_dependencies'])
+        self.assertEqual(later.resolved['routes']['edge']['home_web']['tls'], 'site_certificate')
+        for change in ('outer-endpoint', 'unknown-endpoint', 'missing-endpoint', 'upstream-override',
+                       'conflicting-software', 'retired-profile', 'unused-custom-binding'):
+            broken = copy.deepcopy(value)
+            if change == 'outer-endpoint':
+                row = broken['exposures']['home_web']; row['endpoint'] = row.pop('target')
+                code = 'component.fields'
+            elif change == 'unknown-endpoint':
+                broken['exposures']['home_web']['target']['endpoint'] = 'unknown'
+                code = 'component.invalid'
+            elif change == 'missing-endpoint':
+                del broken['exposures']['home_web']['target']['endpoint']
+                code = 'component.fields'
+            elif change == 'upstream-override':
+                broken['images'] = {'homeassistant_upstream': {
+                    'local_id': 'sha256:' + 'a' * 64, 'archive': '/example/custom.tar',
+                    'archive_sha256': 'b' * 64}}
+                code = 'component.image-binding'
+            elif change == 'conflicting-software':
+                broken['apps']['home']['software'] = ['homeassistant-custom-images']
+                code = 'component.software-conflict'
+            elif change == 'retired-profile':
+                broken['apps']['home']['profile'] = 'homeassistant-public'
+                code = 'component.invalid'
+            else:
+                broken['images'] = {'homeassistant': {
+                    'local_id': 'sha256:' + 'a' * 64, 'archive': '/example/custom.tar',
+                    'archive_sha256': 'b' * 64}}
+                code = 'component.image-binding-unused'
+            with self.subTest(change=change), self.assertRaisesRegex(ComponentError, code):
+                self.plan(broken)
+
+    def test_explicit_custom_profiles_preserve_archive_data_authentication_and_runtime(self):
+        value = component_sources.site(ROOT / 'examples/catalogue/existing-automation.yaml')[0]
+        import re, yaml
+        page = (ROOT / 'docs/guides/images-and-updates.md').read_text()
+        fragment = yaml.safe_load(re.findall(r'```yaml\n(.*?)```', page, re.S)[0])
+        self.assertEqual(fragment['apps']['home']['profile'], 'homeassistant-custom')
+        value['images'] = {name: {'local_id': 'sha256:' + character * 64,
+            'archive': '/example/' + name + '.tar', 'archive_sha256': 'c' * 64}
+            for name, character in (('homeassistant', 'a'), ('node_red', 'b'))}
+        value['images']['homeassistant'] = fragment['images']['homeassistant']
+        before = self.plan(value)
+        for name in ('homeassistant', 'node_red'):
+            app = before.resolved['apps'][name]
+            self.assertEqual(app['profile'], name + '-custom')
+            selected = app['software_selection']['images'][name]
+            self.assertEqual(selected['archive'], value['images'][name]['archive'])
+            self.assertEqual(selected['archive_sha256'], value['images'][name]['archive_sha256'])
+            self.assertTrue(selected['image'].startswith('sha256:'))
+            runtime = component_lower.runtime_config(before, app['guest'])['applications'][name]
+            self.assertTrue(all('initialize' not in row for row in runtime['storage_paths'].values()))
+        node = before.resolved['apps']['node_red']
+        node_runtime = component_lower.runtime_config(before, node['guest'])['applications']['node_red']
+        self.assertTrue({'data', 'config', 'settings', 'healthcheck'} <= set(node_runtime['storage_paths']))
+        self.assertIn('authentication_resolved', node)
+        value['apps']['homeassistant']['display_name'] = 'Another descriptive label'
+        later = self.plan(value)
+        for name in ('homeassistant', 'node_red'):
+            first = before.resolved['apps'][name]; second = later.resolved['apps'][name]
+            for field in ('identity', 'lifecycle', 'storage_paths', 'software_selection',
+                          'secret_bindings', 'authentication_resolved'):
+                self.assertEqual(first.get(field), second.get(field))
+            old_runtime = component_lower.runtime_config(before, first['guest'])['applications'][name]
+            new_runtime = component_lower.runtime_config(later, second['guest'])['applications'][name]
+            self.assertEqual(old_runtime['identity'], new_runtime['identity'])
+            self.assertEqual(old_runtime['storage_paths'], new_runtime['storage_paths'])
+
     def test_complete_cloudflare_example_and_scalar_workflow_binding(self):
         import workflows
         import re, yaml
@@ -33,15 +128,15 @@ class ComponentCompositionTests(unittest.TestCase):
         value['secret_sources']['edge_origin_token']={'type':'file','path':'/run/example/retained-origin-token'}
         value['domains']={'manager':'manager.example.invalid'}
         value['policies']['tls']={'public':{'type':'acme','resolver':'letsencrypt'}}
-        value['exposures']={'manager':{'type':'http','endpoint':{'app':'manager','endpoint':'web'},'domain':'manager',
-            'ingress':{'app':'edge','endpoint':'https'},'tls':'public','middlewares':['cloudflare_public','headers']}}
+        value['exposures']={'manager':{'type':'http','target':{'app':'manager','endpoint':'web_endpoint'},'domain':'manager',
+            'ingress':{'app':'edge','endpoint':'https_endpoint'},'tls':'public','middlewares':['cloudflare_public','headers']}}
         value['policies']['network']['proxy_backend']={'rules':[{'direction':'out','proto':'tcp',
             'destination':{'endpoint':'backend'},'port':{'endpoint':'backend'},'comment':'Selected proxy backend'}]}
         value['policies']['network']['proxy_client']={'rules':[{'direction':'in','proto':'tcp','source':{'endpoint':'proxy'},
             'destination':{'endpoint':'backend'},'port':{'endpoint':'backend'},'comment':'Selected reverse proxy'}]}
-        value['guests']['edge']['network_policy'].append({'policy':'proxy_backend','endpoints':{'backend':{'app':'manager','endpoint':'web'}}})
+        value['guests']['edge']['network_policy'].append({'policy':'proxy_backend','endpoints':{'backend':{'app':'manager','endpoint':'web_endpoint'}}})
         value['guests']['manager']['network_policy'].append({'policy':'proxy_client','endpoints':{
-            'backend':{'app':'manager','endpoint':'web'},'proxy':{'app':'edge','endpoint':'https'}}})
+            'backend':{'app':'manager','endpoint':'web_endpoint'},'proxy':{'app':'edge','endpoint':'https_endpoint'}}})
         plan = self.plan(value)
         edge = plan.resolved['apps']['edge']
         self.assertTrue(edge['settings']['cloudflare'])
@@ -108,8 +203,8 @@ class ComponentCompositionTests(unittest.TestCase):
             'network': 'management', 'slot': 1, 'mac': '02:00:00:25:01:47',
             'address': {'mode': 'static', 'value': '198.18.25.71'},
             'default_route': False, 'ipv6': 'manual'}
-        value['apps']['manager']['interfaces']['management'] = {'interface': 'api'}
-        value['connections']['manager_provider']['source_interface'] = 'management'
+        value['apps']['manager']['interfaces']['management_interface'] = {'interface': 'api'}
+        value['connections']['manager_provider']['source_interface'] = 'management_interface'
         value['policies']['network']['provider_api']['rules'][0].update(
             interface='api', source={'interface': 'api'})
         binding = next(row for row in value['guests']['manager']['network_policy']
@@ -126,7 +221,7 @@ class ComponentCompositionTests(unittest.TestCase):
         flow = Flow('198.18.25.71', '192.0.2.10', 'tcp', 8006)
         self.assertTrue(permits(rules, 'out', flow, 'net1'))
         self.assertFalse(permits(rules, 'out', flow, 'net0'))
-        value['connections']['manager_provider']['source_interface'] = 'web'
+        value['connections']['manager_provider']['source_interface'] = 'web_interface'
         with self.assertRaisesRegex(ComponentError, 'component.traffic-egress'):
             self.plan(value)
 
@@ -200,8 +295,8 @@ class ComponentCompositionTests(unittest.TestCase):
     def test_unbound_loopback_binding_succeeds_and_physical_nic_binding_refuses(self):
         source = self.starter()
         app = self.plan(source).resolved['apps']['recursive_dns']
-        self.assertEqual(app['listeners']['dns_tcp']['publication_address'], '127.0.0.1')
-        source['apps']['recursive_dns']['interfaces']['service'] = {'interface': 'primary'}
+        self.assertEqual(app['listeners']['dns_tcp_listener']['publication_address'], '127.0.0.1')
+        source['apps']['recursive_dns']['interfaces']['service_interface'] = {'interface': 'primary'}
         with self.assertRaises(ValueError): self.plan(source)
 
     def test_repeated_profile_has_distinct_runtime_and_publication_with_cosmetic_labels(self):
@@ -253,10 +348,10 @@ class ComponentCompositionTests(unittest.TestCase):
         source['apps'] = {'pihole': {'profile': 'pihole', 'guest': 'resolver', 'lifecycle': 'retained',
             'identity': {'phase': 'pihole', 'runtime_id': 'pihole', 'project': 'shared',
                          'services': {'pihole': 'pihole'}, 'networks': {}},
-            'interfaces': {'service': {'interface': 'primary'}, 'upstream': {'interface': 'primary'}},
+            'interfaces': {'service_interface': {'interface': 'primary'}, 'upstream_interface': {'interface': 'primary'}},
             'storage': {'config': {'root_path': 'app-data', 'subpath': 'pihole'}}}}
         source['connections'] = {'upstream': {'consumer': {'app': 'pihole', 'connection': 'upstream'},
-            'target': {'external': 'resolver'}, 'source_interface': 'upstream'}}
+            'target': {'external': 'resolver'}, 'source_interface': 'upstream_interface'}}
         return source
 
     def test_pihole_only_uses_an_explicit_external_upstream_and_missing_binding_refuses(self):
@@ -273,8 +368,8 @@ class ComponentCompositionTests(unittest.TestCase):
         source['apps']['unbound'] = {'profile': 'unbound', 'guest': 'resolver', 'lifecycle': 'retained',
             'identity': {'phase': 'unbound', 'runtime_id': 'unbound', 'project': 'shared',
                 'services': {'unbound': 'unbound'}, 'networks': {'default': 'default'}},
-            'interfaces': {'service': {'scope': 'guest-loopback'},
-                           'private': {'scope': 'app-network', 'network': 'default'}},
+            'interfaces': {'service_interface': {'scope': 'guest-loopback'},
+                           'private_interface': {'scope': 'app-network', 'network': 'default'}},
             'storage': {'config': {'root_path': 'app-data', 'subpath': 'unbound'}}}
         selected = {'dev': ('dev', 'rw'), 'var': ('var', 'rw'),
                     'control_key': ('unbound_control.key', 'ro'),
@@ -295,14 +390,14 @@ class ComponentCompositionTests(unittest.TestCase):
 
     def test_independent_pihole_and_unbound_share_project_and_preserve_actual_baseline(self):
         source = self.pihole()
-        source['apps']['pihole']['interfaces']['upstream'] = {'scope': 'guest-loopback'}
+        source['apps']['pihole']['interfaces']['upstream_interface'] = {'scope': 'guest-loopback'}
         source['apps']['unbound'] = {'profile': 'unbound', 'guest': 'resolver', 'lifecycle': 'retained',
             'identity': {'phase': 'unbound', 'runtime_id': 'unbound', 'project': 'shared',
                 'services': {'unbound': 'unbound'}, 'networks': {'default': 'default'}},
-            'interfaces': {'service': {'scope': 'guest-loopback'},
-                           'private': {'scope': 'app-network', 'network': 'default'}},
+            'interfaces': {'service_interface': {'scope': 'guest-loopback'},
+                           'private_interface': {'scope': 'app-network', 'network': 'default'}},
             'storage': {'config': {'root_path': 'app-data', 'subpath': 'unbound'}}}
-        source['connections']['upstream'].update(target={'app': 'unbound', 'endpoint': 'dns_udp'}, readiness='start')
+        source['connections']['upstream'].update(target={'app': 'unbound', 'endpoint': 'dns_udp_endpoint'}, readiness='start')
         document = next(iter(self.compose(source).values()))
         expected = json.loads((ROOT / 'tests/fixtures/dns-compose-baseline.json').read_text())
         self.assertEqual(document, expected)

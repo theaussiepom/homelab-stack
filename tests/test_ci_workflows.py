@@ -31,6 +31,8 @@ class CiWorkflowTests(unittest.TestCase):
         # This existing harness remains collected if a documentation module is
         # deleted or emptied. Keep control facts in their source, not here.
         required = [
+            'test_component_composition.ComponentCompositionTests.test_standard_home_web_resolves_profile_role_endpoint_and_changed_guest_address',
+            'test_component_composition.ComponentCompositionTests.test_explicit_custom_profiles_preserve_archive_data_authentication_and_runtime',
             'test_documentation_examples.DocumentationConformance',
             'test_documentation_examples.DocumentationConformance.test_backup_recovery_catalogue_matches_every_loaded_role_and_capture',
             'test_documentation_examples.DocumentationConformance.test_backup_preparation_and_volume_fragments_follow_presence_controls',
@@ -163,7 +165,12 @@ for name in json.loads(sys.argv[2]):
                             self.assertEqual(step["with"]["persist-credentials"], "false")
         source = documents["validate-stack.yml"]["jobs"]["source"]
         self.assertNotIn("permissions", source)
-        self.assertEqual(source["steps"][0]["with"]["fetch-depth"], "0")
+        # The reconciled authored head includes current main. Preserve its
+        # immutable selection, complete history and read-only credentials.
+        self.assertEqual(source["steps"][0]["with"], {
+            "ref": "${{ github.event.pull_request.head.sha || github.sha }}",
+            "fetch-depth": "0", "persist-credentials": "false",
+        })
         commands = "\n".join(step.get("run", "") for step in source["steps"])
         self.assertIn("blueprints/workflows.py --stack . --site site.example.yaml --check", commands)
         self.assertIn("blueprints/compile.py --stack . --site site.example.yaml --check", commands)
@@ -177,7 +184,6 @@ for name in json.loads(sys.argv[2]):
             "BASE_SHA": "${{ github.event.pull_request.base.sha || github.sha }}",
         })
         self.assertEqual(scan["run"], 'python3 .github/scripts/check_history.py --framework framework-source --scanner "$RUNNER_TEMP/homelab-source-tools/gitleaks" --head "$HEAD_SHA" --base "$BASE_SHA"')
-        self.assertNotIn("ref", source["steps"][0]["with"])
         self.assertIn(".github/workflows/phase.yml", commands)
         self.assertIn("--require-hashes", commands)
         security = documents["scan-python-security.yml"]["jobs"]["analyze"]

@@ -3,35 +3,35 @@ kind: app-profile
 adapter: pegaprox
 display_name: PegaProx
 interfaces:
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
-  private:
+  private_interface:
     required: true
     accepts:
     - app-network
-  management:
+  management_interface:
     required: false
     accepts:
     - guest-interface
 listeners:
-  web:
+  web_listener:
     service: pegaprox
     namespace: app-network
-    interface: private
+    interface: private_interface
     bind: wildcard
     protocol: tcp
     port: 5000
     publish:
       scope: guest-interface
-      interface: web
+      interface: web_interface
       port: 5000
 endpoints:
-  web:
-    listener: web
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
+    via: web_interface
 storage:
   config:
     target: /app/config

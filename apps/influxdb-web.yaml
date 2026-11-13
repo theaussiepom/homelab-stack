@@ -3,38 +3,38 @@ kind: app-profile
 adapter: influxdb
 display_name: InfluxDB with a separate application web frontend
 interfaces:
-  service:
+  service_interface:
     required: true
     accepts:
     - guest-interface
-  web:
+  web_interface:
     required: true
     accepts:
     - guest-interface
 listeners:
-  backend:
+  backend_listener:
     service: influxdb
     namespace: host
-    interface: service
+    interface: service_interface
     bind: interface
     protocol: tcp
     port: 8086
-  web:
+  web_listener:
     service: influxdb
     namespace: host
-    interface: web
+    interface: web_interface
     bind: interface
     protocol: tcp
     port: 8086
 endpoints:
-  backend:
-    listener: backend
+  backend_endpoint:
+    listener: backend_listener
     protocol: http
-    via: service
-  web:
-    listener: web
+    via: service_interface
+  web_endpoint:
+    listener: web_listener
     protocol: http
-    via: web
+    via: web_interface
 storage:
   data:
     target: /var/lib/influxdb
