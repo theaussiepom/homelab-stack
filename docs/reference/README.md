@@ -21,6 +21,7 @@ A selection ID names a reusable application recipe, not a complete installed ser
 | --- | --- | --- |
 | [homeassistant-custom](apps/homeassistant-custom.md) | Home Assistant | `homeassistant` |
 | [homeassistant-bound](apps/homeassistant-bound.md) | Home Assistant | `homeassistant` |
+| [homeassistant-dual-web](apps/homeassistant-dual-web.md) | Home Assistant with two declared web listeners | `homeassistant` |
 | [node_red-custom](apps/node_red-custom.md) | Node-RED | `node_red` |
 | [node_red-bound](apps/node_red-bound.md) | Node-RED | `node_red` |
 | [bitwarden](apps/bitwarden.md) | Bitwarden | `bitwarden` |

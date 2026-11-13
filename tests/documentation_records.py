@@ -6,6 +6,7 @@ loader and validator own acceptance; documentation cells own the statements test
 
 DEFINITIONS = {
     ('backup_profiles', 'pbs-client'): ('backup/pbs-client.yaml', 'docs/reference/backup-profiles.md'),
+    ('app_profiles', 'homeassistant-dual-web'): ('apps/homeassistant-dual-web.yaml', 'docs/reference/apps/homeassistant-dual-web.md'),
     ('app_profiles', 'homeassistant-bound'): ('apps/homeassistant-bound.yaml', 'docs/reference/apps/homeassistant-bound.md'),
     ('app_profiles', 'homeassistant-custom'): ('apps/homeassistant-custom.yaml', 'docs/reference/apps/homeassistant-custom.md'),
     ('app_profiles', 'node_red-bound'): ('apps/node_red-bound.yaml', 'docs/reference/apps/node_red-bound.md'),
