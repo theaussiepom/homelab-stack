@@ -262,7 +262,7 @@ class BackupProfileTests(unittest.TestCase):
             backup_staging.storage([{**qualified, 'type': 'lvmthin'}], storage_id)
 
     def test_scheduler_guide_matches_the_selected_account_owned_installation(self):
-        """Keep the prerequisite and installed-path explanation bound to the real builder."""
+        """Keep canonical prerequisites/paths bound to the builder, without copied procedures."""
         plan = component_plan.resolve(ROOT, ROOT/'site.backup.example.yaml')
         packet = component_packet.lower_guest(plan, 'resolver')
         schedule = json.loads(packet['files']['backup-group.json'])
@@ -271,22 +271,24 @@ class BackupProfileTests(unittest.TestCase):
         directory = state+'/backup-controller/framework/'+'a'*64+'/proxmox/applications'
         rendered = backup_controller.units(schedule, directory, 1000, '/home/example-cd')
         guide = (ROOT/'docs/backup.md').read_text()
+        prerequisite = (FRAMEWORK/'docs/backup/configure.md').read_text()
+        operations = (FRAMEWORK/'docs/backup/operations.md').read_text()
         self.assertIn('configure.md#prepare-the-controllers-persistent-user-manager', guide)
         self.assertIn('operations.md#find-the-schedule-and-completion-records', guide)
-        self.assertIn('`NoNewPrivileges`', guide)
-        self.assertIn('does not use local `sudo`', guide)
-        self.assertIn('root/system-scope namesake is refused', guide)
+        self.assertIn('`NoNewPrivileges=true`', prerequisite)
+        self.assertIn('Local `sudo`, root SSH and a writable system-unit directory are not backup prerequisites', prerequisite)
+        self.assertIn('root/system-scope namesakes are refused', prerequisite)
         self.assertIn('Preparing the user manager alone does not convert that schedule', guide)
         self.assertIn('Keep its working source pins and backup protection until that handover is available', guide)
         self.assertIn('also applies to managed enrollment', guide)
-        self.assertIn("a process with the CD account's UID can alter its own alarm", guide)
-        for suffix in ('service', 'timer'):
-            path = rendered['unit_directory'].removeprefix('/home/example-cd/')
-            path += '/'+rendered['name']+'.'+suffix
-            self.assertIn(path.replace(schedule['group']['name'], '<job-name>'), guide)
-        self.assertIn(rendered['base'].replace(state, '<state_root>')+'/schedules/', guide)
-        self.assertIn(directory.removesuffix('/applications').replace(state, '<state_root>').replace('a'*64, '<source-hash>')+'/', guide)
-        self.assertIn('account-owned, not root-immutable', guide)
+        self.assertIn('These account-owned files do not protect against a malicious process with the same UID', prerequisite)
+        unit = rendered['unit_directory'].removeprefix('/home/example-cd/')
+        unit += '/'+rendered['name'].replace(schedule['group']['name'], '<job-name>')
+        self.assertIn('`'+unit+'.service` and `.timer`', operations)
+        self.assertIn(rendered['base'].replace(state, '<state_root>')+'/schedules/', operations)
+        self.assertIn(directory.removesuffix('/applications').replace(state, '<state_root>').replace('a'*64, '<source-hash>')+'/', operations)
+        self.assertIn('account-owned', prerequisite)
+        self.assertIn('It is not root-immutable', operations)
 
 
 if __name__ == '__main__': unittest.main()
