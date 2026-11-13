@@ -305,7 +305,11 @@ class DocumentationConformance(unittest.TestCase):
         self.assertIn('backup-group.json', packets['resolver']['files'])
         self.assertFalse(cfg['guest']['volumes']['backup-stage']['backup'])
         self.assertEqual(job['staging']['path'], source['guests']['resolver']['volumes']['backup-stage']['path'])
-        self.assertEqual(set(plan.resolved['guests']), set(source['backup']['job']['clients']))
+        self.assertNotIn('clients', source['backup']['job'])
+        enrolled = {name for name, guest in source['guests'].items() if 'backup' in guest}
+        operational = {name for name, guest in plan.resolved['guests'].items()
+                       if 'job' in guest.get('backup', {})}
+        self.assertEqual(operational, enrolled)
 
     def test_backup_documented_refusals_keep_exact_codes_and_context(self):
         source, _ = component_sources.site(ROOT / 'site.example.yaml')
@@ -327,6 +331,22 @@ class DocumentationConformance(unittest.TestCase):
         operational['guests']['resolver']['volumes']['backup-stage']['backup'] = None
         expect_refusal(lambda: self.source_plan(operational), ComponentError,
                        'component.backup-staging-volume', ())
+        for field, code in (('interface', 'component.backup-interface'),
+                            ('staging_volume', 'component.backup-staging-volume')):
+            operational, _ = component_sources.site(ROOT / 'site.backup.example.yaml')
+            operational['backup']['defaults'][field] = 'missing'
+            self.assertIn('`' + code + '`', page)
+            expect_refusal(lambda: self.source_plan(operational), ComponentError, code, ())
+        operational, _ = component_sources.site(ROOT / 'site.backup.example.yaml')
+        operational['backup'] = {'defaults': operational['backup']['defaults']}
+        self.assertIn('`component.backup-job-required`', page)
+        expect_refusal(lambda: self.source_plan(operational), ComponentError,
+                       'component.backup-job-required', ())
+        operational, _ = component_sources.site(ROOT / 'site.backup.example.yaml')
+        operational['backup']['job']['clients'] = {'resolver': copy.deepcopy(operational['backup']['defaults'])}
+        self.assertIn('`component.backup-client-form`', page)
+        expect_refusal(lambda: self.source_plan(operational), ComponentError,
+                       'component.backup-client-form', ())
 
 
 class DocumentationConformanceMechanism(unittest.TestCase):

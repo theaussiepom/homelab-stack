@@ -112,14 +112,12 @@ class BackupProfileTests(unittest.TestCase):
         job = backup['job']
         source['secret_sources']['pbs-management'] = {'type':'environment','name':'PBS_API_TOKEN'}
         source['external_endpoints']['pbs'] = {'protocol':'https','address':'192.0.2.50','port':8007}
-        job['clients'] = {}
         for guest_id, guest in source['guests'].items():
             guest['backup'] = None
             for volume in guest.get('volumes', {}).values():volume['backup'] = None
             volumes = guest.setdefault('volumes', {})
             volumes['backup-stage'] = {'storage':guest['root_storage'],'slot':max([v['slot'] for v in volumes.values()],default=-1)+1,
                 'path':'/srv/backup-stage','size_gib':1}
-            job['clients'][guest_id] = {'staging_volume':'backup-stage','interface':'primary'}
         source['backup'] = None
         with tempfile.TemporaryDirectory() as temporary:
             path=Path(temporary).resolve()/'site.yaml';path.write_text(yaml.safe_dump(source))
@@ -164,14 +162,15 @@ class BackupProfileTests(unittest.TestCase):
         baseline = component_packet.lower_guest(original, 'resolver')
         baseline_job = json.loads(baseline['files']['site.json'])['app']['backup']['job']
         self.assertEqual(baseline_job['limits'], source['backup']['job']['limits'])
-        clients = read_excerpt((ROOT/'docs/backup.md').read_text(),
-                               'Size clients independently', yaml.safe_load)
-        self.assertEqual(set(clients), set(source['backup']['job']['clients']))
+        override = read_excerpt((ROOT/'docs/backup.md').read_text(),
+                                'Size clients independently', yaml.safe_load)
+        self.assertEqual(set(override), {'backup'})
+        self.assertNotIn('clients', source['backup']['job'])
         for inherit_files in (False, True):
             changed = copy.deepcopy(source)
-            changed['backup']['job']['clients'] = copy.deepcopy(clients)
+            changed['guests']['resolver']['backup'] = copy.deepcopy(override['backup'])
             if inherit_files:
-                changed['backup']['job']['clients']['resolver']['limits'].pop('max_files')
+                changed['guests']['resolver']['backup']['limits'].pop('max_files')
             with self.subTest(inherit_files=inherit_files), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary).resolve()
                 path = root/'site.yaml'
@@ -183,12 +182,58 @@ class BackupProfileTests(unittest.TestCase):
                 packet = component_packet.lower_guest(planned, 'resolver')
                 job = json.loads(packet['files']['site.json'])['app']['backup']['job']
                 expected = {**source['backup']['job']['limits'],
-                            **changed['backup']['job']['clients']['resolver']['limits']}
+                            **changed['guests']['resolver']['backup']['limits']}
                 self.assertEqual(job['limits'], expected)
                 self.assertNotEqual(job['limits'], baseline_job['limits'])
                 self.assertEqual({**job, 'limits': baseline_job['limits']}, baseline_job)
                 self.assertEqual(component_workflows.model(planned), component_workflows.model(original))
                 self.assertGreaterEqual(job['staging']['size_bytes'], 4*expected['max_bytes'])
+
+    def test_shared_bindings_keep_enrollment_explicit_including_disabled_members(self):
+        """Root defaults do not enroll another guest or discard a disabled member."""
+        source, _ = component_sources.site(ROOT/'site.backup.example.yaml')
+        other = copy.deepcopy(source['guests']['resolver'])
+        other.pop('backup')
+        other.pop('volumes')
+        other['identity'] = {'vmid': 611, 'hostname': 'example-unenrolled'}
+        other['interfaces']['primary']['mac'] = '02:00:00:20:00:11'
+        other['interfaces']['primary']['address']['value'] = '198.18.20.11'
+        source['guests']['unenrolled'] = other
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            path = root/'site.yaml'
+            path.write_text(yaml.safe_dump(source, sort_keys=False))
+            public = root/source['backup']['recovery_public_key']['source']
+            public.parent.mkdir(parents=True)
+            public.write_bytes((ROOT/source['backup']['recovery_public_key']['source']).read_bytes())
+            plan = component_plan.resolve(ROOT, path, disabled=['resolver'])
+        self.assertNotIn('backup', plan.resolved['guests']['unenrolled'])
+        self.assertFalse(any(row.startswith('proxmox-backup-client=')
+                             for row in plan.resolved['guests']['unenrolled']['software_selection']['packages']))
+        member = plan.resolved['guests']['resolver']['backup']['job']
+        self.assertEqual(member['destination']['backup_id'], 'guest-610')
+        self.assertEqual(set(plan.resolved['backup']['group']['group']['members']), {'guest-610'})
+        self.assertNotIn('clients', source['backup']['job'])
+
+    def test_explicit_guest_bindings_preserve_the_same_complete_packets_and_identity(self):
+        """Spelling inherited values on the guest does not change its effective contract."""
+        source, _ = component_sources.site(ROOT/'site.backup.example.yaml')
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            path = root/'site.yaml'
+            path.write_text(yaml.safe_dump(source, sort_keys=False))
+            public = root/source['backup']['recovery_public_key']['source']
+            public.parent.mkdir(parents=True)
+            public.write_bytes((ROOT/source['backup']['recovery_public_key']['source']).read_bytes())
+            inherited = component_plan.resolve(ROOT, path)
+            identity = inherited.resolved['guests']['resolver']['backup']['job']['destination']['backup_id']
+            source['guests']['resolver']['backup'] = {
+                **source['backup']['defaults'], 'backup_id': identity}
+            path.write_text(yaml.safe_dump(source, sort_keys=False))
+            explicit = component_plan.resolve(ROOT, path)
+            self.assertEqual(explicit.resolved, inherited.resolved)
+            self.assertEqual(component_packet.lower_plan(explicit), component_packet.lower_plan(inherited))
+            self.assertEqual(component_workflows.model(explicit), component_workflows.model(inherited))
 
     def test_operational_example_keeps_runtime_storage_qualification_separate_from_compilation(self):
         """Bind the example's storage ID to the shared runtime floor without a target call."""

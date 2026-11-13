@@ -376,6 +376,7 @@ apps:
     properties:
       adapter: ember
       mqtt_base_topic: example-zigbee
+      watchdog: default
     devices:
       coordinator: coordinator
 domains:
