@@ -64,7 +64,7 @@ Start a Bash-compatible shell in the root of a clean, reviewed library checkout 
 ```sh
 STACK="$(pwd -P)"
 STACK_REVISION="$(git rev-parse HEAD)"
-FRAMEWORK_REVISION=fc133b1d4438d0cbbda09d0c8bb21686441d393a
+FRAMEWORK_REVISION=17d6e2a0375358479882a7b898f9871499ee79c7
 WORK_ROOT="$(mktemp -d)"
 WORK_ROOT="$(cd "$WORK_ROOT" && pwd -P)"
 FRAMEWORK="$WORK_ROOT/homelab"
