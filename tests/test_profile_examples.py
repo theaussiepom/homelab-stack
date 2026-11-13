@@ -62,6 +62,43 @@ class ProfileExampleIntegrations(unittest.TestCase):
     def setUpClass(cls):
         cls.examples = compile_examples()
 
+    def test_ha_dual_web_preserves_the_entire_service_provider_and_core_probe(self):
+        import render
+        import component_checks
+        selected, _ = self.examples['examples/catalogue/existing-automation-dual-web.yaml']
+        source, _ = component_sources.site(ROOT/'examples/catalogue/existing-automation-dual-web.yaml')
+        source['apps']['homeassistant']['profile'] = 'homeassistant-bound'
+        source['apps']['homeassistant']['interfaces'].pop('transition_web_interface')
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp).resolve()/'site.json'; path.write_text(json.dumps(source))
+            with patch('subprocess.run', side_effect=no_native), \
+                 patch('subprocess.check_output', side_effect=no_native), \
+                 patch('socket.create_connection', side_effect=no_native):
+                original = compiler.resolve_plan(ROOT, path, [])
+                compiler.lower_plan(original)
+        for guest in selected.resolved['guests']:
+            self.assertEqual(component_lower.provider_config(selected, guest),
+                             component_lower.provider_config(original, guest))
+            current = component_lower.runtime_config(selected, guest)
+            previous = component_lower.runtime_config(original, guest)
+            self.assertEqual(render.compositions(current), render.compositions(previous))
+        old = component_lower.runtime_config(original, 'homeassistant')['applications']['homeassistant']
+        new = component_lower.runtime_config(selected, 'homeassistant')['applications']['homeassistant']
+        self.assertEqual(component_checks._homeassistant(new, None)[0],
+                         component_checks._homeassistant(old, None)[0])
+        self.assertEqual(selected.resolved['endpoints']['app/homeassistant/web_endpoint'],
+                         original.resolved['endpoints']['app/homeassistant/web_endpoint'])
+        self.assertEqual(selected.resolved['endpoints']['app/homeassistant/transition_web_endpoint']['address'],
+                         '198.18.40.20')
+
+    def test_ha_dual_web_requires_the_transition_role_and_prepared_retained_installation(self):
+        self.invalid_source('examples/catalogue/existing-automation-dual-web.yaml',
+            lambda value: value['apps']['homeassistant']['interfaces'].pop('transition_web_interface'),
+            ComponentError, 'component.invalid')
+        self.invalid_source('examples/catalogue/existing-automation-dual-web.yaml',
+            lambda value: value['apps']['homeassistant'].update(lifecycle='fresh'),
+            ComponentError, 'component.health-lifecycle')
+
     def test_split_pihole_preserves_dns_and_the_complete_existing_service(self):
         import render
         plan, _ = self.examples['examples/catalogue/local-dns-web/site.yaml']

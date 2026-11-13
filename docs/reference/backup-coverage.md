@@ -114,6 +114,18 @@ Every registered variant is listed below. Paths are application mount targets, n
 | `community` — `/hacsfiles` | state | application-export |
 | `startup` — `/startup` | configuration | files |
 
+### homeassistant-dual-web
+
+[Application reference](apps/homeassistant-dual-web.md) · [Definition](../../apps/homeassistant-dual-web.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `config` — `/config` | state | application-export |
+| `media` — `/media` | state | application-export |
+| `community` — `/hacsfiles` | state | application-export |
+| `startup` — `/startup` | configuration | files |
+
+
 ### influxdb
 
 [Application reference](apps/influxdb.md) · [Definition](../../apps/influxdb.yaml)
@@ -212,7 +224,7 @@ before CD can start and check the app.
 #### Rebuild the Node-RED health wrapper
 
 The reusable wrapper is versioned as
-[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/proxmox/applications/node-red-healthcheck.js).
+[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/proxmox/applications/node-red-healthcheck.js).
 Use the same framework revision selected by this Stack. During recovery,
 separately prepare that file at the app's bound `healthcheck` storage source
 before CD. The profile mounts it read-only at `/healthcheck.js`; it reads the

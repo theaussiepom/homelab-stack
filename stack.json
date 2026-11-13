@@ -79,6 +79,9 @@
     },
     "pihole-web": {
       "source": "apps/pihole-web.yaml"
+    },
+    "homeassistant-dual-web": {
+      "source": "apps/homeassistant-dual-web.yaml"
     }
   },
   "guest_templates": {
