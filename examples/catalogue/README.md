@@ -11,6 +11,7 @@ These complete example configurations use invented inputs. You can check them of
 | [bitwarden](../../docs/reference/apps/bitwarden.md) | [vault.yaml](vault.yaml) | `vault` |
 | [cloudbeaver](../../docs/reference/apps/cloudbeaver.md) | [database-guis.yaml](database-guis.yaml) | `cloud` |
 | [pihole](../../docs/reference/apps/pihole.md) | [site.yaml](local-dns/site.yaml) | `filtering` |
+| [pihole-web](../../docs/reference/apps/pihole-web.md) | [site.yaml](local-dns-web/site.yaml) | `filtering` |
 | [unbound](../../docs/reference/apps/unbound.md) | [starter](../../site.example.yaml) | `recursive_dns` |
 | [authentik](../../docs/reference/apps/authentik.md) | [identity-monitoring.yaml](identity-monitoring.yaml) | `identity` |
 | [influxdb](../../docs/reference/apps/influxdb.md) | [native-databases.yaml](native-databases.yaml) | `influxdb` |

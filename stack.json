@@ -76,6 +76,9 @@
     },
     "node_red-custom": {
       "source": "apps/node_red-custom.yaml"
+    },
+    "pihole-web": {
+      "source": "apps/pihole-web.yaml"
     }
   },
   "guest_templates": {

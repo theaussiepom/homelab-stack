@@ -8,6 +8,7 @@ PROFILE_EXAMPLES = {
  'node_red-custom': ('examples/catalogue/existing-automation.yaml', 'node_red'),
  'bitwarden': ('examples/catalogue/vault.yaml', 'vault'),
  'cloudbeaver': ('examples/catalogue/database-guis.yaml', 'cloud'),
+ 'pihole-web': ('examples/catalogue/local-dns-web/site.yaml', 'filtering'),
  'pihole': ('examples/catalogue/local-dns/site.yaml', 'filtering'),
  'unbound': ('site.example.yaml', 'recursive_dns'),
  'authentik': ('examples/catalogue/identity-monitoring.yaml', 'identity'),

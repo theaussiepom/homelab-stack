@@ -26,6 +26,7 @@ A selection ID names a reusable application recipe, not a complete installed ser
 | [bitwarden](apps/bitwarden.md) | Bitwarden | `bitwarden` |
 | [cloudbeaver](apps/cloudbeaver.md) | CloudBeaver | `cloudbeaver` |
 | [pihole](apps/pihole.md) | Pi-hole | `pihole` |
+| [pihole-web](apps/pihole-web.md) | Pi-hole with a separate web interface | `pihole` |
 | [unbound](apps/unbound.md) | Unbound | `unbound` |
 | [authentik](apps/authentik.md) | Authentik | `authentik` |
 | [influxdb](apps/influxdb.md) | InfluxDB | `influxdb` |

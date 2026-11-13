@@ -1,0 +1,10 @@
+schema: homelab-components-v1
+kind: connection
+consumer:
+  app: filtering
+  connection: upstream
+target:
+  app: recursive_dns
+  endpoint: dns_udp_endpoint
+source_interface: upstream_interface
+readiness: start

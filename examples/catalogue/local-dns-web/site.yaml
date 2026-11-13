@@ -1,0 +1,203 @@
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+  backend:
+    context: lab
+    cidr: 198.18.30.0/24
+    bridge: vmbr-example-backend
+    vlan: 230
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  resolver:
+    context: lab
+    template: base
+    lifecycle: retained
+    identity:
+      vmid: 610
+      hostname: example-resolver
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:00:10
+        address:
+          mode: static
+          value: 198.18.20.10
+        default_route: true
+        ipv6: manual
+      backend:
+        network: backend
+        slot: 1
+        mac: 02:00:00:30:00:10
+        address:
+          mode: static
+          value: 198.18.30.10
+        default_route: false
+        ipv6: manual
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: recursive_dns
+      address_groups:
+        internet: internet
+    control_interface: primary
+    root_paths:
+      pihole_config:
+        path: /srv/example/pihole
+      unbound_config:
+        path: /srv/example/unbound
+    compose_projects:
+      dns:
+        name: example-dns
+        file: compose-dns.yml
+apps:
+  recursive_dns:
+    profile: unbound
+    guest: resolver
+    lifecycle: retained
+    interfaces:
+      service_interface:
+        scope: guest-loopback
+      private_interface:
+        scope: app-network
+        network: default
+    identity:
+      phase: recursive_dns
+      runtime_id: recursive_dns
+      project: dns
+      services:
+        unbound: recursive_dns
+      networks:
+        default: recursive_private
+    storage:
+      config:
+        root_path: unbound_config
+        subpath: ''
+  filtering:
+    profile: pihole-web
+    guest: resolver
+    lifecycle: retained
+    identity:
+      phase: filtering
+      runtime_id: filtering
+      project: dns
+      services:
+        pihole: filtering
+      networks: {}
+    interfaces:
+      service_interface:
+        interface: primary
+      upstream_interface:
+        scope: guest-loopback
+      web_interface:
+        interface: backend
+    storage:
+      config:
+        root_path: pihole_config
+        subpath: ''
+domains:
+  filtering: dns.example.invalid
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+connections:
+  filtering_upstream:
+    source: connections/filtering-upstream.yaml
+exposures:
+  filtering_dns:
+    source: exposures/filtering-dns.yaml
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+  transport: {}
+  tls: {}
+  middlewares: {}
+  authentication: {}

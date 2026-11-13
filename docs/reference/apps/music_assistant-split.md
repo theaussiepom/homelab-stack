@@ -21,7 +21,7 @@ The complete reusable declaration is [music_assistant-split.yaml](../../../apps/
 
 ## Application requirements
 
-The profile marks `public` optional, but generating deployment files currently requires an explicit HTTPS connection and the app’s canonical origin (its public base URL). The route check uses both. The connection must use the physical `web_interface` role as its source, so even an independently selected Music Assistant instance needs this ingress connection.
+The profile marks `public` optional, but generating deployment files currently requires an explicit HTTPS connection and the app’s canonical origin (its public base URL). The route check uses both. The HTTPS probe binds the connection’s declared source address. Select a role with an existing route to ingress: the ordinary profile supplies `web_interface`, while the split profile also supports `stream_interface`. Local web and player probes retain their own addresses. A connection and its generated policy do not create routing or a gateway; verify reachability before deployment.
 
 The web address comes from `web`; the player bind and published address come from `stream`. The existing helper checks settings through the selected data root before startup; it does not reset streaming providers. The declared latest image policy is intentional and remains distinct from digest-pinned profiles.
 
@@ -92,7 +92,7 @@ The web listener binds to `web` on TCP8095; player streaming binds to `stream` o
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/c694b1d286faf60e29f5a9f5a0a218c9dcbbc4da/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -112,7 +112,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/c694b1d286faf60e29f5a9f5a0a218c9dcbbc4da/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/app-properties.md).
 
 This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
@@ -121,7 +121,7 @@ This adapter accepts no application property keys. It rejects unknown keys and p
 | Invalid change | Intended result |
 | --- | --- |
 | Omit explicit public HTTPS connection or canonical origin | HomeLab cannot generate the health check without the explicit HTTPS connection and canonical URL. |
-| Bind the HTTPS source to a different address than the web role | Refuses the source-address requirement. |
+| Select an undeclared source interface role for HTTPS | Refuses the role reference before generating its probe. |
 
 The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
 
@@ -149,7 +149,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/c694b1d286faf60e29f5a9f5a0a218c9dcbbc4da/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/c694b1d286faf60e29f5a9f5a0a218c9dcbbc4da/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/c694b1d286faf60e29f5a9f5a0a218c9dcbbc4da/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/c694b1d286faf60e29f5a9f5a0a218c9dcbbc4da/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/c694b1d286faf60e29f5a9f5a0a218c9dcbbc4da/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 

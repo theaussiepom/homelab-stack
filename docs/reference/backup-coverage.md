@@ -212,7 +212,7 @@ before CD can start and check the app.
 #### Rebuild the Node-RED health wrapper
 
 The reusable wrapper is versioned as
-[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/c694b1d286faf60e29f5a9f5a0a218c9dcbbc4da/proxmox/applications/node-red-healthcheck.js).
+[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/21812a6924bf8c5c10f892674ccf8fef16376afa/proxmox/applications/node-red-healthcheck.js).
 Use the same framework revision selected by this Stack. During recovery,
 separately prepare that file at the app's bound `healthcheck` storage source
 before CD. The profile mounts it read-only at `/healthcheck.js`; it reads the
@@ -232,6 +232,15 @@ copy. The public helper cannot reproduce custom behavior that it does not contai
 ### pihole
 
 [Application reference](apps/pihole.md) · [Definition](../../apps/pihole.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `config` — `/etc/pihole` | state | application-export |
+| `database` — `/ftl-db` | Excluded: transient | None |
+
+### pihole-web
+
+[Application reference](apps/pihole-web.md) · [Definition](../../apps/pihole-web.yaml)
 
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |

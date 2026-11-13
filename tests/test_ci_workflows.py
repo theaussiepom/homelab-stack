@@ -165,9 +165,12 @@ for name in json.loads(sys.argv[2]):
                             self.assertEqual(step["with"]["persist-credentials"], "false")
         source = documents["validate-stack.yml"]["jobs"]["source"]
         self.assertNotIn("permissions", source)
-        self.assertEqual(source["steps"][0]["with"]["fetch-depth"], "0")
-        self.assertEqual(source["steps"][0]["with"]["ref"],
-                         "${{ github.event.pull_request.head.sha || github.sha }}")
+        # The reconciled authored head includes current main. Preserve its
+        # immutable selection, complete history and read-only credentials.
+        self.assertEqual(source["steps"][0]["with"], {
+            "ref": "${{ github.event.pull_request.head.sha || github.sha }}",
+            "fetch-depth": "0", "persist-credentials": "false",
+        })
         commands = "\n".join(step.get("run", "") for step in source["steps"])
         self.assertIn("blueprints/workflows.py --stack . --site site.example.yaml --check", commands)
         self.assertIn("blueprints/compile.py --stack . --site site.example.yaml --check", commands)
@@ -181,7 +184,6 @@ for name in json.loads(sys.argv[2]):
             "BASE_SHA": "${{ github.event.pull_request.base.sha || github.sha }}",
         })
         self.assertEqual(scan["run"], 'python3 .github/scripts/check_history.py --framework framework-source --scanner "$RUNNER_TEMP/homelab-source-tools/gitleaks" --head "$HEAD_SHA" --base "$BASE_SHA"')
-        self.assertNotIn("ref", source["steps"][0]["with"])
         self.assertIn(".github/workflows/phase.yml", commands)
         self.assertIn("--require-hashes", commands)
         security = documents["scan-python-security.yml"]["jobs"]["analyze"]

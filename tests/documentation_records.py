@@ -12,6 +12,7 @@ DEFINITIONS = {
     ('app_profiles', 'node_red-custom'): ('apps/node_red-custom.yaml', 'docs/reference/apps/node_red-custom.md'),
     ('app_profiles', 'bitwarden'): ('apps/bitwarden.yaml', 'docs/reference/apps/bitwarden.md'),
     ('app_profiles', 'cloudbeaver'): ('apps/cloudbeaver.yaml', 'docs/reference/apps/cloudbeaver.md'),
+    ('app_profiles', 'pihole-web'): ('apps/pihole-web.yaml', 'docs/reference/apps/pihole-web.md'),
     ('app_profiles', 'pihole'): ('apps/pihole.yaml', 'docs/reference/apps/pihole.md'),
     ('app_profiles', 'unbound'): ('apps/unbound.yaml', 'docs/reference/apps/unbound.md'),
     ('app_profiles', 'authentik'): ('apps/authentik.yaml', 'docs/reference/apps/authentik.md'),
