@@ -99,12 +99,16 @@ This adapter accepts no application property keys. It rejects unknown keys and p
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Co-locate with conflicting native group ownership | HomeLab rejects the placement because the services require conflicting numeric group identities. |
-| Supply arbitrary raw native config text as app properties | Property validation rejects arbitrary native configuration text; this adapter accepts no application property keys. |
+Start from the complete [examples/catalogue/native-databases.yaml](../../../examples/catalogue/native-databases.yaml), app `influxdb`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-native-group-conflict"></a>Co-locate the example’s PostgreSQL app on the InfluxDB guest, adding a distinct `/var/lib/postgresql` root binding and sufficient memory so paths and budgets remain valid. | `component.native-namespace at guests.influxdb.native` — Deployment packet generation: native account namespace check. | The two services require conflicting fixed numeric group identities. Keep their separate guest placement from the complete example. This check does not permit renumbering accounts or changing existing data owners. |
+| <a id="invalid-raw-native-config"></a>Add `properties.config: unrestricted native config text`. | `component.fields at apps.influxdb.properties` — Closed app-property validation. | The native adapter accepts no arbitrary application configuration keys. Remove it and use only the typed profile bindings; accepted YAML does not permit a raw config override. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

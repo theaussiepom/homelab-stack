@@ -73,7 +73,7 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `web_listener` | `auth_gateway` / `app-network` | `wildcard` via `private_interface` | `4180/tcp` | `guest-interface` 80 via `web` |
+| `web_listener` | `auth_gateway` / `app-network` | `wildcard` via `private_interface` | `4180/tcp` | `guest-interface` 80 via `web_interface` |
 | `community_listener` | `cloudbeaver` / `app-network` | `wildcard` via `private_interface` | `8978/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
@@ -127,12 +127,16 @@ This variant already supplies `mariadb_jdbc`; its exact values belong to the [pr
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Omit the managed MariaDB selection | Validation rejects this variant without its required managed MariaDB administration connection and account. |
-| Override the JDBC artifact in site properties or add MariaDB sslmode | Validation rejects a site override of the driver version, SHA-256 or compatibility filename because the library selects them. It also rejects sslmode on a MariaDB connection. |
+Start from the complete [examples/catalogue/database-guis.yaml](../../../examples/catalogue/database-guis.yaml), app `administration`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-site-jdbc-override"></a>Add `properties.mariadb_jdbc` to the site app, copying the otherwise valid library artifact object. | `component.software-authority` — Library/software authority check during app resolution. | The library selects the driver version, SHA-256 and filename. Remove the site override; change the owning library only through its normal reviewed source process. |
+| <a id="invalid-mariadb-sslmode"></a>Add `sslmode: require` to `properties.connections.mariadb-admin`. | `component.properties at apps.administration.properties` — CloudBeaver property/connection binding. | MariaDB does not accept the PostgreSQL `sslmode` property. Remove it and preserve the selected MariaDB account and JDBC requirements. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 
@@ -152,9 +156,9 @@ These reservations and limits determine whether the workloads fit on a guest. Th
 
 ## Gateway and saved-connection behavior
 
-The OIDC gateway checks the issuer, audience, signature using the JSON Web Key Set (JWKS), nonce, Proof Key for Code Exchange (PKCE) and verified email, then supplies only the selected identity headers. Explicit provider endpoints avoid startup discovery. The Community service remains private; the resource manager stays enabled. Your site must already have registered the provider and client and configured its authorization policy.
+This variant uses the same OIDC gateway and private workspace datasource behavior as [CloudBeaver](cloudbeaver.md#gateway-and-saved-connection-behavior), with the library-selected MariaDB JDBC artifact and an explicit managed MariaDB administration account.
 
-Managed connections save their settings in a private native datasource file in the HomeLab-managed workspace. Passwords are stored as plaintext and are shared by the selected authorized users. They do not enter Git, the application environment or normal logs. This mode does not run recovery or initial setup, or replace unrelated user connections. PostgreSQL SUPERUSER can access server files and run programs on the server; select that privilege deliberately rather than treating it as ordinary connection metadata.
+Saved datasource passwords are plaintext in the private workspace and shared with the selected authorized users. Protect that workspace and select the MariaDB administrative privileges deliberately; they are not ordinary connection metadata. The common behavior does not replace this variant’s MariaDB/JDBC and account requirements above.
 
 ## Later deployments
 

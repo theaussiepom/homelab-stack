@@ -118,12 +118,13 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Select mDNS without its physical interface role, startup binding or explicit runtime requirement | Compilation requires a physical interface, a read-only `/startup` binding and the `homeassistant-mdns` runtime. The app must also use `lifecycle: retained`. |
-| Replace the retained archive with the public variant silently | Changes software authority; no fallback is implemented. |
+Start from the complete [examples/catalogue/existing-automation-bound.yaml](../../../examples/catalogue/existing-automation-bound.yaml), app `homeassistant`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+Use the two canonical cases: [omit web interface](homeassistant.md#invalid-omit-web-interface) and [mdns missing startup field](homeassistant.md#invalid-mdns-missing-startup-field). Binding the web socket does not relax the required web role or mDNS property grammar. Its prepared socket/settings requirements above still apply.
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

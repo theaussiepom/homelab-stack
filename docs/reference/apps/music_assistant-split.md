@@ -21,9 +21,9 @@ The complete reusable declaration is [music_assistant-split.yaml](../../../apps/
 
 ## Application requirements
 
-The profile marks `public` optional, but generating deployment files currently requires an explicit HTTPS connection and the app’s canonical origin (its public base URL). The route check uses both. The HTTPS probe binds the connection’s declared source address. Select a role with an existing route to ingress: the ordinary profile supplies `web_interface`, while the split profile also supports `stream_interface`. Local web and player probes retain their own addresses. A connection and its generated policy do not create routing or a gateway; verify reachability before deployment.
+This variant adds `stream_interface` for the player listener. It retains the base profile’s [public HTTPS prerequisites](music_assistant.md#application-requirements); the common [adapter source-selection rule](https://github.com/theaussiepom/homelab/blob/fb99e9d3225858686d277e225b47e18ac76d9ad5/docs/reference/app-properties.md#music-assistant) also permits that declared stream role as the public probe’s source. This does not move either local listener or create routing to ingress.
 
-The web address comes from `web`; the player bind and published address come from `stream`. The existing helper checks settings through the selected data root before startup; it does not reset streaming providers. The declared latest image policy is intentional and remains distinct from digest-pinned profiles.
+The web address comes from `web_interface`; the player bind and published address come from `stream_interface`. The existing helper checks settings through the selected data root before startup; it does not reset streaming providers. The declared latest image policy is intentional and remains distinct from digest-pinned profiles.
 
 ## Separate listener behaviour
 
@@ -88,7 +88,7 @@ Bind each role to a guest NIC with `{interface: NIC_ID}`. This profile accepts o
 | `web_endpoint` | `http` | `web_listener` via `web_interface` |
 | `stream_endpoint` | `http` | `stream_listener` via `stream_interface` |
 
-The web listener binds to `web` on TCP8095; player streaming binds to `stream` on TCP8097. Existing player discovery and audio networks stay separate from web access. Their endpoints advertise those addresses and ports. Advertising an endpoint does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
+The web listener binds to `web_interface` on TCP8095; player streaming binds to `stream_interface` on TCP8097. Existing player discovery and audio networks stay separate from web access. Their endpoints advertise those addresses and ports. Advertising an endpoint does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
@@ -118,12 +118,13 @@ This adapter accepts no application property keys. It rejects unknown keys and p
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Omit explicit public HTTPS connection or canonical origin | HomeLab cannot generate the health check without the explicit HTTPS connection and canonical URL. |
-| Select an undeclared source interface role for HTTPS | Refuses the role reference before generating its probe. |
+Start from the complete [examples/catalogue/music-split.yaml](../../../examples/catalogue/music-split.yaml), app `music`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+Use the two canonical cases: [omit public https](music_assistant.md#invalid-omit-public-https) and [undeclared public source](music_assistant.md#invalid-undeclared-public-source). The additional stream role does not make the public HTTPS connection optional or permit undeclared source roles. Both cases apply unchanged; keep the split listener/settings requirements above.
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

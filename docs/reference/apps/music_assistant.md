@@ -6,6 +6,8 @@ Run an existing Music Assistant installation without resetting its provider and 
 
 [Choose](#choose-this-profile) · [Interfaces](#interfaces) · [Listeners](#listeners-and-endpoints) · [Storage](#storage) · [Inputs](#connections-accounts-and-private-inputs) · [Properties](#application-properties) · [Software](#software-and-resource-policy) · [Update](#check-and-update) · [Declared fields](#declaration-records)
 
+The corrected framework links below use documentation-only revision `fb99e9d3225858686d277e225b47e18ac76d9ad5`, whose runtime files are identical to this library’s selected framework. The [workflow selection](../../../.github/workflows/phase.yml) remains authoritative and unchanged.
+
 ## Choose this profile
 
 | Setting | Value |
@@ -21,7 +23,7 @@ The complete reusable declaration is [music_assistant.yaml](../../../apps/music_
 
 ## Application requirements
 
-The profile marks `public` optional, but generating deployment files currently requires an explicit HTTPS connection and the app’s canonical origin (its public base URL). The route check uses both. The HTTPS probe binds the connection’s declared source address. Select a role with an existing route to ingress: the ordinary profile supplies `web_interface`, while the split profile also supports `stream_interface`. Local web and player probes retain their own addresses. A connection and its generated policy do not create routing or a gateway; verify reachability before deployment.
+This profile supplies `web_interface` for both browser and player listeners. Supply the `public` HTTPS connection and owned origin required by the [Music Assistant adapter](https://github.com/theaussiepom/homelab/blob/fb99e9d3225858686d277e225b47e18ac76d9ad5/docs/reference/app-properties.md#music-assistant), even though profile metadata marks that connection optional. Select its source from a declared role with working routing to ingress; a connection or generated policy does not create that routing. Verify actual reachability before deployment.
 
 The player and web addresses come from the selected web role. The existing helper checks settings through the selected data root before startup; it does not reset streaming providers. The declared latest image policy is intentional and remains distinct from digest-pinned profiles.
 
@@ -75,7 +77,7 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 | `web_endpoint` | `http` | `web_listener` via `web_interface` |
 | `stream_endpoint` | `http` | `stream_listener` via `web_interface` |
 
-The web and stream listeners bind to the guest interface selected by `web`, on TCP ports 8095 and 8097 respectively. Their endpoints advertise those addresses and ports. Advertising an endpoint does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
+The web and stream listeners bind to the guest interface selected by `web_interface`, on TCP ports 8095 and 8097 respectively. Their endpoints advertise those addresses and ports. Advertising an endpoint does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
@@ -105,12 +107,16 @@ This adapter accepts no application property keys. It rejects unknown keys and p
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Omit explicit public HTTPS connection or canonical origin | HomeLab cannot generate the health check without the explicit HTTPS connection and canonical URL. |
-| Select an undeclared source interface role for HTTPS | Refuses the role reference before generating its probe. |
+Start from the complete [examples/catalogue/music.yaml](../../../examples/catalogue/music.yaml), app `music`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-omit-public-https"></a>Remove `connections.music_public`. | `component.type at apps.music.health` — Deployment-file generation: Music health-check builder. | Despite optional profile metadata, the adapter needs the explicit public HTTPS route and owned origin. Restore the connection. Resolving source alone is insufficient; generate the deployment files too. |
+| <a id="invalid-undeclared-public-source"></a>Set `connections.music_public.source_interface: missing_interface`. | `component.connection-source at connections.music_public` — Connection reference resolution. | The source must name a declared app role with an address. Restore the selected role with working routing to ingress; a role reference does not create a route. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

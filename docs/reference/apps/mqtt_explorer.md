@@ -69,7 +69,7 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `web_listener` | `explorer_gateway` / `app-network` | `wildcard` via `private_interface` | `4180/tcp` | `guest-interface` 80 via `web` |
+| `web_listener` | `explorer_gateway` / `app-network` | `wildcard` via `private_interface` | `4180/tcp` | `guest-interface` 80 via `web_interface` |
 | `explorer_listener` | `mqtt_explorer` / `app-network` | `wildcard` via `private_interface` | `3000/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
@@ -111,12 +111,16 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Omit both the existing broker credential and managed-account selection, or omit the saved hostname or outpost | Validation rejects the missing prerequisite: choose one supported credential source and supply the saved hostname and existing authentication outpost. |
-| Bind an existing unmanaged data directory or protected credential directory as fresh | HomeLab rejects the directory because its ownership does not match this app; fresh cannot adopt it. |
+Start from the complete [examples/catalogue/messaging-radio.yaml](../../../examples/catalogue/messaging-radio.yaml), app `browser`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-omit-broker-credential"></a>Remove `credential` from `connections.browser_broker`, without selecting an account. | `component.broker-binding at apps.browser.properties` — MQTT Explorer broker binding during resolution. | The external broker needs an explicit existing credential. Restore it, or use the separately supported managed-account composition with all of its prerequisites. |
+| <a id="invalid-omit-outpost"></a>Remove `connections.browser_outpost`. | `component.connection-required` — Required connection binding during resolution. | This profile requires its existing authentication outpost. Restore the declared outpost connection and supported target, rather than treating the gateway as optional. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

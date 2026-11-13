@@ -70,8 +70,8 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `server_listener` | `zabbix_server` / `app-network` | `wildcard` via `private_interface` | `10051/tcp` | `guest-interface` 10051 via `server` |
-| `web_listener` | `zabbix_web` / `app-network` | `wildcard` via `private_interface` | `8080/tcp` | `guest-interface` 8080 via `web` |
+| `server_listener` | `zabbix_server` / `app-network` | `wildcard` via `private_interface` | `10051/tcp` | `guest-interface` 10051 via `server_interface` |
+| `web_listener` | `zabbix_web` / `app-network` | `wildcard` via `private_interface` | `8080/tcp` | `guest-interface` 8080 via `web_interface` |
 | `local_web_listener` | `zabbix_web` / `app-network` | `wildcard` via `private_interface` | `8080/tcp` | `guest-loopback` 8081 |
 
 | Endpoint | Protocol | Resolves through |
@@ -116,12 +116,16 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Select root monitoring and also supply database_password | Refuses duplicate credential ownership. |
-| Bind database to the wrong protocol/port | Refuses the PostgreSQL binding. |
+Start from the complete [examples/catalogue/identity-monitoring.yaml](../../../examples/catalogue/identity-monitoring.yaml), app `monitoring`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Tests](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-omit-managed-database"></a>Remove `connections.monitoring_database`. | `component.connection-required` — Required connection binding during resolution. | Zabbix requires its PostgreSQL producer connection. Restore that connection and its selected managed-credential ownership; do not add an unrelated password to bypass monitoring ownership. |
+| <a id="invalid-reserved-database-name"></a>Set `properties.database.name: postgres`, retaining the existing valid user. | `component.database at apps.monitoring.properties` — Adapter database-property validation. | The reserved PostgreSQL database name is not an application database selection. Restore `example_monitoring` from the complete example or another accepted non-reserved SQL ID. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

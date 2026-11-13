@@ -101,12 +101,16 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Relocate data away from the supported conventional native path | Refuses the native data-path capability. |
-| Co-locate PostgreSQL and InfluxDB with conflicting fixed numeric groups | HomeLab rejects this placement because the services require conflicting numeric group identities. |
+Start from the complete [examples/catalogue/native-databases.yaml](../../../examples/catalogue/native-databases.yaml), app `postgresql`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-relocated-native-data"></a>Change the native `storage.data.subpath` from the empty string to `relocated`. | `Native PostgreSQL and MariaDB data relocation is not implemented` — Deployment-file generation: native data-path renderer. | The selected PostgreSQL/MariaDB path must remain its conventional native location. Restore the empty subpath on the existing native root. This plain `ValueError` has no structured diagnostic code or field path; it does not authorize moving data. |
+| <a id="invalid-raw-native-config"></a>Add `properties.config: unrestricted native config text`. | `component.fields at apps.postgresql.properties` — Closed app-property validation. | The native adapter accepts no arbitrary application configuration keys. Remove it and use only the typed profile bindings; accepted YAML does not permit a raw config override. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

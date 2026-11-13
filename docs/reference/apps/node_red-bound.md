@@ -115,12 +115,13 @@ This adapter accepts no application property keys. It rejects unknown keys and p
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Use lifecycle fresh with the retained OIDC selection | Validation rejects first-time installation because the selected runtime requires an existing Node-RED installation and sign-in setup. |
-| Omit settings or healthcheck storage on a retained app | Validation rejects the app because both existing script files must be bound through the settings and healthcheck storage roles. |
+Start from the complete [examples/catalogue/existing-automation-bound.yaml](../../../examples/catalogue/existing-automation-bound.yaml), app `node_red`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+Use the two canonical cases: [omit data binding](node_red.md#invalid-omit-data-binding) and [raw settings property](node_red.md#invalid-raw-settings-property). Its bound socket and settings/healthcheck file roles do not make `storage.data` optional or permit raw app properties. Keep its prepared listener and retained-only commissioning limits intact.
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

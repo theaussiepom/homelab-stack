@@ -6,7 +6,7 @@ A connection selects a named consumer role and a named app endpoint or declared 
 
 ## Local DNS: a complete connection fragment
 
-The following is a **connection fragment**, not a complete site. It assumes app `filtering` selects Pi-hole, app `recursive_dns` selects Unbound on the same guest, and Pi-hole's `upstream` interface role uses guest-loopback:
+The following is a **connection fragment**, not a complete site. It assumes app `filtering` selects Pi-hole, app `recursive_dns` selects Unbound on the same guest, and Pi-hole's `upstream_interface` role uses guest-loopback:
 
 ```yaml
 connections:
