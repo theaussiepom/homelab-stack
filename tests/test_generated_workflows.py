@@ -118,7 +118,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
         framework = load(FRAMEWORK / '.github/workflows/guest-phase.yml')
         slots = {slot for roles in SLOTS.values() for slot in roles.values()}
         expected = {**{name: {'required': 'true'} for name in COMMON},
-                    **{name: {'required': 'false'} for name in slots}}
+                    **{name: {'required': 'false'} for name in (*slots, 'PBS_API_TOKEN')}}
         for document in (phase, framework):
             self.assertEqual(document['on']['workflow_call']['secrets'], expected)
             self.assertEqual(document['permissions'], {'contents': 'read'})
@@ -129,7 +129,9 @@ class GeneratedWorkflowTests(unittest.TestCase):
         self.assertEqual([row['name'] for row in steps], ['Check readiness', 'Check inputs', 'Load credentials', 'Deploy'])
         self.assertEqual(set(steps[1]['env']), {'GUEST', 'PHASE', 'DISABLED'})
         self.assertEqual(set(steps[2]['env']), {'GUEST', 'PHASE', *COMMON})
-        self.assertEqual(set(steps[3]['env']), {'GUEST', 'PHASE', *[PREFIX + slot.upper() for slot in slots]})
+        self.assertEqual(set(steps[3]['env']), {'GUEST', 'PHASE', 'PBS_API_TOKEN', *[PREFIX + slot.upper() for slot in slots]})
+        self.assertEqual(steps[3]['env']['PBS_API_TOKEN'], "${{ inputs.phase == 'pbs-agent' && inputs.PBS_API_TOKEN || '' }}")
+        self.assertTrue(all('PBS_API_TOKEN' not in step.get('env', {}) for step in steps[:3]))
         for slot in slots:
             self.assertEqual(steps[3]['env'][PREFIX + slot.upper()], '${{ inputs.' + slot + ' }}')
         self.assertNotIn('secrets.', json.dumps(shared))
