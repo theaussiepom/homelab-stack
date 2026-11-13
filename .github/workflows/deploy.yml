@@ -22,7 +22,7 @@ permissions:
   contents: read
 jobs:
   selection:
-    name: Check guests
+    name: Validate deployment
     if: github.event.repository.private == true && github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 2
@@ -96,7 +96,7 @@ jobs:
         printf ''%s/bin\n'' "$job_tools" >> "$GITHUB_PATH"
 
         '
-    - name: Check guests
+    - name: Validate deployment
       id: selection
       env:
         DISABLED: ${{ inputs.disabled }}
