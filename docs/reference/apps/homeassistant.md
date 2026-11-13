@@ -116,12 +116,16 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Use a pre-existing foreign configuration directory as fresh initialization | Initialization rejects an existing unmanaged directory instead of taking it over or changing its Unix owner. |
-| Select mDNS with `lifecycle: fresh`, or omit its required runtime, interface or startup binding | Compilation rejects the selection. Use `lifecycle: retained` with the required bindings and mDNS runtime; this profile’s base runtime does not grant `NET_ADMIN`. |
+Start from the complete [examples/catalogue/new-automation.yaml](../../../examples/catalogue/new-automation.yaml), app `homeassistant`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-omit-web-interface"></a>Remove the app’s `interfaces.web_interface` binding. | `component.invalid` — Profile binding during app resolution. | This selection requires the physical web role. Restore its binding to the declared guest NIC; an endpoint or exposure cannot substitute for the role. |
+| <a id="invalid-mdns-missing-startup-field"></a>Set `properties.mdns` to `{interface: web_interface}`, omitting `startup`. | `component.fields at apps.homeassistant.properties` — Closed mDNS property validation. | The mDNS object requires both role identifiers. Restore a complete supported selection with its read-only startup binding, explicit mDNS runtime and retained lifecycle, or omit mDNS when it is not selected. Adding the missing name alone does not prepare those prerequisites. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

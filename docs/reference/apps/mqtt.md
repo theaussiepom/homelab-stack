@@ -87,7 +87,7 @@ broker:
     probe: broker_probe
 ```
 
-The guest’s `primary` NIC supplies both endpoint addresses. `backend` and `frontend` advertise the same host TCP listener; they do not create separate sockets. Root path `data` and subpaths within it determine the three mounts. At deployment, the explicit retained identity must match the records proving that HomeLab already manages this broker. See [interface binding](../../guides/multiple-interfaces.md), [storage rules](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/storage.md) and [later deployments](#later-deployments).
+The guest’s `primary` NIC supplies both endpoint addresses. `backend_endpoint` and `frontend_endpoint` advertise the same host TCP listener; they do not create separate sockets. Root path `data` and subpaths within it determine the three mounts. At deployment, the explicit retained identity must match the records proving that HomeLab already manages this broker. See [interface binding](../../guides/multiple-interfaces.md), [storage rules](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/storage.md) and [later deployments](#later-deployments).
 
 ## Resolved result
 

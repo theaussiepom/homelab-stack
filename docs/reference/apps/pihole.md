@@ -107,12 +107,16 @@ This adapter accepts no application property keys. It rejects unknown keys and p
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Omit the upstream connection | Refuses the required connection. |
-| Use a physical source role for a same-guest loopback upstream | Refuses the connection-scope relationship. |
+Start from the complete [examples/catalogue/local-dns/site.yaml](../../../examples/catalogue/local-dns/site.yaml), app `filtering`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-omit-upstream"></a>Remove `connections.filtering_upstream`. | `component.connection-required` — Required connection binding during resolution. | Pi-hole needs one explicit DNS upstream. Restore the same-guest resolver connection and its declared endpoint; selecting a profile does not invent a fallback. |
+| <a id="invalid-physical-loopback-source"></a>Set `connections.filtering_upstream.source_interface: service_interface`. | `component.connection-target-scope at connections.filtering_upstream` — Connection target/source scope resolution. | That role is physical, while this target is guest loopback. Restore `upstream_interface` with its guest-loopback binding; a physical source cannot reach the same-guest loopback contract. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

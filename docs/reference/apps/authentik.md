@@ -68,7 +68,7 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `web_listener` | `server` / `app-network` | `wildcard` via `private_interface` | `9000/tcp` | `guest-interface` 9000 via `web` |
+| `web_listener` | `server` / `app-network` | `wildcard` via `private_interface` | `9000/tcp` | `guest-interface` 9000 via `web_interface` |
 | `redis_listener` | `redis` / `app-network` | `wildcard` via `private_interface` | `6379/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
@@ -119,12 +119,16 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Omit secret_key or postgresql_password | Refuses the required selected roles. |
-| Bind database to a non-PostgreSQL/incorrect-port endpoint | Refuses the database binding. |
+Start from the complete [examples/catalogue/identity-monitoring.yaml](../../../examples/catalogue/identity-monitoring.yaml), app `identity`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Tests](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-omit-secret-key"></a>Remove `apps.identity.secrets.secret_key`. | `component.secret-required at apps.identity.secrets` — Secret binding during reference resolution. | The adapter requires that existing private role. Restore its declared file/scalar source; source checks do not inspect the value. |
+| <a id="invalid-database-port-5433"></a>Set the `identity_database` external endpoint’s port to `5433`. | `component.database-binding at apps.identity.properties` — Adapter database binding during resolution. | Authentik requires PostgreSQL on 5432. Restore the compatible endpoint and keep its explicit database credentials and traffic policy. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

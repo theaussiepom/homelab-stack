@@ -7,7 +7,7 @@ An app role names a need; a guest NIC names a provider interface. The site joins
 ```mermaid
 flowchart LR
   N[Site network CIDR and bridge] --> G[Guest NIC primary / slot0]
-  G --> R[App role web]
+  G --> R[App role web_interface]
   R --> L[Owned listener]
   L --> E[Named endpoint]
   E --> X[Explicit connection or exposure]
@@ -25,7 +25,7 @@ interfaces:
 
 `primary` exists in the app's selected guest. It is not a network ID or another app's role. An advertised web endpoint resolves through that role. A wildcard host listener may still listen across the host namespace; the advertisement is not evidence of isolation or a firewall grant.
 
-Optional HA `database`, `metrics`, `broker` and `home` roles remain absent until their actual capability is selected. They may bind a declared NIC when the contract allows it; an app role does not add a NIC.
+Optional HA `database_interface`, `metrics_interface`, `broker_interface` and `home_interface` roles remain absent until their actual capability is selected. They may bind a declared NIC when the contract allows it; an app role does not add a NIC.
 
 ## Guest loopback and private app network
 
@@ -40,11 +40,11 @@ interfaces:
     network: default
 ```
 
-The container listens privately on port 53. Its profile publishes TCP/UDP to the guest's 127.0.0.1:5335. `private` describes the container network; `service` describes the advertised loopback endpoint. Selecting a physical NIC does not create a private network namespace. Unbound's service role deliberately rejects a physical binding.
+The container listens privately on port 53. Its profile publishes TCP/UDP to the guest's 127.0.0.1:5335. `private_interface` describes the container network; `service_interface` describes the advertised loopback endpoint. Selecting a physical NIC does not create a private network namespace. Unbound's `service_interface` role deliberately rejects a physical binding.
 
 ## A broker has two advertisements, one owned listener
 
-The MQTT profile advertises `backend` and `frontend` endpoints through corresponding physical roles. Both refer to the actual owned MQTT listener. They do not create two independent isolated container sockets. Explorer can save a DNS hostname while targeting the selected backend endpoint; the framework creates a hostname alias for Explorer alone.
+The MQTT profile advertises `backend_endpoint` and `frontend_endpoint` endpoints through corresponding physical roles. Both refer to the actual owned MQTT listener. They do not create two independent isolated container sockets. Explorer can save a DNS hostname while targeting the selected backend endpoint; the framework creates a hostname alias for Explorer alone.
 
 ## Route and health source choices
 

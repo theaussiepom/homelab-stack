@@ -25,7 +25,7 @@ The selected runtime requires at least 512 MiB OS reserve. The effective guest r
 
 ## Management and web access
 
-Bind the optional `management_interface` role to describe the intended Proxmox API source separately from the web listener. The site connection selects `source_interface: management` for traffic validation; this does not bind PegaProx’s outbound API socket to that NIC. Reaching Proxmox through a non-default NIC also requires working routing and, for a container-network app, the appropriate host forwarding policy. Verify the actual outbound source after deployment. The API endpoint and credentials remain independently declared. Omitting the role preserves the original single-interface profile behaviour.
+Bind the optional `management_interface` role to describe the intended Proxmox API source separately from the web listener. The site connection selects `source_interface: management_interface` for traffic validation; this does not bind PegaProx’s outbound API socket to that NIC. Reaching Proxmox through a non-default NIC also requires working routing and, for a container-network app, the appropriate host forwarding policy. Verify the actual outbound source after deployment. The API endpoint and credentials remain independently declared. Omitting the role preserves the original single-interface profile behaviour.
 
 ## First installation
 
@@ -71,7 +71,7 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `web_listener` | `pegaprox` / `app-network` | `wildcard` via `private_interface` | `5000/tcp` | `guest-interface` 5000 via `web` |
+| `web_listener` | `pegaprox` / `app-network` | `wildcard` via `private_interface` | `5000/tcp` | `guest-interface` 5000 via `web_interface` |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
@@ -96,7 +96,7 @@ Bind each storage role to a guest volume and subpath, or to a supported path on 
 | --- | --- | --- | --- |
 | `proxmox` | No | `https` | Selected hypervisor API; bind its endpoint and source interface explicitly. |
 
-The complete example connects `manager_provider` to the existing external Proxmox endpoint through the app’s `web` interface. The guest’s network policy permits the API port, so source validation can check the required traffic. This connection does not configure an existing PegaProx cluster or make deployment wait for it. A site with no configured cluster can omit the role. Selecting an API connection does not require opening SSH, console or other ports.
+The complete example connects `manager_provider` to the existing external Proxmox endpoint through the app’s `web_interface` role. The guest’s network policy permits the API port, so source validation can check the required traffic. This connection does not configure an existing PegaProx cluster or make deployment wait for it. A site with no configured cluster can omit the role. Selecting an API connection does not require opening SSH, console or other ports.
 
 | App secret role | Requirement |
 | --- | --- |
@@ -114,13 +114,16 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Use a public, loopback or link-local management listener | Validation rejects the listener because its address must be in one of the supported private or benchmark ranges. |
-| Name an arbitrary address as trusted_proxy | Refuses; select the actual Traefik physical role. |
-| Select a hypervisor connection without the corresponding outbound API policy | Refuses traffic validation. |
+Start from the complete [examples/catalogue/edge-management.yaml](../../../examples/catalogue/edge-management.yaml), app `manager`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-literal-proxy-address"></a>Replace `properties.trusted_proxy` with a literal IPv4 string. | `component.fields at apps.manager.properties` — Closed app-property validation. | The field requires `{app: edge, interface: management_interface}` in this example, not an address literal. Restore the actual Traefik physical-role reference and its distinct private address. |
+| <a id="invalid-omit-database-key"></a>Remove `secrets.database_key`. | `component.secret-required at apps.manager.secrets` — Secret binding during resolution. | PegaProx needs its existing key file. Restore the declared file source; do not create a new key or change the retained database identity. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

@@ -73,7 +73,7 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `web_listener` | `auth_gateway` / `app-network` | `wildcard` via `private_interface` | `4180/tcp` | `guest-interface` 80 via `web` |
+| `web_listener` | `auth_gateway` / `app-network` | `wildcard` via `private_interface` | `4180/tcp` | `guest-interface` 80 via `web_interface` |
 | `community_listener` | `cloudbeaver` / `app-network` | `wildcard` via `private_interface` | `8978/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
@@ -125,12 +125,16 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Keep only unmanaged metadata connections | Account binding fails because at least one HomeLab-managed database connection is required. |
-| Omit public connection or origin, or give sslmode to a managed connection | Generating the health check fails without the HTTPS connection and canonical origin. Property validation rejects sslmode on a managed connection because its account contract determines transport. |
+Start from the complete [examples/catalogue/database-guis.yaml](../../../examples/catalogue/database-guis.yaml), app `cloud`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-unmanaged-metadata-only"></a>Remove `properties.connections.postgresql-admin`, connection `postgres_administration` and account `postgres_admin`, leaving only the unmanaged metadata connection. | `Keep new owned administrator connections separate from retained metadata` — SQL administrator account binding during resolution. | At least one managed administrator connection is required. Restore the matching property, connection and deliberate account selection. This is a plain `ValueError` message: no structured diagnostic code or field path is emitted. |
+| <a id="invalid-managed-sslmode"></a>Add `sslmode: require` to `properties.connections.postgresql-admin`. | `component.properties at apps.cloud.properties` — CloudBeaver property/connection binding. | The managed account contract determines its transport. Remove `sslmode` from the managed connection; keep that field only for an unmanaged PostgreSQL connection. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

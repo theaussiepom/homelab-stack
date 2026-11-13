@@ -25,7 +25,7 @@ The data role selects the directory used by the native service configuration. Or
 
 ## Separate listener behaviour
 
-InfluxDB serves its UI and API on one port. This variant keeps the native database on `service:8086` and adds a local systemd socket proxy on `web:8086`. Both remain the same authenticated server: the frontend is not a read-only API or a second database. Bind existing metrics clients to endpoint `backend`, and only web publication to `web`. The two addresses must differ. The existing systemd-socket-proxyd executable and the HomeLab network-ready gate are required; no Docker engine is added. The frontend owns only the fixed homelab-influxdb-web.socket/service units, refuses foreign files and starts the socket after networking/database startup. HomeLab also generates `/etc/influxdb/config.toml` from the selected `service` address and data path; changing those bindings changes the native configuration. It preserves database data and credentials. Switching back to the ordinary profile removes only those owned frontend units. Linux traffic forwarded to the same host database address stays local; it is not a new inter-guest database grant.
+InfluxDB serves its UI and API on one port. This variant keeps the native database on the `service_interface` address on TCP 8086 and adds a local systemd socket proxy on the `web_interface` address on TCP 8086. Both remain the same authenticated server: the frontend is not a read-only API or a second database. Bind existing metrics clients to endpoint `backend_endpoint`, and only web publication to `web_endpoint`. The two addresses must differ. The existing systemd-socket-proxyd executable and the HomeLab network-ready gate are required; no Docker engine is added. The frontend owns only the fixed homelab-influxdb-web.socket/service units, refuses foreign files and starts the socket after networking/database startup. HomeLab also generates `/etc/influxdb/config.toml` from the selected `service_interface` address and data path; changing those bindings changes the native configuration. It preserves database data and credentials. Switching back to the ordinary profile removes only those owned frontend units. Linux traffic forwarded to the same host database address stays local; it is not a new inter-guest database grant.
 
 ## First installation
 
@@ -106,12 +106,13 @@ This adapter accepts no application property keys. It rejects unknown keys and p
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Co-locate with conflicting native group ownership | HomeLab rejects the placement because the services require conflicting numeric group identities. |
-| Supply arbitrary raw native config text as app properties | Property validation rejects arbitrary native configuration text; this adapter accepts no application property keys. |
+Start from the complete [examples/catalogue/native-databases-web.yaml](../../../examples/catalogue/native-databases-web.yaml), app `influxdb`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+Use the two canonical cases: [native group conflict](influxdb.md#invalid-native-group-conflict) and [raw native config](influxdb.md#invalid-raw-native-config). The separate web socket still uses the same native account namespace and closed property contract. Both cases apply unchanged; keep its distinct web/service addresses and frontend prerequisites above.
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

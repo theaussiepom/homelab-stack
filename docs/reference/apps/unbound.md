@@ -62,7 +62,7 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 | `service_interface` | Yes | `guest-loopback` |
 | `private_interface` | Yes | `app-network` |
 
-Bind `service` to `{scope: guest-loopback}` and `private` to `{scope: app-network, network: default}`. This profile does not accept a physical NIC for either role. See [Multiple interfaces](../../guides/multiple-interfaces.md).
+Bind `service_interface` to `{scope: guest-loopback}` and `private_interface` to `{scope: app-network, network: default}`. This profile does not accept a physical NIC for either role. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
 ## Listeners and endpoints
 
@@ -110,12 +110,16 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Bind service to a physical NIC | Refuses: this profile publishes only guest-loopback sockets. |
-| Give two same-guest instances the same publication port | Refuses the listener/publication conflict; choose distinct explicit ports. |
+Start from the complete [site.example.yaml](../../../site.example.yaml), app `recursive_dns`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Tests](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-physical-service-role"></a>Replace `apps.recursive_dns.interfaces.service_interface` with `{interface: primary}`. | `component.invalid` — Profile binding during app resolution. | Unbound’s service role accepts guest loopback only. Restore `{scope: guest-loopback}` and retain the distinct private app-network role. |
+| <a id="invalid-duplicate-publication"></a>Copy `apps.recursive_dns` to a second same-guest app without a port override; let its fresh identity be derived independently. Keep its independently derived runtime identity; this case changes publication placement, not ownership of the first app. | `component.invalid` — Endpoint socket-conflict resolution. | Both apps publish guest-loopback port 5335. Give the second app `properties.publish_port: 5336`, or place it on a separate valid guest, with independent identities and data. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

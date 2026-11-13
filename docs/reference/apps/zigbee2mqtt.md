@@ -67,13 +67,13 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `web_listener` | `zigbee2mqtt` / `app-network` | `wildcard` via `private_interface` | `8099/tcp` | `guest-interface` 8099 via `web` |
+| `web_listener` | `zigbee2mqtt` / `app-network` | `wildcard` via `private_interface` | `8099/tcp` | `guest-interface` 8099 via `web_interface` |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
 | `web_endpoint` | `http` | `web_listener` via `web_interface` |
 
-The web listener accepts connections inside the private app network. Its explicit publication makes TCP port 8099 available through the guest interface bound to `web`. The endpoint advertises the resulting address and port; it does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
+The web listener accepts connections inside the private app network. Its explicit publication makes TCP port 8099 available through the guest interface bound to `web_interface`. The endpoint advertises the resulting address and port; it does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
@@ -113,12 +113,16 @@ The complete radio example selects `watchdog: default`. The [built-in watchdog](
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Use lifecycle fresh or omit the registered coordinator | Validation rejects first-time network setup and requires the explicitly registered coordinator for the existing HomeLab-managed network. |
-| Use an arbitrary serial path instead of the stable USB by-id device path | The helper rejects the path unless it matches `/dev/serial/by-id/usb-[A-Za-z0-9_-]+`; the registered coordinator must identify the same character device. |
+Start from the complete [examples/catalogue/messaging-radio.yaml](../../../examples/catalogue/messaging-radio.yaml), app `radio`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-fresh-lifecycle"></a>Set this app’s `lifecycle` to `fresh`. | `component.initialization-unsupported at apps.radio.properties` — Adapter initialization binding during resolution. | This retained-only selection cannot commission a new installation. Use the genuinely HomeLab-managed retained instance; the label cannot import or initialize it. |
+| <a id="invalid-omit-coordinator"></a>Remove the app’s `devices.coordinator` binding. | `component.invalid` — Required device binding during app resolution. | Restore the registered stable USB by-id coordinator for the existing network. Source validation does not verify the live character device or radio identity. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 
