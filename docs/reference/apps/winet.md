@@ -99,12 +99,16 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Omit the protected options role | Refuses the selected private input. |
-| Use a non-443/non-HTTPS inverter or malformed discovery prefix | Validation rejects an inverter endpoint unless it uses HTTPS on port 443, and rejects a discovery prefix that does not meet the mqtt_prefix character rules. |
+Start from the complete [examples/catalogue/messaging-radio.yaml](../../../examples/catalogue/messaging-radio.yaml), app `telemetry`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-omit-options"></a>Remove `secrets.options`. | `component.secret-required at apps.telemetry.secrets` — Secret binding during resolution. | WiNet requires the existing structured options file. Restore its file source; compilation neither reads it nor commissions an inverter. |
+| <a id="invalid-invalid-discovery-prefix"></a>Set `properties.mqtt_prefix: bad prefix`. | `component.properties at apps.telemetry.properties` — Adapter property validation. | Spaces are outside the supported discovery-prefix grammar. Restore the complete example’s `winet-extractor/example` or another accepted prefix; this does not migrate existing discovery state. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

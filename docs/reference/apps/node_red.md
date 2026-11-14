@@ -106,12 +106,16 @@ This adapter accepts no application property keys. It rejects unknown keys and p
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Select the existing profile’s authentication setup and settings script | Validation rejects the existing profile’s authentication setup and settings script because this public-image runtime does not support them. |
-| Reuse a foreign data directory as an initializer | Initialization rejects data that HomeLab does not already manage; it cannot adopt the directory. |
+Start from the complete [examples/catalogue/new-automation.yaml](../../../examples/catalogue/new-automation.yaml), app `node_red`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-omit-data-binding"></a>Remove the app’s `storage.data` binding. | `component.invalid` — Profile storage binding during app resolution. | The data role is required. Restore its owned volume/root-path binding; neither `fresh` nor an image selection adopts an unrelated directory. |
+| <a id="invalid-raw-settings-property"></a>Add `properties.settings: unrestricted settings text`. | `component.fields at apps.node_red.properties` — Closed app-property validation. | Node-RED accepts no application property keys. Remove it. Custom variants select existing settings/healthcheck files through their storage roles; the public variant does not gain those capabilities from raw text. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

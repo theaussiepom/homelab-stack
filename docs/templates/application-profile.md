@@ -21,7 +21,7 @@ For each property or binding, document:
 - Named references and their effects. Explain separately which references supply values, require another app to be ready, declare network access, publish a service, establish trust or select account privileges.
 - The required interfaces, listeners and published endpoints; storage locations, access and initialization; secrets and authentication; and software and resource requirements.
 
-An absent topic should say “None” or “Not applicable” briefly. Do not add a readiness-column explanation without a table, GUI-password warnings to unrelated apps or fictional secret roles.
+Omit irrelevant topics or explain identical inapplicability once for the appropriate group, following [S5.2](../contributing/documentation-standard.md#5-property-and-binding-records). State meaningful absence when a reader might otherwise assume a feature exists. Do not add a readiness-column explanation without a table, GUI-password warnings to unrelated apps or fictional secret roles.
 
 ## Minimal and practical examples
 
@@ -45,7 +45,7 @@ State what changes when selected software, images or defaults are updated. Keep 
 
 ## Invalid cases and validation
 
-Give at least two relevant invalid examples and the intended refusal layer. Trace conditional constraints to the source code and adapter that enforce them. Reuse upstream tests of invalid inputs; add a focused library integration only when it protects a documented composition or known caller requirement.
+Give at least two relevant, distinct invalid variations from otherwise valid complete configurations, with the actual enforcing layer, emitted diagnostic code/context, cause, supported correction and expected recheck. For an unchanged variant case, link the exact canonical case and explain why it applies; retain material differences locally. Broad or absent diagnostic paths must be reported as emitted. Trace conditional constraints to the source code and adapter that enforce them. Reuse upstream tests of invalid inputs; add a focused library integration only when it protects a documented composition or known caller requirement.
 
 Maintain profile-to-example coverage in the library's documentation tests. Run the source suite, compile the real examples, check navigation and anchors, and preserve the existing coverage, security, history and signature checks. Distinguish tests of compilation and generated configuration from an authorized continuous deployment (CD) run and checks of the running service.
 
@@ -57,7 +57,7 @@ Link the profile declaration, complete example, related variant, shared lifecycl
 
 Provide stable field destinations for the complete supplied profile definition, including named map objects and their nested fields. Use the normal table of field paths and selected values from [declaration records](../reference/declaration-records.md). Keep pointers connecting definition source to documentation in `tests/documentation_records.py`; do not add a parallel field list. The checker derives fields from source and checks both that new source fields have documentation rows and that removed fields no longer have rows. These rows describe reusable definition values; do not present them as an arbitrary instance override API.
 
-For every nontrivial binding or property, state its type, whether it is required, its default or lack of one, and its allowed values. Explain separately what happens when the value is omitted, null or empty. Name the component that applies the value and explain how it resolves references and handles overrides. Link the exact nested type, prerequisite, complete example and relevant diagnostic where the relationship is explained. Record adapter requirements that exceed profile metadata.
+Use contextual canonical links for shared constraints and common lifecycle explanations instead of copying their full text into each profile. Retain each selection’s values, material exceptions, directly usable examples and useful failure coverage; a generic end-of-page testing link is insufficient. For every nontrivial binding or property, state its type, whether it is required, its default or lack of one, and its allowed values. Explain separately what happens when the value is omitted, null or empty. Name the component that applies the value and explain how it resolves references and handles overrides. Link the exact nested type, prerequisite, complete example and relevant diagnostic where the relationship is explained. Record adapter requirements that exceed profile metadata.
 
 Explain the resulting addresses, ports and identities, the generated configuration, and the effects of explicitly selected dependencies and access rules. Classify ordinary updates, possible interruption, refused changes and unknown behavior separately. Include the exact diagnostic code and context for invalid inputs, along with the supported correction; source compilation does not prove a runtime transition.
 

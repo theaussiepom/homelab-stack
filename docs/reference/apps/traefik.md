@@ -6,6 +6,8 @@ Provide the selected HTTP and HTTPS ingress with its declared provider, ACME, tr
 
 [Choose](#choose-this-profile) · [Interfaces](#interfaces) · [Listeners](#listeners-and-endpoints) · [Storage](#storage) · [Inputs](#connections-accounts-and-private-inputs) · [Properties](#application-properties) · [Software](#software-and-resource-policy) · [Update](#check-and-update) · [Declared fields](#declaration-records)
 
+The corrected framework links below use documentation-only revision `fb99e9d3225858686d277e225b47e18ac76d9ad5`, whose runtime files are identical to this library’s selected framework. The [workflow selection](../../../.github/workflows/phase.yml) remains authoritative and unchanged.
+
 ## Choose this profile
 
 | Setting | Value |
@@ -23,7 +25,7 @@ The complete reusable declaration is [traefik.yaml](../../../apps/traefik.yaml).
 
 Although secret roles and properties are structurally conditional, the current supported runtime binds both provider and ACME and requires the proxmox_token role for the provider and the cloudflare_dns_token role for ACME. No Docker socket, arbitrary provider or raw route file override is exposed.
 
-The optional `cloudflare-source` exposure policy adds the framework-owned local middleware and requires `cloudflare_origin_token`. Bind the existing token through a protected secret source; normal CD mounts its bytes as a root-owned read-only file rather than exposing them through Traefik dynamic configuration or API output; its header name and internal allowlist belong to site policy. The plugin checks socket sources, sanitizes visitor headers and bounds address-feed refresh/failure behavior. See the framework [middleware contract](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/policies.md#cloudflare-source-boundary).
+The optional `cloudflare-source` exposure policy adds the framework-owned local middleware and requires `cloudflare_origin_token`. Use the canonical [private-role inventory](https://github.com/theaussiepom/homelab/blob/fb99e9d3225858686d277e225b47e18ac76d9ad5/docs/reference/identity-and-secrets.md#adapter-private-roles) at this selection point. Bind the existing token through a protected secret source; normal CD mounts its bytes as a root-owned read-only file rather than exposing them through Traefik dynamic configuration or API output; its header name and internal allowlist belong to site policy. The plugin checks socket sources, sanitizes visitor headers and bounds address-feed refresh/failure behavior. See the framework [middleware contract](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/policies.md#cloudflare-source-boundary).
 
 Deploy route restrictions before opening the ingress frontend firewall in a later deployment. Validate the actual selected Traefik image, internal access, public TLS and visitor identity after CD; source checks alone do not establish service acceptance.
 
@@ -123,12 +125,16 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Omit current provider or ACME inputs or their secret roles | The adapter rejects missing provider or ACME inputs, including their required secret roles, even though profile metadata marks them optional. |
-| Expose dashboard without the required authentication middleware | Refuses the dashboard exposure. |
+Start from the complete [examples/catalogue/edge-management.yaml](../../../examples/catalogue/edge-management.yaml), app `edge`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-omit-provider"></a>Remove `properties.provider`. | `component.foundation-required at apps.edge.properties` — Traefik foundation binding during resolution. | The supported adapter requires the provider despite optional structural metadata. Restore the declared context/token identity and existing protected token binding. |
+| <a id="invalid-omit-dns-token"></a>Remove `secrets.cloudflare_dns_token`. | `component.secret-required at apps.edge.properties` — Traefik foundation binding during resolution. | The selected ACME capability needs the existing DNS API credential. Restore its protected source; removing the binding does not disable or provision ACME. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 

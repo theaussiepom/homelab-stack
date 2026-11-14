@@ -25,7 +25,7 @@ Compilation generates configuration without changing infrastructure or running s
 | Network policy | A site selects an ordered set of rules and connects its roles to site resources. | Declares which traffic is allowed; the connection itself grants no access. |
 | Persistent ownership | The same app continues to own its services, Compose project, storage and credentials across deployments. | Prevents an ordinary update from taking over another installation or relocating its resources. |
 
-An interface role is an app requirement, such as `web` or `broker`. It points at a named guest NIC, guest loopback or a private app network. It does not create a NIC. A listener defines the address and port where a service accepts connections. An endpoint tells other apps how to reach it. An exposure separately selects DNS publication or HTTP routing.
+An interface role is an app requirement, such as `web_interface` or `broker_interface`. It points at a named guest NIC, guest loopback or a private app network. It does not create a NIC. A listener defines the address and port where a service accepts connections. An endpoint tells other apps how to reach it. An exposure separately selects DNS publication or HTTP routing.
 
 ## Defaults and identity
 

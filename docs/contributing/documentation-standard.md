@@ -305,29 +305,29 @@ kind: app-profile
 adapter: mqtt
 display_name: MQTT
 interfaces:
-  backend_interface:
+  backend:
     required: true
     accepts: [guest-interface]
-  frontend_interface:
+  frontend:
     required: true
     accepts: [guest-interface]
 listeners:
-  mqtt_listener:
+  mqtt:
     service: mqtt
     namespace: host
-    interface: backend_interface
+    interface: backend
     bind: wildcard
     protocol: tcp
     port: 1883
 endpoints:
-  backend_endpoint:
-    listener: mqtt_listener
+  backend:
+    listener: mqtt
     protocol: tcp
-    via: backend_interface
-  frontend_endpoint:
-    listener: mqtt_listener
+    via: backend
+  frontend:
+    listener: mqtt
     protocol: tcp
-    via: frontend_interface
+    via: frontend
 storage:
   config:
     target: /mosquitto/config
@@ -373,9 +373,9 @@ The following records describe this selected profile. General syntax is defined 
 | <a id="field-mqtt-schema"></a><a id="field-mqtt-kind"></a>`schema`, `kind` | Strings `homelab-components-v1`, `app-profile` | These markers identify a complete reusable definition, not the root type of a site. Neither null nor an empty value is accepted. |
 | <a id="field-mqtt-adapter"></a>`adapter` | String `mqtt` | Selects the existing typed MQTT adapter and the service role it manages. It does not allow an arbitrary adapter or Compose override. |
 | <a id="field-mqtt-display-name"></a>`display_name` | String `MQTT` | Supplies the default descriptive label. An explicit site `display_name` replaces it without renaming the persistent identity. |
-| <a id="field-mqtt-interfaces"></a><a id="field-mqtt-interfaces-backend"></a><a id="field-mqtt-interfaces-backend-required"></a><a id="field-mqtt-interfaces-backend-accepts"></a><a id="field-mqtt-interfaces-frontend"></a><a id="field-mqtt-interfaces-frontend-required"></a><a id="field-mqtt-interfaces-frontend-accepts"></a>`interfaces.backend_interface`, `.frontend` | [Named role mappings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/supporting-types.md#profile-interface-listener-and-endpoint-types) | Both roles are required: each `.required` is boolean `true` and `.accepts` is the sequence `[guest-interface]`. Each site role [binds a guest NIC](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/apps.md#interface-roles) with `{interface: NIC_ID}` in the selected guest. |
+| <a id="field-mqtt-interfaces"></a><a id="field-mqtt-interfaces-backend"></a><a id="field-mqtt-interfaces-backend-required"></a><a id="field-mqtt-interfaces-backend-accepts"></a><a id="field-mqtt-interfaces-frontend"></a><a id="field-mqtt-interfaces-frontend-required"></a><a id="field-mqtt-interfaces-frontend-accepts"></a>`interfaces.backend`, `.frontend` | [Named role mappings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/supporting-types.md#profile-interface-listener-and-endpoint-types) | Both roles are required: each `.required` is boolean `true` and `.accepts` is the sequence `[guest-interface]`. Each site role [binds a guest NIC](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/apps.md#interface-roles) with `{interface: NIC_ID}` in the selected guest. |
 | <a id="field-mqtt-listeners"></a><a id="field-mqtt-listeners-mqtt"></a><a id="field-mqtt-listeners-mqtt-service"></a><a id="field-mqtt-listeners-mqtt-namespace"></a><a id="field-mqtt-listeners-mqtt-interface"></a><a id="field-mqtt-listeners-mqtt-bind"></a><a id="field-mqtt-listeners-mqtt-protocol"></a><a id="field-mqtt-listeners-mqtt-port"></a>`listeners.mqtt` | [Named listener mapping](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/supporting-types.md#profile-interface-listener-and-endpoint-types) | The listener declares `.service: mqtt`, `.namespace: host`, `.interface: backend`, `.bind: wildcard`, `.protocol: tcp`, `.port: 1883`. The generated container uses host networking, and its actual socket is host TCP 1883. |
-| <a id="field-mqtt-endpoints"></a><a id="field-mqtt-endpoints-backend"></a><a id="field-mqtt-endpoints-backend-listener"></a><a id="field-mqtt-endpoints-backend-protocol"></a><a id="field-mqtt-endpoints-backend-via"></a><a id="field-mqtt-endpoints-frontend"></a><a id="field-mqtt-endpoints-frontend-listener"></a><a id="field-mqtt-endpoints-frontend-protocol"></a><a id="field-mqtt-endpoints-frontend-via"></a>`endpoints.backend_endpoint`, `.frontend` | [Named endpoint mappings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/supporting-types.md#profile-interface-listener-and-endpoint-types) | Each endpoint declares `.listener: mqtt`, `.protocol: tcp`; `.via` is the matching role name. The endpoint address comes from that role’s bound NIC, and the port comes from the shared listener. These are two advertised endpoints for one listener. |
+| <a id="field-mqtt-endpoints"></a><a id="field-mqtt-endpoints-backend"></a><a id="field-mqtt-endpoints-backend-listener"></a><a id="field-mqtt-endpoints-backend-protocol"></a><a id="field-mqtt-endpoints-backend-via"></a><a id="field-mqtt-endpoints-frontend"></a><a id="field-mqtt-endpoints-frontend-listener"></a><a id="field-mqtt-endpoints-frontend-protocol"></a><a id="field-mqtt-endpoints-frontend-via"></a>`endpoints.backend`, `.frontend` | [Named endpoint mappings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/supporting-types.md#profile-interface-listener-and-endpoint-types) | Each endpoint declares `.listener: mqtt`, `.protocol: tcp`; `.via` is the matching role name. The endpoint address comes from that role’s bound NIC, and the port comes from the shared listener. These are two advertised endpoints for one listener. |
 | <a id="field-mqtt-storage"></a><a id="field-mqtt-storage-config"></a><a id="field-mqtt-storage-config-target"></a><a id="field-mqtt-storage-config-required"></a><a id="field-mqtt-storage-config-kind"></a><a id="field-mqtt-storage-config-read-only"></a><a id="field-mqtt-storage-data"></a><a id="field-mqtt-storage-data-target"></a><a id="field-mqtt-storage-data-required"></a><a id="field-mqtt-storage-data-kind"></a><a id="field-mqtt-storage-data-read-only"></a><a id="field-mqtt-storage-log"></a><a id="field-mqtt-storage-log-target"></a><a id="field-mqtt-storage-log-required"></a><a id="field-mqtt-storage-log-kind"></a><a id="field-mqtt-storage-log-read-only"></a>`storage.config`, `.data`, `.log` | [Named storage requirement mappings](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#profile-storage-roles) | Each role declares `.required: true`, `.kind: directory`, `.read_only: false`. The `.target` values are `/mosquitto/config`, `/mosquitto/data`, `/mosquitto/log` respectively. The site must [bind all three](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/storage.md#app-storage-bindings). The profile declares neither a default source path nor an initializer for a new directory. |
 | <a id="field-mqtt-connections"></a>`connections` | Empty mapping `{}` | The broker has no role for connecting to an upstream service. Other apps can target its endpoints through their own supported connection roles; this does not implicitly give the broker an upstream. |
 | <a id="field-mqtt-software"></a>`software` | [Software IDs](https://github.com/theaussiepom/homelab/blob/52913d4ba03f85e7d734a85b08c93e73f320455d/docs/reference/supporting-types.md#software): `docker`, `curl`, `mqtt-images` | Selects named library definitions. `mqtt-images` maps image role `mqtt` to authoritative catalogue ID `mqtt`. |
@@ -434,9 +434,9 @@ broker:
   guest: broker
   lifecycle: retained
   interfaces:
-    backend_interface:
+    backend:
       interface: primary
-    frontend_interface:
+    frontend:
       interface: primary
   storage:
     config:

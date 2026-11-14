@@ -64,13 +64,13 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
-| `web_listener` | `bitwarden` / `app-network` | `wildcard` via `private_interface` | `8080/tcp` | `guest-interface` 8080 via `web` |
+| `web_listener` | `bitwarden` / `app-network` | `wildcard` via `private_interface` | `8080/tcp` | `guest-interface` 8080 via `web_interface` |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
 | `web_endpoint` | `http` | `web_listener` via `web_interface` |
 
-The web listener accepts connections inside the private app network. Its explicit publication makes TCP port 8080 available through the guest interface bound to `web`. The endpoint advertises the resulting address and port; it does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
+The web listener accepts connections inside the private app network. Its explicit publication makes TCP port 8080 available through the guest interface bound to `web_interface`. The endpoint advertises the resulting address and port; it does not create a firewall rule or HTTPS route, or make a consumer wait for the service.
 
 ## Storage
 
@@ -110,12 +110,16 @@ These are instance inputs under `apps.<id>.properties`, distinct from [reusable 
 
 ## Invalid cases
 
-| Invalid change | Intended result |
-| --- | --- |
-| Select lifecycle fresh | Refuses: new-vault creation is unsupported. |
-| Supply a floating or local image or an authored environment checksum | Validation rejects floating or local images because this profile requires an immutable registry image. It also rejects an authored environment-checksum property, which this adapter does not accept. |
+Start from the complete [examples/catalogue/vault.yaml](../../../examples/catalogue/vault.yaml), app `vault`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-The framework validates these requirements. [Testing guide](../../testing.md) explains which checks validate the source configuration and which require a deployed service.
+| Invalid variation | Actual refusal and enforcing layer | Cause and supported correction |
+| --- | --- | --- |
+| <a id="invalid-fresh-lifecycle"></a>Set this app’s `lifecycle` to `fresh`. | `component.lifecycle at apps.vault.properties` — Adapter lifecycle binding during resolution. | This retained-only selection cannot commission a new installation. Use the genuinely HomeLab-managed retained instance; the label cannot import or initialize it. |
+| <a id="invalid-authored-environment-checksum"></a>Add `properties.environment_sha256` with a 64-character lowercase hex string. | `component.fields at apps.vault.properties` — Closed app-property validation. | The opaque runtime file is a protected private role, not an authored checksum property. Remove the unsupported property and preserve the existing runtime file binding. |
+
+After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
+
+The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
 
