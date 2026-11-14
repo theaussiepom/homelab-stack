@@ -6,7 +6,7 @@
   },
   "authentik": {
     "repository": "ghcr.io/goauthentik/server",
-    "tag": null,
+    "tag": "2025.2.1",
     "digest": "sha256:dc07e81b4462a1dad9c6720f4c73993e37d7cb2d2f94a306187318704d112e71"
   },
   "traefik": {
@@ -66,7 +66,7 @@
   },
   "winet": {
     "repository": "ghcr.io/theaussiepom/winet-extractor",
-    "tag": null,
+    "tag": "upstream-6cd07d24fdaa-41286808454-1",
     "digest": "sha256:82c6b886967995f0a3cfe6fb5e20eeef70d10aa525d5bd824064eb272e1ce51a"
   },
   "music_assistant": {
