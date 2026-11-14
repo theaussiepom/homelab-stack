@@ -1,0 +1,290 @@
+# Synthetic source; no terms acceptance or credential values.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+    timezone: Etc/UTC
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  postgresql:
+    context: lab
+    template: base
+    lifecycle: fresh
+    identity:
+      vmid: 810
+      hostname: example-postgresql
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 3072
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:0a
+        address:
+          mode: static
+          value: 198.18.20.10
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/postgresql
+      native:
+        path: /var/lib/postgresql
+    compose_projects: {}
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: renovate_database_in
+      interfaces:
+        database: primary
+        client:
+          app: renovate
+          interface: database_interface
+  renovate:
+    context: lab
+    template: docker
+    lifecycle: fresh
+    identity:
+      vmid: 818
+      hostname: example-renovate
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      cpu_cores: 2
+      memory_mib: 2560
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:12
+        address:
+          mode: static
+          value: 198.18.20.18
+        default_route: true
+        ipv6: manual
+    volumes:
+      cache:
+        storage: local
+        slot: 0
+        path: /srv/renovate
+        size_gib: 8
+    compose_projects:
+      renovate:
+        name: renovate
+        file: compose-renovate.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: renovate_database_out
+      endpoints:
+        database:
+          app: postgresql
+          endpoint: backend_endpoint
+apps:
+  postgresql:
+    profile: postgresql
+    guest: postgresql
+    lifecycle: fresh
+    interfaces:
+      service_interface:
+        interface: primary
+    storage:
+      data:
+        root_path: native
+        subpath: ''
+    properties:
+      application_database:
+        app: renovate
+  renovate:
+    profile: renovate
+    guest: renovate
+    lifecycle: fresh
+    identity:
+      phase: renovate
+      runtime_id: renovate
+      project: renovate
+      services:
+        renovate: renovate
+      networks:
+        default: default
+    interfaces:
+      database_interface:
+        interface: primary
+    storage:
+      scratch:
+        volume: cache
+        subpath: scratch
+      cache:
+        volume: cache
+        subpath: containerbase
+    properties:
+      database:
+        name: renovate
+        user: renovate
+      repositories:
+      - example-owner/example-repository
+    secrets:
+      accept_terms: renovate_accept_terms
+      license_key: renovate_license_key
+      github_app_id: renovate_github_app_id
+      github_app_key: renovate_github_app_key
+      database_password: renovate_database_password
+domains: {}
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+identity_providers: {}
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+  renovate_accept_terms:
+    type: environment
+    name: RENOVATE_ACCEPT_TERMS
+  renovate_license_key:
+    type: environment
+    name: RENOVATE_LICENSE_KEY
+  renovate_github_app_id:
+    type: environment
+    name: RENOVATE_GITHUB_APP_ID
+  renovate_github_app_key:
+    type: environment
+    name: RENOVATE_GITHUB_APP_KEY
+  renovate_database_password:
+    type: environment
+    name: RENOVATE_DATABASE_PASSWORD
+accounts: {}
+devices: {}
+evidence: {}
+connections:
+  renovate_database:
+    consumer:
+      app: renovate
+      connection: database
+    target:
+      app: postgresql
+      endpoint: backend_endpoint
+    source_interface: database_interface
+    readiness: start
+exposures: {}
+images: {}
+host_aliases: {}
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    recursive_dns:
+      rules:
+      - direction: out
+        proto: udp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+      - direction: out
+        proto: tcp
+        port: '53'
+        destination:
+          address_group: internet
+        comment: Recursive DNS
+    renovate_database_out:
+      rules:
+      - direction: out
+        proto: tcp
+        destination:
+          endpoint: database
+        port:
+          endpoint: database
+        comment: Selected PostgreSQL database
+    renovate_database_in:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          interface: client
+        destination:
+          interface: database
+        port: '5432'
+        comment: Selected Renovate database client
+  transport: {}
+  tls: {}
+  middlewares: {}
+  authentication: {}

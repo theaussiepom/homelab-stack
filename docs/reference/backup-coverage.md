@@ -224,7 +224,7 @@ before CD can start and check the app.
 #### Rebuild the Node-RED health wrapper
 
 The reusable wrapper is versioned as
-[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/proxmox/applications/node-red-healthcheck.js).
+[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/f3c7ad1636da18c160a55051991e6c4d4a87e742/proxmox/applications/node-red-healthcheck.js).
 Use the same framework revision selected by this Stack. During recovery,
 separately prepare that file at the app's bound `healthcheck` storage source
 before CD. The profile mounts it read-only at `/healthcheck.js`; it reads the
@@ -308,3 +308,14 @@ No declared storage roles. Preserve the individually owned runtime inputs and th
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |
 | `data` — `/app/data` | state | application-export |
+
+### renovate
+
+[Application reference](apps/renovate.md) · [Definition](../../apps/renovate.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `scratch` — `/tmp` | Excluded: transient | None |
+| `cache` — `/opt/containerbase` | Excluded: rebuildable | None |
+
+The framework includes the sealed private environment and PostgreSQL application-database ownership record in their respective configuration inventories. PostgreSQL's native database export contains Renovate's database and role. Keep the GitHub App private key, licence and terms acceptance in protected recovery custody. A cache rebuild is not a database restore; isolated CE recovery has not been verified.

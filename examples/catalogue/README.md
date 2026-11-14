@@ -25,6 +25,7 @@ These complete example configurations use invented inputs. You can check them of
 | [music_assistant](../../docs/reference/apps/music_assistant.md) | [music.yaml](music.yaml) | `music` |
 | [music_assistant-split](../../docs/reference/apps/music_assistant-split.md) | [music-split.yaml](music-split.yaml) | `music` |
 | [pegaprox](../../docs/reference/apps/pegaprox.md) | [edge-management.yaml](edge-management.yaml) | `manager` |
+| [renovate](../../docs/reference/apps/renovate.md) | [renovate.yaml](renovate.yaml), app `renovate` | Fresh CE with an explicitly owned PostgreSQL database; hourly repository scans. |
 | [postgresql](../../docs/reference/apps/postgresql.md) | [native-databases.yaml](native-databases.yaml) | `postgresql` |
 | [zigbee2mqtt](../../docs/reference/apps/zigbee2mqtt.md) | [messaging-radio.yaml](messaging-radio.yaml) | `radio` |
 | [winet](../../docs/reference/apps/winet.md) | [messaging-radio.yaml](messaging-radio.yaml) | `telemetry` |

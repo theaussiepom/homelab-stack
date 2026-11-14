@@ -38,6 +38,28 @@ def compile_examples():
 
 
 class ProfileExampleIntegrations(unittest.TestCase):
+    def test_renovate_has_one_explicit_postgresql_owner_and_no_ingress_dependency(self):
+        plan, packets = self.examples['examples/catalogue/renovate.yaml']
+        self.assertEqual(plan.resolved['guest_dependencies']['renovate'], ['postgresql'])
+        self.assertEqual(plan.resolved['app_dependencies']['renovate'], ['postgresql'])
+        self.assertEqual(set(plan.resolved['apps']), {'renovate','postgresql'})
+        worker, database = (plan.resolved['apps'][name] for name in ('renovate','postgresql'))
+        self.assertEqual(database['secret_bindings']['application_database_password'], worker['secret_bindings']['database_password'])
+        self.assertEqual(database['settings']['client_access'][-1], {
+            'source_address':'198.18.20.18','database':'renovate','user':'renovate','method':'scram-sha-256'})
+        service = json.loads(packets['renovate']['files']['compose-renovate.yml'])['services']['renovate']
+        self.assertNotIn('ports', service)
+        self.assertTrue(service['read_only'])
+        self.assertNotIn('MEND_RNV_ACCEPT_TOS', service['environment'])
+        self.assertNotIn('PGPASSWORD', service['environment'])
+        self.assertEqual(service['environment']['PGHOST'], '198.18.20.10')
+        self.invalid_source('examples/catalogue/renovate.yaml',
+            lambda value: value['apps']['postgresql']['properties'].pop('application_database'),
+            ComponentError, 'component.database-binding')
+        self.invalid_source('examples/catalogue/renovate.yaml',
+            lambda value: value['apps']['renovate']['properties'].update(repositories=['example/*']),
+            ComponentError, 'component.renovate-repositories')
+
     def test_radio_watchdog_compiles_only_the_selected_environment_setting(self):
         path = 'examples/catalogue/messaging-radio.yaml'
         selected, packets = self.examples[path]

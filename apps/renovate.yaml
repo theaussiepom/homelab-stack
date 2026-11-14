@@ -1,0 +1,65 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: renovate
+display_name: Renovate
+interfaces:
+  database_interface:
+    required: true
+    accepts:
+    - guest-interface
+listeners: {}
+endpoints: {}
+storage:
+  scratch:
+    target: /tmp
+    read_only: false
+    required: true
+    kind: directory
+    initialize:
+      type: directory
+      uid: 12021
+      gid: 12021
+      mode: '0700'
+  cache:
+    target: /opt/containerbase
+    read_only: false
+    required: true
+    kind: directory
+    initialize:
+      type: directory
+      uid: 12021
+      gid: 12021
+      mode: '0700'
+connections:
+  database:
+    type: postgresql
+    required: true
+    readiness:
+    - start
+software:
+- docker
+- renovate-images
+runtime:
+- container-host
+- renovate
+health:
+  ready:
+    profile: adapter-ready
+secrets:
+  accept_terms:
+    required: true
+  license_key:
+    required: true
+  github_app_id:
+    required: true
+  github_app_key:
+    required: true
+  database_password:
+    required: true
+monitoring:
+  profile: docker-agent
+backup:
+  include: {}
+  exclude:
+    scratch: transient
+    cache: rebuildable
