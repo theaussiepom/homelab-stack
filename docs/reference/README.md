@@ -19,6 +19,7 @@ A selection ID names a reusable application recipe, not a complete installed ser
 
 | Profile | Application | Adapter / variant |
 | --- | --- | --- |
+| [scrypted](apps/scrypted.md) | Scrypted with local state and NAS recordings | `scrypted` |
 | [homeassistant-custom](apps/homeassistant-custom.md) | Home Assistant | `homeassistant` |
 | [homeassistant-bound](apps/homeassistant-bound.md) | Home Assistant | `homeassistant` |
 | [homeassistant-dual-web](apps/homeassistant-dual-web.md) | Home Assistant with two declared web listeners | `homeassistant` |

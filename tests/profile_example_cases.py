@@ -1,5 +1,6 @@
 """Documentation scenario index; bodies live only in the canonical YAML files."""
 PROFILE_EXAMPLES = {
+ 'scrypted': ('examples/catalogue/scrypted.yaml', 'scrypted'),
  'renovate': ('examples/catalogue/renovate.yaml', 'renovate'),
  'node_red-bound': ('examples/catalogue/existing-automation-bound.yaml', 'node_red'),
  'homeassistant-dual-web': ('examples/catalogue/existing-automation-dual-web.yaml', 'homeassistant'),

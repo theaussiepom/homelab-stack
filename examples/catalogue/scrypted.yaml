@@ -1,0 +1,95 @@
+# Complete SYNTHETIC source-only composition; requires an already owned guest and prepared state.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint: {external: proxmox}
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials: {api_token: api, ssh_private_key: ssh}
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers: [{external: resolver}]
+    timezone: Etc/UTC
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+storage:
+  local: {context: lab, pool: example-local}
+guests:
+  cameras:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity: {vmid: 850, hostname: example-cameras}
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources: {memory_mib: 6144, cpu_cores: 6, root_gib: 16}
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:32
+        address: {mode: static, value: 198.18.20.50}
+        default_route: true
+        ipv6: manual
+    volumes:
+      state: {storage: local, slot: 0, path: /srv/example/state, size_gib: 16, backup: null}
+    root_paths:
+      recordings:
+        path: /srv/example/recordings
+        host_bind:
+          source: /mnt/example-nas/camera-recordings
+          slot: 1
+          filesystem_source: nas.example.invalid:/recordings
+          filesystem: nfs4
+          filesystem_root: /camera-recordings
+    compose_projects:
+      cameras: {name: example-cameras, file: compose-cameras.yml}
+    network_policy:
+    - policy: deployment
+      endpoints: {runner: {external: runner}}
+apps:
+  scrypted:
+    profile: scrypted
+    guest: cameras
+    lifecycle: retained
+    interfaces: {web_interface: {interface: primary}}
+    storage:
+      data: {volume: state, subpath: scrypted}
+      recordings: {root_path: recordings, subpath: ''}
+    identity:
+      phase: scrypted
+      runtime_id: example-scrypted
+      services: {scrypted: scrypted}
+      networks: {}
+      project: cameras
+external_endpoints:
+  proxmox: {protocol: https, address: 192.0.2.10, port: 8006}
+  resolver: {protocol: udp, address: 192.0.2.53, port: 53}
+  runner: {protocol: tcp, address: 198.18.20.2, port: 22}
+secret_sources:
+  api: {type: file, path: /run/example/api-token}
+  ssh: {type: file, path: /run/example/ssh-key}
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source: {endpoint: runner}
+        port: {endpoint: runner}
+        comment: Deployment SSH

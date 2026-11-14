@@ -26,6 +26,21 @@ sys.path[:0] = [str(ROOT / 'tests'), str(ROOT)]
 
 
 class ProfileDefinitionTests(unittest.TestCase):
+    def test_scrypted_keeps_local_state_and_external_recordings_distinct(self):
+        value = self.profile('scrypted')
+        self.assertEqual(set(value['storage']), {'data', 'recordings'})
+        self.assertEqual(value['storage']['data']['target'], '/server/volume')
+        self.assertEqual(value['storage']['recordings']['target'], '/nvr')
+        self.assertTrue(all('initialize' not in row for row in value['storage'].values()))
+        self.assertEqual(value['backup'], {'include': {
+            'data': {'category': 'state', 'capture': 'application-export'}},
+            'exclude': {'recordings': 'external-recordings'}})
+        self.assertNotIn('connections', value)
+        self.assertNotIn('devices', value)
+        self.assertEqual(self.library['runtime_profiles']['scrypted']['containers']['scrypted']['user'], '0:0')
+        self.assertEqual(json.loads((ROOT / 'images.json').read_text())['scrypted'], {
+            'repository': 'ghcr.io/koush/scrypted', 'tag': 'latest', 'digest': None})
+
     @classmethod
     def setUpClass(cls):
         cls.library, cls.sources = component_sources.library(ROOT)
@@ -41,7 +56,7 @@ class ProfileDefinitionTests(unittest.TestCase):
              mock.patch.object(component_backup, 'application') as backup:
             component_types.profile(value)
         contract.assert_called_once_with(expected)
-        backup.assert_called_once_with(value['backup'], value.get('storage', {}))
+        backup.assert_called_once_with(value['backup'], value.get('storage', {}), adapter=expected)
         selected = foundations if expected in component_foundations.OWNED else properties
         selected.assert_called_once_with(expected, value.get('properties', {}), partial=True)
         self.assertEqual(value['health']['ready']['profile'], 'adapter-ready')
@@ -264,7 +279,7 @@ class SharedDefinitionTests(unittest.TestCase):
 
     def test_registered_independent_adapters_public_variants_and_no_implicit_guest_graph(self):
         """Keep every profile independent and the shared catalogue closed."""
-        self.assertEqual(len(self.library['app_profiles']), 28)
+        self.assertEqual(len(self.library['app_profiles']), 29)
         self.assertEqual({v['adapter'] for v in self.library['app_profiles'].values()}, set(component_adapters.ADAPTERS))
         self.assertFalse({'guests', 'default_enabled', 'required_site_bindings'} & set(self.library))
         self.assertEqual(set(self.library['guest_templates']), {'base', 'docker'})

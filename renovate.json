@@ -22,5 +22,14 @@
       "versioningTemplate": "docker",
       "autoReplaceStringTemplate": "\"repository\": \"{{{depName}}}\",\n    \"tag\": {{#if newValue}}\"{{{newValue}}}\"{{else}}null{{/if}},\n    \"digest\": {{#if newDigest}}\"{{{newDigest}}}\"{{else}}null{{/if}}"
     }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "ghcr.io/music-assistant/server",
+        "ghcr.io/koush/scrypted"
+      ],
+      "pinDigests": false
+    }
   ]
 }

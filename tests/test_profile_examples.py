@@ -38,6 +38,22 @@ def compile_examples():
 
 
 class ProfileExampleIntegrations(unittest.TestCase):
+    def test_scrypted_real_packet_binds_the_exact_provider_and_application_recording_root(self):
+        import component_guest
+        _,packets=self.examples['examples/catalogue/scrypted.yaml']
+        packet=packets['cameras'];cfg=json.loads(packet['files']['site.json'])
+        inputs=Path(cfg['deployment']['input_directory']).parents[1]
+        component_guest.packet(packet,inputs)
+        mount=cfg['guest']['recording_mount']
+        self.assertEqual(mount['slot'],1)
+        self.assertEqual(mount['source'],'/mnt/example-nas/camera-recordings')
+        for mutate in (lambda c:c['guest'].pop('recording_mount'),
+                       lambda c:c['guest']['recording_mount'].update(path='/srv/foreign'),
+                       lambda c:c['guest']['recording_mount'].update(filesystem_source='other.example.invalid:/recordings')):
+            broken=copy.deepcopy(packet);changed=json.loads(broken['files']['site.json']);mutate(changed)
+            broken['files']['site.json']=json.dumps(changed)
+            with self.subTest(mutate=mutate),self.assertRaises(ValueError):component_guest.packet(broken,inputs)
+
     def test_renovate_has_one_explicit_postgresql_owner_and_no_ingress_dependency(self):
         plan, packets = self.examples['examples/catalogue/renovate.yaml']
         self.assertEqual(plan.resolved['guest_dependencies']['renovate'], ['postgresql'])

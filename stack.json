@@ -85,6 +85,9 @@
     },
     "renovate": {
       "source": "apps/renovate.yaml"
+    },
+    "scrypted": {
+      "source": "apps/scrypted.yaml"
     }
   },
   "guest_templates": {
@@ -268,6 +271,11 @@
     "renovate-images": {
       "images": {
         "renovate": "renovate"
+      }
+    },
+    "scrypted-images": {
+      "images": {
+        "scrypted": "scrypted"
       }
     }
   },
@@ -511,6 +519,16 @@
           ],
           "no_new_privileges": true,
           "read_only": true
+        }
+      }
+    },
+    "scrypted": {
+      "containers": {
+        "scrypted": {
+          "memory_mib": 4096,
+          "cpu_limit": 4,
+          "pids_limit": 512,
+          "user": "0:0"
         }
       }
     }

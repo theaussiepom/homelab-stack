@@ -8,6 +8,7 @@ This catalogue states what each application needs for recovery. It does not repo
 - **application-export** requires consistent application state. An operational job must have permission to pause the app’s existing services before capture; copying a directory while its writers run is insufficient.
 - **database-export** requires the database’s native export procedure. Its live engine directory is excluded from selected file capture.
 - **transient** and **rebuildable** explicitly exclude a role from selected application recovery. Exclusion neither deletes the original data nor excludes an entire volume from native full-guest backup.
+- **external-recordings** excludes only Scrypted's separately mounted persistent recording store from its local-state capture. It does not classify recordings as rebuildable or claim an independent recording backup.
 
 ## Native databases
 
@@ -224,7 +225,7 @@ before CD can start and check the app.
 #### Rebuild the Node-RED health wrapper
 
 The reusable wrapper is versioned as
-[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/f8a629ed78732f5fb72f3da6c7da0e88b7844606/proxmox/applications/node-red-healthcheck.js).
+[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/0899d84fb1861034a4463788286180a80d7970e8/proxmox/applications/node-red-healthcheck.js).
 Use the same framework revision selected by this Stack. During recovery,
 separately prepare that file at the app's bound `healthcheck` storage source
 before CD. The profile mounts it read-only at `/healthcheck.js`; it reads the
@@ -266,6 +267,17 @@ copy. The public helper cannot reproduce custom behavior that it does not contai
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |
 | `data` — `/var/lib/postgresql` | database | database-export |
+
+### scrypted
+
+[Application reference](apps/scrypted.md) · [Definition](../../apps/scrypted.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `data` — `/server/volume` | state | application-export |
+| `recordings` — `/nvr` | Excluded: external-recordings | None |
+
+Pause only the owned Scrypted service, with explicit backup permission, while capturing local configuration and database state. NAS recordings remain persistent data outside this local-state backup; the exclusion makes no claim that recordings are rebuildable or independently backed up.
 
 ### traefik
 

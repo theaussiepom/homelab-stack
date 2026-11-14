@@ -10,6 +10,7 @@ A software entry selects exact packages, public signed repository definitions, a
 
 | Selection | Packages | Image role → catalogue ID | Public repository |
 | --- | --- | --- | --- |
+| <a id="registration-software-scrypted-images"></a>`software.scrypted-images` | None | `scrypted` → `scrypted` | None |
 | <a id="registration-software-renovate-images"></a>`software.renovate-images` | None | `renovate` → `renovate` | None |
 | <a id="registration-software-docker"></a>`software.docker` | `docker.io=26.1.5+dfsg1-9+deb13u1`<br>`docker-cli=26.1.5+dfsg1-9+deb13u1`<br>`docker-compose=2.26.1-4` | None | None |
 | <a id="registration-software-curl"></a>`software.curl` | `curl=8.14.1-2+deb13u7` | None | None |
@@ -44,7 +45,7 @@ Repository signing keys come from hash-bound public assets. All four vendor asse
 ## Image policies
 
 - A registry digest produces the exact selected immutable image reference. Its `missing` pull policy downloads the image only when it is absent locally.
-- The explicit Music Assistant `latest` selection keeps its floating policy and protected upgrade checks.
+- The explicit Music Assistant and Scrypted `latest` selections keep their floating policy and protected upgrade checks.
 - Home Assistant and Node-RED custom archive selections require the site to supply local_id, archive and archive_sha256. The public zero values are placeholders, and HomeLab does not substitute a public image for them.
 - Public HA/Node-RED variants select separate official image catalogue IDs. They do not replace another instance's custom image or data.
 
@@ -70,6 +71,7 @@ Each app selects named resource limits, process settings and security requiremen
 | <a id="registration-runtime-profiles-mqtt"></a>`runtime_profiles.mqtt` | `mqtt`: `memory_mib=256`, `pids_limit=128`, `cpu_limit=1` | None |
 | <a id="registration-runtime-profiles-mqtt-explorer"></a>`runtime_profiles.mqtt_explorer` | `mqtt_explorer`: `memory_mib=256`, `pids_limit=128`, `cpu_limit=1`, `read_only=True`, `cap_drop=['ALL']`, `user=1001:1001`, `no_new_privileges=True`<br>`explorer_gateway`: `memory_mib=128`, `pids_limit=128`, `cpu_limit=1`, `read_only=True`, `cap_drop=['ALL']`, `user=65532:65532`, `no_new_privileges=True` | None |
 | <a id="registration-runtime-profiles-music-assistant"></a>`runtime_profiles.music_assistant` | `music_assistant`: `memory_mib=1536`, `pids_limit=512`, `cpu_limit=2` | None |
+| <a id="registration-runtime-profiles-scrypted"></a>`runtime_profiles.scrypted` | `scrypted`: `memory_mib=4096`, `pids_limit=512`, `cpu_limit=4`, `user=0:0` | None |
 | <a id="registration-runtime-profiles-pegaprox"></a>`runtime_profiles.pegaprox` | `pegaprox`: `memory_mib=1536`, `pids_limit=256`, `cpu_limit=2`, `read_only=True`, `cap_drop=['ALL']`, `tmpfs=['/tmp:rw,nosuid,nodev,size=64m']`, `no_new_privileges=True` | `os_reserve_mib=512` |
 | <a id="registration-runtime-profiles-zigbee2mqtt"></a>`runtime_profiles.zigbee2mqtt` | `zigbee2mqtt`: `memory_mib=512`, `pids_limit=128`, `cpu_limit=2` | None |
 | <a id="registration-runtime-profiles-winet"></a>`runtime_profiles.winet` | `winet`: `memory_mib=256`, `pids_limit=128`, `cpu_limit=1` | None |

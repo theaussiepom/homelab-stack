@@ -4,6 +4,7 @@ These complete example configurations use invented inputs. You can check them of
 
 | Profile | Complete source | App instance |
 | --- | --- | --- |
+| [scrypted](../../docs/reference/apps/scrypted.md) | [scrypted.yaml](scrypted.yaml) | `scrypted` |
 | [homeassistant-custom](../../docs/reference/apps/homeassistant-custom.md) | [existing-automation.yaml](existing-automation.yaml) | `homeassistant` |
 | [homeassistant-bound](../../docs/reference/apps/homeassistant-bound.md) | [existing-automation-bound.yaml](existing-automation-bound.yaml) | `homeassistant` |
 | [homeassistant-dual-web](../../docs/reference/apps/homeassistant-dual-web.md) | [existing-automation-dual-web.yaml](existing-automation-dual-web.yaml) | `homeassistant` |

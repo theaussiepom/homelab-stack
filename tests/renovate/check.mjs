@@ -8,6 +8,8 @@ import {fileURLToPath} from 'node:url';
 import {extractPackageFile} from './node_modules/renovate/dist/modules/manager/custom/regex/index.js';
 import {doAutoReplace} from './node_modules/renovate/dist/workers/repository/update/branch/auto-replace.js';
 import {GlobalConfig} from './node_modules/renovate/dist/config/global.js';
+import {applyPackageRules} from './node_modules/renovate/dist/util/package-rules/index.js';
+import {resolveUpdateDigests} from './node_modules/renovate/dist/workers/repository/process/lookup/digest.js';
 import {init} from './node_modules/renovate/dist/logger/index.js';
 await init();
 const root=fileURLToPath(new URL('../../', import.meta.url));
@@ -31,15 +33,29 @@ async function check(text, tagChange=false) {
     const [key,before]=registry[depIndex];
     assert.equal(dep.currentValue,before.tag??undefined);
     assert.equal(dep.currentDigest,before.digest??undefined);
-    const newDigest='sha256:'+'a'.repeat(64);
+    const policy=await applyPackageRules({...config,...dep,manager:'regex',packageName:dep.depName});
+    const floating=before.tag==='latest' && before.digest===null;
+    assert.equal(policy.pinDigests,!floating);
+    assert.notEqual(policy.enabled,false);
     const newValue=tagChange?'2.0.0':dep.currentValue;
-    const changed=await doAutoReplace({...manager,...actual,...dep,manager:'regex',
-      packageFile:'images.json',depIndex,newDigest,newValue,
-      updateType:tagChange?'major':dep.currentDigest?'digest':'pinDigest'},text,false);
+    const update={newDigest:'sha256:'+'a'.repeat(64),newValue,
+      updateType:tagChange?'major':dep.currentDigest?'digest':'pinDigest'};
+    // Exercise Renovate's actual digest policy without a registry lookup:
+    // supplied digests are retained for pinned entries and removed for floating ones.
+    await resolveUpdateDigests(policy,{updates:[update]},null);
+    const changed=await doAutoReplace({...policy,...manager,...actual,...dep,...update,manager:'regex',
+      packageFile:'images.json',depIndex},text,false);
     const expected=structuredClone(catalogue);
-    expected[key].digest=newDigest;
+    if(floating) {
+      assert.equal(update.newDigest,undefined);
+      assert.ok(changed===null || changed===text);
+    } else {
+      assert.equal(update.newDigest,'sha256:'+'a'.repeat(64));
+      assert.equal(typeof changed,'string');
+      expected[key].digest=update.newDigest;
+    }
     if(tagChange)expected[key].tag=newValue;
-    assert.deepEqual(JSON.parse(changed),expected);
+    assert.deepEqual(JSON.parse(changed??text),expected);
   }
   return registry.length;
 }
