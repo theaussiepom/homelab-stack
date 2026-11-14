@@ -21,7 +21,7 @@ The complete reusable declaration is [music_assistant-split.yaml](../../../apps/
 
 ## Application requirements
 
-This variant adds `stream_interface` for the player listener. It retains the base profile’s [public HTTPS prerequisites](music_assistant.md#application-requirements); the common [adapter source-selection rule](https://github.com/theaussiepom/homelab/blob/fb99e9d3225858686d277e225b47e18ac76d9ad5/docs/reference/app-properties.md#music-assistant) also permits that declared stream role as the public probe’s source. This does not move either local listener or create routing to ingress.
+This variant adds `stream_interface` for the player listener. Both local listeners retain their own addresses. Like the base profile, it declares `/info` and the `server_version` marker for the shared controller HTTPS check; no guest-originating public probe or source binding is needed.
 
 The web address comes from `web_interface`; the player bind and published address come from `stream_interface`. The existing helper checks settings through the selected data root before startup; it does not reset streaming providers. The declared latest image policy is intentional and remains distinct from digest-pinned profiles.
 
@@ -92,7 +92,7 @@ The web listener binds to `web_interface` on TCP8095; player streaming binds to 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -112,7 +112,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/app-properties.md).
 
 This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
@@ -120,7 +120,7 @@ This adapter accepts no application property keys. It rejects unknown keys and p
 
 Start from the complete [examples/catalogue/music-split.yaml](../../../examples/catalogue/music-split.yaml), app `music`, using the [source-only setup](../../guides/first-configuration.md). Change only the input described; retain the rest of that composition. Diagnostics below are emitted results, not inferred field paths. Where no `at` context appears, no field path was emitted.
 
-Use the two canonical cases: [omit public https](music_assistant.md#invalid-omit-public-https) and [undeclared public source](music_assistant.md#invalid-undeclared-public-source). The additional stream role does not make the public HTTPS connection optional or permit undeclared source roles. Both cases apply unchanged; keep the split listener/settings requirements above.
+The [undeclared connection source case](music_assistant.md#invalid-undeclared-public-source) also applies when a public connection is selected. Omitting that optional connection is now supported; declared exposures still receive their shared HTTPS checks. Keep the split listener/settings requirements above.
 
 After repair, resolve the same complete source and generate every guest’s deployment packet; expect both to pass as the unchanged baseline does. Source checks neither inspect credential contents nor establish installation, routing, socket isolation or service recovery on a target.
 
@@ -150,7 +150,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -191,6 +191,9 @@ Complete values from [music_assistant-split.yaml](../../../apps/music_assistant-
 | <a id="declaration-endpoints-web-endpoint-listener"></a>`endpoints.web_endpoint.listener` | `"web_listener"` |
 | <a id="declaration-endpoints-web-endpoint-protocol"></a>`endpoints.web_endpoint.protocol` | `"http"` |
 | <a id="declaration-endpoints-web-endpoint-via"></a>`endpoints.web_endpoint.via` | `"web_interface"` |
+| <a id="declaration-endpoints-web-endpoint-http-check"></a>`endpoints.web_endpoint.http_check` | `object` |
+| <a id="declaration-endpoints-web-endpoint-http-check-path"></a>`endpoints.web_endpoint.http_check.path` | `"/info"` |
+| <a id="declaration-endpoints-web-endpoint-http-check-contains"></a>`endpoints.web_endpoint.http_check.contains` | `"server_version"` |
 | <a id="declaration-endpoints-stream-endpoint"></a>`endpoints.stream_endpoint` | `object` |
 | <a id="declaration-endpoints-stream-endpoint-listener"></a>`endpoints.stream_endpoint.listener` | `"stream_listener"` |
 | <a id="declaration-endpoints-stream-endpoint-protocol"></a>`endpoints.stream_endpoint.protocol` | `"http"` |

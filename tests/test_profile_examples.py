@@ -131,27 +131,30 @@ class ProfileExampleIntegrations(unittest.TestCase):
             lambda value: value['apps']['filtering']['interfaces'].pop('web_interface'),
             ComponentError, 'component.invalid')
 
-    def test_music_https_probe_uses_the_declared_stream_source_and_keeps_its_assertions(self):
+    def test_music_native_checks_do_not_require_public_connection_and_https_is_shared(self):
         import component_checks
-        old, _ = self.examples['examples/catalogue/music-split.yaml']
-        source, _ = component_sources.site(ROOT / 'examples/catalogue/music-split.yaml')
-        source['connections']['music_public']['source_interface'] = 'stream_interface'
-        source['policies']['network']['connect_music_public_incoming']['rules'][0]['source'] = '198.18.100.40/32'
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp).resolve() / 'site.json'
-            path.write_text(json.dumps(source))
-            with patch('subprocess.run', side_effect=no_native), \
-                 patch('subprocess.check_output', side_effect=no_native), \
-                 patch('socket.create_connection', side_effect=no_native):
-                selected = compiler.resolve_plan(ROOT, path, [])
-                compiler.lower_plan(selected)
-        def checks(plan):
-            app = component_lower.runtime_config(plan, 'media')['applications']['music']
-            return component_checks._music_assistant(app, '/opt/homelab-app/compose.yml')
-        original = checks(old); actual = checks(selected)
-        expected = copy.deepcopy(original)
-        argv = expected[1]['argv']; argv[argv.index('--interface') + 1] = '198.18.100.40'
-        self.assertEqual(actual, expected)
+        import component_https
+        for example in ('examples/catalogue/music.yaml', 'examples/catalogue/music-split.yaml'):
+            old, _ = self.examples[example]
+            source, _ = component_sources.site(ROOT / example)
+            source['connections'].pop('music_public')
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp).resolve() / 'site.json'
+                path.write_text(json.dumps(source))
+                with patch('subprocess.run', side_effect=no_native), \
+                     patch('subprocess.check_output', side_effect=no_native), \
+                     patch('socket.create_connection', side_effect=no_native):
+                    selected = compiler.resolve_plan(ROOT, path, [])
+                    compiler.lower_plan(selected)
+            def checks(plan):
+                app = component_lower.runtime_config(plan, 'media')['applications']['music']
+                return component_checks._music_assistant(app, '/opt/homelab-app/compose.yml')
+            self.assertEqual(checks(old), checks(selected))
+            self.assertEqual(len(checks(selected)), 1)
+            _, assignments = component_https.checks(selected.resolved, selected.site, selected.library)
+            music_checks = [row for rows in assignments.values() for row in rows if row['contains']=='server_version']
+            self.assertTrue(music_checks)
+            self.assertTrue(all(row['url'].endswith('/info') for row in music_checks))
 
     def test_split_music_allows_only_selected_players_to_its_stream_socket(self):
         """Check the actual compiled policy for its intended and denied flows."""
@@ -245,8 +248,6 @@ class ProfileExampleIntegrations(unittest.TestCase):
     def test_documented_current_packet_floors_refuse_without_native_effects(self):
         self.invalid_source('examples/catalogue/messaging-radio.yaml',
             lambda v: v['apps']['broker'].pop('secrets'), ComponentError, 'component.secret-required')
-        self.invalid_source('examples/catalogue/music.yaml',
-            lambda v: v['connections'].pop('music_public'), ComponentError, 'component.type')
         self.invalid_source('examples/catalogue/database-guis.yaml',
             lambda v: v['apps']['cloud']['properties']['connections']['postgresql-admin'].update(sslmode='require'),
             ComponentError, 'component.properties')

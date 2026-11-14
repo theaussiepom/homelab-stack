@@ -21,7 +21,7 @@ The complete reusable declaration is [cloudbeaver.yaml](../../../apps/cloudbeave
 
 ## Application requirements
 
-The profile marks `public` optional, but generating a usable deployment packet currently requires an explicit HTTPS connection and the app’s canonical origin (its public base URL). The sign-in health check uses both, so supply them even though the profile metadata marks the field optional.
+The `public` connection is optional for readiness. The app still requires its canonical HTTPS origin for authentication. Its local service/gateway check remains, while the shared controller check verifies each declared HTTPS exposure and its configured sign-in redirects.
 
 Only the OpenID Connect (OIDC) sign-in gateway is published; the Community service remains private. Authentication is required through the named cloudbeaver-oidc policy, including its client-secret source and canonical HTTPS app origin. The current account-binding code requires at least one managed datasource, a saved connection using an account that HomeLab manages. You can add unmanaged connection metadata alongside it, but a configuration containing only unmanaged connections is rejected. Managed PostgreSQL administration is SUPERUSER; managed MariaDB administration is global ALL with GRANT. These dedicated accounts are created once and reused. You must explicitly select their privileges; a connection reference does not grant them. Saved managed datasource passwords are plaintext at rest in the private workspace.
 
@@ -84,7 +84,7 @@ A wildcard listener accepts connections within the declared app network. A port 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -112,7 +112,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -170,7 +170,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/63c656ad424a1a7cc6b8d56f000828d114926885/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/38cdd9d542c5235eaf46c23c72b7b820e3e4c606/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
