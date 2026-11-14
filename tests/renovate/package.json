@@ -1,0 +1,11 @@
+{
+  "name": "homelab-catalogue-renovate-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "renovate-config-validator ../../renovate.json && node check.mjs"
+  },
+  "dependencies": {
+    "renovate": "44.239.1"
+  }
+}

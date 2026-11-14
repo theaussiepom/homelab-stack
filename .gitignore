@@ -22,3 +22,5 @@ secrets.*
 /site.yml
 .coverage
 .coverage.*
+
+/tests/renovate/node_modules/

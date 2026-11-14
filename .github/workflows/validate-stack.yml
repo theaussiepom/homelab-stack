@@ -58,6 +58,14 @@ jobs:
           HOMELAB_FRAMEWORK: framework-source
           GITLEAKS_BIN: ${{ runner.temp }}/homelab-source-tools/gitleaks
         run: python3 framework-source/tools/measure_coverage.py --suite stack --stack . --fail-under 100 --output "$RUNNER_TEMP/stack-coverage"
+      - name: Set up Node for the actual Renovate manager tests
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24.15.0'
+      - name: Validate catalogue extraction and replacement with Renovate
+        run: |
+          npm ci --prefix tests/renovate --no-audit --no-fund
+          npm test --prefix tests/renovate
       - name: Scan source and complete history
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}

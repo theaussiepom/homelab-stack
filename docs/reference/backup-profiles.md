@@ -2,7 +2,7 @@
 
 [Reference index](README.md) · [Configure PBS backups](../backup.md) · [Application recovery coverage](backup-coverage.md)
 
-The `pbs-client` profile selects the Proxmox Backup Client and lists guest configuration that its recovery inventory must include. It does not create a PBS server, supply credentials or install a schedule on its own. The site chooses the profile and, when ready, supplies an operational job through the [framework backup contract](https://github.com/theaussiepom/homelab/blob/0394051c59602efad1c4b1fb26c3ecef9107c04b/docs/reference/backup.md).
+The `pbs-client` profile selects the Proxmox Backup Client and lists guest configuration that its recovery inventory must include. It does not create a PBS server, supply credentials or install a schedule on its own. The site chooses the profile and, when ready, supplies an operational job through the [framework backup contract](https://github.com/theaussiepom/homelab/blob/f8a629ed78732f5fb72f3da6c7da0e88b7844606/docs/reference/backup.md).
 
 ## Selection and field meaning
 
@@ -16,7 +16,7 @@ With an operational job, the site may share interface and staging-volume names t
 | `software` | Required nonempty list of unique software IDs. The selected definitions must provide exactly one versioned `proxmox-backup-client` package. This profile selects the [shared PBS software definition](software-and-runtime.md#registration-software-pbs-client). |
 | `configuration` | Required named map, which may be empty. Each entry has a required canonical absolute `path` other than `/` and a required `kind` of `file` or `directory`. These are guest recovery paths, not files read during compilation. |
 
-The [configuration records](#declaration-configuration) below select the hostname, hosts file and SSH directory. When root monitoring is also selected, the framework adds its managed Zabbix agent configuration, pre-shared key and ownership receipt. The [framework profile rules](https://github.com/theaussiepom/homelab/blob/0394051c59602efad1c4b1fb26c3ecef9107c04b/docs/reference/backup.md#backup-profiles) define those reserved paths and reject conflicting selections.
+The [configuration records](#declaration-configuration) below select the hostname, hosts file and SSH directory. When root monitoring is also selected, the framework adds its managed Zabbix agent configuration, pre-shared key and ownership receipt. The [framework profile rules](https://github.com/theaussiepom/homelab/blob/f8a629ed78732f5fb72f3da6c7da0e88b7844606/docs/reference/backup.md#backup-profiles) define those reserved paths and reject conflicting selections.
 
 ## Complete example and deployment effects
 
@@ -30,7 +30,7 @@ Later deployments preserve identities, credentials and failure evidence. Changed
 
 ## Declaration records
 
-These are all supplied fields in [backup/pbs-client.yaml](../../backup/pbs-client.yaml) after the loader removes `schema` and `kind`. `object` introduces nested fields. These are reusable definition values; the site supplies only the controls allowed by the [backup contract](https://github.com/theaussiepom/homelab/blob/0394051c59602efad1c4b1fb26c3ecef9107c04b/docs/reference/backup.md#syntax). [Declaration records](declaration-records.md) explains the notation and source comparison.
+These are all supplied fields in [backup/pbs-client.yaml](../../backup/pbs-client.yaml) after the loader removes `schema` and `kind`. `object` introduces nested fields. These are reusable definition values; the site supplies only the controls allowed by the [backup contract](https://github.com/theaussiepom/homelab/blob/f8a629ed78732f5fb72f3da6c7da0e88b7844606/docs/reference/backup.md#syntax). [Declaration records](declaration-records.md) explains the notation and source comparison.
 
 | Declaration path | Selected value |
 | --- | --- |

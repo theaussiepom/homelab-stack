@@ -42,6 +42,18 @@ name: Guest phase
         required: false
       pegaprox_database_key:
         required: false
+      postgresql_application_database_password:
+        required: false
+      renovate_accept_terms:
+        required: false
+      renovate_database_password:
+        required: false
+      renovate_github_app_id:
+        required: false
+      renovate_github_app_key:
+        required: false
+      renovate_license_key:
+        required: false
       traefik_cloudflare_dns_token:
         required: false
       traefik_cloudflare_origin_token:
@@ -58,7 +70,7 @@ permissions:
   contents: read
 jobs:
   run:
-    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@0394051c59602efad1c4b1fb26c3ecef9107c04b
+    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@f8a629ed78732f5fb72f3da6c7da0e88b7844606
     with:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
@@ -77,6 +89,12 @@ jobs:
       mqtt_probe: ${{ secrets.mqtt_probe }}
       node_red_api_token: ${{ secrets.node_red_api_token }}
       pegaprox_database_key: ${{ secrets.pegaprox_database_key }}
+      postgresql_application_database_password: ${{ secrets.postgresql_application_database_password }}
+      renovate_accept_terms: ${{ secrets.renovate_accept_terms }}
+      renovate_database_password: ${{ secrets.renovate_database_password }}
+      renovate_github_app_id: ${{ secrets.renovate_github_app_id }}
+      renovate_github_app_key: ${{ secrets.renovate_github_app_key }}
+      renovate_license_key: ${{ secrets.renovate_license_key }}
       traefik_cloudflare_dns_token: ${{ secrets.traefik_cloudflare_dns_token }}
       traefik_cloudflare_origin_token: ${{ secrets.traefik_cloudflare_origin_token }}
       traefik_proxmox_token: ${{ secrets.traefik_proxmox_token }}
