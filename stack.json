@@ -83,6 +83,9 @@
     "homeassistant-dual-web": {
       "source": "apps/homeassistant-dual-web.yaml"
     },
+    "renovate": {
+      "source": "apps/renovate.yaml"
+    },
     "scrypted": {
       "source": "apps/scrypted.yaml"
     }
@@ -264,6 +267,11 @@
           "key_asset": "proxmox-backup-repository-key"
         }
       ]
+    },
+    "renovate-images": {
+      "images": {
+        "renovate": "renovate"
+      }
     },
     "scrypted-images": {
       "images": {
@@ -497,6 +505,21 @@
     "native-influxdb": {
       "native": {
         "memory_mib": 1792
+      }
+    },
+    "renovate": {
+      "containers": {
+        "renovate": {
+          "memory_mib": 2048,
+          "pids_limit": 512,
+          "cpu_limit": 2,
+          "user": "12021:12021",
+          "cap_drop": [
+            "ALL"
+          ],
+          "no_new_privileges": true,
+          "read_only": true
+        }
       }
     },
     "scrypted": {

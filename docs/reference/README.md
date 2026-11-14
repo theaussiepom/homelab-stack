@@ -41,6 +41,7 @@ A selection ID names a reusable application recipe, not a complete installed ser
 | [music_assistant](apps/music_assistant.md) | Music Assistant | `music_assistant` |
 | [music_assistant-split](apps/music_assistant-split.md) | Music Assistant | `music_assistant` |
 | [pegaprox](apps/pegaprox.md) | PegaProx | `pegaprox` |
+| [renovate](apps/renovate.md) | Renovate | `renovate` |
 | [postgresql](apps/postgresql.md) | PostgreSQL | `postgresql` |
 | [zigbee2mqtt](apps/zigbee2mqtt.md) | Zigbee2MQTT | `zigbee2mqtt` |
 | [winet](apps/winet.md) | WiNet | `winet` |

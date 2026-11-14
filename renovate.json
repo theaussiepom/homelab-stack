@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabledManagers": [
+    "custom.regex"
+  ],
+  "automerge": false,
+  "platformAutomerge": false,
+  "platformCommit": "enabled",
+  "pinDigests": true,
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^images\\.json$/"
+      ],
+      "matchStrings": [
+        "\"repository\":\\s*\"(?<depName>[a-z0-9][a-z0-9./_-]*)\",\\s*\"tag\":\\s*(?:\"(?<currentValue>[A-Za-z0-9_.-]+)\"|null),\\s*\"digest\":\\s*(?:\"(?<currentDigest>sha256:[a-f0-9]{64})\"|null)"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker",
+      "autoReplaceStringTemplate": "\"repository\": \"{{{depName}}}\",\n    \"tag\": {{#if newValue}}\"{{{newValue}}}\"{{else}}null{{/if}},\n    \"digest\": {{#if newDigest}}\"{{{newDigest}}}\"{{else}}null{{/if}}"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "ghcr.io/music-assistant/server",
+        "ghcr.io/koush/scrypted"
+      ],
+      "pinDigests": false
+    }
+  ]
+}

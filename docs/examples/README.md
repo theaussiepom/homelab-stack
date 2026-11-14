@@ -26,3 +26,5 @@ The [complete profile-composition index](../../examples/catalogue/README.md) map
 ## Cloudflare ingress
 
 The [Cloudflare policy fragment](cloudflare-ingress.md) extends the complete retained edge-management base with site-owned internal clients and a protected origin-token binding. Its real compiler test supplies those prerequisites and backend permissions. Deploy middleware and internal route restrictions before any later frontend firewall opening; source compilation does not verify Cloudflare, TLS or application acceptance.
+
+The [Renovate CE composition](../../examples/catalogue/renovate.yaml) binds a dedicated updater to an owned database on a separate PostgreSQL guest. Read the [profile](../reference/apps/renovate.md) before supplying protected inputs.

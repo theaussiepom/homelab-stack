@@ -11,6 +11,7 @@ A software entry selects exact packages, public signed repository definitions, a
 | Selection | Packages | Image role → catalogue ID | Public repository |
 | --- | --- | --- | --- |
 | <a id="registration-software-scrypted-images"></a>`software.scrypted-images` | None | `scrypted` → `scrypted` | None |
+| <a id="registration-software-renovate-images"></a>`software.renovate-images` | None | `renovate` → `renovate` | None |
 | <a id="registration-software-docker"></a>`software.docker` | `docker.io=26.1.5+dfsg1-9+deb13u1`<br>`docker-cli=26.1.5+dfsg1-9+deb13u1`<br>`docker-compose=2.26.1-4` | None | None |
 | <a id="registration-software-curl"></a>`software.curl` | `curl=8.14.1-2+deb13u7` | None | None |
 | <a id="registration-software-network-tools"></a>`software.network-tools` | `iproute2=6.15.0-1` | None | None |
@@ -56,6 +57,7 @@ Each app selects named resource limits, process settings and security requiremen
 
 | Runtime | Owned workloads / settings | Guest requirements |
 | --- | --- | --- |
+| <a id="registration-runtime-profiles-renovate"></a>`runtime_profiles.renovate` | `renovate`: `memory_mib=2048`, `cpu_limit=2`, `pids_limit=512`, `user=12021:12021`, `cap_drop=['ALL']`, `no_new_privileges=True`, `read_only=True` | None |
 | <a id="registration-runtime-profiles-container-host"></a>`runtime_profiles.container-host` | No workload limits | `nesting=True`, `keyctl=False` |
 | <a id="registration-runtime-profiles-homeassistant"></a>`runtime_profiles.homeassistant` | `homeassistant`: `memory_mib=2048`, `pids_limit=512`, `cpu_limit=2` | None |
 | <a id="registration-runtime-profiles-node-red"></a>`runtime_profiles.node_red` | `node_red`: `memory_mib=1024`, `pids_limit=256`, `cpu_limit=1`, `user=node-red` | None |

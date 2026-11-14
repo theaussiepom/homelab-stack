@@ -60,6 +60,16 @@ The removed `*-public` definitions have no aliases. Existing custom consumers mu
 
 Pin the compatible published pair together and inspect changed routes, records and app packets. Unchanged instance names keep their runtime namespace; renaming an app to follow a profile name would change identity. These source changes do not update a consumer's pins or deploy anything.
 
+## Propose catalogue updates with Renovate
+
+The [Renovate CE profile](../reference/apps/renovate.md) runs Mend's self-hosted Community server on a dedicated Docker-capable guest. It scans explicitly selected repositories hourly, using a GitHub App installed only on those repositories. The Community edition has no Enterprise Web UI; this composition publishes no listener and needs no Traefik dependency or inbound webhook. Disable the GitHub App webhook when creating this scheduled-only installation.
+
+[renovate.json](../../renovate.json) reads registry records directly from [images.json](../../images.json). Adding another record in its canonical `repository`, `tag`, `digest` order makes it discoverable without another image list. Explicit tags follow Docker versioning and can propose tag and digest changes. For an existing `tag: null` record, Docker's implicit `latest` tag supplies future digest proposals; its stored tag stays null. Review whether that stream is appropriate before accepting its first proposal. Treat digest-only proposals as potentially major updates and assess upstream compatibility. Music Assistant and Scrypted keep their explicit floating `latest` tags with a null digest. Scoped package rules suppress digest-pin proposals for those two image names while retaining their catalogue extraction; other registry images keep the global digest policy. The private archive records have no registry repository and are excluded entirely; this does not rebuild or replace custom Home Assistant or Node-RED images.
+
+Only the catalogue regex manager is enabled. Renovate proposes pull requests and never merges them automatically; the CE runtime also forces automerge off. `platformCommit` uses GitHub's commit API so PR commits can carry GitHub's verified signature. Existing protection, tests and review gates remain authoritative. A merged catalogue PR does not change a private site's pinned library selection: review and adopt the new immutable library/framework pair through that site's normal protected CD.
+
+Before deployment, a human must review [Mend's terms](https://www.mend.io/terms-of-service/) and the current [Community licensing setup](https://github.com/mend/renovate-ce-ee/blob/main/docs/setup-for-github.md). Supply an appropriate licence and explicit acceptance through protected inputs. The source does not accept terms, register an App or contain a licence key. See the profile for the five required inputs and the owned PostgreSQL binding.
+
 ## Understand an ordinary update
 
 1. Select exact compatible published framework and library revisions. Keep each authoritative selector in its existing workflow location.
