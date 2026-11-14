@@ -31,6 +31,9 @@ endpoints:
     listener: web_listener
     protocol: http
     via: web_interface
+    http_check:
+      path: /info
+      contains: server_version
   stream_endpoint:
     listener: stream_listener
     protocol: http
