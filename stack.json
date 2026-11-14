@@ -82,6 +82,9 @@
     },
     "homeassistant-dual-web": {
       "source": "apps/homeassistant-dual-web.yaml"
+    },
+    "scrypted": {
+      "source": "apps/scrypted.yaml"
     }
   },
   "guest_templates": {
@@ -261,6 +264,11 @@
           "key_asset": "proxmox-backup-repository-key"
         }
       ]
+    },
+    "scrypted-images": {
+      "images": {
+        "scrypted": "scrypted"
+      }
     }
   },
   "runtime_profiles": {
@@ -489,6 +497,16 @@
     "native-influxdb": {
       "native": {
         "memory_mib": 1792
+      }
+    },
+    "scrypted": {
+      "containers": {
+        "scrypted": {
+          "memory_mib": 4096,
+          "cpu_limit": 4,
+          "pids_limit": 512,
+          "user": "0:0"
+        }
       }
     }
   },

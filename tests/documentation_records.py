@@ -5,6 +5,7 @@ loader and validator own acceptance; documentation cells own the statements test
 """
 
 DEFINITIONS = {
+    ('app_profiles', 'scrypted'): ('apps/scrypted.yaml', 'docs/reference/apps/scrypted.md'),
     ('backup_profiles', 'pbs-client'): ('backup/pbs-client.yaml', 'docs/reference/backup-profiles.md'),
     ('app_profiles', 'homeassistant-dual-web'): ('apps/homeassistant-dual-web.yaml', 'docs/reference/apps/homeassistant-dual-web.md'),
     ('app_profiles', 'homeassistant-bound'): ('apps/homeassistant-bound.yaml', 'docs/reference/apps/homeassistant-bound.md'),
@@ -44,8 +45,8 @@ REGISTRATIONS = {
     'policies.transport': (),
     'bundles': (),
     'backup_profiles': ('pbs-client',),
-    'software': ('pbs-client', 'docker', 'curl', 'network-tools', 'yaml-parser', 'mariadb-client', 'postgresql', 'mariadb', 'influxdb', 'homeassistant-custom-images', 'node_red-custom-images', 'bitwarden-images', 'cloudbeaver-images', 'pihole-images', 'unbound-images', 'authentik-images', 'traefik-images', 'zabbix-images', 'mqtt-images', 'mqtt_explorer-images', 'music_assistant-images', 'pegaprox-images', 'zigbee2mqtt-images', 'winet-images', 'homeassistant-upstream-images', 'node_red-upstream-images'),
-    'runtime_profiles': ('container-host', 'homeassistant', 'node_red', 'bitwarden', 'cloudbeaver', 'pihole', 'unbound', 'authentik', 'traefik', 'zabbix', 'mqtt', 'mqtt_explorer', 'music_assistant', 'pegaprox', 'zigbee2mqtt', 'winet', 'homeassistant-mdns', 'native-postgresql', 'native-mariadb', 'native-influxdb'),
+    'software': ('scrypted-images', 'pbs-client', 'docker', 'curl', 'network-tools', 'yaml-parser', 'mariadb-client', 'postgresql', 'mariadb', 'influxdb', 'homeassistant-custom-images', 'node_red-custom-images', 'bitwarden-images', 'cloudbeaver-images', 'pihole-images', 'unbound-images', 'authentik-images', 'traefik-images', 'zabbix-images', 'mqtt-images', 'mqtt_explorer-images', 'music_assistant-images', 'pegaprox-images', 'zigbee2mqtt-images', 'winet-images', 'homeassistant-upstream-images', 'node_red-upstream-images'),
+    'runtime_profiles': ('scrypted', 'container-host', 'homeassistant', 'node_red', 'bitwarden', 'cloudbeaver', 'pihole', 'unbound', 'authentik', 'traefik', 'zabbix', 'mqtt', 'mqtt_explorer', 'music_assistant', 'pegaprox', 'zigbee2mqtt', 'winet', 'homeassistant-mdns', 'native-postgresql', 'native-mariadb', 'native-influxdb'),
     'health_profiles': ('adapter-ready',),
     'authentication_profiles': ('cloudbeaver-oidc', 'node-red-retained-oidc', 'zabbix-saml'),
     'monitoring_profiles': ('linux-agent', 'docker-agent', 'postgresql-agent', 'mariadb-agent', 'influxdb-agent'),

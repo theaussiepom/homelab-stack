@@ -1,0 +1,59 @@
+schema: homelab-components-v1
+kind: app-profile
+adapter: scrypted
+display_name: Scrypted
+interfaces:
+  web_interface:
+    required: true
+    accepts:
+    - guest-interface
+listeners:
+  web_listener:
+    service: scrypted
+    namespace: host
+    interface: web_interface
+    bind: wildcard
+    protocol: tcp
+    port: 80
+  secure_listener:
+    service: scrypted
+    namespace: host
+    interface: web_interface
+    bind: wildcard
+    protocol: tcp
+    port: 443
+endpoints:
+  web_endpoint:
+    listener: web_listener
+    protocol: http
+    via: web_interface
+storage:
+  data:
+    target: /server/volume
+    read_only: false
+    required: true
+    kind: directory
+  recordings:
+    target: /nvr
+    read_only: false
+    required: true
+    kind: directory
+software:
+- docker
+- curl
+- scrypted-images
+runtime:
+- container-host
+- scrypted
+health:
+  ready:
+    profile: adapter-ready
+monitoring:
+  profile: docker-agent
+backup:
+  include:
+    data:
+      category: state
+      capture: application-export
+  exclude:
+    recordings: external-recordings

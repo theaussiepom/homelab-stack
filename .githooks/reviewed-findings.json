@@ -1,23 +1,23 @@
 [
   {
     "path": "stack.json",
-    "sha256": "41dc6722635d80e79cbc568b7fab0869797ec79009a28a0c7ae021d1791d52ed",
+    "sha256": "85914443abab02a289d448fda177050cdab5f4acecba0c4b711a08a461e4057b",
     "rule": "generic-api-key",
-    "line": 499,
+    "line": 517,
     "reason": "SHA256 of the public postgresql vendor signing key, verified against the vendor.asc asset bytes referenced by this exact library; not a credential."
   },
   {
     "path": "stack.json",
-    "sha256": "41dc6722635d80e79cbc568b7fab0869797ec79009a28a0c7ae021d1791d52ed",
+    "sha256": "85914443abab02a289d448fda177050cdab5f4acecba0c4b711a08a461e4057b",
     "rule": "generic-api-key",
-    "line": 504,
+    "line": 522,
     "reason": "SHA256 of the public mariadb vendor signing key, verified against the vendor.asc asset bytes referenced by this exact library; not a credential."
   },
   {
     "path": "stack.json",
-    "sha256": "41dc6722635d80e79cbc568b7fab0869797ec79009a28a0c7ae021d1791d52ed",
+    "sha256": "85914443abab02a289d448fda177050cdab5f4acecba0c4b711a08a461e4057b",
     "rule": "generic-api-key",
-    "line": 509,
+    "line": 527,
     "reason": "SHA256 of the public influxdb vendor signing key, verified against the vendor.asc asset bytes referenced by this exact library; not a credential."
   }
 ]

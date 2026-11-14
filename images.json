@@ -98,5 +98,10 @@
     "repository": "nodered/node-red",
     "tag": null,
     "digest": "sha256:2ccd38b4066648bd5e17430c50a2f8102c566a82fd4f2fc5c342e61664d6896f"
+  },
+  "scrypted": {
+    "repository": "ghcr.io/koush/scrypted",
+    "tag": "latest",
+    "digest": null
   }
 }
