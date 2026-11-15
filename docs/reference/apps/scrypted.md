@@ -87,7 +87,7 @@ The upstream `/init` entrypoint remains in place. Before the upstream server com
 
 ## First installation
 
-This adapter starts prepared Scrypted state. It does not create an empty installation, restore a backup, import a foreign ownership record, copy recordings or configure cameras. Prepare the local data generation and exact NAS attachment through an authorised commissioning procedure before the first application start. The NAS mount needs platform support and authority beyond naming a `root_path`.
+This adapter starts prepared Scrypted state. It does not create an empty installation, restore a backup, import a foreign ownership record, copy recordings or configure cameras. Prepare the local data generation through an authorised offline import before the first application start. Bootstrap provisions the separate restricted NFS attachment key/helper and protected Environment secret; the context selects its `nfs-attachment` capability. Guest Infrastructure attaches and verifies the declared NAS bind before the saved provider plan. An identical bind is a no-op; conflicts or local fallback are refused. The key supports any guest and NFS source without a VMID allowlist.
 
 ## Later deployments
 
