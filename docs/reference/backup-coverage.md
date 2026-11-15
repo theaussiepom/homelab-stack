@@ -225,7 +225,7 @@ before CD can start and check the app.
 #### Rebuild the Node-RED health wrapper
 
 The reusable wrapper is versioned as
-[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/c2a874c600b92273f52d4e6ce1efb5c755be8786/proxmox/applications/node-red-healthcheck.js).
+[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/1aedda3779c18bfe2db628692e777e37ecd5f97d/proxmox/applications/node-red-healthcheck.js).
 Use the same framework revision selected by this Stack. During recovery,
 separately prepare that file at the app's bound `healthcheck` storage source
 before CD. The profile mounts it read-only at `/healthcheck.js`; it reads the
