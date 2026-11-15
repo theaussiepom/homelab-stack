@@ -19,6 +19,11 @@ contexts:
     ssh_public_keys: []
     dns_servers: [{external: resolver}]
     timezone: Etc/UTC
+    capabilities:
+      nfs:
+        type: nfs-attachment
+        ssh_private_key: nfs
+        known_hosts: /run/example/nfs-known-hosts
 networks:
   services:
     context: lab
@@ -84,6 +89,7 @@ external_endpoints:
 secret_sources:
   api: {type: file, path: /run/example/api-token}
   ssh: {type: file, path: /run/example/ssh-key}
+  nfs: {type: file, path: /run/example/nfs-key}
 policies:
   network:
     deployment:

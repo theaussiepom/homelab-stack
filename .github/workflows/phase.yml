@@ -66,11 +66,13 @@ name: Guest phase
         required: false
       PBS_API_TOKEN:
         required: false
+      PROXMOX_NFS_SSH_KEY:
+        required: false
 permissions:
   contents: read
 jobs:
   run:
-    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@0899d84fb1861034a4463788286180a80d7970e8
+    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@aabd7640afc9570eda42083b0b81621a4ba1b26b
     with:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
@@ -101,3 +103,4 @@ jobs:
       winet_options: ${{ secrets.winet_options }}
       zabbix_database_password: ${{ secrets.zabbix_database_password }}
       PBS_API_TOKEN: ${{ secrets.PBS_API_TOKEN }}
+      PROXMOX_NFS_SSH_KEY: ${{ secrets.PROXMOX_NFS_SSH_KEY }}

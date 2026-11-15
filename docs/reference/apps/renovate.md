@@ -8,7 +8,7 @@ Run Mend Renovate Community Edition as a scheduled GitHub dependency-update serv
 
 Select `apps.<instance>.profile: renovate` on a Debian LXC using the Docker guest template. The [definition](../../../apps/renovate.yaml) owns one `renovate` service. Each instance requires its own project, storage and explicitly selected PostgreSQL owner. The current database contract supports one application database per PostgreSQL app. Multiple instances sharing one guest have not been verified.
 
-CE is the server distribution, not the standalone CLI image. It uses hourly scans of exact repository names. There is no public listener, webhook, endpoint, Traefik dependency or Enterprise Web UI. The internal health endpoint is checked inside the running container.
+CE is the server distribution, not the standalone CLI image. It uses hourly scans of exact repository names. The server configuration sets `vulnerabilityAlerts: {enabled: false}` for the optional Renovate integration and keeps `automerge` and `platformAutomerge` false. This setting does not change GitHub repository alerts or App permissions. There is no public listener, webhook, endpoint, Traefik dependency or Enterprise Web UI. The internal health endpoint is checked inside the running container.
 
 ## First installation
 
@@ -57,7 +57,7 @@ These are the only writable container mounts. The root filesystem is read-only, 
 | `connections.database` | Required PostgreSQL connection on TCP 5432 with `readiness: start`, to the explicit database owner in the same deployment context. | Derives PGHOST/PGPORT and ordering; no credentials are duplicated in this binding. |
 | Producer `properties.application_database` | Required for this composition; exactly `{app: CONSUMER_ID}` on the selected PostgreSQL app. | Derives a narrowly scoped HBA entry and consumes the same protected database-password reference. |
 
-Unknown properties are rejected. Omission, null or an empty value cannot disable a required input. The framework's [Renovate contract](https://github.com/theaussiepom/homelab/blob/0899d84fb1861034a4463788286180a80d7970e8/docs/reference/renovate.md) owns validation and database lifecycle behavior.
+Unknown properties are rejected. Omission, null or an empty value cannot disable a required input. The framework's [Renovate contract](https://github.com/theaussiepom/homelab/blob/aabd7640afc9570eda42083b0b81621a4ba1b26b/docs/reference/renovate.md) owns validation and database lifecycle behavior.
 
 ## Protected inputs
 

@@ -46,6 +46,8 @@ class ProfileExampleIntegrations(unittest.TestCase):
         component_guest.packet(packet,inputs)
         mount=cfg['guest']['recording_mount']
         self.assertEqual(mount['slot'],1)
+        self.assertEqual(cfg['paths']['host_nfs_key'],'/run/example/nfs-key')
+        self.assertEqual(cfg['paths']['host_nfs_known_hosts'],'/run/example/nfs-known-hosts')
         self.assertEqual(mount['source'],'/mnt/example-nas/camera-recordings')
         for mutate in (lambda c:c['guest'].pop('recording_mount'),
                        lambda c:c['guest']['recording_mount'].update(path='/srv/foreign'),
@@ -53,6 +55,21 @@ class ProfileExampleIntegrations(unittest.TestCase):
             broken=copy.deepcopy(packet);changed=json.loads(broken['files']['site.json']);mutate(changed)
             broken['files']['site.json']=json.dumps(changed)
             with self.subTest(mutate=mutate),self.assertRaises(ValueError):component_guest.packet(broken,inputs)
+
+    def test_nfs_guest_provisioning_does_not_require_a_selected_application(self):
+        import component_guest
+        selected=copy.deepcopy(component_sources.site(ROOT/'examples/catalogue/scrypted.yaml')[0])
+        selected['apps']={}
+        with tempfile.TemporaryDirectory()as tmp:
+            path=Path(tmp).resolve()/'empty-nfs-guest.json';path.write_text(json.dumps(selected))
+            with patch('subprocess.run',side_effect=no_native),patch('subprocess.check_output',side_effect=no_native),patch('socket.create_connection',side_effect=no_native):
+                plan=compiler.resolve_plan(ROOT,path,[])
+                packet=compiler.lower_plan(plan)['cameras']
+                cfg=json.loads(packet['files']['site.json'])
+                component_guest.packet(packet,Path(cfg['deployment']['input_directory']).parents[1])
+        self.assertEqual(cfg['deployment']['applications'],{})
+        self.assertEqual(cfg['guest']['recording_mount']['source'],'/mnt/example-nas/camera-recordings')
+        self.assertEqual(cfg['paths']['host_nfs_key'],'/run/example/nfs-key')
 
     def test_renovate_has_one_explicit_postgresql_owner_and_no_ingress_dependency(self):
         plan, packets = self.examples['examples/catalogue/renovate.yaml']
