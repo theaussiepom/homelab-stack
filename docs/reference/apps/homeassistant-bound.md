@@ -85,7 +85,7 @@ This variant binds its web listener to the selected interface; actual socket che
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/aabd7640afc9570eda42083b0b81621a4ba1b26b/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/5c847f82a691782c9411f2e54a1159f9cbc64ec1/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -110,7 +110,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/aabd7640afc9570eda42083b0b81621a4ba1b26b/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/5c847f82a691782c9411f2e54a1159f9cbc64ec1/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -152,7 +152,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/aabd7640afc9570eda42083b0b81621a4ba1b26b/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/aabd7640afc9570eda42083b0b81621a4ba1b26b/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/aabd7640afc9570eda42083b0b81621a4ba1b26b/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/aabd7640afc9570eda42083b0b81621a4ba1b26b/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/aabd7640afc9570eda42083b0b81621a4ba1b26b/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/5c847f82a691782c9411f2e54a1159f9cbc64ec1/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/5c847f82a691782c9411f2e54a1159f9cbc64ec1/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/5c847f82a691782c9411f2e54a1159f9cbc64ec1/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/5c847f82a691782c9411f2e54a1159f9cbc64ec1/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/5c847f82a691782c9411f2e54a1159f9cbc64ec1/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
