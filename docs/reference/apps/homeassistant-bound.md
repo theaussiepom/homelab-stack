@@ -23,6 +23,8 @@ The complete reusable declaration is [homeassistant-bound.yaml](../../../apps/ho
 
 The site must supply `local_id`, `archive` and `archive_sha256` for the custom image. Zero values in the public catalogue are placeholders, not usable image identities. Select the retained multicast DNS (mDNS) startup capability explicitly when required; it does not imply hardware access.
 
+For the official image with the same retained paths and listener contract, see [homeassistant-upstream-bound](homeassistant-upstream-bound.md). Inspect custom dependencies and patches before converting.
+
 For a temporary two-address conversion, choose [homeassistant-dual-web](homeassistant-dual-web.md); this single-address profile remains unchanged.
 
 ## Bound web behaviour
