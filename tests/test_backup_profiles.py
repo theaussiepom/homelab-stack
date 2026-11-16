@@ -92,7 +92,7 @@ class BackupProfileTests(unittest.TestCase):
             packet = component_packet.lower_guest(prepared, guest)
             cfg = json.loads(packet['files']['site.json'])
             self.assertEqual(cfg['deployment']['phases'][-1], 'pbs-agent')
-            self.assertEqual(component_workflows.model(prepared)['guests'][guest]['phases'][-1]['name'], 'Backup')
+            self.assertEqual(component_workflows.model(prepared)['guests'][guest]['phases'][-1]['name'], 'Configure backup')
             job = cfg['app']['backup']['job']
             self.assertEqual(job['destination']['backup_id'], 'guest-610')
             self.assertEqual(job['schedule']['calendar'], '02:00')
