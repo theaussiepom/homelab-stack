@@ -115,6 +115,17 @@ Every registered variant is listed below. Paths are application mount targets, n
 | `community` — `/hacsfiles` | state | application-export |
 | `startup` — `/startup` | configuration | files |
 
+### homeassistant-upstream-bound
+
+[Application reference](apps/homeassistant-upstream-bound.md) · [Definition](../../apps/homeassistant-upstream-bound.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `config` — `/config` | state | application-export |
+| `media` — `/media` | state | application-export |
+| `community` — `/hacsfiles` | state | application-export |
+| `startup` — `/startup` | configuration | files |
+
 ### homeassistant-dual-web
 
 [Application reference](apps/homeassistant-dual-web.md) · [Definition](../../apps/homeassistant-dual-web.yaml)

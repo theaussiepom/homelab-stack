@@ -5,6 +5,7 @@ loader and validator own acceptance; documentation cells own the statements test
 """
 
 DEFINITIONS = {
+    ('app_profiles', 'homeassistant-upstream-bound'): ('apps/homeassistant-upstream-bound.yaml', 'docs/reference/apps/homeassistant-upstream-bound.md'),
     ('app_profiles', 'scrypted'): ('apps/scrypted.yaml', 'docs/reference/apps/scrypted.md'),
     ('app_profiles', 'renovate'): ('apps/renovate.yaml', 'docs/reference/apps/renovate.md'),
     ('backup_profiles', 'pbs-client'): ('backup/pbs-client.yaml', 'docs/reference/backup-profiles.md'),

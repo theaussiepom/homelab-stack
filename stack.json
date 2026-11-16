@@ -65,6 +65,9 @@
     "influxdb-web": {
       "source": "apps/influxdb-web.yaml"
     },
+    "homeassistant-upstream-bound": {
+      "source": "apps/homeassistant-upstream-bound.yaml"
+    },
     "homeassistant-bound": {
       "source": "apps/homeassistant-bound.yaml"
     },

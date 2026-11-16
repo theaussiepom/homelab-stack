@@ -37,7 +37,8 @@ class ComponentCompositionTests(unittest.TestCase):
         self.assertEqual(runtime['storage_paths']['config']['initialize'],
                          {'type': 'directory', 'uid': 0, 'gid': 0, 'mode': '0700'})
         image = app['software_selection']['images']['homeassistant']
-        self.assertTrue(image['image'].startswith('ghcr.io/home-assistant/home-assistant@sha256:'))
+        upstream = json.loads((ROOT / 'images.json').read_text())['homeassistant_upstream']
+        self.assertEqual(image['image'], upstream['repository'] + ':' + upstream['tag'] + '@' + upstream['digest'])
         self.assertNotIn('archive', image)
         rendered = render.compositions(component_lower.runtime_config(plan, 'edge'))
         self.assertTrue(rendered)
