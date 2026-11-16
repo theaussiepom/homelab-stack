@@ -9,6 +9,7 @@ Image versions and policies belong to [images.json](../../images.json); package,
 | Need | Profile / policy |
 | --- | --- |
 | Existing custom Home Assistant image and configuration | Select `homeassistant-custom` and explicitly bind its versioned image archive. |
+| Official Home Assistant with prepared retained data and an isolated web listener | Select `homeassistant-upstream-bound`; preserve the prepared startup capability and first establish compatibility with the official image. |
 | New standard Home Assistant image and configuration | Select homeassistant with the declared official image digest. |
 | Existing Node-RED custom nodes, settings and OpenID Connect sign-in | Select `node_red-custom` with its explicit archive and existing settings and health-check scripts. |
 | New standard Node-RED data | Select node_red. It does not install the existing profile's OpenID Connect sign-in setup or silently replace that setup. |

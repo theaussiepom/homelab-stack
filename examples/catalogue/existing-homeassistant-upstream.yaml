@@ -1,0 +1,162 @@
+# Complete synthetic retained installation; requires prepared config and startup paths.
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+    timezone: Etc/UTC
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  homeassistant:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 820
+      hostname: example-homeassistant
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:14
+        address:
+          mode: static
+          value: 198.18.20.20
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/homeassistant
+    compose_projects:
+      homeassistant:
+        name: example-homeassistant
+        file: compose-homeassistant.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+apps:
+  homeassistant:
+    profile: homeassistant-upstream-bound
+    guest: homeassistant
+    lifecycle: retained
+    interfaces:
+      web_interface:
+        interface: primary
+      home_interface:
+        interface: primary
+    storage:
+      config:
+        root_path: data
+        subpath: homeassistant/config
+      startup:
+        root_path: data
+        subpath: homeassistant/startup
+    identity:
+      phase: homeassistant
+      runtime_id: example-homeassistant
+      services:
+        homeassistant: homeassistant_homeassistant
+      networks: {}
+      project: homeassistant
+    properties:
+      mdns:
+        interface: home_interface
+        startup: startup
+    runtime:
+    - homeassistant-mdns
+domains: {}
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+identity_providers: {}
+secret_sources:
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+accounts: {}
+devices: {}
+evidence: {}
+connections: {}
+exposures: {}
+images: {}
+host_aliases: {}
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+  transport: {}
+  tls: {}
+  middlewares: {}
+  authentication: {}
