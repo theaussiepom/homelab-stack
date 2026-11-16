@@ -37,6 +37,19 @@ def copy_library(target):
 
 
 class GeneratedWorkflowTests(unittest.TestCase):
+    def test_recovery_barrier_and_finalization_preserve_source_graph_and_secret_scopes(self):
+        deploy = load(ROOT/'.github/workflows/deploy.yml')['jobs']
+        self.assertEqual(deploy['_recover']['needs'], ['selection'])
+        self.assertEqual(set(deploy['_finish']['needs']), set(deploy)-{'_finish'})
+        self.assertIn('always()', deploy['_finish']['if'])
+        for name, mode in [('pending-recovery.yml', 'pending'), ('finish-deployment.yml', 'finish')]:
+            workflow = load(ROOT/'.github/workflows'/name)
+            self.assertEqual(workflow['on']['workflow_call']['secrets'], {})
+            job = workflow['jobs']['deploy']
+            self.assertEqual(job['env']['HOMELAB_CD_RECOVERY'], 'v1')
+            self.assertIn('--mode '+mode, job['steps'][-1]['run'])
+            self.assertNotIn('secrets.', json.dumps(job))
+
     def test_checked_in_workflows_match_the_explicit_starter_and_published_pin(self):
         result = generate(ROOT, check=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -82,7 +95,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                 graph = component_workflows.model(plan); packets = compiler.lower_plan(plan)
                 deploy = load(root / '.github/workflows/deploy.yml')
                 self.assertEqual(len(graph['guests']), guests)
-                self.assertEqual(set(deploy['jobs']), {'selection', *graph['guests']})
+                self.assertEqual(set(deploy['jobs']), {'selection', '_recover', '_finish', *graph['guests']})
                 self.assertEqual(sum(len(row['phases']) for row in graph['guests'].values()), phases)
                 pin = load(root / '.github/workflows/phase.yml')['jobs']['run']['uses']
                 repository, revision = pin.split('/.github/workflows/guest-phase.yml@')
@@ -92,12 +105,14 @@ class GeneratedWorkflowTests(unittest.TestCase):
                     job = workflow['jobs']['deploy']; caller = deploy['jobs'][guest]
                     self.assertEqual(workflow['name'], metadata['name']); self.assertEqual(job['name'], metadata['name'])
                     self.assertEqual(job['name'], caller['name'])
-                    self.assertEqual(caller['needs'], metadata['needs'])
+                    self.assertEqual(caller['needs'], [*metadata['needs'], '_recover'])
                     self.assertEqual(job['if'], caller['if'])
                     self.assertIn("github.event.repository.private == true", job['if'])
                     self.assertIn("github.ref == 'refs/heads/main'", job['if'])
                     self.assertEqual(int(job['timeout-minutes']), 45 * len(metadata['phases']))
-                    self.assertEqual(job['env'], {'HOMELAB_DEPLOYMENT_WORKFLOW': '${{ github.workflow_ref }}'})
+                    self.assertEqual(job['env'], {'HOMELAB_DEPLOYMENT_WORKFLOW': '${{ github.workflow_ref }}',
+                        'HOMELAB_CD_RECOVERY': 'v1',
+                        'HOMELAB_CD_DEPENDENCIES': json.dumps(graph['dependencies'], sort_keys=True)})
                     self.assertEqual(job['steps'][0], {'name': 'Setup', 'uses': repository + '/.github/actions/guest-setup@' + revision,
                                                      'timeout-minutes': '45'})
                     cfg = json.loads(packets[guest]['files']['site.json'])
