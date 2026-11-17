@@ -37,18 +37,24 @@ def copy_library(target):
 
 
 class GeneratedWorkflowTests(unittest.TestCase):
-    def test_recovery_barrier_and_finalization_preserve_source_graph_and_secret_scopes(self):
+    def test_each_guest_owns_recovery_completion_and_cleanup(self):
         deploy = load(ROOT/'.github/workflows/deploy.yml')['jobs']
-        self.assertEqual(deploy['_recover']['needs'], ['selection'])
-        self.assertEqual(set(deploy['_finish']['needs']), set(deploy)-{'_finish'})
-        self.assertIn('always()', deploy['_finish']['if'])
-        for name, mode in [('pending-recovery.yml', 'pending'), ('finish-deployment.yml', 'finish')]:
-            workflow = load(ROOT/'.github/workflows'/name)
-            self.assertEqual(workflow['on']['workflow_call']['secrets'], {})
-            job = workflow['jobs']['deploy']
+        self.assertNotIn('_recover', deploy)
+        self.assertNotIn('_finish', deploy)
+        for name in ('pending-recovery.yml', 'finish-deployment.yml'):
+            self.assertFalse((ROOT/'.github/workflows'/name).exists())
+        for guest in compiler.resolve_plan(ROOT, ROOT/'site.example.yaml').resolved['guests']:
+            job = load(ROOT/'.github/workflows'/('guest-'+guest+'.yml'))['jobs']['deploy']
             self.assertEqual(job['env']['HOMELAB_CD_RECOVERY'], 'v1')
-            self.assertIn('--mode '+mode, job['steps'][-1]['run'])
-            self.assertNotIn('secrets.', json.dumps(job))
+            pending, finish = job['steps'][1], job['steps'][-2]
+            self.assertEqual(pending['id'], 'recover')
+            self.assertEqual(finish['if'], "always() && !cancelled() && steps.recover.outcome == 'success'")
+            self.assertEqual(finish['env']['HOMELAB_GUEST_RESULT'], '${{ job.status }}')
+            for step, mode in ((pending, 'pending'), (finish, 'finish')):
+                self.assertEqual(step['env']['GUEST'], guest)
+                self.assertIn('--mode '+mode, step['run'])
+                self.assertNotIn('secrets.', json.dumps(step))
+            self.assertEqual(job['steps'][-1]['name'], 'Cleanup')
 
     def test_checked_in_workflows_match_the_explicit_starter_and_published_pin(self):
         result = generate(ROOT, check=True)
@@ -95,7 +101,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                 graph = component_workflows.model(plan); packets = compiler.lower_plan(plan)
                 deploy = load(root / '.github/workflows/deploy.yml')
                 self.assertEqual(len(graph['guests']), guests)
-                self.assertEqual(set(deploy['jobs']), {'selection', '_recover', '_finish', *graph['guests']})
+                self.assertEqual(set(deploy['jobs']), {'selection', *graph['guests']})
                 self.assertEqual(sum(len(row['phases']) for row in graph['guests'].values()), phases)
                 pin = load(root / '.github/workflows/phase.yml')['jobs']['run']['uses']
                 repository, revision = pin.split('/.github/workflows/guest-phase.yml@')
@@ -105,7 +111,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                     job = workflow['jobs']['deploy']; caller = deploy['jobs'][guest]
                     self.assertEqual(workflow['name'], metadata['name']); self.assertEqual(job['name'], metadata['name'])
                     self.assertEqual(job['name'], caller['name'])
-                    self.assertEqual(caller['needs'], [*metadata['needs'], '_recover'])
+                    self.assertEqual(caller['needs'], metadata['needs'])
                     self.assertEqual(job['if'], caller['if'])
                     self.assertIn("github.event.repository.private == true", job['if'])
                     self.assertIn("github.ref == 'refs/heads/main'", job['if'])
@@ -118,7 +124,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
                     cfg = json.loads(packets[guest]['files']['site.json'])
                     self.assertEqual(['infrastructure', *cfg['deployment']['phases']],
                                      [row['id'] for row in metadata['phases']])
-                    for step, phase in zip(job['steps'][1:], metadata['phases'], strict=True):
+                    for step, phase in zip(job['steps'][2:-2], metadata['phases'], strict=True):
                         self.assertEqual(step['name'], phase['name'])
                         self.assertEqual(step['uses'], repository + '/.github/actions/guest-phase@' + revision)
                         self.assertEqual(step['with']['phase'], phase['id'])
@@ -159,7 +165,7 @@ class GeneratedWorkflowTests(unittest.TestCase):
         for guest in compiler.resolve_plan(ROOT, ROOT / 'site.example.yaml').resolved['guests']:
             workflow = load(ROOT / '.github/workflows' / ('guest-' + guest + '.yml'))
             self.assertEqual(set(workflow['on']['workflow_call']['secrets']), COMMON)
-            for step in workflow['jobs']['deploy']['steps'][1:]:
+            for step in workflow['jobs']['deploy']['steps'][2:-2]:
                 self.assertEqual(set(step['with']), {'guest', 'phase', 'disabled', *COMMON})
                 for name in COMMON: self.assertEqual(step['with'][name], '${{ secrets.' + name + ' }}')
 
