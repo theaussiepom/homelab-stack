@@ -36,7 +36,7 @@ jobs:
     timeout-minutes: 270
     steps:
     - name: Setup
-      uses: theaussiepom/homelab/.github/actions/guest-setup@40065901c50d0e5af72b73eb5dd5e00ae96f4fad
+      uses: theaussiepom/homelab/.github/actions/guest-setup@7bd67b63bcce4e130ad541d5a4a4650076e34703
     - name: Recover pending deployment
       env:
         DISABLED: ${{ inputs.disabled }}
