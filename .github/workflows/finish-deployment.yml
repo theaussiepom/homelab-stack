@@ -36,7 +36,7 @@ jobs:
     timeout-minutes: 270
     steps:
     - name: Setup
-      uses: theaussiepom/homelab/.github/actions/guest-setup@86d33c4112b8146c313ce307fc8217646e0b6d1f
+      uses: theaussiepom/homelab/.github/actions/guest-setup@20cbc84793f1c322a4c90625bf0abe07efb7eae6
     - name: Finish deployment
       env:
         DISABLED: ${{ inputs.disabled }}
