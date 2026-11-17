@@ -6,7 +6,7 @@ Supply the minimal reusable guest defaults; applications can add their own softw
 
 ## Field meaning and constraints
 
-The compatible [guest contract](https://github.com/theaussiepom/homelab/blob/7bd67b63bcce4e130ad541d5a4a4650076e34703/docs/reference/guests.md) and [actual scalar validators](https://github.com/theaussiepom/homelab/blob/7bd67b63bcce4e130ad541d5a4a4650076e34703/blueprints/component_types.py) determine which values are accepted. The following explanations accompany the exact declaration records below:
+The compatible [guest contract](https://github.com/theaussiepom/homelab/blob/4ec51151ca1f727821d30f7e1aa22358ee6bdb86/docs/reference/guests.md) and [actual scalar validators](https://github.com/theaussiepom/homelab/blob/4ec51151ca1f727821d30f7e1aa22358ee6bdb86/blueprints/component_types.py) determine which values are accepted. The following explanations accompany the exact declaration records below:
 
 | Field group | Meaning, presence and constraints |
 | --- | --- |
