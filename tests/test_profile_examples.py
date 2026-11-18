@@ -38,6 +38,38 @@ def compile_examples():
 
 
 class ProfileExampleIntegrations(unittest.TestCase):
+    def test_database_gateway_uses_the_declared_identity_hostname(self):
+        import render
+        for path in ('examples/catalogue/database-guis.yaml','examples/catalogue/new-database-guis.yaml'):
+            plan,_=self.examples[path]
+            for name in ('cloud','administration'):
+                app=plan.resolved['apps'][name]
+                target=app['resolved_connections']['public']
+                self.assertEqual(target['hostname'],plan.site['domains']['identity'])
+                config=component_lower.runtime_config(plan,app['guest'])
+                services={key:value for project in render.compositions(config).values()
+                          for key,value in project['services'].items()}
+                gateway=services[app['identity']['services']['auth_gateway']]
+                server=services[app['identity']['services']['cloudbeaver']]
+                self.assertEqual(gateway['extra_hosts'],{target['hostname']:target['target']['address']})
+                self.assertNotIn('extra_hosts',server)
+                self.assertTrue(gateway['read_only'])
+                self.assertEqual(gateway['user'],'65532:65532')
+                self.assertNotIn('ports',server)
+
+    def test_database_gateway_refuses_declared_hostnames_shadowing_its_backend(self):
+        for path in ('examples/catalogue/database-guis.yaml','examples/catalogue/new-database-guis.yaml'):
+            plan,_=self.examples[path]
+            for name in ('cloud','administration'):
+                owned=plan.resolved['apps'][name]['identity']['services']['cloudbeaver']
+                for hostname in (owned,owned.upper()):
+                    def collide(value):
+                        value.setdefault('host_aliases',{})['backend_collision']={'hostname':hostname}
+                        value['connections'][name+'_public']['hostname']={'alias':'backend_collision'}
+                    with self.subTest(path=path,app=name,hostname=hostname):
+                        self.invalid_source(path,collide,ValueError,
+                                            'Do not shadow the owned Community service name')
+
     def test_manager_provider_ca_is_explicit_and_preserves_native_oidc_and_image(self):
         path='examples/catalogue/edge-management.yaml'
         plan,packets=self.examples[path]

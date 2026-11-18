@@ -468,7 +468,7 @@ connections:
       endpoint: https_endpoint
     source_interface: web_interface
     hostname:
-      domain: cloud
+      domain: identity
   browse:
     consumer:
       app: cloud
@@ -494,7 +494,7 @@ connections:
       endpoint: https_endpoint
     source_interface: web_interface
     hostname:
-      domain: administration
+      domain: identity
   administration:
     consumer:
       app: administration
