@@ -49,7 +49,9 @@ class ProfileExampleIntegrations(unittest.TestCase):
             'pegaprox-proxmox-ca.pem','pegaprox-trust.py'})
         service=json.loads(packets['manager']['files']['compose-manager.yml'])['services']['manager_pegaprox']
         self.assertEqual(service['entrypoint'],['python3','/run/homelab/pegaprox-trust.py'])
-        self.assertTrue(service['image'].startswith('ghcr.io/pegaprox/pegaprox:1.5.0@sha256:'))
+        image=json.loads((ROOT/'images.json').read_text())['pegaprox']
+        tag=':'+image['tag'] if image['tag'] else ''
+        self.assertEqual(service['image'],image['repository']+tag+'@'+image['digest'])
         self.assertTrue(service['read_only'])
         self.assertTrue(app['authentication_resolved']['settings']['oidc_enabled'])
         reference=(ROOT/'docs/reference/apps/pegaprox.md').read_text()

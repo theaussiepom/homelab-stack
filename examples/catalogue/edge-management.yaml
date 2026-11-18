@@ -201,6 +201,7 @@ apps:
       trusted_proxy:
         app: edge
         interface: management_interface
+      # Adds the context CA to the application process's trusted TLS authorities.
       trust_proxmox_ca: true
     authentication: manager_login
     origin:
