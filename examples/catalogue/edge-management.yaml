@@ -201,6 +201,7 @@ apps:
       trusted_proxy:
         app: edge
         interface: management_interface
+      trust_proxmox_ca: true
     authentication: manager_login
     origin:
       exposure: manager
