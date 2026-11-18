@@ -189,6 +189,19 @@ class ComponentCompositionTests(unittest.TestCase):
         self.assertNotIn('extra_hosts', service)
         self.assertEqual(selected.resolved['guests'], absent.resolved['guests'])
 
+    def test_manager_frontend_admits_only_selected_clients_on_https(self):
+        from component_traffic import Flow, permits
+        value = component_sources.site(ROOT / 'examples/catalogue/edge-management.yaml')[0]
+        selected = self.plan(value)
+        rules = selected.resolved['guests']['edge']['rules']
+        endpoint = selected.resolved['endpoints']['app/edge/https_endpoint']
+        for source, port, allowed in (('198.18.10.50', 443, True),
+                                      ('198.18.30.50', 443, False),
+                                      ('198.18.10.50', 80, False)):
+            with self.subTest(source=source, port=port):
+                self.assertEqual(permits(rules, 'in',
+                    Flow(source, endpoint['address'], 'tcp', port), 'net0'), allowed)
+
     def test_pegaprox_api_binding_checks_egress_without_configuring_cluster_or_scheduling(self):
         value = component_sources.site(ROOT / 'examples/catalogue/edge-management.yaml')[0]
         selected = self.plan(value)

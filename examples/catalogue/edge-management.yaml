@@ -78,6 +78,13 @@ guests:
         application:
           app: manager
           endpoint: web_endpoint
+    - policy: manager_client_https
+      endpoints:
+        listener:
+          app: edge
+          endpoint: https_endpoint
+      address_groups:
+        clients: management_clients
   manager:
     context: lab
     template: docker
@@ -286,11 +293,26 @@ exposures:
 images: {}
 host_aliases: {}
 address_groups:
+  management_clients:
+    # Synthetic routed client network permitted to use the manager's HTTPS URL.
+    members:
+    - 198.18.10.0/24
   internet:
     members:
     - 0.0.0.0/0
 policies:
   network:
+    manager_client_https:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          address_group: clients
+        destination:
+          endpoint: listener
+        port:
+          endpoint: listener
+        comment: Selected management clients to edge HTTPS
     provider_api:
       rules:
       - direction: out
