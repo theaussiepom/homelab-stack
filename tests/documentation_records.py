@@ -50,7 +50,7 @@ REGISTRATIONS = {
     'software': ('scrypted-images', 'renovate-images', 'pbs-client', 'docker', 'curl', 'network-tools', 'yaml-parser', 'mariadb-client', 'postgresql', 'mariadb', 'influxdb', 'homeassistant-custom-images', 'node_red-custom-images', 'bitwarden-images', 'cloudbeaver-images', 'pihole-images', 'unbound-images', 'authentik-images', 'traefik-images', 'zabbix-images', 'mqtt-images', 'mqtt_explorer-images', 'music_assistant-images', 'pegaprox-images', 'zigbee2mqtt-images', 'winet-images', 'homeassistant-upstream-images', 'node_red-upstream-images'),
     'runtime_profiles': ('scrypted', 'renovate', 'container-host', 'homeassistant', 'node_red', 'bitwarden', 'cloudbeaver', 'pihole', 'unbound', 'authentik', 'traefik', 'zabbix', 'mqtt', 'mqtt_explorer', 'music_assistant', 'pegaprox', 'zigbee2mqtt', 'winet', 'homeassistant-mdns', 'native-postgresql', 'native-mariadb', 'native-influxdb'),
     'health_profiles': ('adapter-ready',),
-    'authentication_profiles': ('cloudbeaver-oidc', 'node-red-retained-oidc', 'zabbix-saml'),
+    'authentication_profiles': ('cloudbeaver-oidc', 'pegaprox-oidc', 'node-red-retained-oidc', 'zabbix-saml'),
     'monitoring_profiles': ('linux-agent', 'docker-agent', 'postgresql-agent', 'mariadb-agent', 'influxdb-agent'),
     'assets': ('proxmox-backup-repository-key', 'postgresql-repository-key', 'mariadb-repository-key', 'influxdb-repository-key'),
     'policies.network': ('mqtt_backend_ingress', 'http_backend_egress', 'resolver_dns_udp_first', 'source_bound_package_image_provider_web_egress', 'resolver_dns_tcp_first', 'package_repository_web_egress', 'package_image_provider_web_egress'),

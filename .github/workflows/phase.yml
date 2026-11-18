@@ -40,7 +40,11 @@ name: Guest phase
         required: false
       node_red_api_token:
         required: false
+      pegaprox_client_secret:
+        required: false
       pegaprox_database_key:
+        required: false
+      pegaprox_management_token:
         required: false
       postgresql_application_database_password:
         required: false
@@ -72,7 +76,7 @@ permissions:
   contents: read
 jobs:
   run:
-    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@5ef20160f3b0440c43fd147d74dbdba5bce1567f
+    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@b6e343517d26f8637a9cd336a9cf8d2e6e1de2ac
     with:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
@@ -90,7 +94,9 @@ jobs:
       mqtt_explorer_broker_password: ${{ secrets.mqtt_explorer_broker_password }}
       mqtt_probe: ${{ secrets.mqtt_probe }}
       node_red_api_token: ${{ secrets.node_red_api_token }}
+      pegaprox_client_secret: ${{ secrets.pegaprox_client_secret }}
       pegaprox_database_key: ${{ secrets.pegaprox_database_key }}
+      pegaprox_management_token: ${{ secrets.pegaprox_management_token }}
       postgresql_application_database_password: ${{ secrets.postgresql_application_database_password }}
       renovate_accept_terms: ${{ secrets.renovate_accept_terms }}
       renovate_database_password: ${{ secrets.renovate_database_password }}

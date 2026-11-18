@@ -36,8 +36,8 @@
   },
   "pegaprox": {
     "repository": "ghcr.io/pegaprox/pegaprox",
-    "tag": null,
-    "digest": "sha256:8d295a524a52f0b923616a3eb415ff6422fe62beba5bb441f35c75d8985f1add"
+    "tag": "1.5.0",
+    "digest": "sha256:3c8cb496769f05e8c37a6e9cb37a4700df2a37898c073b635c83d734014065f7"
   },
   "pihole": {
     "repository": "pihole/pihole",

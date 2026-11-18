@@ -103,6 +103,7 @@ The template’s Linux monitoring and each app’s monitoring settings take effe
 | Requirement | Type | Profile floor |
 | --- | --- | --- |
 | <a id="registration-authentication-profiles-cloudbeaver-oidc"></a>`authentication_profiles.cloudbeaver-oidc` | `cloudbeaver-oidc` | Required |
+| <a id="registration-authentication-profiles-pegaprox-oidc"></a>`authentication_profiles.pegaprox-oidc` | `pegaprox-oidc` | Optional |
 | <a id="registration-authentication-profiles-node-red-retained-oidc"></a>`authentication_profiles.node-red-retained-oidc` | `node-red-retained-oidc` | Required |
 | <a id="registration-authentication-profiles-zabbix-saml"></a>`authentication_profiles.zabbix-saml` | `zabbix-saml` | Optional |
 

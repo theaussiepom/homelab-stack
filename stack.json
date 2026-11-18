@@ -590,6 +590,10 @@
     }
   },
   "authentication_profiles": {
+    "pegaprox-oidc": {
+      "type": "pegaprox-oidc",
+      "required": false
+    },
     "cloudbeaver-oidc": {
       "type": "cloudbeaver-oidc",
       "required": true

@@ -127,7 +127,7 @@ class ComponentCompositionTests(unittest.TestCase):
         value['policies']['middlewares']['trusted_clients']={'type':'ip-allow-list','ranges':['10.222.0.0/16']}
         value['policies']['middlewares']['headers']={'type':'default-headers'}
         value['secret_sources']['edge_origin_token']={'type':'file','path':'/run/example/retained-origin-token'}
-        value['domains']={'manager':'manager.example.invalid'}
+        value['domains'].update({'manager':'manager.example.invalid'})
         value['policies']['tls']={'public':{'type':'acme','resolver':'letsencrypt'}}
         value['exposures']={'manager':{'type':'http','target':{'app':'manager','endpoint':'web_endpoint'},'domain':'manager',
             'ingress':{'app':'edge','endpoint':'https_endpoint'},'tls':'public','middlewares':['cloudflare_public','headers']}}
@@ -170,6 +170,38 @@ class ComponentCompositionTests(unittest.TestCase):
     def starter(self):
         return component_sources.site(ROOT / 'site.example.yaml')[0]
 
+    def test_pegaprox_native_oidc_is_optional_and_uses_only_selected_secret_roles(self):
+        value = component_sources.site(ROOT / 'examples/catalogue/edge-management.yaml')[0]
+        selected = self.plan(value)
+        app = component_lower.runtime_config(selected, 'manager')['applications']['manager']
+        self.assertEqual(app['authentication_resolved']['settings']['oidc_redirect_uri'],
+                         'https://manager.example.invalid/oidc/callback')
+        self.assertEqual(set(app['input_sources']), {'database_key','client_secret','management_token'})
+        service = next(iter(render.compositions(component_lower.runtime_config(selected,'manager')).values()))['services']['manager_pegaprox']
+        self.assertEqual(service['extra_hosts'], {'sso.example.invalid':'192.0.2.20'})
+        value['apps']['manager'].pop('authentication')
+        value['connections'].pop('manager_identity')
+        absent = self.plan(value)
+        app = component_lower.runtime_config(absent, 'manager')['applications']['manager']
+        self.assertNotIn('authentication_resolved', app)
+        self.assertEqual(set(app['input_sources']), {'database_key'})
+        service = next(iter(render.compositions(component_lower.runtime_config(absent,'manager')).values()))['services']['manager_pegaprox']
+        self.assertNotIn('extra_hosts', service)
+        self.assertEqual(selected.resolved['guests'], absent.resolved['guests'])
+
+    def test_manager_frontend_admits_only_selected_clients_on_https(self):
+        from component_traffic import Flow, permits
+        value = component_sources.site(ROOT / 'examples/catalogue/edge-management.yaml')[0]
+        selected = self.plan(value)
+        rules = selected.resolved['guests']['edge']['rules']
+        endpoint = selected.resolved['endpoints']['app/edge/https_endpoint']
+        for source, port, allowed in (('198.18.10.50', 443, True),
+                                      ('198.18.30.50', 443, False),
+                                      ('198.18.10.50', 80, False)):
+            with self.subTest(source=source, port=port):
+                self.assertEqual(permits(rules, 'in',
+                    Flow(source, endpoint['address'], 'tcp', port), 'net0'), allowed)
+
     def test_pegaprox_api_binding_checks_egress_without_configuring_cluster_or_scheduling(self):
         value = component_sources.site(ROOT / 'examples/catalogue/edge-management.yaml')[0]
         selected = self.plan(value)
@@ -177,7 +209,9 @@ class ComponentCompositionTests(unittest.TestCase):
         absent['connections'].pop('manager_provider')
         omitted = self.plan(absent)
         self.assertEqual(selected.resolved['apps']['manager']['resolved_connections']['proxmox']['target']['port'], 8006)
-        self.assertEqual(omitted.resolved['apps']['manager']['resolved_connections'], {})
+        expected = copy.deepcopy(selected.resolved['apps']['manager']['resolved_connections'])
+        expected.pop('proxmox')
+        self.assertEqual(omitted.resolved['apps']['manager']['resolved_connections'], expected)
         self.assertEqual(selected.resolved['guest_dependencies'], omitted.resolved['guest_dependencies'])
         self.assertEqual(render.compositions(component_lower.runtime_config(selected, 'manager')),
                          render.compositions(component_lower.runtime_config(omitted, 'manager')))
