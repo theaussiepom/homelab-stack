@@ -35,7 +35,7 @@ You need prepared data, configuration and log directories, the existing database
 
 The optional `pegaprox-oidc` authentication capability adds the application's native sign-in button. Select a policy with an existing confidential identity-provider client, a distinct PegaProx API token limited to `admin.settings`, an HTTPS app origin and explicit group mappings. The adapter preserves local login, uses a fixed viewer fallback, and leaves both TLS and JWT verification skip switches disabled. PegaProx 1.5.0 can still accept a token from the verified TLS token response without checking its signature when signing keys cannot be obtained; disabling the skip switch does not guarantee signature verification. Identity-provider application setup and user admission remain external prerequisites.
 
-The [complete edge/manager example](../../../examples/catalogue/edge-management.yaml) includes those declarations, an external identity endpoint, its hostname binding and the exact proxy-to-manager traffic rules. Its credentials and endpoints are synthetic. Configure the IdP's strict callback as the app origin plus `/oidc/callback`. Read the compatible framework's [native OIDC reference](https://github.com/theaussiepom/homelab/blob/b6e343517d26f8637a9cd336a9cf8d2e6e1de2ac/docs/reference/pegaprox-oidc.md) before selecting the capability; an older framework revision does not implement it. Complete a verified image-only deployment before first enabling OIDC, because generic CD rollback does not undo API settings in the application database.
+The [complete edge/manager example](../../../examples/catalogue/edge-management.yaml) includes those declarations, an external identity endpoint, its hostname binding and the exact proxy-to-manager traffic rules. Its credentials and endpoints are synthetic. Configure the IdP's strict callback as the app origin plus `/oidc/callback`. Read the compatible framework's [native OIDC reference](https://github.com/theaussiepom/homelab/blob/674301c44315a01716a39287f60ef9610cd9dd4e/docs/reference/pegaprox-oidc.md) before selecting the capability; an older framework revision does not implement it. Complete a verified image-only deployment before first enabling OIDC, because generic CD rollback does not undo API settings in the application database.
 
 The example admits client HTTPS only from its explicitly selected `management_clients` address group, representing the routed benchmark client network `198.18.10.0/24`; it does not grant unrestricted Internet ingress.
 
@@ -91,7 +91,7 @@ A wildcard listener accepts connections within the declared app network. A port 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/b6e343517d26f8637a9cd336a9cf8d2e6e1de2ac/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/674301c44315a01716a39287f60ef9610cd9dd4e/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -117,7 +117,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/b6e343517d26f8637a9cd336a9cf8d2e6e1de2ac/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/674301c44315a01716a39287f60ef9610cd9dd4e/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -162,7 +162,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/b6e343517d26f8637a9cd336a9cf8d2e6e1de2ac/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/b6e343517d26f8637a9cd336a9cf8d2e6e1de2ac/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/b6e343517d26f8637a9cd336a9cf8d2e6e1de2ac/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/b6e343517d26f8637a9cd336a9cf8d2e6e1de2ac/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/b6e343517d26f8637a9cd336a9cf8d2e6e1de2ac/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/674301c44315a01716a39287f60ef9610cd9dd4e/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/674301c44315a01716a39287f60ef9610cd9dd4e/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/674301c44315a01716a39287f60ef9610cd9dd4e/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/674301c44315a01716a39287f60ef9610cd9dd4e/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/674301c44315a01716a39287f60ef9610cd9dd4e/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
