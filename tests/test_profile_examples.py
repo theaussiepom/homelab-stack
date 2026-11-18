@@ -38,6 +38,31 @@ def compile_examples():
 
 
 class ProfileExampleIntegrations(unittest.TestCase):
+    def test_manager_provider_ca_is_explicit_and_preserves_native_oidc_and_image(self):
+        path='examples/catalogue/edge-management.yaml'
+        plan,packets=self.examples[path]
+        cfg=json.loads(packets['manager']['files']['site.json'])
+        app=plan.resolved['apps']['manager']
+        self.assertEqual(app['settings']['proxmox_ca_source'],cfg['paths']['ca_file'])
+        self.assertEqual(set(app['runtime_files']['files']),{
+            'pegaprox-db-key','pegaprox-oidc.json','pegaprox-oidc-applied.json',
+            'pegaprox-proxmox-ca.pem','pegaprox-trust.py'})
+        service=json.loads(packets['manager']['files']['compose-manager.yml'])['services']['manager_pegaprox']
+        self.assertEqual(service['entrypoint'],['python3','/run/homelab/pegaprox-trust.py'])
+        image=json.loads((ROOT/'images.json').read_text())['pegaprox']
+        tag=':'+image['tag'] if image['tag'] else ''
+        self.assertEqual(service['image'],image['repository']+tag+'@'+image['digest'])
+        self.assertTrue(service['read_only'])
+        self.assertTrue(app['authentication_resolved']['settings']['oidc_enabled'])
+        reference=(ROOT/'docs/reference/apps/pegaprox.md').read_text()
+        self.assertIn('trust_proxmox_ca',reference)
+        self.assertIn('#pegaprox-provider-trust',reference)
+        self.invalid_source(path,
+            lambda value:value['apps']['manager']['properties'].update(trust_proxmox_ca='true'),
+            ComponentError,'component.properties')
+        self.invalid_source(path,lambda value:value['connections'].pop('manager_provider'),
+            ComponentError,'component.reference')
+
     def test_scrypted_real_packet_binds_the_exact_provider_and_application_recording_root(self):
         import component_guest
         _,packets=self.examples['examples/catalogue/scrypted.yaml']

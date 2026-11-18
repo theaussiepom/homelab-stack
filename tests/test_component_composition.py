@@ -204,6 +204,9 @@ class ComponentCompositionTests(unittest.TestCase):
 
     def test_pegaprox_api_binding_checks_egress_without_configuring_cluster_or_scheduling(self):
         value = component_sources.site(ROOT / 'examples/catalogue/edge-management.yaml')[0]
+        # This oracle owns the optional connectivity declaration without CA opt-in.
+        # The provider-trust integration separately requires that connection.
+        self.assertIs(value['apps']['manager']['properties'].pop('trust_proxmox_ca'), True)
         selected = self.plan(value)
         absent = copy.deepcopy(value)
         absent['connections'].pop('manager_provider')
