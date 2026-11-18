@@ -31,6 +31,16 @@ Bind the optional `management_interface` role to describe the intended Proxmox A
 
 You need prepared data, configuration and log directories, the existing database key, and a completed administrator setup. The profile does not create a new application administrator or adopt an unrelated manager. The practical example maintains an already HomeLab-managed instance.
 
+## Native OIDC login
+
+The optional `pegaprox-oidc` authentication capability adds the application's native sign-in button. Select a policy with an existing confidential identity-provider client, a distinct PegaProx API token limited to `admin.settings`, an HTTPS app origin and explicit group mappings. The adapter preserves local login, uses a fixed viewer fallback, and leaves both TLS and JWT verification skip switches disabled. PegaProx 1.5.0 can still accept a token from the verified TLS token response without checking its signature when signing keys cannot be obtained; disabling the skip switch does not guarantee signature verification. Identity-provider application setup and user admission remain external prerequisites.
+
+The [complete edge/manager example](../../../examples/catalogue/edge-management.yaml) includes those declarations, an external identity endpoint, its hostname binding and the exact proxy-to-manager traffic rules. Its credentials and endpoints are synthetic. Configure the IdP's strict callback as the app origin plus `/oidc/callback`. Read the compatible framework's [native OIDC reference](https://github.com/theaussiepom/homelab/blob/3348b6fca17846a0148496d5a7e287350525b4ce/docs/reference/pegaprox-oidc.md) before selecting the capability; an older framework revision does not implement it. Complete a verified image-only deployment before first enabling OIDC, because generic CD rollback does not undo API settings in the application database.
+
+The example admits client HTTPS only from its explicitly selected `management_clients` address group, representing the routed benchmark client network `198.18.10.0/24`; it does not grant unrestricted Internet ingress.
+
+This image selection is PegaProx 1.5.0 pinned to the amd64 manifest in [images.json](../../../images.json). Qualification includes an isolated upgrade from the previous 1.4.1 image with encrypted state, separate key, retained account login, proxy boundaries and settings-API idempotence. It does not establish a particular site's browser sign-in. Preserve recoverable state/key material before updating. Use `enabled: false` in the authentication policy for a reviewed disable while retaining secret ownership; ordinary CD does not rotate protected credentials.
+
 ## Minimal usage
 
 The following is an **app-selection fragment**, not a complete site. Its instance ID and values come from the [complete synthetic composition](../../../examples/catalogue/edge-management.yaml).
@@ -81,7 +91,7 @@ A wildcard listener accepts connections within the declared app network. A port 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/d26af16c524403962abb9caa8d5dfc79fef9e3be/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/3348b6fca17846a0148496d5a7e287350525b4ce/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -95,6 +105,7 @@ Bind each storage role to a guest volume and subpath, or to a supported path on 
 | Connection role | Required | Type | Meaning |
 | --- | --- | --- | --- |
 | `proxmox` | No | `https` | Selected hypervisor API; bind its endpoint and source interface explicitly. |
+| `identity` | No | `https` | Native OIDC provider's reachable HTTPS endpoint; an explicit hostname binding can retain its TLS hostname. |
 
 The complete example connects `manager_provider` to the existing external Proxmox endpoint through the app’s `web_interface` role. The guest’s network policy permits the API port, so source validation can check the required traffic. This connection does not configure an existing PegaProx cluster or make deployment wait for it. A site with no configured cluster can omit the role. Selecting an API connection does not require opening SSH, console or other ports.
 
@@ -106,7 +117,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/d26af16c524403962abb9caa8d5dfc79fef9e3be/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/3348b6fca17846a0148496d5a7e287350525b4ce/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -151,7 +162,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/d26af16c524403962abb9caa8d5dfc79fef9e3be/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/d26af16c524403962abb9caa8d5dfc79fef9e3be/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/d26af16c524403962abb9caa8d5dfc79fef9e3be/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/d26af16c524403962abb9caa8d5dfc79fef9e3be/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/d26af16c524403962abb9caa8d5dfc79fef9e3be/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/3348b6fca17846a0148496d5a7e287350525b4ce/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/3348b6fca17846a0148496d5a7e287350525b4ce/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/3348b6fca17846a0148496d5a7e287350525b4ce/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/3348b6fca17846a0148496d5a7e287350525b4ce/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/3348b6fca17846a0148496d5a7e287350525b4ce/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -204,6 +215,9 @@ These are the complete supplied fields in [pegaprox.yaml](../../../apps/pegaprox
 | <a id="declaration-storage-logs-required"></a>`storage.logs.required` | `true` |
 | <a id="declaration-storage-logs-kind"></a>`storage.logs.kind` | `"directory"` |
 | <a id="declaration-connections"></a>`connections` | `object` |
+| <a id="declaration-connections-identity"></a>`connections.identity` | `object` |
+| <a id="declaration-connections-identity-type"></a>`connections.identity.type` | `"https"` |
+| <a id="declaration-connections-identity-required"></a>`connections.identity.required` | `false` |
 | <a id="declaration-connections-proxmox"></a>`connections.proxmox` | `object` |
 | <a id="declaration-connections-proxmox-type"></a>`connections.proxmox.type` | `"https"` |
 | <a id="declaration-connections-proxmox-required"></a>`connections.proxmox.required` | `false` |
@@ -212,6 +226,7 @@ These are the complete supplied fields in [pegaprox.yaml](../../../apps/pegaprox
 | <a id="declaration-health"></a>`health` | `object` |
 | <a id="declaration-health-ready"></a>`health.ready` | `object` |
 | <a id="declaration-health-ready-profile"></a>`health.ready.profile` | `"adapter-ready"` |
+| <a id="declaration-authentication"></a>`authentication` | `"pegaprox-oidc"` |
 | <a id="declaration-secrets"></a>`secrets` | `object` |
 | <a id="declaration-secrets-database-key"></a>`secrets.database_key` | `object` |
 | <a id="declaration-secrets-database-key-required"></a>`secrets.database_key.required` | `true` |

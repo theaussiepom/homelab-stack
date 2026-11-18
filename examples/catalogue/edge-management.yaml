@@ -1,4 +1,3 @@
-# Complete SYNTHETIC source-only composition. Retained entries require an already owned installation.
 schema: homelab-components-v1
 kind: site
 contexts:
@@ -74,6 +73,18 @@ guests:
     - policy: downloads
       address_groups:
         internet: internet
+    - policy: manager_proxy_egress
+      endpoints:
+        application:
+          app: manager
+          endpoint: web_endpoint
+    - policy: manager_client_https
+      endpoints:
+        listener:
+          app: edge
+          endpoint: https_endpoint
+      address_groups:
+        clients: management_clients
   manager:
     context: lab
     template: docker
@@ -117,6 +128,14 @@ guests:
       endpoints:
         provider:
           external: proxmox
+    - policy: manager_proxy_ingress
+      endpoints:
+        application:
+          app: manager
+          endpoint: web_endpoint
+        proxy:
+          app: edge
+          endpoint: https_endpoint
 apps:
   edge:
     profile: traefik
@@ -182,7 +201,12 @@ apps:
       trusted_proxy:
         app: edge
         interface: management_interface
-domains: {}
+    authentication: manager_login
+    origin:
+      exposure: manager
+domains:
+  manager: manager.example.invalid
+  identity: sso.example.invalid
 external_endpoints:
   proxmox:
     protocol: https
@@ -196,7 +220,23 @@ external_endpoints:
     protocol: tcp
     address: 198.18.20.2
     port: 22
-identity_providers: {}
+  identity:
+    protocol: https
+    address: 192.0.2.20
+    port: 443
+identity_providers:
+  management_identity:
+    type: oidc
+    origin:
+      domain: identity
+    issuer_path: /application/o/manager/
+    endpoints:
+      authorization: /application/o/authorize/
+      token: /application/o/token/
+      userinfo: /application/o/userinfo/
+      jwks: /application/o/manager/jwks/
+    signing_algorithms:
+    - RS256
 secret_sources:
   api:
     type: file
@@ -213,6 +253,12 @@ secret_sources:
   manager_database_key:
     type: file
     path: /run/example/manager_database_key
+  manager_client_secret:
+    type: file
+    path: /run/example/manager_client_secret
+  manager_api_token:
+    type: file
+    path: /run/example/manager_api_token
 accounts: {}
 devices: {}
 evidence: {}
@@ -224,15 +270,49 @@ connections:
     target:
       external: proxmox
     source_interface: web_interface
-exposures: {}
+  manager_identity:
+    consumer:
+      app: manager
+      connection: identity
+    target:
+      external: identity
+    source_interface: web_interface
+    hostname:
+      domain: identity
+exposures:
+  manager:
+    type: http
+    target:
+      app: manager
+      endpoint: web_endpoint
+    domain: manager
+    ingress:
+      app: edge
+      endpoint: https_endpoint
+    tls: public
 images: {}
 host_aliases: {}
 address_groups:
+  management_clients:
+    # Synthetic routed client network permitted to use the manager's HTTPS URL.
+    members:
+    - 198.18.10.0/24
   internet:
     members:
     - 0.0.0.0/0
 policies:
   network:
+    manager_client_https:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          address_group: clients
+        destination:
+          endpoint: listener
+        port:
+          endpoint: listener
+        comment: Selected management clients to edge HTTPS
     provider_api:
       rules:
       - direction: out
@@ -273,7 +353,41 @@ policies:
         destination:
           address_group: internet
         comment: Recursive DNS
+    manager_proxy_egress:
+      rules:
+      - direction: out
+        proto: tcp
+        destination:
+          endpoint: application
+        port:
+          endpoint: application
+        comment: Manager backend from selected proxy
+    manager_proxy_ingress:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: proxy
+        port:
+          endpoint: application
+        comment: Manager backend from selected proxy
   transport: {}
-  tls: {}
+  tls:
+    public:
+      type: acme
+      resolver: letsencrypt
   middlewares: {}
-  authentication: {}
+  authentication:
+    manager_login:
+      type: pegaprox-oidc
+      provider: management_identity
+      client_id: management-ui
+      client_secret: manager_client_secret
+      management_token: manager_api_token
+      display_name: Sign in with Identity
+      user_claim: preferred_username
+      enabled: true
+      allow_private_ip: true
+      group_mappings:
+      - group_id: Management administrators
+        role: admin

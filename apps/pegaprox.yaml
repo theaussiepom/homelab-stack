@@ -44,6 +44,9 @@ storage:
     required: true
     kind: directory
 connections:
+  identity:
+    type: https
+    required: false
   proxmox:
     type: https
     required: false
@@ -56,6 +59,7 @@ runtime:
 health:
   ready:
     profile: adapter-ready
+authentication: pegaprox-oidc
 secrets:
   database_key:
     required: true
