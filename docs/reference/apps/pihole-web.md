@@ -87,7 +87,7 @@ The DNS wildcard listeners can accept connections through interfaces other than 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/80071a549865b9f0fcd475e529a2286b830383be/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -108,7 +108,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/80071a549865b9f0fcd475e529a2286b830383be/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/app-properties.md).
 
 This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
@@ -126,6 +126,10 @@ After repair, resolve the same complete source and generate every guest’s depl
 The existing [complete-profile integrations](../../../tests/test_profile_examples.py) and [composition cases](../../../tests/test_component_composition.py) exercise the real selected framework. Its validators, binding checks and packet/file builders enforce these boundaries; the [testing guide](../../testing.md#documentation-conformance) explains the evidence limits.
 
 ## Software and resource policy
+
+This resolver retains guest OS DNS (`runtime_dns: host`) so startup does not
+depend on its own service. See [application DNS](../software-and-runtime.md#application-dns)
+for the shared container policy.
 
 Software selections: [`docker`](../software-and-runtime.md#registration-software-docker), [`curl`](../software-and-runtime.md#registration-software-curl), [`pihole-images`](../software-and-runtime.md#registration-software-pihole-images). Runtime selections: [`container-host`](../software-and-runtime.md#registration-runtime-profiles-container-host), [`pihole`](../software-and-runtime.md#registration-runtime-profiles-pihole).
 
@@ -151,7 +155,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/80071a549865b9f0fcd475e529a2286b830383be/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/80071a549865b9f0fcd475e529a2286b830383be/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/80071a549865b9f0fcd475e529a2286b830383be/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/80071a549865b9f0fcd475e529a2286b830383be/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/80071a549865b9f0fcd475e529a2286b830383be/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -164,6 +168,7 @@ These are the complete supplied fields in [pihole-web.yaml](../../../apps/pihole
 | Declaration path | Selected value |
 | --- | --- |
 | <a id="declaration-adapter"></a>`adapter` | `"pihole"` |
+| <a id="declaration-runtime-dns"></a>`runtime_dns` | `"host"` |
 | <a id="declaration-display-name"></a>`display_name` | `"Pi-hole with a separate web interface"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
 | <a id="declaration-interfaces-service-interface"></a>`interfaces.service_interface` | `object` |

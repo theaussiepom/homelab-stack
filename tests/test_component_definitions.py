@@ -26,6 +26,15 @@ sys.path[:0] = [str(ROOT / 'tests'), str(ROOT)]
 
 
 class ProfileDefinitionTests(unittest.TestCase):
+    def test_dns_infrastructure_keeps_host_resolvers(self):
+        # apps.*.runtime_dns -> docs/reference/software-and-runtime.md.
+        for name, profile in self.library['app_profiles'].items():
+            with self.subTest(profile=name):
+                if name in ('pihole', 'pihole-web', 'unbound'):
+                    self.assertEqual(profile['runtime_dns'], 'host')
+                else:
+                    self.assertNotIn('runtime_dns', profile)
+
     def test_scrypted_keeps_local_state_and_external_recordings_distinct(self):
         value = self.profile('scrypted')
         self.assertEqual(set(value['storage']), {'data', 'recordings'})

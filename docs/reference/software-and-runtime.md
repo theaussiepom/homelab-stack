@@ -143,3 +143,21 @@ The loader checks hash-bound assets as public source bytes; they are vendor repo
 The tests check for both missing and extra registered names through [documentation conformance](../testing.md#documentation-conformance). Tests compare exact app, guest-template and backup-profile field values with their typed records. The shared catalogue check covers registered names; a reviewer must still compare its nested values and procedural explanations with the source.
 
 The compatible loader also accepts a bundle registry, but this library registers no bundles; no fixed guest/application bundle is implied. New registrations must acquire explicit catalogue and pointer records.
+
+## Application DNS
+
+A site's context may select `runtime_dns_servers` using declared DNS endpoint
+references. Ordinary application containers inherit that selection; the shared
+framework renders Compose `dns` and narrow port 53 rules. Guest OS package and
+image downloads continue to use context `dns_servers`. Native database services
+outside containers retain OS DNS.
+
+The `pihole`, `pihole-web` and `unbound` profiles declare `runtime_dns: host` so DNS
+infrastructure can start independently. App instances may explicitly override
+the mode with `host` or `context`. At least one selected runtime resolver must be
+available when an application needs DNS. This does not add global deployment
+ordering or make arbitrary per-application hostname bindings redundant.
+
+See the framework's context and application DNS reference for exact validation,
+network grants and update behavior. Profile checks establish source selection;
+service startup, DNS transit and sign-in require deployment verification.
