@@ -1,6 +1,7 @@
 schema: homelab-components-v1
 kind: app-profile
 adapter: pihole
+runtime_dns: host
 display_name: Pi-hole
 interfaces:
   service_interface:

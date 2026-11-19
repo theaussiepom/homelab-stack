@@ -1,6 +1,7 @@
 schema: homelab-components-v1
 kind: app-profile
 adapter: unbound
+runtime_dns: host
 display_name: Unbound
 interfaces:
   service_interface:
