@@ -23,6 +23,10 @@ interfaces:
     required: false
     accepts:
     - guest-interface
+  storage_interface:
+    required: false
+    accepts:
+    - guest-interface
   private_interface:
     required: true
     accepts:
@@ -82,6 +86,9 @@ connections:
     readiness:
     - start
   proxmox:
+    type: https
+    required: false
+  pbs:
     type: https
     required: false
   metrics:

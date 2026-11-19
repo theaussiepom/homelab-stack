@@ -62,6 +62,7 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 | `postgresql_interface` | Yes | `guest-interface` |
 | `metrics_interface` | No; selected capability can require it | `guest-interface` |
 | `management_interface` | No; selected capability can require it | `guest-interface` |
+| `storage_interface` | No; use it for a PBS connection on a separate storage network | `guest-interface` |
 | `private_interface` | Yes | `app-network` |
 
 Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback or an app network through its explicit scope. A role does not create another network interface. See [Multiple interfaces](../../guides/multiple-interfaces.md).
@@ -83,7 +84,7 @@ A wildcard listener accepts connections within the declared app network. A port 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/4016c9efa400a47161c9d008bded5227a2b5cea2/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 No app storage role is declared. Generated private runtime files retain their separate owned paths.
 
@@ -94,9 +95,16 @@ No app storage role is declared. Generated private runtime files retain their se
 | `database` | `postgresql` | Yes | `start` | None |
 | `public` | `https` | No | `start` | None |
 | `proxmox` | `https` | No | None | None |
+| `pbs` | `https` | No | None | None |
 | `metrics` | `influxdb` | No | None | None |
 
 The readiness column lists the ordering options you can choose. Set `readiness` explicitly on the site connection to make one app wait for another. Referencing a value alone creates no wait and permits no network traffic. See [Connect apps](../../guides/connect-apps.md).
+
+The `pbs` connection links the community PBS template to the selected root
+monitoring server. Supply a reachable PBS endpoint, TLS transport policy with
+the certificate and its hostname, and a dedicated read-only token. Supply its
+secret in a protected controller file. Connect once per PBS server. Datastore
+discovery and backup task queries use that connection for every guest.
 
 | App secret role | Requirement |
 | --- | --- |
@@ -108,7 +116,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/4016c9efa400a47161c9d008bded5227a2b5cea2/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -155,7 +163,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/e619a1c670d21df7e450f9cf8c51eb91887eaf4e/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/4016c9efa400a47161c9d008bded5227a2b5cea2/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/4016c9efa400a47161c9d008bded5227a2b5cea2/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/4016c9efa400a47161c9d008bded5227a2b5cea2/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/4016c9efa400a47161c9d008bded5227a2b5cea2/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/4016c9efa400a47161c9d008bded5227a2b5cea2/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -185,6 +193,9 @@ These are the complete supplied fields in [zabbix.yaml](../../../apps/zabbix.yam
 | <a id="declaration-interfaces-management-interface"></a>`interfaces.management_interface` | `object` |
 | <a id="declaration-interfaces-management-interface-required"></a>`interfaces.management_interface.required` | `false` |
 | <a id="declaration-interfaces-management-interface-accepts"></a>`interfaces.management_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-storage-interface"></a>`interfaces.storage_interface` | `object` |
+| <a id="declaration-interfaces-storage-interface-required"></a>`interfaces.storage_interface.required` | `false` |
+| <a id="declaration-interfaces-storage-interface-accepts"></a>`interfaces.storage_interface.accepts` | `["guest-interface"]` |
 | <a id="declaration-interfaces-private-interface"></a>`interfaces.private_interface` | `object` |
 | <a id="declaration-interfaces-private-interface-required"></a>`interfaces.private_interface.required` | `true` |
 | <a id="declaration-interfaces-private-interface-accepts"></a>`interfaces.private_interface.accepts` | `["app-network"]` |
@@ -243,6 +254,9 @@ These are the complete supplied fields in [zabbix.yaml](../../../apps/zabbix.yam
 | <a id="declaration-connections-proxmox"></a>`connections.proxmox` | `object` |
 | <a id="declaration-connections-proxmox-type"></a>`connections.proxmox.type` | `"https"` |
 | <a id="declaration-connections-proxmox-required"></a>`connections.proxmox.required` | `false` |
+| <a id="declaration-connections-pbs"></a>`connections.pbs` | `object` |
+| <a id="declaration-connections-pbs-type"></a>`connections.pbs.type` | `"https"` |
+| <a id="declaration-connections-pbs-required"></a>`connections.pbs.required` | `false` |
 | <a id="declaration-connections-metrics"></a>`connections.metrics` | `object` |
 | <a id="declaration-connections-metrics-type"></a>`connections.metrics.type` | `"influxdb"` |
 | <a id="declaration-connections-metrics-required"></a>`connections.metrics.required` | `false` |
