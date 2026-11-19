@@ -130,8 +130,8 @@ class ProfileDefinitionTests(unittest.TestCase):
         self.assertEqual(self.library['software']['bitwarden-images'],
                          {'images': {'bitwarden': 'bitwarden'}})
         self.assertEqual(json.loads((ROOT / 'images.json').read_text())['bitwarden'], {
-            'repository': 'ghcr.io/bitwarden/lite', 'tag': None,
-            'digest': 'sha256:94484fe9382df51ad755151ea360663e922e60a32385500454dd1f38045bf6a6'})
+            'repository': 'ghcr.io/bitwarden/lite', 'tag': '2026.11.0',
+            'digest': 'sha256:89c1844364fa6fe09e145e73b035c0e01d6194d317fb10853e30bc672a4648fb'})
 
     def test_cloudbeaver_helpers_and_database_roles_do_not_require_identity_readiness(self):
         value = self.profile('cloudbeaver')
