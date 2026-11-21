@@ -27,7 +27,7 @@
   "mqtt": {
     "repository": "eclipse-mosquitto",
     "tag": null,
-    "digest": "sha256:077fe4ff4c49df1e860c98335c77dda08360629e0e2a718147027e4db3eace9d"
+    "digest": "sha256:fa12172a051310efe5bcb7a6a11b77bd5faacb82cbacd7742aa758bf024fd8e4"
   },
   "bitwarden": {
     "repository": "ghcr.io/bitwarden/lite",
