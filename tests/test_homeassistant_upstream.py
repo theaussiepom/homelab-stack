@@ -35,6 +35,8 @@ class OfficialHomeAssistant(unittest.TestCase):
 
     def test_conversion_changes_only_image_and_pull_policy_in_compose(self):
         source = self.source()
+        source['connections'].pop('ha_controller')
+        source['apps']['homeassistant']['interfaces'].pop('management_interface')
         official = self.resolve(source)
         source['apps']['homeassistant']['profile'] = 'homeassistant-bound'
         archived = self.resolve(source)
@@ -65,6 +67,23 @@ class OfficialHomeAssistant(unittest.TestCase):
             self.assertEqual(new_service['environment']['HOMELAB_HA_IPV4'], '198.18.20.20')
             self.assertIn('/srv/example/homeassistant/homeassistant/startup:/startup:ro', new_service['volumes'])
 
+    def test_controller_connection_keeps_hostname_scoped_to_home_assistant(self):
+        source = self.source()
+        with_controller = self.resolve(source)
+        source['connections'].pop('ha_controller')
+        without_controller = self.resolve(source)
+        self.assertEqual(component_lower.provider_config(with_controller, 'homeassistant'),
+                         component_lower.provider_config(without_controller, 'homeassistant'))
+        actual, prior = (
+            render.compositions(component_lower.runtime_config(plan, 'homeassistant'))
+            for plan in (with_controller, without_controller)
+        )
+        self.assertEqual(len(actual), 1)
+        service = next(iter(actual.values()))['services']['homeassistant_homeassistant']
+        self.assertEqual(service.pop('extra_hosts'),
+                         {'controller.example.invalid': '198.18.20.3'})
+        self.assertEqual(actual, prior)
+
     def test_unused_archive_binding_must_be_removed(self):
         source = self.source()
         source['images']['homeassistant'] = {
@@ -80,6 +99,10 @@ class OfficialHomeAssistant(unittest.TestCase):
         official.pop('display_name'); archived.pop('display_name')
         official['software'].remove('homeassistant-upstream-images')
         archived['software'].remove('homeassistant-custom-images')
+        self.assertEqual(official['interfaces'].pop('management_interface'),
+                         {'required': False, 'accepts': ['guest-interface']})
+        self.assertEqual(official['connections'].pop('controller'),
+                         {'type': 'https', 'required': False})
         self.assertEqual(official, archived)
         source = self.source()
         app = source['apps']['homeassistant']

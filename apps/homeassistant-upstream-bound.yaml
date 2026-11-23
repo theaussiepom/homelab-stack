@@ -23,6 +23,10 @@ interfaces:
     required: false
     accepts:
     - guest-interface
+  management_interface:
+    required: false
+    accepts:
+    - guest-interface
 listeners:
   web_listener:
     service: homeassistant
@@ -73,6 +77,9 @@ connections:
     required: false
     readiness:
     - start
+  controller:
+    type: https
+    required: false
 software:
 - docker
 - curl
