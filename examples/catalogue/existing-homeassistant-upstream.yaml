@@ -74,6 +74,12 @@ guests:
     - policy: downloads
       address_groups:
         internet: internet
+    - policy: controller_https
+      interfaces:
+        management: primary
+      endpoints:
+        controller:
+          external: controller
 apps:
   homeassistant:
     profile: homeassistant-upstream-bound
@@ -83,6 +89,8 @@ apps:
       web_interface:
         interface: primary
       home_interface:
+        interface: primary
+      management_interface:
         interface: primary
     storage:
       config:
@@ -118,6 +126,10 @@ external_endpoints:
     protocol: tcp
     address: 198.18.20.2
     port: 22
+  controller:
+    protocol: https
+    address: 198.18.20.3
+    port: 8443
 identity_providers: {}
 secret_sources:
   api:
@@ -129,10 +141,21 @@ secret_sources:
 accounts: {}
 devices: {}
 evidence: {}
-connections: {}
+connections:
+  ha_controller:
+    consumer:
+      app: homeassistant
+      connection: controller
+    target:
+      external: controller
+    source_interface: management_interface
+    hostname:
+      alias: controller
 exposures: {}
 images: {}
-host_aliases: {}
+host_aliases:
+  controller:
+    hostname: controller.example.invalid
 address_groups:
   internet:
     members:
@@ -156,6 +179,18 @@ policies:
         destination:
           address_group: internet
         comment: Package and image downloads
+    controller_https:
+      rules:
+      - direction: out
+        proto: tcp
+        interface: management
+        source:
+          interface: management
+        destination:
+          endpoint: controller
+        port:
+          endpoint: controller
+        comment: Controller HTTPS
   transport: {}
   tls: {}
   middlewares: {}

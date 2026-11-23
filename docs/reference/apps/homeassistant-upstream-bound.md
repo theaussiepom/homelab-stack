@@ -74,6 +74,7 @@ A role describes a network connection the app needs. Its [binding](../declaratio
 | `database_interface` | No; selected capability can require it | `guest-interface` |
 | `metrics_interface` | No; selected capability can require it | `guest-interface` |
 | `broker_interface` | No; selected capability can require it | `guest-interface` |
+| `management_interface` | No; select it as the source for the management connection | `guest-interface` |
 
 Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role names an application requirement; it does not create another NIC. See [Multiple interfaces](../../guides/multiple-interfaces.md).
 
@@ -109,6 +110,16 @@ Bind each storage role to a guest volume and subpath, or to a supported path on 
 | `recorder` | `mariadb` | No | `start` | None |
 | `metrics` | `influxdb` | No | `start` | None |
 | `broker` | `mqtt` | No | `start` | None |
+| `controller` | `https` | No | None | None |
+
+Use the optional `controller` connection to give Home Assistant a direct
+HTTPS path to a managed controller. Bind `management_interface` to the guest
+NIC that routes to the controller, select an HTTPS endpoint, and set
+`hostname` when the integration uses a DNS name from the controller's TLS
+certificate. The mapping is scoped to the Home Assistant container. Configure
+the integration with that name and permit the selected endpoint in the site's
+firewall. The [complete example](../../../examples/catalogue/existing-homeassistant-upstream.yaml)
+shows this binding and its matching policy.
 
 The readiness column lists the ordering options you can choose. Set `readiness` explicitly on the site connection to make one app wait for another. Referencing a value alone creates no wait and permits no network traffic. See [Connect apps](../../guides/connect-apps.md).
 
@@ -188,6 +199,9 @@ Complete values from [homeassistant-upstream-bound.yaml](../../../apps/homeassis
 | <a id="declaration-interfaces-broker-interface"></a>`interfaces.broker_interface` | `object` |
 | <a id="declaration-interfaces-broker-interface-required"></a>`interfaces.broker_interface.required` | `false` |
 | <a id="declaration-interfaces-broker-interface-accepts"></a>`interfaces.broker_interface.accepts` | `["guest-interface"]` |
+| <a id="declaration-interfaces-management-interface"></a>`interfaces.management_interface` | `object` |
+| <a id="declaration-interfaces-management-interface-required"></a>`interfaces.management_interface.required` | `false` |
+| <a id="declaration-interfaces-management-interface-accepts"></a>`interfaces.management_interface.accepts` | `["guest-interface"]` |
 | <a id="declaration-listeners"></a>`listeners` | `object` |
 | <a id="declaration-listeners-web-listener"></a>`listeners.web_listener` | `object` |
 | <a id="declaration-listeners-web-listener-service"></a>`listeners.web_listener.service` | `"homeassistant"` |
@@ -235,6 +249,9 @@ Complete values from [homeassistant-upstream-bound.yaml](../../../apps/homeassis
 | <a id="declaration-connections-broker-type"></a>`connections.broker.type` | `"mqtt"` |
 | <a id="declaration-connections-broker-required"></a>`connections.broker.required` | `false` |
 | <a id="declaration-connections-broker-readiness"></a>`connections.broker.readiness` | `["start"]` |
+| <a id="declaration-connections-controller"></a>`connections.controller` | `object` |
+| <a id="declaration-connections-controller-type"></a>`connections.controller.type` | `"https"` |
+| <a id="declaration-connections-controller-required"></a>`connections.controller.required` | `false` |
 | <a id="declaration-software"></a>`software` | `["docker", "curl", "homeassistant-upstream-images"]` |
 | <a id="declaration-runtime"></a>`runtime` | `["container-host", "homeassistant"]` |
 | <a id="declaration-health"></a>`health` | `object` |
