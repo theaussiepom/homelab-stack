@@ -30,6 +30,21 @@
         "ghcr.io/koush/scrypted"
       ],
       "pinDigests": false
+    },
+    {
+      "description": "Keep Authentik in its selected release series",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/goauthentik/server",
+        "beryju/authentik"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "enabled": false
     }
   ]
 }

@@ -24,6 +24,16 @@ for(const pattern of manager.matchStrings) new RE2(pattern);
 const raw=fs.readFileSync(path.join(root,'images.json'),'utf8');
 const scratch=fs.mkdtempSync(path.join(os.tmpdir(),'renovate-catalogue-'));
 GlobalConfig.set({localDir:scratch});
+// Authentik uses calendar releases. Renovate may propose patch and digest PRs
+// while an operator advances the year/month series through its migration path.
+for (const packageName of ['ghcr.io/goauthentik/server', 'beryju/authentik', 'registry.example.invalid/other']) {
+  for (const updateType of ['major', 'minor', 'patch', 'digest', 'pinDigest']) {
+    const result = await applyPackageRules({...config, manager: 'regex', datasource: 'docker', packageName, updateType});
+    const isAuthentik = packageName !== 'registry.example.invalid/other';
+    const changesSeries = updateType === 'major' || updateType === 'minor';
+    assert.equal(result.enabled !== false, !(isAuthentik && changesSeries));
+  }
+}
 async function check(text, tagChange=false) {
   const catalogue=JSON.parse(text);
   const registry=Object.entries(catalogue).filter(([,value])=>value.repository);
