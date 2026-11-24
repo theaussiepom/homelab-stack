@@ -156,6 +156,9 @@ Both `fresh` and `retained` can update an instance that HomeLab already manages.
 
 ### Check and update
 
+The first upgrade from 2025.2.1 selects the original multi-platform 2025.2.4 release for both server and worker. The Authentik build provenance records publication to both `ghcr.io/goauthentik/server` and `beryju/authentik`. The latter still serves the original tagged index for Linux AMD64 and ARM64. The current GHCR tag serves ARM64 only. Use the immutable index selected in the catalogue. Sites using this hop need Docker Hub registry access. Back up PostgreSQL and verify the restored copy, worker and existing sign-in before moving to the next release series. [Image catalogue](../../../images.json) · [Upstream upgrade procedure](https://docs.goauthentik.io/install-config/upgrade/)
+
+
 Keep the same app, service and project identities, writable storage paths and credential owners. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Before an ordinary update, HomeLab checks the current ownership records, matching deployment state and preserved private inputs. Selecting a profile cannot clear a HOLD left by an unresolved operation or adopt data that HomeLab does not manage.
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
