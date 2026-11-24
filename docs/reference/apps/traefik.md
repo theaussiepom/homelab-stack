@@ -2,7 +2,7 @@
 
 # Traefik
 
-Provide the selected HTTP and HTTPS ingress with its declared provider, ACME, trust and routing inputs.
+Provide HTTP and HTTPS ingress and optional private TLS relays with the declared provider, ACME, trust and routing inputs.
 
 [Choose](#choose-this-profile) · [Interfaces](#interfaces) · [Listeners](#listeners-and-endpoints) · [Storage](#storage) · [Inputs](#connections-accounts-and-private-inputs) · [Properties](#application-properties) · [Software](#software-and-resource-policy) · [Update](#check-and-update) · [Declared fields](#declaration-records)
 
@@ -25,7 +25,7 @@ The complete reusable declaration is [traefik.yaml](../../../apps/traefik.yaml).
 
 Although secret roles and properties are structurally conditional, the current supported runtime binds both provider and ACME and requires the proxmox_token role for the provider and the cloudflare_dns_token role for ACME. No Docker socket, arbitrary provider or raw route file override is exposed.
 
-The optional `cloudflare-source` exposure policy adds the framework-owned local middleware and requires `cloudflare_origin_token`. Use the canonical [private-role inventory](https://github.com/theaussiepom/homelab/blob/fb99e9d3225858686d277e225b47e18ac76d9ad5/docs/reference/identity-and-secrets.md#adapter-private-roles) at this selection point. Bind the existing token through a protected secret source; normal CD mounts its bytes as a root-owned read-only file rather than exposing them through Traefik dynamic configuration or API output; its header name and internal allowlist belong to site policy. The plugin checks socket sources, sanitizes visitor headers and bounds address-feed refresh/failure behavior. See the framework [middleware contract](https://github.com/theaussiepom/homelab/blob/105203a55bad55a8e077310fbc9f4520433a849b/docs/reference/policies.md#cloudflare-source-boundary).
+The optional `cloudflare-source` exposure policy adds the framework-owned local middleware and requires `cloudflare_origin_token`. Use the canonical [private-role inventory](https://github.com/theaussiepom/homelab/blob/fb99e9d3225858686d277e225b47e18ac76d9ad5/docs/reference/identity-and-secrets.md#adapter-private-roles) at this selection point. Bind the existing token through a protected secret source; normal CD mounts its bytes as a root-owned read-only file rather than exposing them through Traefik dynamic configuration or API output; its header name and internal allowlist belong to site policy. The plugin checks socket sources, sanitizes visitor headers and bounds address-feed refresh/failure behavior. See the framework [middleware contract](https://github.com/theaussiepom/homelab/blob/979b570b13c1f7524c842ba623a93836acf3595c/docs/reference/policies.md#cloudflare-source-boundary).
 
 Deploy route restrictions before opening the ingress frontend firewall in a later deployment. Validate the actual selected Traefik image, internal access, public TLS and visitor identity after CD; source checks alone do not establish service acceptance.
 
@@ -87,9 +87,18 @@ Bind each selected role to a named guest NIC with `{interface: NIC_ID}`. A role 
 
 Listeners use the declared interface or network namespace. Endpoints tell consumers where to connect; they do not permit traffic or make consumers wait for the service.
 
+The framework adds a listener and endpoint for each relay declared in
+`properties.private_tls_relays`. Select the physical `management_interface`
+binding at a different address from `frontend_interface` to use this option.
+Each relay selects one client interface, a TLS hostname, a listen port and an
+upstream endpoint. A relay can pass TLS through or terminate it and verify a
+new upstream TLS connection through a named transport policy. Stage the exact
+client and upstream firewall grants before switching clients. Changing the
+listener set updates Traefik's static configuration through CD.
+
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/105203a55bad55a8e077310fbc9f4520433a849b/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/979b570b13c1f7524c842ba623a93836acf3595c/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -115,13 +124,14 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/105203a55bad55a8e077310fbc9f4520433a849b/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/979b570b13c1f7524c842ba623a93836acf3595c/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
 | dashboard | Optional boolean, default false | Enables only the internal dashboard endpoint; it does not publish port 8080. An exposure still requires its TLS and authentication policies. |
 | provider | Required by current runtime | context and token_id select the existing HTTPS provider. Optional discovery uses `local_directory`, `mirror_directory` and required `scope: all-guests`. HomeLab verifies the existing audit-only credential and mirrored ownership records. Adding guests needs no permission extension or source owner hash; only configured Notes labels create routes. |
 | acme | Required by current runtime | Supply email and 1..3 named DNS endpoint references. Optional propagation_timeout_seconds accepts 120..2100. The selected existing DNS credential role is required. |
+| private_tls_relays | Optional named map. Omission preserves the declared web listeners. | Each relay owns a TCP listener on the bound management interface, restricted to one selected client interface. |
 
 ## Invalid cases
 
@@ -162,7 +172,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/105203a55bad55a8e077310fbc9f4520433a849b/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/105203a55bad55a8e077310fbc9f4520433a849b/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/105203a55bad55a8e077310fbc9f4520433a849b/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/105203a55bad55a8e077310fbc9f4520433a849b/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/105203a55bad55a8e077310fbc9f4520433a849b/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/979b570b13c1f7524c842ba623a93836acf3595c/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/979b570b13c1f7524c842ba623a93836acf3595c/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/979b570b13c1f7524c842ba623a93836acf3595c/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/979b570b13c1f7524c842ba623a93836acf3595c/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/979b570b13c1f7524c842ba623a93836acf3595c/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
