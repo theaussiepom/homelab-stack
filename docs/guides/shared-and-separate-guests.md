@@ -22,7 +22,7 @@ The instance ID, derived or explicit runtime/service/project/network identities 
 
 ## Share a Compose project explicitly
 
-A guest may declare named `compose_projects`, and retained app identities bind to the selected project and owned service roles. Helpers remain with their app: CloudBeaver owns its auth gateway; Explorer owns its gateway; Authentik owns server/worker/Redis. Shared project membership is not a dependency and does not authorize restarting peers.
+A guest may declare named `compose_projects`, and retained app identities bind to the selected project and owned service roles. Helpers remain with their app: CloudBeaver owns its auth gateway; Explorer owns its gateway; Authentik owns its server and worker. Shared project membership is not a dependency and does not authorize restarting peers.
 
 The compiler rejects overlapping service/network identities, writable storage namespaces and incompatible publications. Native service definitions also reject conflicts between fixed unit names, configuration paths and accounts. PostgreSQL and MariaDB can pass these checks together; PostgreSQL and InfluxDB currently use a conflicting fixed group identity. Having enough memory alone does not establish that two services can share a guest.
 

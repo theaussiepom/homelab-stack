@@ -61,7 +61,7 @@ class BackupProfileTests(unittest.TestCase):
 
     def test_critical_state_is_not_misclassified_as_logs_or_rebuildable_cache(self):
         expected = {'bitwarden': 'data', 'node_red': 'data', 'homeassistant': 'config',
-                    'authentik': 'redis', 'mqtt': 'data', 'zigbee2mqtt': 'data',
+                    'authentik': 'data', 'mqtt': 'data', 'zigbee2mqtt': 'data',
                     'music_assistant': 'data', 'pegaprox': 'config', 'traefik': 'certs',
                     'cloudbeaver': 'workspace', 'mqtt_explorer': 'data'}
         for name, role in expected.items():

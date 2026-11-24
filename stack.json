@@ -203,8 +203,7 @@
     "authentik-images": {
       "images": {
         "server": "authentik",
-        "worker": "authentik",
-        "redis": "redis"
+        "worker": "authentik"
       }
     },
     "traefik-images": {
@@ -373,11 +372,6 @@
           "pids_limit": 256,
           "cpu_limit": 1,
           "user": "1000"
-        },
-        "redis": {
-          "memory_mib": 128,
-          "pids_limit": 256,
-          "cpu_limit": 1
         }
       }
     },
