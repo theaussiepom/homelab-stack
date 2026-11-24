@@ -5,9 +5,9 @@
     "digest": "sha256:6cbef353e480a8a6e7f10ec545f13d7d3fa85a212cdcc5ffaf5a1c818b9d3798"
   },
   "authentik": {
-    "repository": "ghcr.io/goauthentik/server",
-    "tag": "2025.2.1",
-    "digest": "sha256:dc07e81b4462a1dad9c6720f4c73993e37d7cb2d2f94a306187318704d112e71"
+    "repository": "beryju/authentik",
+    "tag": "2025.2.4",
+    "digest": "sha256:36233579415aa2e2e52a6b0c45736cb871fe71460bfe0cf95d83f67528fb1182"
   },
   "traefik": {
     "repository": "traefik",
