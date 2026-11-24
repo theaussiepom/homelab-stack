@@ -24,6 +24,22 @@ name: Guest phase
         required: true
       PROXMOX_APP_TOKEN:
         required: true
+      authentik_oidc_client_1:
+        required: false
+      authentik_oidc_client_2:
+        required: false
+      authentik_oidc_client_3:
+        required: false
+      authentik_oidc_client_4:
+        required: false
+      authentik_oidc_client_5:
+        required: false
+      authentik_oidc_client_6:
+        required: false
+      authentik_oidc_client_7:
+        required: false
+      authentik_oidc_client_8:
+        required: false
       authentik_postgresql_password:
         required: false
       authentik_secret_key:
@@ -76,7 +92,7 @@ permissions:
   contents: read
 jobs:
   run:
-    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@979b570b13c1f7524c842ba623a93836acf3595c
+    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@cf21b6a367b6e8d3a6710b1cfbc4c149f6952b6e
     with:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
@@ -86,6 +102,14 @@ jobs:
     secrets:
       APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
       PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
+      authentik_oidc_client_1: ${{ secrets.authentik_oidc_client_1 }}
+      authentik_oidc_client_2: ${{ secrets.authentik_oidc_client_2 }}
+      authentik_oidc_client_3: ${{ secrets.authentik_oidc_client_3 }}
+      authentik_oidc_client_4: ${{ secrets.authentik_oidc_client_4 }}
+      authentik_oidc_client_5: ${{ secrets.authentik_oidc_client_5 }}
+      authentik_oidc_client_6: ${{ secrets.authentik_oidc_client_6 }}
+      authentik_oidc_client_7: ${{ secrets.authentik_oidc_client_7 }}
+      authentik_oidc_client_8: ${{ secrets.authentik_oidc_client_8 }}
       authentik_postgresql_password: ${{ secrets.authentik_postgresql_password }}
       authentik_secret_key: ${{ secrets.authentik_secret_key }}
       authentik_smtp_password: ${{ secrets.authentik_smtp_password }}
