@@ -78,7 +78,7 @@ A wildcard listener accepts connections within the declared app network. A port 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/2a022550cd07a07c0dba9b2190ec27f52555e025/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -88,6 +88,8 @@ The target is the path the app uses. Its [site binding](https://github.com/theau
 | `data` | Yes | `/data` | directory / writable | None |
 
 Bind each storage role to a guest volume and subpath, or to a supported path on the guest’s root filesystem. HomeLab checks existing data without changing its file owner or moving it. Where a profile supports initialization, it creates only a new app subdirectory on a volume whose provider ownership has been verified. It does not initialize an existing directory.
+
+When upgrading an owned legacy installation, bind `data` to a subdirectory on the same declared volume as the existing media. The Authentik phase verifies the old server and worker mounts, creates the missing data directory, then checks all four directories. If `data` uses a root-path binding, supply that directory before guest preparation. A missing data directory on an installation already using the modern mounts requires recovery.
 
 ## Connections, accounts and private inputs
 
@@ -108,7 +110,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/2a022550cd07a07c0dba9b2190ec27f52555e025/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -159,7 +161,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/2a022550cd07a07c0dba9b2190ec27f52555e025/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/2a022550cd07a07c0dba9b2190ec27f52555e025/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/2a022550cd07a07c0dba9b2190ec27f52555e025/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/2a022550cd07a07c0dba9b2190ec27f52555e025/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/2a022550cd07a07c0dba9b2190ec27f52555e025/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 

@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FRAMEWORK = Path(os.environ.get('HOMELAB_FRAMEWORK', ROOT.parent/'homelab')).resolve()
 sys.path[:0] = [str(FRAMEWORK/'blueprints'), str(FRAMEWORK/'proxmox/applications')]
 import component_lower
+import component_packet
 import component_plan
 from authentik_releases import REPOSITORY
 
@@ -29,6 +30,30 @@ spec.loader.exec_module(planner)
 
 
 class HookTests(unittest.TestCase):
+    def test_retained_storage_is_checked_in_the_phase_that_owns_it(self):
+        site = yaml.safe_load((ROOT/'examples/catalogue/identity-monitoring.yaml').read_text())
+        guest = site['guests']['identity']
+        storage = site['apps']['identity']['storage']
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory).resolve()/'site.yaml'
+            for binding in ('root_path', 'volume'):
+                with self.subTest(binding=binding):
+                    if binding == 'volume':
+                        root = guest.pop('root_paths')['data']['path']
+                        guest['volumes'] = {'data': {'storage': 'local', 'slot': 0, 'size_gib': 8, 'path': root}}
+                        for row in storage.values():
+                            row['volume'] = row.pop('root_path')
+                    source.write_text(yaml.safe_dump(site))
+                    plan = component_plan.resolve(ROOT, source)
+                    packet = component_packet.lower_guest(plan, 'identity')
+                    runtime = json.loads(packet['files']['component-runtime.json'])
+                    paths = runtime['applications']['identity']['storage_paths']
+                    self.assertEqual(set(paths), {'data', 'media', 'certs', 'templates'})
+                    prepared = json.loads(packet['files']['site.json'])['app']['required_paths']
+                    self.assertEqual({row['path'] for row in prepared},
+                                     {row['source'] for role, row in paths.items()
+                                      if binding == 'root_path' or role != 'data'})
+
     def test_default_and_cross_profile_scope(self):
         with tempfile.TemporaryDirectory() as directory:
             stack = Path(directory).resolve()/'stack'
