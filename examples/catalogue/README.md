@@ -33,6 +33,7 @@ These complete example configurations use invented inputs. You can check them of
 | [winet](../../docs/reference/apps/winet.md) | [messaging-radio.yaml](messaging-radio.yaml) | `telemetry` |
 | [homeassistant](../../docs/reference/apps/homeassistant.md) | [new-automation.yaml](new-automation.yaml) | `homeassistant` |
 | [node_red](../../docs/reference/apps/node_red.md) | [new-automation.yaml](new-automation.yaml) | `node_red` |
+| [cloudbeaver-forward-auth](../../docs/reference/apps/cloudbeaver-forward-auth.md) | [database-forward-auth.yaml](database-forward-auth.yaml) | `administration` |
 | [cloudbeaver-mariadb-admin](../../docs/reference/apps/cloudbeaver-mariadb-admin.md) | [database-guis.yaml](database-guis.yaml) | `administration` |
 
 The separate [fresh InfluxDB web example](new-influxdb-web.yaml) creates the native server and its optional web socket with distinct addresses. It does not initialize an organization, bucket or token, or grant browser access.

@@ -50,6 +50,8 @@ name: Guest phase
         required: false
       cloudbeaver_client_secret:
         required: false
+      cloudbeaver_recovery_password:
+        required: false
       mqtt_explorer_broker_password:
         required: false
       mqtt_probe:
@@ -92,7 +94,7 @@ permissions:
   contents: read
 jobs:
   run:
-    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@ab7e4e18090cb31c0e2fadf7ddee1d3007036542
+    uses: theaussiepom/homelab/.github/workflows/guest-phase.yml@5f6d08ecd02fe1a3bbed88a6b857ab9c9d91c6ff
     with:
       disabled: ${{ inputs.disabled }}
       runner_labels: ${{ inputs.runner_labels }}
@@ -115,6 +117,7 @@ jobs:
       authentik_smtp_password: ${{ secrets.authentik_smtp_password }}
       bitwarden_runtime_environment: ${{ secrets.bitwarden_runtime_environment }}
       cloudbeaver_client_secret: ${{ secrets.cloudbeaver_client_secret }}
+      cloudbeaver_recovery_password: ${{ secrets.cloudbeaver_recovery_password }}
       mqtt_explorer_broker_password: ${{ secrets.mqtt_explorer_broker_password }}
       mqtt_probe: ${{ secrets.mqtt_probe }}
       node_red_api_token: ${{ secrets.node_red_api_token }}

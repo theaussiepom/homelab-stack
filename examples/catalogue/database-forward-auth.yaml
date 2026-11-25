@@ -1,0 +1,493 @@
+schema: homelab-components-v1
+kind: site
+contexts:
+  lab:
+    backend: proxmox-lxc
+    node: example-node
+    api_endpoint:
+      external: proxmox
+    trust:
+      ca_file: /etc/example/ca.pem
+      known_hosts: /etc/example/known_hosts
+    credentials:
+      api_token: api
+      ssh_private_key: ssh
+    paths:
+      state_root: /var/lib/example/state
+      backup_directory: /mnt/example/backups
+      backup_mount: /mnt/example
+      backup_source: nas.example.invalid:/backups
+    protected_guests: []
+    ssh_public_keys: []
+    dns_servers:
+    - external: resolver
+    timezone: Etc/UTC
+networks:
+  services:
+    context: lab
+    cidr: 198.18.20.0/24
+    bridge: vmbr-example
+    vlan: 220
+    gateway: 198.18.20.1
+storage:
+  local:
+    context: lab
+    pool: example-local
+guests:
+  ingress:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 1000
+      hostname: example-ingress
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:c8
+        address:
+          mode: static
+          value: 198.18.20.200
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/ingress
+    compose_projects:
+      ingress:
+        name: example-ingress
+        file: compose-ingress.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_administration
+    - policy: identity_web_out
+  administration:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 881
+      hostname: example-administration
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 6144
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:51
+        address:
+          mode: static
+          value: 198.18.20.81
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/administration
+      native:
+        path: /var/lib/mysql
+    compose_projects:
+      administration:
+        name: example-administration
+        file: compose-administration.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: ingress_administration_in
+    - policy: connect_administration
+    - policy: connect_administration_incoming
+  identity:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 850
+      hostname: example-identity
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:32
+        address:
+          mode: static
+          value: 198.18.20.50
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/identity
+    compose_projects:
+      identity:
+        name: example-identity
+        file: compose-identity.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: connect_identity_database
+    - policy: identity_web_in
+apps:
+  ingress:
+    profile: traefik
+    guest: ingress
+    lifecycle: retained
+    interfaces:
+      frontend_interface:
+        interface: primary
+      management_interface:
+        interface: primary
+    storage:
+      certs:
+        root_path: data
+        subpath: ingress/certs
+    identity:
+      phase: ingress
+      runtime_id: example-ingress
+      services:
+        traefik: ingress_traefik
+      networks: {}
+      runtime_directory: /opt/homelab-app/runtime/ingress
+      project: ingress
+    properties:
+      provider:
+        context: lab
+        token_id: example@pve!reader
+      acme:
+        email: admin@example.invalid
+        resolvers:
+        - external: resolver
+    secrets:
+      cloudflare_dns_token: ingress_cloudflare_dns_token
+      proxmox_token: ingress_proxmox_token
+  administration:
+    profile: cloudbeaver-forward-auth
+    guest: administration
+    lifecycle: retained
+    interfaces:
+      web_interface:
+        interface: primary
+      private_interface:
+        scope: app-network
+        network: database_tools
+      mariadb_interface:
+        interface: primary
+    storage:
+      workspace:
+        root_path: data
+        subpath: administration/workspace
+    identity:
+      phase: administration
+      runtime_id: example-administration
+      services:
+        cloudbeaver: administration_cloudbeaver
+      networks:
+        database_tools: database_tools
+      runtime_directory: /opt/homelab-app/runtime/administration
+      custody_directory: /var/lib/homelab-db-tools/administration
+      project: administration
+    origin:
+      exposure: administration
+    secrets:
+      recovery_password: console_recovery
+    authentication: administration
+    properties:
+      server_name: Example database UI
+      recovery_admin: local-recovery
+      heap_mib: 1024
+      auth_headers:
+        user: X-authentik-username
+        team: X-Team
+      connections:
+        mariadb-admin:
+          name: Example MariaDB administration
+          database: example
+    forward_auth:
+      middleware: identity-check
+      slug: database-console
+      provider_name: Example database console
+      admission_group: Database operators
+      outpost: embedded
+      authorization_flow: default-provider-authorization-implicit-consent
+      invalidation_flow: default-provider-invalidation-flow
+  database:
+    profile: mariadb
+    guest: administration
+    lifecycle: retained
+    interfaces:
+      service_interface:
+        interface: primary
+    storage:
+      data:
+        root_path: native
+        subpath: ''
+    identity:
+      phase: database
+      runtime_id: example-database
+      services: {}
+      networks: {}
+  identity:
+    profile: authentik
+    guest: identity
+    lifecycle: retained
+    interfaces:
+      web_interface:
+        interface: primary
+      private_interface:
+        scope: app-network
+        network: default
+      postgresql_interface:
+        interface: primary
+    storage:
+      media:
+        root_path: data
+        subpath: identity/media
+      templates:
+        root_path: data
+        subpath: identity/templates
+      certs:
+        root_path: data
+        subpath: identity/certs
+      data:
+        root_path: data
+        subpath: identity/files
+    identity:
+      phase: identity
+      runtime_id: example-identity
+      services:
+        server: identity_server
+        worker: identity_worker
+      networks:
+        default: default
+      runtime_directory: /opt/homelab-app/runtime/identity
+      project: identity
+    secrets:
+      secret_key: identity_secret_key
+      postgresql_password: identity_postgresql_password
+    properties:
+      database:
+        name: example_identity
+        user: example_identity
+domains:
+  identity: identity.example.invalid
+  administration: administration.example.invalid
+external_endpoints:
+  proxmox:
+    protocol: https
+    address: 192.0.2.10
+    port: 8006
+  resolver:
+    protocol: udp
+    address: 192.0.2.53
+    port: 53
+  runner:
+    protocol: tcp
+    address: 198.18.20.2
+    port: 22
+  identity_database:
+    protocol: tcp
+    address: 192.0.2.60
+    port: 5432
+identity_providers: {}
+secret_sources:
+  console_recovery:
+    type: file
+    path: /run/example/console-recovery
+  api:
+    type: file
+    path: /run/example/api-token
+  ssh:
+    type: file
+    path: /run/example/ssh-key
+  ingress_cloudflare_dns_token:
+    type: file
+    path: /run/example/ingress_cloudflare_dns_token
+  ingress_proxmox_token:
+    type: file
+    path: /run/example/ingress_proxmox_token
+  database_admin:
+    type: generated
+    credential_id: example-admin
+  identity_secret_key:
+    type: file
+    path: /run/example/identity_secret_key
+  identity_postgresql_password:
+    type: file
+    path: /run/example/identity_postgresql_password
+accounts:
+  database_admin:
+    adapter: mariadb-admin
+    owner: administration
+    target:
+      app: database
+      endpoint: backend_endpoint
+    principal: example_admin
+    credential: database_admin
+    access: server-administration
+    lifecycle: create-once
+devices: {}
+evidence: {}
+connections:
+  administration:
+    consumer:
+      app: administration
+      connection: mariadb-admin
+    target:
+      app: database
+      endpoint: backend_endpoint
+    source_interface: mariadb_interface
+    account: database_admin
+  identity_database:
+    consumer:
+      app: identity
+      connection: database
+    target:
+      external: identity_database
+    source_interface: postgresql_interface
+exposures:
+  administration:
+    type: http
+    target:
+      app: administration
+      endpoint: web_endpoint
+    domain: administration
+    ingress:
+      app: ingress
+      endpoint: https_endpoint
+    tls: public
+    middlewares:
+    - identity-check
+    - console-identity
+  identity:
+    type: http
+    target:
+      app: identity
+      endpoint: web_endpoint
+    domain: identity
+    ingress:
+      app: ingress
+      endpoint: https_endpoint
+    tls: public
+images: {}
+host_aliases: {}
+address_groups:
+  internet:
+    members:
+    - 0.0.0.0/0
+policies:
+  network:
+    deployment:
+      rules:
+      - direction: in
+        proto: tcp
+        source:
+          endpoint: runner
+        port:
+          endpoint: runner
+        comment: Deployment SSH
+    downloads:
+      rules:
+      - direction: out
+        proto: tcp
+        port: 80,443
+        destination:
+          address_group: internet
+        comment: Package and image downloads
+    ingress_administration:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.81/32
+        port: '8978'
+        comment: Selected administration route backend
+    ingress_administration_in:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.200/32
+        port: '8978'
+        comment: Selected administration ingress
+    connect_administration:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.81/32
+        port: '3306'
+        comment: Selected administration relationship
+    connect_administration_incoming:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.81/32
+        port: '3306'
+        comment: Selected administration client
+    connect_identity_database:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 192.0.2.60/32
+        port: '5432'
+        comment: Selected identity_database relationship
+    identity_web_in:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.200/32
+        port: '9000'
+        comment: Selected identity provider
+    identity_web_out:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.50/32
+        port: '9000'
+        comment: Selected identity provider
+  transport: {}
+  tls:
+    public:
+      type: acme
+      resolver: letsencrypt
+  middlewares:
+    identity-check:
+      type: forward-auth
+      endpoint:
+        app: identity
+        endpoint: web_endpoint
+    console-identity:
+      type: cloudbeaver-headers
+  authentication:
+    administration:
+      type: cloudbeaver-forward-auth
