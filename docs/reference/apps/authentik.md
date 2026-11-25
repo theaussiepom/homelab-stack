@@ -2,7 +2,7 @@
 
 # Authentik
 
-Run the identity application, worker and dedicated Redis together. PostgreSQL remains a separately selected application or external endpoint.
+Run the Authentik server and worker against PostgreSQL. PostgreSQL remains a separately selected application or external endpoint.
 
 [Choose](#choose-this-profile) · [Interfaces](#interfaces) · [Listeners](#listeners-and-endpoints) · [Storage](#storage) · [Inputs](#connections-accounts-and-private-inputs) · [Properties](#application-properties) · [Software](#software-and-resource-policy) · [Update](#check-and-update) · [Declared fields](#declaration-records)
 
@@ -12,8 +12,8 @@ Run the identity application, worker and dedicated Redis together. PostgreSQL re
 | --- | --- |
 | Site selection | `apps.<instance>.profile: authentik` |
 | Adapter | `authentik` |
-| Owned containers | `server`, `worker`, `redis` |
-| Multiple instances | Supporting server/worker/Redis belong to one app. Same-guest independent identity installations are not qualified by this page. |
+| Owned containers | `server`, `worker` |
+| Multiple instances | The server and worker belong to one app. Same-guest independent identity installations are not qualified by this page. |
 
 This profile runs on Debian LXC on Proxmox. Compilation checks the configuration, and local helper tests check the controller code. Neither check verifies a deployed service.
 
@@ -21,11 +21,11 @@ The complete reusable declaration is [authentik.yaml](../../../apps/authentik.ya
 
 ## Application requirements
 
-Supply separate private inputs for `secret_key` and `postgresql_password`. Supply `smtp_password` when the SMTP configuration requires it. This app manages its own supporting Redis container; you do not need to place a separate Redis app.
+Supply separate private inputs for `secret_key` and `postgresql_password`. Supply `smtp_password` when the SMTP configuration requires it. Both containers use the same pinned Authentik release.
 
 ## First installation
 
-Container configuration is available with a prepared PostgreSQL database/user and supplied application keys. Administrator onboarding, users, providers and client registrations are not created by this profile. The complete example maintains an already configured installation; source compilation is not target onboarding verification.
+Container configuration is available with a prepared PostgreSQL database/user and supplied application keys. The Identity worker applies native OIDC registrations declared by client apps. Operators manage initial administrator onboarding, users and group membership. The complete example maintains an already configured installation; source compilation is not target onboarding verification.
 
 ## Minimal usage
 
@@ -69,7 +69,6 @@ Use `{interface: NIC_ID}` to select a physical guest interface. Select loopback 
 | Listener | Owned service / namespace | Bind | Container/native socket | Publication |
 | --- | --- | --- | --- | --- |
 | `web_listener` | `server` / `app-network` | `wildcard` via `private_interface` | `9000/tcp` | `guest-interface` 9000 via `web_interface` |
-| `redis_listener` | `redis` / `app-network` | `wildcard` via `private_interface` | `6379/tcp` | None; listener remains in its declared namespace |
 
 | Endpoint | Protocol | Resolves through |
 | --- | --- | --- |
@@ -79,14 +78,14 @@ A wildcard listener accepts connections within the declared app network. A port 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/ad26084deabf6890736745540c9a5970983991c6/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/92ab0050e840638326de9e3ab871e8894357912c/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
-| `media` | Yes | `/media` | directory / writable | None |
+| `media` | Yes | `/data/media` | directory / writable | None |
 | `templates` | Yes | `/templates` | directory / writable | None |
 | `certs` | Yes | `/certs` | directory / writable | None |
-| `redis` | Yes | `/data` | directory / writable | None |
+| `data` | Yes | `/data` | directory / writable | None |
 
 Bind each storage role to a guest volume and subpath, or to a supported path on the guest’s root filesystem. HomeLab checks existing data without changing its file owner or moving it. Where a profile supports initialization, it creates only a new app subdirectory on a volume whose provider ownership has been verified. It does not initialize an existing directory.
 
@@ -109,7 +108,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/ad26084deabf6890736745540c9a5970983991c6/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/92ab0050e840638326de9e3ab871e8894357912c/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -138,19 +137,17 @@ Software selections: [`docker`](../software-and-runtime.md#registration-software
 | --- | --- | --- |
 | `server` | `authentik` | Immutable registry digest |
 | `worker` | `authentik` | Immutable registry digest |
-| `redis` | `redis` | Immutable registry digest |
 
 | Owned service | Memory MiB | CPU limit | PID limit |
 | --- | --- | --- | --- |
 | `server` | 768 | 1 | 256 |
 | `worker` | 768 | 1 | 256 |
-| `redis` | 128 | 1 | 256 |
 
 These reservations and limits determine whether the workloads fit on a guest. They do not measure how much traffic the service can handle. Guest memory must also leave enough capacity for the operating system’s effective reserve. Security/process defaults and package versions are listed once in [Software and runtime](../software-and-runtime.md); [templates](../templates.md) define guest defaults.
 
 ## Later deployments
 
-HomeLab updates the server, worker and dedicated Redis configuration that it manages while preserving the PostgreSQL data and selected application keys. The profile does not recreate existing users, providers or client registrations.
+The Identity guest waits for each selected registration to apply and checks its content hash and native fields. A repeated deployment verifies the existing registration. Preserve the PostgreSQL database, application keys and existing media directory across upgrades. Bind a separate persistent directory at `/data` and retain the media directory at `/data/media`. At the Redis transition, CD verifies the previous Compose project, both service dependencies, the running Redis configuration hash, container ID and data bind before retiring that one container. Its data directory stays on the volume. At the file-storage transition, CD compares both services’ previous media mounts before initializing the new directory on a selected guest volume. A later run refuses to recreate a missing owned directory. Sites binding an existing root path must prepare the matching writable directory during rehearsal.
 
 Both `fresh` and `retained` can update an instance that HomeLab already manages. Keep `fresh` after creating an instance with that policy; do not change it after each deployment. `retained` requires an existing HomeLab-managed instance and cannot create one.
 
@@ -162,7 +159,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/ad26084deabf6890736745540c9a5970983991c6/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/ad26084deabf6890736745540c9a5970983991c6/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/ad26084deabf6890736745540c9a5970983991c6/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/ad26084deabf6890736745540c9a5970983991c6/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/ad26084deabf6890736745540c9a5970983991c6/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/92ab0050e840638326de9e3ab871e8894357912c/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/92ab0050e840638326de9e3ab871e8894357912c/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/92ab0050e840638326de9e3ab871e8894357912c/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/92ab0050e840638326de9e3ab871e8894357912c/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/92ab0050e840638326de9e3ab871e8894357912c/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -201,13 +198,6 @@ These are the complete supplied fields in [authentik.yaml](../../../apps/authent
 | <a id="declaration-listeners-web-listener-publish-scope"></a>`listeners.web_listener.publish.scope` | `"guest-interface"` |
 | <a id="declaration-listeners-web-listener-publish-interface"></a>`listeners.web_listener.publish.interface` | `"web_interface"` |
 | <a id="declaration-listeners-web-listener-publish-port"></a>`listeners.web_listener.publish.port` | `9000` |
-| <a id="declaration-listeners-redis-listener"></a>`listeners.redis_listener` | `object` |
-| <a id="declaration-listeners-redis-listener-service"></a>`listeners.redis_listener.service` | `"redis"` |
-| <a id="declaration-listeners-redis-listener-namespace"></a>`listeners.redis_listener.namespace` | `"app-network"` |
-| <a id="declaration-listeners-redis-listener-interface"></a>`listeners.redis_listener.interface` | `"private_interface"` |
-| <a id="declaration-listeners-redis-listener-bind"></a>`listeners.redis_listener.bind` | `"wildcard"` |
-| <a id="declaration-listeners-redis-listener-protocol"></a>`listeners.redis_listener.protocol` | `"tcp"` |
-| <a id="declaration-listeners-redis-listener-port"></a>`listeners.redis_listener.port` | `6379` |
 | <a id="declaration-endpoints"></a>`endpoints` | `object` |
 | <a id="declaration-endpoints-web-endpoint"></a>`endpoints.web_endpoint` | `object` |
 | <a id="declaration-endpoints-web-endpoint-listener"></a>`endpoints.web_endpoint.listener` | `"web_listener"` |
@@ -215,7 +205,7 @@ These are the complete supplied fields in [authentik.yaml](../../../apps/authent
 | <a id="declaration-endpoints-web-endpoint-via"></a>`endpoints.web_endpoint.via` | `"web_interface"` |
 | <a id="declaration-storage"></a>`storage` | `object` |
 | <a id="declaration-storage-media"></a>`storage.media` | `object` |
-| <a id="declaration-storage-media-target"></a>`storage.media.target` | `"/media"` |
+| <a id="declaration-storage-media-target"></a>`storage.media.target` | `"/data/media"` |
 | <a id="declaration-storage-media-read-only"></a>`storage.media.read_only` | `false` |
 | <a id="declaration-storage-media-required"></a>`storage.media.required` | `true` |
 | <a id="declaration-storage-media-kind"></a>`storage.media.kind` | `"directory"` |
@@ -229,11 +219,11 @@ These are the complete supplied fields in [authentik.yaml](../../../apps/authent
 | <a id="declaration-storage-certs-read-only"></a>`storage.certs.read_only` | `false` |
 | <a id="declaration-storage-certs-required"></a>`storage.certs.required` | `true` |
 | <a id="declaration-storage-certs-kind"></a>`storage.certs.kind` | `"directory"` |
-| <a id="declaration-storage-redis"></a>`storage.redis` | `object` |
-| <a id="declaration-storage-redis-target"></a>`storage.redis.target` | `"/data"` |
-| <a id="declaration-storage-redis-read-only"></a>`storage.redis.read_only` | `false` |
-| <a id="declaration-storage-redis-required"></a>`storage.redis.required` | `true` |
-| <a id="declaration-storage-redis-kind"></a>`storage.redis.kind` | `"directory"` |
+| <a id="declaration-storage-data"></a>`storage.data` | `object` |
+| <a id="declaration-storage-data-target"></a>`storage.data.target` | `"/data"` |
+| <a id="declaration-storage-data-read-only"></a>`storage.data.read_only` | `false` |
+| <a id="declaration-storage-data-required"></a>`storage.data.required` | `true` |
+| <a id="declaration-storage-data-kind"></a>`storage.data.kind` | `"directory"` |
 | <a id="declaration-connections"></a>`connections` | `object` |
 | <a id="declaration-connections-database"></a>`connections.database` | `object` |
 | <a id="declaration-connections-database-type"></a>`connections.database.type` | `"postgresql"` |
@@ -268,7 +258,7 @@ These are the complete supplied fields in [authentik.yaml](../../../apps/authent
 | <a id="declaration-backup-include-certs"></a>`backup.include.certs` | `object` |
 | <a id="declaration-backup-include-certs-category"></a>`backup.include.certs.category` | `"configuration"` |
 | <a id="declaration-backup-include-certs-capture"></a>`backup.include.certs.capture` | `"files"` |
-| <a id="declaration-backup-include-redis"></a>`backup.include.redis` | `object` |
-| <a id="declaration-backup-include-redis-category"></a>`backup.include.redis.category` | `"state"` |
-| <a id="declaration-backup-include-redis-capture"></a>`backup.include.redis.capture` | `"application-export"` |
+| <a id="declaration-backup-include-data"></a>`backup.include.data` | `object` |
+| <a id="declaration-backup-include-data-category"></a>`backup.include.data.category` | `"state"` |
+| <a id="declaration-backup-include-data-capture"></a>`backup.include.data.capture` | `"application-export"` |
 | <a id="declaration-backup-exclude"></a>`backup.exclude` | `{}` |

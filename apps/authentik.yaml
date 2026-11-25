@@ -31,13 +31,6 @@ listeners:
       scope: guest-interface
       interface: web_interface
       port: 9000
-  redis_listener:
-    service: redis
-    namespace: app-network
-    interface: private_interface
-    bind: wildcard
-    protocol: tcp
-    port: 6379
 endpoints:
   web_endpoint:
     listener: web_listener
@@ -45,7 +38,7 @@ endpoints:
     via: web_interface
 storage:
   media:
-    target: /media
+    target: /data/media
     read_only: false
     required: true
     kind: directory
@@ -59,7 +52,7 @@ storage:
     read_only: false
     required: true
     kind: directory
-  redis:
+  data:
     target: /data
     read_only: false
     required: true
@@ -105,7 +98,7 @@ backup:
     certs:
       category: configuration
       capture: files
-    redis:
+    data:
       category: state
       capture: application-export
   exclude: {}
