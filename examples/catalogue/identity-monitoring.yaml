@@ -177,16 +177,15 @@ apps:
       certs:
         root_path: data
         subpath: identity/certs
-      redis:
+      data:
         root_path: data
-        subpath: identity/redis
+        subpath: identity/files
     identity:
       phase: identity
       runtime_id: example-identity
       services:
         server: identity_server
         worker: identity_worker
-        redis: identity_redis
       networks:
         default: default
       runtime_directory: /opt/homelab-app/runtime/identity

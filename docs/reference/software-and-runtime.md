@@ -26,7 +26,7 @@ A software entry selects exact packages, public signed repository definitions, a
 | <a id="registration-software-cloudbeaver-images"></a>`software.cloudbeaver-images` | None | `cloudbeaver` → `cloudbeaver`, `auth_gateway` → `auth_gateway` | None |
 | <a id="registration-software-pihole-images"></a>`software.pihole-images` | None | `pihole` → `pihole` | None |
 | <a id="registration-software-unbound-images"></a>`software.unbound-images` | None | `unbound` → `unbound` | None |
-| <a id="registration-software-authentik-images"></a>`software.authentik-images` | None | `server` → `authentik`, `worker` → `authentik`, `redis` → `redis` | None |
+| <a id="registration-software-authentik-images"></a>`software.authentik-images` | None | `server` → `authentik`, `worker` → `authentik` | None |
 | <a id="registration-software-traefik-images"></a>`software.traefik-images` | None | `traefik` → `traefik` | None |
 | <a id="registration-software-zabbix-images"></a>`software.zabbix-images` | None | `zabbix_server` → `zabbix_server`, `zabbix_web` → `zabbix_web` | None |
 | <a id="registration-software-mqtt-images"></a>`software.mqtt-images` | None | `mqtt` → `mqtt` | None |
@@ -65,7 +65,7 @@ Each app selects named resource limits, process settings and security requiremen
 | <a id="registration-runtime-profiles-cloudbeaver"></a>`runtime_profiles.cloudbeaver` | `cloudbeaver`: `memory_mib=1536`, `pids_limit=512`, `cpu_limit=1`, `cap_drop=['ALL']`, `user=8978:8978`, `no_new_privileges=True`<br>`auth_gateway`: `memory_mib=128`, `pids_limit=128`, `cpu_limit=1`, `read_only=True`, `cap_drop=['ALL']`, `user=65532:65532`, `no_new_privileges=True` | None |
 | <a id="registration-runtime-profiles-pihole"></a>`runtime_profiles.pihole` | `pihole`: `memory_mib=256`, `pids_limit=128`, `cpu_limit=1` | None |
 | <a id="registration-runtime-profiles-unbound"></a>`runtime_profiles.unbound` | `unbound`: `memory_mib=256`, `pids_limit=128`, `cpu_limit=1` | None |
-| <a id="registration-runtime-profiles-authentik"></a>`runtime_profiles.authentik` | `server`: `memory_mib=768`, `pids_limit=256`, `cpu_limit=1`, `user=1000`<br>`worker`: `memory_mib=768`, `pids_limit=256`, `cpu_limit=1`, `user=1000`<br>`redis`: `memory_mib=128`, `pids_limit=256`, `cpu_limit=1` | None |
+| <a id="registration-runtime-profiles-authentik"></a>`runtime_profiles.authentik` | `server`: `memory_mib=768`, `pids_limit=256`, `cpu_limit=1`, `user=1000`<br>`worker`: `memory_mib=768`, `pids_limit=256`, `cpu_limit=1`, `user=1000` | None |
 | <a id="registration-runtime-profiles-traefik"></a>`runtime_profiles.traefik` | `traefik`: `memory_mib=512`, `pids_limit=256`, `cpu_limit=1` | None |
 | <a id="registration-runtime-profiles-zabbix"></a>`runtime_profiles.zabbix` | `zabbix_server`: `memory_mib=768`, `pids_limit=256`, `cpu_limit=1`<br>`zabbix_web`: `memory_mib=512`, `pids_limit=256`, `cpu_limit=1` | None |
 | <a id="registration-runtime-profiles-mqtt"></a>`runtime_profiles.mqtt` | `mqtt`: `memory_mib=256`, `pids_limit=128`, `cpu_limit=1` | None |

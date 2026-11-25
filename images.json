@@ -1,13 +1,8 @@
 {
-  "redis": {
-    "repository": "redis",
-    "tag": null,
-    "digest": "sha256:6cbef353e480a8a6e7f10ec545f13d7d3fa85a212cdcc5ffaf5a1c818b9d3798"
-  },
   "authentik": {
     "repository": "ghcr.io/goauthentik/server",
-    "tag": "2025.4.4",
-    "digest": "sha256:37d6f18ca084b5302b9e6f5559b7c059eb228561cd4b8a6b77527bc2c10ce195"
+    "tag": "2026.8.6",
+    "digest": "sha256:da89d8338a3b1889800eb033fd61f8d43f7aa9a1c5a042cb5e03d891b1f0c56c"
   },
   "traefik": {
     "repository": "traefik",

@@ -27,7 +27,7 @@ Each database owns its credentials and the procedure that keeps its export consi
 | Home Assistant | Preserve configuration, `.storage`, authentication, fabric and pairing records, other private state, compatible custom integrations and patches, and selected media. Recover an external recorder separately when selected. An existing SQLite database needs consistent capture. |
 | Node-RED | Preserve flows, credentials, the credential-encryption key, settings, modules and persistent context from one usable generation. Keep private API and OpenID Connect inputs independently recoverable when the guest does not retain them. |
 | Bitwarden | `/etc/bitwarden` includes attachments and application protection files. Match it to the MariaDB generation and required environment and encryption files; a database-only copy cannot recover the vault. Logs are excluded. |
-| Authentik | Preserve the matching PostgreSQL generation, secret key, media, custom templates, certificates and compatible Redis state. Stop the app’s Redis and Authentik services before capture; copying a running Redis directory does not preserve a coherent state. |
+| Authentik | Preserve the matching PostgreSQL generation, secret key, application files, media, custom templates and certificates. Coordinate file capture with the database backup so the restored generation is consistent. |
 | MQTT | Preserve broker configuration, passwords and certificates, retained messages, durable sessions and quality-of-service persistence. Use a capture procedure that keeps the broker’s state consistent; do not publish synthetic device commands as a backup test. |
 | MQTT Explorer | Preserve saved connections and user-interface state, plus the separately managed broker account. Capturing the GUI does not back up the broker. |
 | Zigbee2MQTT | Preserve keys, devices, groups, databases and state, together with existing coordinator backups, hardware and firmware identity, and backup age. Routine capture must not issue radio or non-volatile-memory commands, reset the coordinator or activate a duplicate coordinator. |
@@ -52,10 +52,10 @@ Every registered variant is listed below. Paths are application mount targets, n
 
 | Role / app target | Disposition | Capture requirement |
 | --- | --- | --- |
-| `media` — `/media` | state | application-export |
+| `media` — `/data/media` | state | application-export |
 | `templates` — `/templates` | configuration | files |
 | `certs` — `/certs` | configuration | files |
-| `redis` — `/data` | state | application-export |
+| `data` — `/data` | state | application-export |
 
 ### bitwarden
 
@@ -236,7 +236,7 @@ before CD can start and check the app.
 #### Rebuild the Node-RED health wrapper
 
 The reusable wrapper is versioned as
-[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/48f6d959de7c953ae5450ab3bd0ba14000db806c/proxmox/applications/node-red-healthcheck.js).
+[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/03f5210c099687561ad31b26958652643d8f650a/proxmox/applications/node-red-healthcheck.js).
 Use the same framework revision selected by this Stack. During recovery,
 separately prepare that file at the app's bound `healthcheck` storage source
 before CD. The profile mounts it read-only at `/healthcheck.js`; it reads the
