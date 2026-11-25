@@ -1,0 +1,6 @@
+owner: authentik
+upstream: goauthentik/authentik
+image: ghcr.io/goauthentik/server
+roles:
+  - server
+  - worker

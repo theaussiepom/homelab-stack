@@ -1,6 +1,7 @@
 schema: homelab-components-v1
 kind: app-profile
 adapter: authentik
+image_update: release-series
 display_name: Authentik
 interfaces:
   web_interface:

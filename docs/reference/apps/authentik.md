@@ -78,7 +78,7 @@ A wildcard listener accepts connections within the declared app network. A port 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/03f5210c099687561ad31b26958652643d8f650a/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -108,7 +108,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/03f5210c099687561ad31b26958652643d8f650a/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -153,13 +153,13 @@ Both `fresh` and `retained` can update an instance that HomeLab already manages.
 
 ### Check and update
 
-Both server and worker use the same pinned image. To upgrade an existing 2025.2.1 installation, first deploy the 2025.2.4 multi-platform image from `beryju/authentik`. The original Docker Hub index includes Linux AMD64 and ARM64. For 2025.4.4 the catalogue selects the multi-platform index from `ghcr.io/goauthentik/server`. Verify the PostgreSQL recovery point before each upgrade, then check migrations, worker health and an existing sign-in before advancing to the next series. [Image catalogue](../../../images.json) · [Upstream upgrade procedure](https://docs.goauthentik.io/install-config/upgrade/)
+Both server and worker use the same tag and digest from the stack image catalogue. This profile selects its own [release-series hook](../../../apps/authentik/image-update.yaml). Give the [planner](../../../apps/authentik/plan.py) the accepted deployment image to generate the path through the exact catalogue target. It verifies the published stable tags and Linux amd64 image indices and includes the latest patch of each intervening series. Use `--check-app` with the site app declaration to verify the reviewed path. CD checks migrations, registrations and container health at every step. [Upstream upgrade procedure](https://docs.goauthentik.io/install-config/upgrade/)
 
 Keep the same app, service and project identities, writable storage paths and credential owners. Read [Images and updates](../../guides/images-and-updates.md) before changing software and [Troubleshooting](../../troubleshooting.md) for a refusal. Before an ordinary update, HomeLab checks the current ownership records, matching deployment state and preserved private inputs. Selecting a profile cannot clear a HOLD left by an unresolved operation or adopt data that HomeLab does not manage.
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/03f5210c099687561ad31b26958652643d8f650a/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/03f5210c099687561ad31b26958652643d8f650a/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/03f5210c099687561ad31b26958652643d8f650a/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/03f5210c099687561ad31b26958652643d8f650a/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/03f5210c099687561ad31b26958652643d8f650a/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/f933d498e75a36e1b059a30e7d330108e3181248/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
@@ -172,6 +172,7 @@ These are the complete supplied fields in [authentik.yaml](../../../apps/authent
 | Declaration path | Selected value |
 | --- | --- |
 | <a id="declaration-adapter"></a>`adapter` | `"authentik"` |
+| <a id="declaration-image-update"></a>`image_update` | `"release-series"` |
 | <a id="declaration-display-name"></a>`display_name` | `"Authentik"` |
 | <a id="declaration-interfaces"></a>`interfaces` | `object` |
 | <a id="declaration-interfaces-web-interface"></a>`interfaces.web_interface` | `object` |
