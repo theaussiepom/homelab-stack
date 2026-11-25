@@ -26,8 +26,7 @@ for(const pattern of manager.matchStrings) new RE2(pattern);
 const raw=fs.readFileSync(path.join(root,'images.json'),'utf8');
 const scratch=fs.mkdtempSync(path.join(os.tmpdir(),'renovate-catalogue-'));
 GlobalConfig.set({localDir:scratch});
-// Authentik uses calendar releases. Renovate may propose patch and digest PRs
-// while an operator advances the year/month series through its migration path.
+// Renovate proposes the catalogue target. The planner supplies intermediate images.
 for (const packageName of ['ghcr.io/goauthentik/server', 'beryju/authentik', 'registry.example.invalid/other']) {
   const policy = await applyPackageRules({...config, manager:'regex', datasource:'docker', packageName});
   const isAuthentik = packageName !== 'registry.example.invalid/other';
@@ -35,11 +34,14 @@ for (const packageName of ['ghcr.io/goauthentik/server', 'beryju/authentik', 're
     ['2025.4.4','2025.4.5','2025.6.4','2026.8.6'],
     ['2026.8.6','2026.8.7','2026.10.1','2027.2.1'],
   ]) {
-    const releases = [current, patch, nextSeries, nextYear].map(version => ({version}));
+    const releases = [current, patch, nextSeries, nextYear, '2027.13.1'].map(version => ({version}));
     const candidates = filterVersions(policy, current, nextYear, releases, dockerVersions);
-    assert.deepEqual(candidates.map(row => row.version), isAuthentik ? [patch] : [patch, nextSeries, nextYear]);
+    const expected = [patch, nextSeries, nextYear];
+    if (!isAuthentik) expected.push('2027.13.1');
+    assert.deepEqual(candidates.map(row => row.version), expected);
   }
   assert.equal(policy.pinDigests, true);
+  if (isAuthentik) assert.equal(policy.separateMajorMinor, false);
 }
 async function check(text, tagChange=false) {
   const catalogue=JSON.parse(text);

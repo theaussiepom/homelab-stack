@@ -88,7 +88,11 @@ class HookTests(unittest.TestCase):
                 with patch.object(sys,'argv',[str(SCRIPT),*args]), redirect_stdout(io.StringIO()) as output:
                     planner.main()
                     return json.loads(output.getvalue())
-            with patch.object(planner,'published',return_value=['2026.8.6','2027.1.2']), \
+            catalogue = Path(directory) / 'images.json'
+            catalogue.write_text(json.dumps({'authentik': {'repository': REPOSITORY, 'tag': '2027.1.2',
+                                                           'digest': digest}}))
+            with patch.object(planner, 'CATALOGUE', catalogue), \
+                 patch.object(planner,'published',return_value=['2026.8.6','2027.1.1','2027.1.2','2027.1.3','2027.3.1']), \
                  patch.object(planner,'registry',return_value=lambda _:digest):
                 self.assertEqual(invoke([source]),chain)
                 with self.assertRaises(SystemExit), patch.object(sys,'stderr',new_callable=io.StringIO):
