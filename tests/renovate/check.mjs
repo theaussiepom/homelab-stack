@@ -9,6 +9,8 @@ import {extractPackageFile} from './node_modules/renovate/dist/modules/manager/c
 import {doAutoReplace} from './node_modules/renovate/dist/workers/repository/update/branch/auto-replace.js';
 import {GlobalConfig} from './node_modules/renovate/dist/config/global.js';
 import {applyPackageRules} from './node_modules/renovate/dist/util/package-rules/index.js';
+import {filterVersions} from './node_modules/renovate/dist/workers/repository/process/lookup/filter.js';
+import {api as dockerVersions} from './node_modules/renovate/dist/modules/versioning/docker/index.js';
 import {resolveUpdateDigests} from './node_modules/renovate/dist/workers/repository/process/lookup/digest.js';
 import {init} from './node_modules/renovate/dist/logger/index.js';
 await init();
@@ -27,12 +29,17 @@ GlobalConfig.set({localDir:scratch});
 // Authentik uses calendar releases. Renovate may propose patch and digest PRs
 // while an operator advances the year/month series through its migration path.
 for (const packageName of ['ghcr.io/goauthentik/server', 'beryju/authentik', 'registry.example.invalid/other']) {
-  for (const updateType of ['major', 'minor', 'patch', 'digest', 'pinDigest']) {
-    const result = await applyPackageRules({...config, manager: 'regex', datasource: 'docker', packageName, updateType});
-    const isAuthentik = packageName !== 'registry.example.invalid/other';
-    const changesSeries = updateType === 'major' || updateType === 'minor';
-    assert.equal(result.enabled !== false, !(isAuthentik && changesSeries));
+  const policy = await applyPackageRules({...config, manager:'regex', datasource:'docker', packageName});
+  const isAuthentik = packageName !== 'registry.example.invalid/other';
+  for (const [current, patch, nextSeries, nextYear] of [
+    ['2025.4.4','2025.4.5','2025.6.4','2026.8.6'],
+    ['2026.8.6','2026.8.7','2026.10.1','2027.2.1'],
+  ]) {
+    const releases = [current, patch, nextSeries, nextYear].map(version => ({version}));
+    const candidates = filterVersions(policy, current, nextYear, releases, dockerVersions);
+    assert.deepEqual(candidates.map(row => row.version), isAuthentik ? [patch] : [patch, nextSeries, nextYear]);
   }
+  assert.equal(policy.pinDigests, true);
 }
 async function check(text, tagChange=false) {
   const catalogue=JSON.parse(text);
