@@ -57,7 +57,7 @@ These are the only writable container mounts. The root filesystem is read-only, 
 | `connections.database` | Required PostgreSQL connection on TCP 5432 with `readiness: start`, to the explicit database owner in the same deployment context. | Derives PGHOST/PGPORT and ordering; no credentials are duplicated in this binding. |
 | Producer `properties.application_database` | Required for this composition; exactly `{app: CONSUMER_ID}` on the selected PostgreSQL app. | Derives a narrowly scoped HBA entry and consumes the same protected database-password reference. |
 
-Unknown properties are rejected. Omission, null or an empty value cannot disable a required input. The framework's [Renovate contract](https://github.com/theaussiepom/homelab/blob/b379b332b3cf8942c10ac3484f609016b05b9408/docs/reference/renovate.md) owns validation and database lifecycle behavior.
+Unknown properties are rejected. Omission, null or an empty value cannot disable a required input. The framework's [Renovate contract](https://github.com/theaussiepom/homelab/blob/f4832b42bd9ac5a874971d07a7d0e45274ca0a0e/docs/reference/renovate.md) owns validation and database lifecycle behavior.
 
 ## Protected inputs
 

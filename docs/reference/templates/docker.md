@@ -6,7 +6,7 @@ Select Docker packages and container-host requirements explicitly. Select with `
 
 ## Field meaning and constraints
 
-The compatible [guest contract](https://github.com/theaussiepom/homelab/blob/b379b332b3cf8942c10ac3484f609016b05b9408/docs/reference/guests.md) and [actual scalar validators](https://github.com/theaussiepom/homelab/blob/b379b332b3cf8942c10ac3484f609016b05b9408/blueprints/component_types.py) determine which values are accepted. The following explanations accompany the exact declaration records below:
+The compatible [guest contract](https://github.com/theaussiepom/homelab/blob/f4832b42bd9ac5a874971d07a7d0e45274ca0a0e/docs/reference/guests.md) and [actual scalar validators](https://github.com/theaussiepom/homelab/blob/f4832b42bd9ac5a874971d07a7d0e45274ca0a0e/blueprints/component_types.py) determine which values are accepted. The following explanations accompany the exact declaration records below:
 
 | Field group | Meaning, presence and constraints |
 | --- | --- |
