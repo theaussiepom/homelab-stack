@@ -66,6 +66,14 @@ Every registered variant is listed below. Paths are application mount targets, n
 | `data` — `/etc/bitwarden` | state | application-export |
 | `logs` — `/var/log/bitwarden` | Excluded: transient | None |
 
+### cloudbeaver-forward-auth
+
+[Application reference](apps/cloudbeaver-forward-auth.md) · [Definition](../../apps/cloudbeaver-forward-auth.yaml)
+
+| Role / app target | Disposition | Capture requirement |
+| --- | --- | --- |
+| `workspace` — `/opt/cloudbeaver/workspace` | state | application-export |
+
 ### cloudbeaver-mariadb-admin
 
 [Application reference](apps/cloudbeaver-mariadb-admin.md) · [Definition](../../apps/cloudbeaver-mariadb-admin.yaml)
@@ -236,7 +244,7 @@ before CD can start and check the app.
 #### Rebuild the Node-RED health wrapper
 
 The reusable wrapper is versioned as
-[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/ab7e4e18090cb31c0e2fadf7ddee1d3007036542/proxmox/applications/node-red-healthcheck.js).
+[`node-red-healthcheck.js`](https://github.com/theaussiepom/homelab/blob/3faf657fb7579a846f0ccf0aced5363a886cf386/proxmox/applications/node-red-healthcheck.js).
 Use the same framework revision selected by this Stack. During recovery,
 separately prepare that file at the app's bound `healthcheck` storage source
 before CD. The profile mounts it read-only at `/healthcheck.js`; it reads the

@@ -48,6 +48,7 @@ A selection ID names a reusable application recipe, not a complete installed ser
 | [winet](apps/winet.md) | WiNet | `winet` |
 | [homeassistant](apps/homeassistant.md) | Home Assistant | `homeassistant` |
 | [node_red](apps/node_red.md) | Node-RED | `node_red` |
+| [cloudbeaver-forward-auth](apps/cloudbeaver-forward-auth.md) | CloudBeaver behind Authentik | `cloudbeaver` |
 | [cloudbeaver-mariadb-admin](apps/cloudbeaver-mariadb-admin.md) | CloudBeaver | `cloudbeaver` |
 
 

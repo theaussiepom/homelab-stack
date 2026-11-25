@@ -23,6 +23,7 @@ A software entry selects exact packages, public signed repository definitions, a
 | <a id="registration-software-homeassistant-custom-images"></a>`software.homeassistant-custom-images` | None | `homeassistant` → `homeassistant` | None |
 | <a id="registration-software-node-red-custom-images"></a>`software.node_red-custom-images` | None | `node_red` → `node_red` | None |
 | <a id="registration-software-bitwarden-images"></a>`software.bitwarden-images` | None | `bitwarden` → `bitwarden` | None |
+| <a id="registration-software-cloudbeaver-server-image"></a>`software.cloudbeaver-server-image` | None | `cloudbeaver` → `cloudbeaver` | None |
 | <a id="registration-software-cloudbeaver-images"></a>`software.cloudbeaver-images` | None | `cloudbeaver` → `cloudbeaver`, `auth_gateway` → `auth_gateway` | None |
 | <a id="registration-software-pihole-images"></a>`software.pihole-images` | None | `pihole` → `pihole` | None |
 | <a id="registration-software-unbound-images"></a>`software.unbound-images` | None | `unbound` → `unbound` | None |
@@ -62,6 +63,7 @@ Each app selects named resource limits, process settings and security requiremen
 | <a id="registration-runtime-profiles-homeassistant"></a>`runtime_profiles.homeassistant` | `homeassistant`: `memory_mib=2048`, `pids_limit=512`, `cpu_limit=2` | None |
 | <a id="registration-runtime-profiles-node-red"></a>`runtime_profiles.node_red` | `node_red`: `memory_mib=1024`, `pids_limit=256`, `cpu_limit=1`, `user=node-red` | None |
 | <a id="registration-runtime-profiles-bitwarden"></a>`runtime_profiles.bitwarden` | `bitwarden`: `memory_mib=1536`, `pids_limit=256`, `cpu_limit=1` | None |
+| <a id="registration-runtime-profiles-cloudbeaver-server"></a>`runtime_profiles.cloudbeaver-server` | `cloudbeaver` with 1536 MiB, 512 processes, one CPU, UID and GID 8978, all capabilities dropped and no new privileges | None |
 | <a id="registration-runtime-profiles-cloudbeaver"></a>`runtime_profiles.cloudbeaver` | `cloudbeaver`: `memory_mib=1536`, `pids_limit=512`, `cpu_limit=1`, `cap_drop=['ALL']`, `user=8978:8978`, `no_new_privileges=True`<br>`auth_gateway`: `memory_mib=128`, `pids_limit=128`, `cpu_limit=1`, `read_only=True`, `cap_drop=['ALL']`, `user=65532:65532`, `no_new_privileges=True` | None |
 | <a id="registration-runtime-profiles-pihole"></a>`runtime_profiles.pihole` | `pihole`: `memory_mib=256`, `pids_limit=128`, `cpu_limit=1` | None |
 | <a id="registration-runtime-profiles-unbound"></a>`runtime_profiles.unbound` | `unbound`: `memory_mib=256`, `pids_limit=128`, `cpu_limit=1` | None |
@@ -102,6 +104,7 @@ The template’s Linux monitoring and each app’s monitoring settings take effe
 
 | Requirement | Type | Profile floor |
 | --- | --- | --- |
+| <a id="registration-authentication-profiles-cloudbeaver-forward-auth"></a>`authentication_profiles.cloudbeaver-forward-auth` | `cloudbeaver-forward-auth` | Required |
 | <a id="registration-authentication-profiles-cloudbeaver-oidc"></a>`authentication_profiles.cloudbeaver-oidc` | `cloudbeaver-oidc` | Required |
 | <a id="registration-authentication-profiles-pegaprox-oidc"></a>`authentication_profiles.pegaprox-oidc` | `pegaprox-oidc` | Optional |
 | <a id="registration-authentication-profiles-node-red-retained-oidc"></a>`authentication_profiles.node-red-retained-oidc` | `node-red-retained-oidc` | Required |

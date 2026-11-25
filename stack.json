@@ -91,6 +91,9 @@
     },
     "scrypted": {
       "source": "apps/scrypted.yaml"
+    },
+    "cloudbeaver-forward-auth": {
+      "source": "apps/cloudbeaver-forward-auth.yaml"
     }
   },
   "guest_templates": {
@@ -278,6 +281,11 @@
     "scrypted-images": {
       "images": {
         "scrypted": "scrypted"
+      }
+    },
+    "cloudbeaver-server-image": {
+      "images": {
+        "cloudbeaver": "cloudbeaver"
       }
     }
   },
@@ -528,6 +536,20 @@
           "user": "0:0"
         }
       }
+    },
+    "cloudbeaver-server": {
+      "containers": {
+        "cloudbeaver": {
+          "memory_mib": 1536,
+          "pids_limit": 512,
+          "cpu_limit": 1,
+          "cap_drop": [
+            "ALL"
+          ],
+          "user": "8978:8978",
+          "no_new_privileges": true
+        }
+      }
     }
   },
   "assets": {
@@ -599,6 +621,10 @@
     "zabbix-saml": {
       "type": "zabbix-saml",
       "required": false
+    },
+    "cloudbeaver-forward-auth": {
+      "type": "cloudbeaver-forward-auth",
+      "required": true
     }
   },
   "monitoring_profiles": {

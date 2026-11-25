@@ -29,6 +29,7 @@ PROFILE_EXAMPLES = {
  'winet': ('examples/catalogue/messaging-radio.yaml', 'telemetry'),
  'homeassistant': ('examples/catalogue/new-automation.yaml', 'homeassistant'),
  'node_red': ('examples/catalogue/new-automation.yaml', 'node_red'),
+ 'cloudbeaver-forward-auth': ('examples/catalogue/database-forward-auth.yaml', 'administration'),
  'cloudbeaver-mariadb-admin': ('examples/catalogue/database-guis.yaml', 'administration'),
 }
 CREATION_EXAMPLES = {
