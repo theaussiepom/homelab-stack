@@ -38,6 +38,19 @@ def compile_examples():
 
 
 class ProfileExampleIntegrations(unittest.TestCase):
+    def test_retained_monitoring_profile_and_identity_share_saml_trust(self):
+        import hashlib
+        import ssl
+        path, instance = PROFILE_EXAMPLES['zabbix']
+        plan, _ = self.examples[path]
+        app = plan.resolved['apps'][instance]
+        registration = plan.site['policies']['authentication'][app['authentication']]['registration']
+        identity = plan.resolved['apps']['identity']['settings']['saml_blueprints'][registration['slug']]
+        self.assertEqual(identity['attributes']['audience'], app['origin_url'] + '/')
+        self.assertEqual(identity['admission_group'], registration['admission_group'])
+        certificate = ssl.PEM_cert_to_DER_cert(app['authentication_resolved']['idp_signing_certificate'])
+        self.assertEqual(identity['certificate_sha256'], hashlib.sha256(certificate).hexdigest())
+
     def test_retained_editor_compiles_one_oidc_registration_on_its_identity_guest(self):
         path, instance = PROFILE_EXAMPLES['node_red-bound']
         plan, _ = self.examples[path]

@@ -75,6 +75,7 @@ guests:
       address_groups:
         internet: internet
     - policy: connect_identity_database
+    - policy: identity_web_in
   monitoring:
     context: lab
     template: docker
@@ -115,6 +116,7 @@ guests:
       address_groups:
         internet: internet
     - policy: connect_monitoring_database
+    - policy: monitor_web_in
   monitoring-storage:
     context: lab
     template: base
@@ -154,6 +156,47 @@ guests:
       address_groups:
         internet: internet
     - policy: connect_monitoring_database_incoming
+  ingress:
+    context: lab
+    template: docker
+    lifecycle: retained
+    identity:
+      vmid: 1000
+      hostname: example-ingress
+    template_file_id: example:vztmpl/debian.tar.zst
+    root_storage: local
+    control_interface: primary
+    resources:
+      memory_mib: 4096
+      cpu_cores: 2
+      root_gib: 8
+    interfaces:
+      primary:
+        network: services
+        slot: 0
+        mac: 02:00:00:20:01:c8
+        address:
+          mode: static
+          value: 198.18.20.200
+        default_route: true
+        ipv6: manual
+    root_paths:
+      data:
+        path: /srv/example/ingress
+    compose_projects:
+      ingress:
+        name: example-ingress
+        file: compose-ingress.yml
+    network_policy:
+    - policy: deployment
+      endpoints:
+        runner:
+          external: runner
+    - policy: downloads
+      address_groups:
+        internet: internet
+    - policy: monitor_web_out
+    - policy: identity_web_out
 apps:
   identity:
     profile: authentik
@@ -226,6 +269,9 @@ apps:
       database:
         name: example_monitoring
         user: example_monitoring
+    origin:
+      exposure: monitor
+    authentication: monitor_login
   monitoring_storage:
     profile: postgresql
     guest: monitoring-storage
@@ -242,7 +288,41 @@ apps:
       runtime_id: example-monitoring_storage
       services: {}
       networks: {}
-domains: {}
+  ingress:
+    profile: traefik
+    guest: ingress
+    lifecycle: retained
+    interfaces:
+      frontend_interface:
+        interface: primary
+      management_interface:
+        interface: primary
+    storage:
+      certs:
+        root_path: data
+        subpath: ingress/certs
+    identity:
+      phase: ingress
+      runtime_id: example-ingress
+      services:
+        traefik: ingress_traefik
+      networks: {}
+      runtime_directory: /opt/homelab-app/runtime/ingress
+      project: ingress
+    properties:
+      provider:
+        context: lab
+        token_id: example@pve!reader
+      acme:
+        email: admin@example.invalid
+        resolvers:
+        - external: resolver
+    secrets:
+      cloudflare_dns_token: ingress_cloudflare_dns_token
+      proxmox_token: ingress_proxmox_token
+domains:
+  identity: login.example.invalid
+  monitor: monitor.example.invalid
 external_endpoints:
   proxmox:
     protocol: https
@@ -260,7 +340,48 @@ external_endpoints:
     protocol: tcp
     address: 192.0.2.60
     port: 5432
-identity_providers: {}
+identity_providers:
+  monitor_identity:
+    type: saml
+    signing_certificate: '-----BEGIN CERTIFICATE-----
+
+      MIIC8jCCAdqgAwIBAgIBATANBgkqhkiG9w0BAQsFADAyMTAwLgYDVQQDDCdzeW50
+
+      aGV0aWMtbW9uaXRvcmluZy1pZHAtc291cmNlLWZpeHR1cmUwHhcNMjAwMTAxMDAw
+
+      MDAwWhcNNDAwMTAxMDAwMDAwWjAyMTAwLgYDVQQDDCdzeW50aGV0aWMtbW9uaXRv
+
+      cmluZy1pZHAtc291cmNlLWZpeHR1cmUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
+
+      ggEKAoIBAQCcgf9e5kGQ2qxDMLhkjoofWSYcKnUmGJvyzu4AI0wxnG9U+LTgTmnY
+
+      68xcn0syGQ3bbAAW+lOdC4vUOpE2aM4Sl45n9cxLewR5ah8rvogJ9PYmU6GD/lMy
+
+      R9wolMNuvmqNGMhlDIEmaYLibgmzyRUMEyULre9YKYq+gxTsW7usqISmCrB3GCVs
+
+      D17xpJ7EB7vxK7IMbWEOOgaTt6DM8ISy6sZTRwyM+OfFJ51KZ+OxKedIslcdJqt3
+
+      1jc+EIugCopwZPpmyiIaTofTyiGnGnzrdDHR3YFqaX3wMR/0p7Ldw6HL+cSnvXqj
+
+      8kOtYUAMgGBV4c9O7oeIdT1PFRfJjo2PAgMBAAGjEzARMA8GA1UdEwEB/wQFMAMB
+
+      Af8wDQYJKoZIhvcNAQELBQADggEBAG1Gh1lg/G40PcMx8V5U8AXVMBVROoagOTnn
+
+      TIfLyVB6y4bnF6R8mXGlDzJq2Ew5rJJ6frELN3BoQHlCA4+nnuJ+szVsTjPRg26X
+
+      //Sdk5mEEw3GthcIf8IzvMKww7eADtR0FTE3PU7DGvDi16642SD0osOdY/axhdsB
+
+      Uu6kQBbzgIH7pIPC7EpNHr6+Xox42utumqMXRl/phptBh5LQmzL2hZmupj4syMI9
+
+      0MAMioYic4ni306kjxdRuuPXS2HpGZ3wn+exAQc5LtergSNOm/hRrJGfsYexb+bA
+
+      zL7yN8VJCmWdrRThIePeHGao0NzngtMTQToh59+xv3L+9ut5rEs=
+
+      -----END CERTIFICATE-----
+
+      '
+    origin:
+      exposure: identity
 secret_sources:
   api:
     type: file
@@ -274,6 +395,12 @@ secret_sources:
   identity_postgresql_password:
     type: file
     path: /run/example/identity_postgresql_password
+  ingress_cloudflare_dns_token:
+    type: file
+    path: /run/example/ingress_cloudflare_dns_token
+  ingress_proxmox_token:
+    type: file
+    path: /run/example/ingress_proxmox_token
 accounts: {}
 devices: {}
 evidence: {}
@@ -293,7 +420,27 @@ connections:
       app: monitoring_storage
       endpoint: backend_endpoint
     source_interface: postgresql_interface
-exposures: {}
+exposures:
+  identity:
+    type: http
+    target:
+      app: identity
+      endpoint: web_endpoint
+    domain: identity
+    ingress:
+      app: ingress
+      endpoint: https_endpoint
+    tls: public
+  monitor:
+    type: http
+    target:
+      app: monitoring
+      endpoint: web_endpoint
+    domain: monitor
+    ingress:
+      app: ingress
+      endpoint: https_endpoint
+    tls: public
 images: {}
 host_aliases: {}
 address_groups:
@@ -354,9 +501,64 @@ policies:
         source: 198.18.20.51/32
         port: '5432'
         comment: Selected monitoring_database client
+    identity_web_in:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.200/32
+        port: '9000'
+        comment: Selected identity provider
+    identity_web_out:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.50/32
+        port: '9000'
+        comment: Selected identity provider
+    monitor_web_in:
+      rules:
+      - direction: in
+        proto: tcp
+        source: 198.18.20.200/32
+        port: '8080'
+        comment: Monitoring web from ingress
+    monitor_web_out:
+      rules:
+      - direction: out
+        proto: tcp
+        destination: 198.18.20.51/32
+        port: '8080'
+        comment: Monitoring web endpoint
   transport: {}
-  tls: {}
+  tls:
+    public:
+      type: acme
+      resolver: letsencrypt
   middlewares: {}
-  authentication: {}
+  authentication:
+    monitor_login:
+      type: zabbix-saml
+      provider: monitor_identity
+      default_login: saml
+      registration:
+        slug: monitor
+        application_name: Example monitoring
+        provider_name: Example monitoring
+        issuer: monitor
+        signing_key: Example signing key
+        admission_group: Monitoring operators
+        authentication_flow: null
+        authorization_flow: default-provider-authorization-implicit-consent
+        invalidation_flow: default-provider-invalidation-flow
+        policy_engine_mode: any
+        session_minutes: 86400
+        attribute_mappings:
+        - email
+        - groups
+        - name
+        - upn
+        - uid
+        - username
+        - ms-windowsaccountname
 zabbix:
   server: monitoring
