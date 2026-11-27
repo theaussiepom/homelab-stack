@@ -23,6 +23,10 @@ The complete reusable declaration is [node_red-bound.yaml](../../../apps/node_re
 
 The optional settings and healthcheck roles become mandatory in retained mode. The node-red-retained-oidc policy is required. You must supply the existing custom nodes, flows, secrets and sign-in configuration; this profile does not install or migrate them implicitly. api_token is optional until the selected API capability requires it.
 
+### Adopt an existing Authentik registration
+
+The complete example selects the existing client ID, a managed Authentik exposure, and an optional `registration` on the editor authentication policy. Match the application display name, provider, flows, signing key, callbacks and group binding to the installed registration. Supply its current client credential to Identity in a dedicated secret slot. Identity verifies and applies the blueprint. The editor continues reading its settings and permissions from its retained files. A site with managed DNS and ingress can also select `check.oidc: true` on the editor's canonical exposure and deferred checks on its guest. [Complete example](../../../examples/catalogue/existing-automation-bound.yaml) · [Registration fields](https://github.com/theaussiepom/homelab/blob/347b01fb82c1db296bcb41abe9ee91b430244cb6/docs/reference/identity-and-secrets.md#existing-node-red-oidc-strategy)
+
 ## Bound web behaviour
 
 This retained profile requires the maintained settings and health wrappers to support NODE_RED_WEB_ADDRESS. Prepare these files separately before adopting the profile; ordinary CD does not overwrite retained application files. The runtime supplies the validated web-role address as a non-secret environment value; the settings wrapper binds there and the health wrapper uses that address instead of loopback. Existing OIDC secrets, users, flows and credentials remain unchanged. Fresh public Node-RED does not have this wrapper and is refused by the bound runtime. The post-start check reads actual TCP listening sockets and refuses wildcard or other-interface bindings, even if a route would otherwise respond. Socket checks and saved policy are separate from effective firewall enforcement.
@@ -80,7 +84,7 @@ This variant binds its web listener to the selected interface; actual socket che
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/3faf657fb7579a846f0ccf0aced5363a886cf386/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/347b01fb82c1db296bcb41abe9ee91b430244cb6/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -109,7 +113,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/3faf657fb7579a846f0ccf0aced5363a886cf386/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/347b01fb82c1db296bcb41abe9ee91b430244cb6/docs/reference/app-properties.md).
 
 This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
@@ -147,7 +151,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/3faf657fb7579a846f0ccf0aced5363a886cf386/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/3faf657fb7579a846f0ccf0aced5363a886cf386/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/3faf657fb7579a846f0ccf0aced5363a886cf386/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/3faf657fb7579a846f0ccf0aced5363a886cf386/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/3faf657fb7579a846f0ccf0aced5363a886cf386/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/347b01fb82c1db296bcb41abe9ee91b430244cb6/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/347b01fb82c1db296bcb41abe9ee91b430244cb6/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/347b01fb82c1db296bcb41abe9ee91b430244cb6/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/347b01fb82c1db296bcb41abe9ee91b430244cb6/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/347b01fb82c1db296bcb41abe9ee91b430244cb6/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 

@@ -38,6 +38,23 @@ def compile_examples():
 
 
 class ProfileExampleIntegrations(unittest.TestCase):
+    def test_retained_editor_compiles_one_oidc_registration_on_its_identity_guest(self):
+        path, instance = PROFILE_EXAMPLES['node_red-bound']
+        plan, _ = self.examples[path]
+        client = plan.resolved['apps'][instance]
+        policy = plan.site['policies']['authentication'][client['authentication']]
+        provider = plan.site['identity_providers'][policy['provider']]
+        owner = plan.resolved['exposures'][provider['origin']['exposure']]['target']['app']
+        settings = plan.resolved['apps'][owner]['settings']
+        spec = settings['oidc_blueprints'][policy['registration']['slug']]
+        self.assertEqual(spec['client_id'], client['authentication_resolved']['client_id'])
+        self.assertEqual(spec['admission_group'], policy['registration']['admission_group'])
+        self.assertEqual(spec['callback'], client['origin_url'] + '/auth/strategy/callback/')
+        self.assertEqual(spec['additional_callbacks'],
+                         ['https://flow-alias.example.invalid/auth/strategy/callback/'])
+        self.assertTrue(spec['retained'])
+        self.assertNotIn('model: authentik_core.group', spec['blueprint'])
+
     def test_database_gateway_uses_the_declared_identity_hostname(self):
         import render
         for path in ('examples/catalogue/database-guis.yaml','examples/catalogue/new-database-guis.yaml'):
