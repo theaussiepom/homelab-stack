@@ -50,6 +50,19 @@ class ProfileExampleIntegrations(unittest.TestCase):
         self.assertEqual(identity['admission_group'], registration['admission_group'])
         certificate = ssl.PEM_cert_to_DER_cert(app['authentication_resolved']['idp_signing_certificate'])
         self.assertEqual(identity['certificate_sha256'], hashlib.sha256(certificate).hexdigest())
+        import render
+        config = component_lower.runtime_config(plan, 'identity')
+        owner = config['applications']['identity']
+        services = render.compositions(config)[owner['identity']['runtime_id']]['services']
+        filename = 'homelab-saml-' + registration['slug'] + '.yaml'
+        self.assertIn(filename, owner['runtime_files']['files'])
+        for role in ('server', 'worker'):
+            volumes = services[owner['identity']['services'][role]]['volumes']
+            selected = [mount for mount in volumes if filename in str(mount)]
+            expected = {'type': 'bind', 'source': owner['identity']['runtime_directory'] + '/' + filename,
+                        'target': '/blueprints/custom/' + filename, 'read_only': True, 'bind': {'create_host_path': False}}
+            self.assertEqual(selected, [expected] if role == 'worker' else [])
+
 
     def test_retained_editor_compiles_one_oidc_registration_on_its_identity_guest(self):
         path, instance = PROFILE_EXAMPLES['node_red-bound']
