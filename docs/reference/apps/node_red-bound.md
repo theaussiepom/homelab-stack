@@ -25,7 +25,7 @@ The optional settings and healthcheck roles become mandatory in retained mode. T
 
 ### Adopt an existing Authentik registration
 
-The complete example selects the existing client ID, a managed Authentik exposure, and an optional `registration` on the editor authentication policy. Match the application display name, provider, flows, signing key, callbacks and group binding to the installed registration. Supply its current client credential to Identity in a dedicated secret slot. Identity verifies and applies the blueprint. The editor continues reading its settings and permissions from its retained files. A site with managed DNS and ingress can also select `check.oidc: true` on the editor's canonical exposure and deferred checks on its guest. [Complete example](../../../examples/catalogue/existing-automation-bound.yaml) · [Registration fields](https://github.com/theaussiepom/homelab/blob/954315a6b3e160065a78aa7eb662d403868fedea/docs/reference/identity-and-secrets.md#existing-node-red-oidc-strategy)
+The complete example selects the existing client ID, a managed Authentik exposure, and an optional `registration` on the editor authentication policy. Match the application display name, provider, flows, signing key, callbacks and group binding to the installed registration. Supply its current client credential to Identity in a dedicated secret slot. Identity verifies and applies the blueprint. The editor continues reading its settings and permissions from its retained files. A site with managed DNS and ingress can also select `check.oidc: true` on the editor's canonical exposure and deferred checks on its guest. [Complete example](../../../examples/catalogue/existing-automation-bound.yaml) · [Registration fields](https://github.com/theaussiepom/homelab/blob/b141353b7f61be0a201aebb917c0ccc6ebed3fe6/docs/reference/identity-and-secrets.md#existing-node-red-oidc-strategy)
 
 ## Bound web behaviour
 
@@ -84,7 +84,7 @@ This variant binds its web listener to the selected interface; actual socket che
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/954315a6b3e160065a78aa7eb662d403868fedea/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/b141353b7f61be0a201aebb917c0ccc6ebed3fe6/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -113,7 +113,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/954315a6b3e160065a78aa7eb662d403868fedea/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/b141353b7f61be0a201aebb917c0ccc6ebed3fe6/docs/reference/app-properties.md).
 
 This adapter accepts no application property keys. It rejects unknown keys and provides no way to pass arbitrary commands, environment variables or mounts.
 
@@ -151,7 +151,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/954315a6b3e160065a78aa7eb662d403868fedea/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/954315a6b3e160065a78aa7eb662d403868fedea/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/954315a6b3e160065a78aa7eb662d403868fedea/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/954315a6b3e160065a78aa7eb662d403868fedea/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/954315a6b3e160065a78aa7eb662d403868fedea/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/b141353b7f61be0a201aebb917c0ccc6ebed3fe6/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/b141353b7f61be0a201aebb917c0ccc6ebed3fe6/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/b141353b7f61be0a201aebb917c0ccc6ebed3fe6/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/b141353b7f61be0a201aebb917c0ccc6ebed3fe6/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/b141353b7f61be0a201aebb917c0ccc6ebed3fe6/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 

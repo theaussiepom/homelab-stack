@@ -203,6 +203,11 @@ class ProfileExampleIntegrations(unittest.TestCase):
         self.assertEqual(spec['admission_group'], source['admission_group'])
         self.assertIn('policy_engine_mode: any', spec['blueprint'])
         self.assertIn("meta_launch_url: ''", spec['blueprint'])
+        secondary = plan.resolved['apps']['identity']['settings']['forward_blueprints']['radio-secondary']
+        self.assertEqual(secondary['retained_application']['launch_url'],
+                         'https://secondary.radio.example.invalid/dashboard')
+        self.assertEqual(secondary['admission_group'], 'Radio operators')
+        self.assertEqual(set(plan.site['exposures']) & {'radio-secondary'}, set())
 
     def test_radio_watchdog_compiles_only_the_selected_environment_setting(self):
         path = 'examples/catalogue/messaging-radio.yaml'
