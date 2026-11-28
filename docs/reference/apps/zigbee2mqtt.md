@@ -51,6 +51,10 @@ After [the source-only setup](../../guides/first-configuration.md) defines STACK
 
 The command should compile every selected guest without reading credentials or contacting a guest, container or device. The integration test also generates each guest’s deployment files and checks its resources, identities, application files and health-check definitions.
 
+### Adopt an existing Authentik registration
+
+The example protects the radio's web endpoint with Traefik forward authentication. Its `forward_auth.retained_application` declares the portal name, policy mode and launch URL already in Authentik. Identity checks the existing provider, group binding and embedded outpost assignment before importing the blueprint. The radio keeps its existing coordinator, MQTT connection and frontend settings. After deployment, sign in through the canonical route and verify that the Zigbee2MQTT dashboard opens. [Complete radio and Identity example](../../../examples/catalogue/messaging-radio.yaml)
+
 ## Interfaces
 
 A role describes a network connection the app needs. Its [binding](../declaration-records.md#follow-the-selected-field-to-its-effect) selects an interface or network inside the app’s guest. [Interface composition](../../guides/multiple-interfaces.md) explains physical interfaces, guest loopback and private app networks.
@@ -77,7 +81,7 @@ The web listener accepts connections inside the private app network. Its explici
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/644f79a96c0eccbdbce01defc0747f4d78f5ca0b/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 | Role | Required | Target | Type / access | Fresh initializer |
 | --- | --- | --- | --- | --- |
@@ -101,7 +105,7 @@ No direct app secret role is declared.
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/644f79a96c0eccbdbce01defc0747f4d78f5ca0b/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -148,7 +152,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/644f79a96c0eccbdbce01defc0747f4d78f5ca0b/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/644f79a96c0eccbdbce01defc0747f4d78f5ca0b/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/644f79a96c0eccbdbce01defc0747f4d78f5ca0b/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/644f79a96c0eccbdbce01defc0747f4d78f5ca0b/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/644f79a96c0eccbdbce01defc0747f4d78f5ca0b/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
