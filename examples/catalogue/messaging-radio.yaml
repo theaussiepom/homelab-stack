@@ -437,6 +437,19 @@ apps:
         name: Example upstairs radio
         policy_engine_mode: any
         launch_url: ''
+    retained_proxy_registrations:
+      identity: identity
+      outpost: embedded
+      authorization_flow: default-provider-authorization-implicit-consent
+      invalidation_flow: default-provider-invalidation-flow
+      registrations:
+        radio-secondary:
+          origin: {domain: radio-secondary}
+          provider_name: Secondary radio proxy
+          name: Secondary radio portal
+          admission_group: Radio operators
+          policy_engine_mode: any
+          launch_path: /dashboard
   identity:
     profile: authentik
     guest: identity
@@ -484,6 +497,7 @@ domains:
   broker: broker.example.invalid
   identity: identity.example.invalid
   radio: radio.example.invalid
+  radio-secondary: secondary.radio.example.invalid
 external_endpoints:
   proxmox:
     protocol: https
