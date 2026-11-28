@@ -442,7 +442,20 @@ apps:
       outpost: embedded
       authorization_flow: default-provider-authorization-implicit-consent
       invalidation_flow: default-provider-invalidation-flow
+      additional_scope_mappings:
+        existing_claims:
+          name: Example existing claims
+          scope_name: profile
+          expression_sha256: c883dd3ad14616c6a7d76ef93eaf66f77f229f9796d02cb810ec025357b2f8ae
       registrations:
+        radio-archive:
+          origin: {domain: radio-archive}
+          provider_name: Archive radio proxy
+          name: Archive radio portal
+          admission_group: null
+          policy_engine_mode: any
+          launch_path: ''
+          additional_scope_mapping: existing_claims
         radio-secondary:
           origin: {domain: radio-secondary}
           provider_name: Secondary radio proxy
@@ -498,6 +511,7 @@ domains:
   identity: identity.example.invalid
   radio: radio.example.invalid
   radio-secondary: secondary.radio.example.invalid
+  radio-archive: archive.radio.example.invalid
 external_endpoints:
   proxmox:
     protocol: https

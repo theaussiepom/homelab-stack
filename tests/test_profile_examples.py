@@ -207,7 +207,11 @@ class ProfileExampleIntegrations(unittest.TestCase):
         self.assertEqual(secondary['retained_application']['launch_url'],
                          'https://secondary.radio.example.invalid/dashboard')
         self.assertEqual(secondary['admission_group'], 'Radio operators')
-        self.assertEqual(set(plan.site['exposures']) & {'radio-secondary'}, set())
+        archived = plan.resolved['apps']['identity']['settings']['forward_blueprints']['radio-archive']
+        self.assertIsNone(archived['admission_group'])
+        self.assertIn('Example existing claims', archived['blueprint'])
+        self.assertNotIn('authentik_policies.policybinding', archived['blueprint'])
+        self.assertEqual(set(plan.site['exposures']) & {'radio-secondary', 'radio-archive'}, set())
 
     def test_radio_watchdog_compiles_only_the_selected_environment_setting(self):
         path = 'examples/catalogue/messaging-radio.yaml'
