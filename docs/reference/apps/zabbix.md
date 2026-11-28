@@ -25,7 +25,7 @@ Select `zabbix` at the site root to use the existing monitoring credential recor
 
 ### Adopt SAML on a retained monitoring guest
 
-The monitoring example selects the existing Identity signing key, its public certificate, the admission group and the stock username and group mappings. Identity delivers the blueprint and waits for its worker to report success. Zabbix verifies assertions with the public certificate and continues to apply its local directory role mappings. After deployment, confirm that an admitted account returns to Zabbix with its expected role. [Complete composition](../../../examples/catalogue/identity-monitoring.yaml) · [Registration fields](https://github.com/theaussiepom/homelab/blob/d64b77902103c77862cf5ac0b933c12322d334fa/docs/reference/identity-and-secrets.md#adopt-an-existing-zabbix-saml-application)
+The monitoring example selects the existing Identity signing key, its public certificate, the admission group and the stock username and group mappings. Identity delivers the blueprint and waits for its worker to report success. Zabbix verifies assertions with the public certificate and continues to apply its local directory role mappings. After deployment, confirm that an admitted account returns to Zabbix with its expected role. [Complete composition](../../../examples/catalogue/identity-monitoring.yaml) · [Registration fields](https://github.com/theaussiepom/homelab/blob/04fc3046c1243e783d084813292aa9ccf641f145/docs/reference/identity-and-secrets.md#adopt-an-existing-zabbix-saml-application)
 
 ## First installation
 
@@ -88,7 +88,7 @@ A wildcard listener accepts connections within the declared app network. A port 
 
 ## Storage
 
-The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/d64b77902103c77862cf5ac0b933c12322d334fa/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
+The target is the path the app uses. Its [site binding](https://github.com/theaussiepom/homelab/blob/04fc3046c1243e783d084813292aa9ccf641f145/docs/reference/storage.md#app-storage-bindings) selects the HomeLab-managed data on the guest. Read [preparation](../../guides/installation.md#prepare-a-consuming-site) before treating an existing directory as usable.
 
 No app storage role is declared. Generated private runtime files retain their separate owned paths.
 
@@ -120,7 +120,7 @@ Keep secret values outside Git. A file or environment reference identifies where
 
 ## Application properties
 
-These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/d64b77902103c77862cf5ac0b933c12322d334fa/docs/reference/app-properties.md).
+These are instance inputs under `apps.<id>.properties`, distinct from [reusable declaration values](#declaration-records). The selected adapter defines the [accepted fields, types and constraints](https://github.com/theaussiepom/homelab/blob/04fc3046c1243e783d084813292aa9ccf641f145/docs/reference/app-properties.md).
 
 | Property | Presence / default | Meaning / constraint |
 | --- | --- | --- |
@@ -167,7 +167,7 @@ Keep the same app, service and project identities, writable storage paths and cr
 
 Follow [Start here](../../start-here.md) to set up the commands, then run the [library checks](../../testing.md). After an authorized deployment, check the service’s endpoint, authentication and selected integrations. Compilation alone does not verify them.
 
-Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/d64b77902103c77862cf5ac0b933c12322d334fa/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/d64b77902103c77862cf5ac0b933c12322d334fa/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/d64b77902103c77862cf5ac0b933c12322d334fa/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/d64b77902103c77862cf5ac0b933c12322d334fa/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/d64b77902103c77862cf5ac0b933c12322d334fa/proxmox/applications/component_runtime.py).
+Framework: [lifecycle](https://github.com/theaussiepom/homelab/blob/04fc3046c1243e783d084813292aa9ccf641f145/docs/reference/lifecycle.md), [property types](https://github.com/theaussiepom/homelab/blob/04fc3046c1243e783d084813292aa9ccf641f145/docs/reference/app-properties.md), [app bindings](https://github.com/theaussiepom/homelab/blob/04fc3046c1243e783d084813292aa9ccf641f145/docs/reference/apps.md) and [support](https://github.com/theaussiepom/homelab/blob/04fc3046c1243e783d084813292aa9ccf641f145/docs/reference/support.md). Adapter trace: [runtime source](https://github.com/theaussiepom/homelab/blob/04fc3046c1243e783d084813292aa9ccf641f145/proxmox/applications/component_runtime.py).
 
 ## Backup coverage
 
