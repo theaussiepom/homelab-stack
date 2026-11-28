@@ -456,6 +456,16 @@ apps:
           policy_engine_mode: any
           launch_path: ''
           additional_scope_mapping: existing_claims
+        radio-retired:
+          origin: {domain: radio-retired}
+          provider_name: Retired radio proxy
+          name: Retired radio portal
+          admission_group: Radio operators
+          policy_engine_mode: any
+          launch_path: ''
+          retire:
+            application_id: 00000000-0000-0000-0000-000000000042
+            provider_id: 42
         radio-secondary:
           origin: {domain: radio-secondary}
           provider_name: Secondary radio proxy
@@ -510,6 +520,7 @@ domains:
   broker: broker.example.invalid
   identity: identity.example.invalid
   radio: radio.example.invalid
+  radio-retired: retired.radio.example.invalid
   radio-secondary: secondary.radio.example.invalid
   radio-archive: archive.radio.example.invalid
 external_endpoints:
