@@ -36,7 +36,7 @@ jobs:
     timeout-minutes: 135
     steps:
     - name: Setup
-      uses: theaussiepom/homelab/.github/actions/guest-setup@3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18
+      uses: theaussiepom/homelab/.github/actions/guest-setup@954315a6b3e160065a78aa7eb662d403868fedea
       timeout-minutes: 45
     - name: Recover pending deployment
       timeout-minutes: 45
@@ -46,7 +46,7 @@ jobs:
       run: '"$HOMELAB_CONFIG_PYTHON" framework-source/blueprints/guest_recovery.py --stack stack-source --site-root . --disabled "$DISABLED" --guest "$GUEST" --mode pending'
       id: recover
     - name: Infrastructure
-      uses: theaussiepom/homelab/.github/actions/guest-phase@3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18
+      uses: theaussiepom/homelab/.github/actions/guest-phase@954315a6b3e160065a78aa7eb662d403868fedea
       timeout-minutes: 45
       with:
         guest: resolver
@@ -55,7 +55,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: Prepare
-      uses: theaussiepom/homelab/.github/actions/guest-phase@3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18
+      uses: theaussiepom/homelab/.github/actions/guest-phase@954315a6b3e160065a78aa7eb662d403868fedea
       timeout-minutes: 45
       with:
         guest: resolver
@@ -64,7 +64,7 @@ jobs:
         APPLICATION_SSH_KEY: ${{ secrets.APPLICATION_SSH_KEY }}
         PROXMOX_APP_TOKEN: ${{ secrets.PROXMOX_APP_TOKEN }}
     - name: Unbound
-      uses: theaussiepom/homelab/.github/actions/guest-phase@3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18
+      uses: theaussiepom/homelab/.github/actions/guest-phase@954315a6b3e160065a78aa7eb662d403868fedea
       timeout-minutes: 45
       with:
         guest: resolver
@@ -84,7 +84,7 @@ jobs:
       if: always()
       continue-on-error: true
       timeout-minutes: 5
-      uses: theaussiepom/homelab/.github/actions/guest-cleanup@3b6b8a416b9a1e93fc18cbcc60a2260113b2ea18
+      uses: theaussiepom/homelab/.github/actions/guest-cleanup@954315a6b3e160065a78aa7eb662d403868fedea
       with:
         guest: resolver
         phase: infrastructure

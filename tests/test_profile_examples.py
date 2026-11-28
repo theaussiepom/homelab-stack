@@ -193,6 +193,17 @@ class ProfileExampleIntegrations(unittest.TestCase):
             lambda value: value['apps']['renovate']['properties'].update(repositories=['example/*']),
             ComponentError, 'component.renovate-repositories')
 
+    def test_radio_portal_is_adopted_by_identity(self):
+        path, instance = PROFILE_EXAMPLES['zigbee2mqtt']
+        plan, _ = self.examples[path]
+        source = plan.site['apps'][instance]['forward_auth']
+        spec = plan.resolved['apps']['identity']['settings']['forward_blueprints'][source['slug']]
+        self.assertEqual(spec['origin'], plan.resolved['apps'][instance]['origin_url'])
+        self.assertEqual(spec['app_name'], source['retained_application']['name'])
+        self.assertEqual(spec['admission_group'], source['admission_group'])
+        self.assertIn('policy_engine_mode: any', spec['blueprint'])
+        self.assertIn("meta_launch_url: ''", spec['blueprint'])
+
     def test_radio_watchdog_compiles_only_the_selected_environment_setting(self):
         path = 'examples/catalogue/messaging-radio.yaml'
         selected, packets = self.examples[path]
