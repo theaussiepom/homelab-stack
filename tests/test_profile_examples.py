@@ -211,7 +211,14 @@ class ProfileExampleIntegrations(unittest.TestCase):
         self.assertIsNone(archived['admission_group'])
         self.assertIn('Example existing claims', archived['blueprint'])
         self.assertNotIn('authentik_policies.policybinding', archived['blueprint'])
-        self.assertEqual(set(plan.site['exposures']) & {'radio-secondary', 'radio-archive'}, set())
+        retired = plan.resolved['apps']['identity']['settings']['forward_blueprints']['radio-retired']
+        self.assertEqual(retired['retire'], {
+            'application_id': '00000000-0000-0000-0000-000000000042',
+            'provider_id': 42,
+        })
+        self.assertEqual(retired['blueprint'].count('state: absent'), 2)
+        self.assertIn('confirmed_retirement', retired['blueprint'])
+        self.assertEqual(set(plan.site['exposures']) & {'radio-secondary', 'radio-archive', 'radio-retired'}, set())
 
     def test_radio_watchdog_compiles_only_the_selected_environment_setting(self):
         path = 'examples/catalogue/messaging-radio.yaml'
